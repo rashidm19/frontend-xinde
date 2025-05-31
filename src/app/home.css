@@ -1,0 +1,31 @@
+html {
+  font-size: calc(100vw / 375);
+  @apply scroll-smooth;
+}
+
+@media screen and (min-width: 500px) {
+  html {
+    font-size: calc(100vw / 1024);
+    overflow-x: hidden;
+  }
+}
+
+@media screen and (min-width: 1280px) {
+  html {
+    font-size: calc(100vw / 1440);
+    overflow-x: hidden;
+  }
+}
+
+@media screen and (min-width: 1440px) {
+  html {
+    font-size: calc(1440px / 1440);
+    overflow-x: hidden;
+  }
+}
+
+@media screen and (min-width: 1920px) {
+  html {
+    font-size: calc(1920px / 1920);
+  }
+}
