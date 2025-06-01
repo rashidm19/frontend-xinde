@@ -32,7 +32,7 @@ export default function Page() {
   }
 
   const formSchema = z.object({
-    answer: z.string().min(500),
+    answer: z.string(),
   });
 
   const form = useForm<z.infer<typeof formSchema>>({
