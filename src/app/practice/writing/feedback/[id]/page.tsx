@@ -4,32 +4,19 @@ import React, { useEffect, useState } from 'react';
 
 import { GET_practice_writing_feedback_id } from '@/api/GET_practice_writing_feedback_id';
 import { HeaderDuringTest } from '@/components/HeaderDuringTest';
-import { Log } from '@/components/Log';
-import { useForm } from 'react-hook-form';
 import { useQuery } from '@tanstack/react-query';
-import { z } from 'zod';
-import { zodResolver } from '@hookform/resolvers/zod';
-
-const formSchema = z.object({
-  answer: z.string().min(500),
-});
 
 export default function Page({ params }: { params: { id: string } }) {
-  const { data, status } = useQuery({
-    queryKey: ['pracitce-writing-feedbacks'],
-    queryFn: () =>
-      fetch(`https://api.studybox.kz/practice/writing/passed`, {
-        method: 'GET',
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
-      }).then(res => res.json()),
-    refetchInterval: 3000,
-  });
-
   const { data: feedbackData, status: feedbackStatus } = useQuery({
     queryKey: ['practice-writing-feedback', params.id],
     queryFn: () => GET_practice_writing_feedback_id(params.id),
+    retry: false,
+    refetchInterval: (query) => {
+      const err = query.state.error as { status?: number } | null
+
+      // Если статус 404 — вернуть 3000 (мс), иначе — false (не рефетчить)
+      return err?.status === 404 ? 10000 : false
+    },
   });
 
   const [part, setPart] = useState<'part_1' | 'part_2' | undefined>(undefined);
@@ -48,7 +35,7 @@ export default function Page({ params }: { params: { id: string } }) {
     <>
       <HeaderDuringTest title='Writing section feedback' tag={'Writing'} />
 
-      {(status === 'pending' || (status === 'success' && data === null)) && (
+      {(feedbackStatus === 'pending' || !feedbackData) && (
         <main className='flex h-[100dvh] items-center justify-center gap-x-[5rem] bg-d-blue-secondary'>
           <div className='text-[20rem] font-medium leading-tight text-d-black/80'>Evaluating your answer. It usually takes 1-2 minutes...</div>
           <svg className='size-[20rem] animate-spin text-black' xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24'>
