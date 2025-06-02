@@ -14,8 +14,8 @@ export default function Login() {
   const router = useRouter();
 
   const formSchema = z.object({
-    email: z.string().min(2),
-    password: z.string().min(2),
+    email: z.string().min(1, 'Required field').email('Invalid email address'),
+    password: z.string().min(1, 'Required field'),
   });
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -50,7 +50,7 @@ export default function Login() {
   return (
     <main>
       <section className='relative flex h-full min-h-[100vh] items-center'>
-        <img className='absolute bottom-0 left-0 h-auto w-[960rem]' src='/images/illustration_torusArray.png' />
+        <img className='absolute bottom-0 left-0 h-auto w-[960rem]' src='/images/illustration_torusArray.png' alt='Flower illustration' />
         <div className='container relative z-10 flex max-w-[1440rem] flex-col items-center py-[74rem]'>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className='flex w-[520rem] flex-col gap-y-[30rem] rounded-[24rem] bg-white p-[40rem] shadow-card'>

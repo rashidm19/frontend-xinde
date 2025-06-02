@@ -7,21 +7,19 @@ import { Checkbox } from '@/components/ui/checkbox';
 import Link from 'next/link';
 import img from '../../../public/images/illustration_flower.png';
 import { useForm } from 'react-hook-form';
-import { useRouter } from 'next/navigation';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 
 const formSchema = z.object({
-  name: z.string().min(2, 'Required field'),
-  email: z.string().min(2, 'Required field'),
-  password: z.string().min(2, 'Required field'),
-  region: z.string().min(2),
+  name: z.string().min(1, 'Required field'),
+  email: z.string().min(1, 'Required field').email('Invalid email address'),
+  password: z.string().min(1, 'Required field').min(8, '8 characters minimum'),
+  region: z.string().min(1, 'Required field'),
   agreement: z.boolean().default(true),
   avatar: z.string(),
 });
 
 export default function Registration() {
-  const router = useRouter();
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -70,7 +68,7 @@ export default function Registration() {
     return (
       <main>
         <section className='relative flex min-h-[1024rem] items-center'>
-          <img className='absolute left-0 top-[114rem] h-auto w-[951rem]' src='/images/illustration_flower2.png' />
+          <img className='absolute left-0 top-[114rem] h-auto w-[951rem]' src='/images/illustration_flower2.png' alt='Flower illustration' />
           <div className='container relative z-10 flex max-w-[1440rem] flex-col items-center py-[80rem]'>
             <div className='flex w-[560rem] flex-col gap-y-[30rem] rounded-[24rem] bg-white p-[40rem] shadow-card'>
               <div className='flex items-center justify-between'>
@@ -97,7 +95,7 @@ export default function Registration() {
   return (
     <main>
       <section className='relative flex min-h-[1024rem] items-center'>
-        <img className='absolute left-0 top-[114rem] h-auto w-[951rem]' src='/images/illustration_flower2.png' />
+        <img className='absolute left-0 top-[114rem] h-auto w-[951rem]' src='/images/illustration_flower2.png' alt='Flower illustration' />
         <div className='container relative z-10 flex max-w-[1440rem] flex-col items-center py-[80rem]'>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className='flex w-[520rem] flex-col gap-y-[30rem] rounded-[24rem] bg-white p-[40rem] shadow-card'>
