@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import { DndContext } from '@dnd-kit/core';
 import { Draggable } from '@/components/ui/Draggable';
@@ -16,19 +16,40 @@ interface DndMatchingProps {
     }[];
   };
   setFieldValue: any;
+  value: any;
 }
 
-export const DndMatching = ({ block, setFieldValue }: DndMatchingProps) => {
+export const DndMatching = ({ block, value, setFieldValue }: DndMatchingProps) => {
   // Define the draggable options
   const draggableOptions = block.choices;
   const [containerContents, setContainerContents] = useState<Record<string, string | null>>({});
+
+  useEffect(() => {
+    const initialState: Record<string, string | null> = {};
+
+    block.questions.forEach(q => {
+      const savedAnswer = value[q.number];
+      if (savedAnswer) {
+        const matched = block.choices.find(c => c.answer === savedAnswer);
+        if (matched) {
+          initialState[q.number] = matched.choice;
+        } else {
+          initialState[q.number] = null;
+        }
+      } else {
+        initialState[q.number] = null;
+      }
+    });
+
+    setContainerContents(initialState);
+  }, [block.choices, block.questions, value]);
 
   return (
     <div className='flex w-full flex-col gap-y-[48rem] rounded-[16rem] bg-white'>
       <DndContext onDragEnd={handleDragEnd} autoScroll={{ layoutShiftCompensation: false }}>
         {/* Droppable containers */}
         <div className='flex flex-col items-start justify-start gap-x-[8rem] gap-y-[16rem] text-[16rem] leading-tight tracking-[-0.2rem] text-d-black'>
-          {block.questions.map((q: any, index: number) => (
+          {block.questions.map((q: any) => (
             <div className='flex items-center gap-x-[10rem]' key={`question-${q.number}`}>
               <p className='w-[350rem]'>{q.question}</p>
               <Droppable
@@ -54,8 +75,8 @@ export const DndMatching = ({ block, setFieldValue }: DndMatchingProps) => {
   );
 
   function handleDragEnd(event: any) {
-    console.log(event);
     const { over, active } = event;
+
     if (over) {
       setContainerContents(prev => ({
         ...prev,

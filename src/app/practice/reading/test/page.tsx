@@ -32,7 +32,7 @@ export default function Page() {
     queryKey: ['practice-reading'],
     queryFn: () => GET_practice_reading_id('2'),
   });
-
+  console.log(data);
   const formSchema = z.object({
     ...Object.fromEntries(Array.from({ length: 40 }, (_, i) => [(i + 1).toString(), z.string().optional()])),
   }) satisfies z.ZodType<FormValues>;
@@ -590,9 +590,9 @@ export default function Page() {
                           </div>
                         )}
                         {/* Драг-н-дроп списки */}
-                        {block.kind === 'dragdrop' && <DndMatching block={block} setFieldValue={form.setValue} />}
+                        {block.kind === 'dragdrop' && <DndMatching block={block} value={form.getValues()} setFieldValue={form.setValue} />}
                         {/* Драг-н-дроп текст */}
-                        {block.kind === 'dragdrop-type2' && <DndText block={block} setFieldValue={form.setValue} />}
+                        {block.kind === 'dragdrop-type2' && <DndText block={block} value={form.getValues()} setFieldValue={form.setValue} />}
                       </div>
                     ))}
 

@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { transformStringToArrayV2, transformStringToArrayV3 } from '@/lib/utils';
+import React, { useEffect, useState } from 'react';
+import { transformStringToArrayV3 } from '@/lib/utils';
 
 import { DndContext } from '@dnd-kit/core';
 import { Draggable } from '@/components/ui/Draggable';
@@ -18,21 +18,42 @@ interface DndMatchingProps {
     }[];
   };
   setFieldValue: any;
+  value: any;
 }
 
-export const DndText = ({ block, setFieldValue }: DndMatchingProps) => {
+export const DndText = ({ block, value, setFieldValue }: DndMatchingProps) => {
   // Define the draggable options
   const draggableOptions = block.choices;
-  const textSplitedAsArray = transformStringToArrayV3(block.text);
+  const textSplitAsArray = transformStringToArrayV3(block.text);
   const [containerContents, setContainerContents] = useState<Record<string, string | null>>({});
   let qCount = 0;
+
+  useEffect(() => {
+    const initialState: Record<string, string | null> = {};
+
+    block.questions.forEach(q => {
+      const savedAnswer = value[q.number];
+      if (savedAnswer) {
+        const matched = block.choices.find(c => c.answer === savedAnswer);
+        if (matched) {
+          initialState[q.number] = matched.choice;
+        } else {
+          initialState[q.number] = null;
+        }
+      } else {
+        initialState[q.number] = null;
+      }
+    });
+
+    setContainerContents(initialState);
+  }, [block.choices, block.questions, value]);
 
   return (
     <div className='flex w-full flex-col gap-y-[48rem] rounded-[16rem] bg-white'>
       <DndContext onDragEnd={handleDragEnd} autoScroll={{ layoutShiftCompensation: false }}>
         {/* Droppable containers */}
         <div className='inline-flex flex-wrap items-center gap-x-[5rem] gap-y-[4rem] text-[16rem] leading-relaxed text-d-black'>
-          {textSplitedAsArray.map((str: any, index: number) => {
+          {textSplitAsArray.map((str: any, index: number) => {
             if (str === '___') {
               qCount += 1;
               return (
@@ -63,8 +84,8 @@ export const DndText = ({ block, setFieldValue }: DndMatchingProps) => {
   );
 
   function handleDragEnd(event: any) {
-    console.log(event);
     const { over, active } = event;
+
     if (over) {
       setContainerContents(prev => ({
         ...prev,
