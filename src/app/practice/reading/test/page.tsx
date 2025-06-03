@@ -90,7 +90,6 @@ export default function Page() {
         answer: answer,
       })),
     };
-
     // Выписываем все номера вопросов типа чекбокс
     let checkboxQuestionBlocks: number[][] = [];
     [1, 2, 3].map(p =>
@@ -103,12 +102,14 @@ export default function Page() {
     // В финальном ответе для бека, все чекбоксы вопросы, которые записаны как A|B|C - переделываем в одиночные ответы
     checkboxQuestionBlocks.forEach((block: number[]) => {
       block.forEach((question: number, index: number) => {
-        // question - 1 - потому что массив начинается с index 0 и соответсвенно имеем виде [ {0: {question: 1, answer: 'some answer'}}, ...]
-        if (formattedValues.answers[question - 1].answer?.includes('|')) {
+        // question - 1 - потому что массив начинается с index 0 и соответственно имеем виде [{0: {question: 1, answer: 'some answer'}}, ...]
+        if (formattedValues.answers?.[question - 1]?.answer?.includes('|')) {
           formattedValues.answers[question - 1].answer = formattedValues.answers[question - 1].answer!.split('|')[index];
         }
       });
     });
+
+    formattedValues.answers = formattedValues.answers.filter(item => item.answer);
 
     const response = await fetch('https://api.studybox.kz/practice/reading/2', {
       method: 'POST',
@@ -293,7 +294,8 @@ export default function Page() {
                             {block.questions.map((q: any) => (
                               <div key={`question-${q.number}`}>
                                 <div className='mb-[24rem] flex items-start gap-x-[24rem] text-[20rem] font-medium leading-[24rem] tracking-[-0.2rem] text-d-black'>
-                                  <div className='w-[25rem] shrink-0'>{q.number}</div> <div>{q.question}</div>
+                                  <div className='w-[25rem] shrink-0'>{q.number}</div>
+                                  <div>{q.question}</div>
                                 </div>
 
                                 <FormField
@@ -349,7 +351,8 @@ export default function Page() {
                             {block.questions.map((q: any) => (
                               <div key={`reading_${q.number}`}>
                                 <div className='mb-[24rem] flex items-start gap-x-[24rem] text-[20rem] font-medium leading-[24rem] tracking-[-0.2rem] text-d-black'>
-                                  <div className='w-[25rem] shrink-0'>{q.number}</div> <div>{q.question}</div>
+                                  <div className='w-[25rem] shrink-0'>{q.number}</div>
+                                  <div>{q.question}</div>
                                 </div>
                                 <FormField
                                   control={form.control}
@@ -386,7 +389,7 @@ export default function Page() {
                               <div key={`question-checkboxes-${c.choice}-${block.answers[0].number}`} className={`w-full`}>
                                 <FormField
                                   control={form.control}
-                                  // Name контрола - номер первого вопроса, для остальных вопросов прокидываем ( дублируем ) значение через в onChange функции
+                                  // Name контрола - номер первого вопроса, для остальных вопросов прокидываем (дублируем) значение через onChange функции
                                   name={block.answers[0].number.toString()}
                                   render={({ field }) => (
                                     <FormControl>
@@ -486,10 +489,10 @@ export default function Page() {
                         {block.kind === 'table2' && (
                           <div>
                             <div className='mb-[48rem] flex flex-col items-start gap-y-[16rem] text-[20rem] font-medium leading-[24rem] tracking-[-0.2rem] text-d-black'>
-                              <div>Questions 1-5 </div>
+                              <div>Questions 1-5</div>
 
                               <div className='text-[16rem] font-normal leading-[19rem] tracking-[-0.2rem] text-d-black'>
-                                Complete the table. Write <span className='font-semibold'>NO MORE THAN THREE WORDS </span>from the text for each answer.{' '}
+                                Complete the table. Write <span className='font-semibold'>NO MORE THAN THREE WORDS </span>from the text for each answer.{' '}
                               </div>
                             </div>
                             <div className='grid grid-cols-4 rounded-[8rem] border border-d-black'>
@@ -533,7 +536,7 @@ export default function Page() {
 
                               {/* 3d row */}
                               <div className='h-[76rem] border-b border-b-d-black px-[8rem] py-[8rem] text-[16rem] font-medium leading-[120%] tracking-[-0.2rem] text-d-black'>
-                                Complementary  species{' '}
+                                Complementary species{' '}
                               </div>
                               <div className='h-[76rem] border-b border-l border-b-d-black border-l-d-black px-[8rem] py-[8rem] text-[16rem] font-medium leading-[120%] tracking-[-0.2rem] text-d-black'>
                                 Spanish
