@@ -587,9 +587,9 @@ export default function Page({ params }: { params: { id: string } }) {
                           </div>
                         )}
                         {/* Драг-н-дроп списки */}
-                        {block.kind === 'dragdrop' && <DndMatching block={block} setFieldValue={form.setValue} />}
+                        {block.kind === 'dragdrop' && <DndMatching value={form.getValues()} block={block} setFieldValue={form.setValue} />}
                         {/* Драг-н-дроп текст */}
-                        {block.kind === 'dragdrop-type2' && <DndText block={block} setFieldValue={form.setValue} />}
+                        {block.kind === 'dragdrop-type2' && <DndText value={form.getValues()} block={block} setFieldValue={form.setValue} />}
                       </div>
                     ))}
 

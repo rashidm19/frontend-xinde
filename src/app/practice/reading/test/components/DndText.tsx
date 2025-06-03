@@ -56,13 +56,24 @@ export const DndText = ({ block, value, setFieldValue }: DndMatchingProps) => {
           {textSplitAsArray.map((str: any, index: number) => {
             if (str === '___') {
               qCount += 1;
+              const actualQNumber = qCount;
+
               return (
                 <Droppable
                   key={`span-${index}`}
-                  id={qCount.toString()}
-                  className={`flex h-[28rem] w-[150rem] items-center justify-center rounded-[8rem] border-[1.5rem] border-dotted border-d-black/60 p-[10rem] text-center text-[16rem] font-normal leading-[22rem] tracking-[-0.2rem] text-d-black ${containerContents[qCount] ? 'bg-d-yellow-secondary' : ''}`}
+                  id={actualQNumber.toString()}
+                  className={`relative flex h-[28rem] w-[150rem] items-center justify-center rounded-[8rem] border-[1.5rem] border-dotted border-d-black/60 p-[10rem] text-center text-[16rem] font-normal leading-[22rem] tracking-[-0.2rem] text-d-black ${containerContents[actualQNumber] ? 'bg-d-yellow-secondary' : ''}`}
                 >
-                  {containerContents[qCount] || qCount}
+                  {containerContents[actualQNumber] || actualQNumber}
+
+                  {value[actualQNumber] && (
+                    <img
+                      src='/images/icon_close--black.svg'
+                      alt='Close'
+                      className='absolute right-0 top-1/2 z-10 size-[16rem] shrink-0 -translate-y-1/2 cursor-pointer'
+                      onClick={() => handleClearAnswer(String(actualQNumber))}
+                    />
+                  )}
                 </Droppable>
               );
             } else {
@@ -93,5 +104,13 @@ export const DndText = ({ block, value, setFieldValue }: DndMatchingProps) => {
       }));
       setFieldValue(`${over.id}`, draggableOptions.find(option => option.choice === active.id)!.answer);
     }
+  }
+
+  function handleClearAnswer(id: string) {
+    setContainerContents(prev => ({
+      ...prev,
+      [id]: null,
+    }));
+    setFieldValue(`${id}`, undefined);
   }
 };

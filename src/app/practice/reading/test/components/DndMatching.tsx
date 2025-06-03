@@ -54,9 +54,18 @@ export const DndMatching = ({ block, value, setFieldValue }: DndMatchingProps) =
               <p className='w-[350rem]'>{q.question}</p>
               <Droppable
                 id={q.number}
-                className={`flex h-[32rem] min-w-[150rem] max-w-[250rem] items-center rounded-[8rem] border-[1.5rem] border-dotted border-d-black/60 p-[10rem] text-left text-[16rem] font-normal leading-[26rem] tracking-[-0.2rem] text-d-black ${containerContents[q.number] ? 'bg-d-yellow-secondary' : ''}`}
+                className={`relative flex h-[32rem] min-w-[150rem] max-w-[250rem] items-center rounded-[8rem] border-[1.5rem] border-dotted border-d-black/60 p-[10rem] text-left text-[16rem] font-normal leading-[26rem] tracking-[-0.2rem] text-d-black ${containerContents[q.number] ? 'bg-d-yellow-secondary' : ''}`}
               >
                 {containerContents[q.number] || ''}
+
+                {value[q.number] && (
+                  <img
+                    src='/images/icon_close--black.svg'
+                    alt='Close'
+                    className='absolute left-full top-1/2 size-[16rem] shrink-0 -translate-y-1/2'
+                    onClick={() => handleClearAnswer(q.number)}
+                  />
+                )}
               </Droppable>{' '}
             </div>
           ))}
@@ -84,5 +93,13 @@ export const DndMatching = ({ block, value, setFieldValue }: DndMatchingProps) =
       }));
       setFieldValue(`${over.id}`, draggableOptions.find(option => option.choice === active.id)!.answer);
     }
+  }
+
+  function handleClearAnswer(id: string) {
+    setContainerContents(prev => ({
+      ...prev,
+      [id]: null,
+    }));
+    setFieldValue(`${id}`, undefined);
   }
 };

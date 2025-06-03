@@ -32,7 +32,7 @@ export default function Page() {
     queryKey: ['practice-reading'],
     queryFn: () => GET_practice_reading_id('2'),
   });
-  console.log(data);
+
   const formSchema = z.object({
     ...Object.fromEntries(Array.from({ length: 40 }, (_, i) => [(i + 1).toString(), z.string().optional()])),
   }) satisfies z.ZodType<FormValues>;
