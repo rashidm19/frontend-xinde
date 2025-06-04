@@ -8,11 +8,12 @@ import { GET_practice_speaking_categories } from '@/api/GET_practice_speaking_ca
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
+import nProgress from 'nprogress';
 
 export default function Page() {
   const router = useRouter();
 
-  const { data, status } = useQuery({
+  const { data } = useQuery({
     queryKey: ['speaking-categories'],
     queryFn: GET_practice_speaking_categories,
   });
@@ -21,29 +22,28 @@ export default function Page() {
   const [selectedTopic, setSelectedTopic] = useState<string>('random');
 
   const startPractice = async () => {
-    const result = await fetch(`https://api.studybox.kz/practice/speaking?part=${selectedPart}&tag_id=${selectedTopic}`, {
+    const params = new URLSearchParams();
+    params.append('part', String(selectedPart));
+    params.append('tag_id', selectedTopic === 'random' ? randomTopic() : selectedTopic);
+
+    const result = await fetch(`https://api.studybox.kz/practice/speaking?${params.toString()}`, {
       method: 'GET',
       headers: {
         Authorization: `Bearer ${localStorage.getItem('token')}`,
       },
     });
-    const json = await result.json();
 
     if (result?.ok) {
+      nProgress.start();
+      const json = await result.json();
       localStorage.setItem('practiceSpeakingId', json.data[0].speaking_id);
-      localStorage.setItem('practiceSpeakingPart', selectedPart.toString());
+      router.push('/practice/speaking/rules/');
     }
+  };
 
-    const practiceID = await fetch(`https://api.studybox.kz/practice/speaking/`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem('token')}`,
-      },
-      body: JSON.stringify({
-        id: json.data[0].speaking_id,
-        part: selectedPart.toString(),
-      }),
-    });
+  const randomTopic = () => {
+    const randomIndex = Math.floor(Math.random() * data.data.find((c: any) => c.name === `speaking_part_${selectedPart}`).tags.length);
+    return data.data.find((c: any) => c.name === `speaking_part_${selectedPart}`).tags[randomIndex].id;
   };
 
   return (
