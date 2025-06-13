@@ -48,6 +48,10 @@ export const DndText = ({ block, value, setFieldValue }: DndMatchingProps) => {
     setContainerContents(initialState);
   }, [block.choices, block.questions, value]);
 
+  const placedChoices = new Set(
+    Object.values(containerContents).filter((id): id is string => !!id)
+  );
+
   return (
     <div className='flex w-full flex-col gap-y-[48rem] rounded-[16rem] bg-white'>
       <DndContext onDragEnd={handleDragEnd} autoScroll={{ layoutShiftCompensation: false }}>
@@ -85,7 +89,7 @@ export const DndText = ({ block, value, setFieldValue }: DndMatchingProps) => {
         {/* Display draggable options */}
         <div className='mb-[20rem] flex flex-wrap gap-[8rem]'>
           {draggableOptions.map((option: any) => (
-            <Draggable key={option.choice} id={option.choice}>
+            <Draggable key={option.choice} id={option.choice} isSelected={placedChoices.has(option.choice)}>
               {option.choice}
             </Draggable>
           ))}
