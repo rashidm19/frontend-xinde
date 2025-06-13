@@ -8,7 +8,8 @@ import { Footer } from '@/components/Footer';
 import Link from 'next/link';
 
 export default function Page() {
-  const [selectedTopic, setSelectedTopic] = useState<string>('random');
+  // const [selectedTopic, setSelectedTopic] = useState<string>('random');
+  const selectedTopic = 'random'
 
   return (
     <>
@@ -43,31 +44,31 @@ export default function Page() {
 
             {/* // * Selection */}
             <section>
-              <h1 className='mb-[40rem] text-[32rem] font-medium leading-none'>Tasks selection</h1>
+              {/*<h1 className='mb-[40rem] text-[32rem] font-medium leading-none'>Tasks selection</h1>*/}
               {/* // * Accent Selection */}
-              <div className='mb-[32rem]'>
-                <label className='mb-[16rem] block text-[20rem] leading-none'>Please select the accent in which the audio will be played</label>
-                <Select defaultValue='random' value={selectedTopic} onValueChange={setSelectedTopic}>
-                  <SelectTrigger className='h-[70rem] rounded-[16rem] bg-d-light-gray px-[40rem] text-[20rem] font-medium leading-normal data-[state=open]:rounded-b-none'>
-                    <SelectValue placeholder='Random' className='placeholder:text-d-black/60' />
-                  </SelectTrigger>
+              {/*<div className='mb-[32rem]'>*/}
+              {/*  <label className='mb-[16rem] block text-[20rem] leading-none'>Please select the accent in which the audio will be played</label>*/}
+              {/*  <Select defaultValue='random' value={selectedTopic} onValueChange={setSelectedTopic}>*/}
+              {/*    <SelectTrigger className='h-[70rem] rounded-[16rem] bg-d-light-gray px-[40rem] text-[20rem] font-medium leading-normal data-[state=open]:rounded-b-none'>*/}
+              {/*      <SelectValue placeholder='Random' className='placeholder:text-d-black/60' />*/}
+              {/*    </SelectTrigger>*/}
 
-                  <SelectContent className='mt-0 max-h-[250rem] rounded-b-[40rem]'>
-                    <SelectItem value='random' className='h-[50rem] px-[40rem] text-[20rem] font-medium leading-none last:rounded-b-[8rem] hover:bg-d-light-gray'>
-                      Random
-                    </SelectItem>
-                    <SelectItem value='britain' className='h-[50rem] px-[40rem] text-[20rem] font-medium leading-none last:rounded-b-[8rem] hover:bg-d-light-gray'>
-                      British
-                    </SelectItem>
-                    <SelectItem value='australian' className='h-[50rem] px-[40rem] text-[20rem] font-medium leading-none last:rounded-b-[8rem] hover:bg-d-light-gray'>
-                      Australian
-                    </SelectItem>
-                    <SelectItem value='American' className='h-[50rem] px-[40rem] text-[20rem] font-medium leading-none last:rounded-b-[8rem] hover:bg-d-light-gray'>
-                      American
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+              {/*    <SelectContent className='mt-0 max-h-[250rem] rounded-b-[40rem]'>*/}
+              {/*      <SelectItem value='random' className='h-[50rem] px-[40rem] text-[20rem] font-medium leading-none last:rounded-b-[8rem] hover:bg-d-light-gray'>*/}
+              {/*        Random*/}
+              {/*      </SelectItem>*/}
+              {/*      <SelectItem value='britain' className='h-[50rem] px-[40rem] text-[20rem] font-medium leading-none last:rounded-b-[8rem] hover:bg-d-light-gray'>*/}
+              {/*        British*/}
+              {/*      </SelectItem>*/}
+              {/*      <SelectItem value='australian' className='h-[50rem] px-[40rem] text-[20rem] font-medium leading-none last:rounded-b-[8rem] hover:bg-d-light-gray'>*/}
+              {/*        Australian*/}
+              {/*      </SelectItem>*/}
+              {/*      <SelectItem value='American' className='h-[50rem] px-[40rem] text-[20rem] font-medium leading-none last:rounded-b-[8rem] hover:bg-d-light-gray'>*/}
+              {/*        American*/}
+              {/*      </SelectItem>*/}
+              {/*    </SelectContent>*/}
+              {/*  </Select>*/}
+              {/*</div>*/}
               {/* // * User agreement */}
               <div className='mb-[56rem] flex items-center gap-x-[12rem]'>
                 <Checkbox className='size-[20rem]' checked />

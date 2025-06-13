@@ -170,7 +170,7 @@ export default function Page() {
                   <br /> in the overall statistics{' '}
                 </p>
                 <Link
-                  href='/practice/listening/customize'
+                  href='/practice/listening/rules'
                   className='flex h-[64rem] w-[328rem] items-center justify-center rounded-[40rem] bg-d-green text-[14rem] font-semibold hover:bg-d-green/40'
                 >
                   Take the test

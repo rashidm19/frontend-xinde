@@ -2,8 +2,19 @@
 
 import { Footer } from '@/components/Footer';
 import Link from 'next/link';
+import { Checkbox } from '@/components/ui/checkbox';
+import React, { useState } from 'react';
 
 export default function Page() {
+  const [accepted, setAccepted] = useState(false);
+
+  const handleClick = (e: React.MouseEvent) => {
+    if (!accepted)  {
+      e.preventDefault()
+      alert('Please accept the User Agreement before continuing.')
+    }
+  }
+
   return (
     <>
       <main className='min-h-screen overflow-hidden bg-d-light-gray'>
@@ -61,9 +72,21 @@ export default function Page() {
               <p className='mb-[48rem] text-[20rem] font-medium leading-tight text-d-black/80'>
                 Each correct answer receives 1 mark. Your final score is given as a band score in whole or half bands, e.g. 5.5 or 7.0.
               </p>
+
+              <label className='mb-[56rem] flex items-center gap-x-[12rem] select-none'>
+                <Checkbox className='size-[20rem]' checked={accepted} onCheckedChange={newCheckedState => setAccepted(!!newCheckedState)} />
+                <div className='text-[16rem] font-medium leading-none'>
+                  I accept the{' '}
+                  <Link href='/user-agreement' className='border-b border-d-black'>
+                    user agreement
+                  </Link>
+                </div>
+              </label>
+
               <Link
-                href='/practice/listening/audio-check/'
-                className='mx-auto flex h-[63rem] w-[280rem] items-center justify-center rounded-[40rem] bg-d-green text-[20rem] font-semibold hover:bg-d-green/40'
+                onClick={handleClick}
+                href={accepted ? '/practice/listening/audio-check/' : '#'}
+                className={`mx-auto flex h-[63rem] w-[280rem] items-center justify-center rounded-[40rem] text-[20rem] font-semibold ${accepted? 'bg-d-green hover:bg-d-green/40 cursor-pointer': 'bg-d-gray cursor-not-allowed pointer-events-none opacity-50'}`}
               >
                 Continue
               </Link>
