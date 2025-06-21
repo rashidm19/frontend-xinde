@@ -3,18 +3,17 @@
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 
-import { ApproximateIeltsScore } from './ApproximateIieltsScore  ';
 import { BestMockScore } from './BestMockScore';
 import { BestSectionsResults } from './BestSectionsResults';
-import Link from 'next/link';
 import { ProfileEditFormModal } from '../settings/_components/ProfileEditFormModal';
 import nProgress from 'nprogress';
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
+import { ApproximateIELTSScore } from './ApproximateIELTSScore';
 
 export const BestResults = () => {
   const router = useRouter();
-  const { data, status } = useQuery({
+  const { data } = useQuery({
     queryKey: ['user'],
     queryFn: () =>
       fetch(`https://api.studybox.kz/auth/profile`, {
@@ -70,7 +69,7 @@ export const BestResults = () => {
         <div className='flex justify-start'>
           <BestSectionsResults />
           <BestMockScore />
-          <ApproximateIeltsScore />
+          <ApproximateIELTSScore />
         </div>
       </div>
     </section>

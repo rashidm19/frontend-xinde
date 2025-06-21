@@ -2,15 +2,14 @@
 
 import * as NProgress from 'nprogress';
 
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
 
 import Link from 'next/link';
 import { useForm } from 'react-hook-form';
 import { useRouter } from 'next/navigation';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useEffect } from 'react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 export default function PasswordReset() {
   const router = useRouter();
@@ -65,7 +64,7 @@ export default function PasswordReset() {
     return (
       <main>
         <section className='relative flex min-h-[1024rem] items-center'>
-          <img className='absolute left-0 top-[114rem] h-auto w-[951rem]' src='/images/illustration_flower2.png' />
+          <img className='absolute left-0 top-[114rem] h-auto w-[951rem]' src='/images/illustration_flower2.png' alt='illustration_flower2' />
           <div className='container relative z-10 flex max-w-[1440rem] flex-col items-center py-[80rem]'>
             <div className='flex w-[560rem] flex-col gap-y-[30rem] rounded-[24rem] bg-white p-[30rem] shadow-card'>
               <div className='flex items-center justify-between'>
@@ -91,7 +90,7 @@ export default function PasswordReset() {
   return (
     <main>
       <section className='relative flex h-full min-h-[100vh] items-center'>
-        <img className='absolute bottom-0 left-0 h-auto w-[960rem]' src='/images/illustration_torusArray.png' />
+        <img className='absolute bottom-0 left-0 h-auto w-[960rem]' src='/images/illustration_torusArray.png' alt='illustration_torusArray' />
         <div className='container relative z-10 flex max-w-[1440rem] flex-col items-center py-[74rem]'>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className='flex w-[560rem] flex-col gap-y-[30rem] rounded-[24rem] bg-white p-[40rem] shadow-card'>

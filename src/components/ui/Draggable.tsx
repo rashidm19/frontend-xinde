@@ -17,9 +17,7 @@ export function Draggable(props: any) {
       style={style}
       {...listeners}
       {...attributes}
-      className={
-        `flex w-fit cursor-move items-center justify-center rounded-[4rem] border-[1.5rem] border-d-black px-[6rem] py-[4rem] text-[16rem] font-normal leading-[26rem] tracking-[-0.2rem] text-d-black ${props.isSelected && 'bg-d-yellow-secondary'}`
-      }
+      className={`flex w-fit cursor-move items-center justify-center rounded-[4rem] border-[1.5rem] border-d-black px-[6rem] py-[4rem] text-[16rem] font-normal leading-[26rem] tracking-[-0.2rem] text-d-black ${props.isSelected && 'bg-d-yellow-secondary'}`}
     >
       {props.children}
     </div>

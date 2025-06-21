@@ -83,7 +83,7 @@ export const DreamUniversity = () => {
               alt='illustration'
             />
             <div className='mb-[16rem] flex items-start font-poppins text-[40rem] font-semibold leading-none text-white tablet:text-[80rem] wide:text-[120rem]'>91%</div>
-            <div className='text-[16rem] font-medium leading-tight text-white/80 tablet:text-[24rem] wide:text-[32rem]'>approval rate </div>
+            <div className='text-[16rem] font-medium leading-tight text-white/80 tablet:text-[24rem] wide:text-[32rem]'>approval rate</div>
           </figure>
           {/* // * reviews */}
           <div
@@ -93,7 +93,7 @@ export const DreamUniversity = () => {
           >
             <Carousel setApi={setApi}>
               <CarouselContent>
-                {[1, 2].map(i => (
+                {[1, 2].map(() => (
                   <CarouselItem>
                     <div className='mb-[24rem] pr-[14rem] text-[16rem] font-medium leading-tight tracking-[-0.2rem] text-d-black/80 tablet:mb-[70rem] tablet:pr-[100rem] tablet:text-[24rem] desktop:mb-0 desktop:h-[575rem] desktop:pr-0 wide:h-[810rem] wide:text-[32rem]'>
                       “Thanks to this platform, I've seen a <span className='font-semibold text-d-violet'>significant improvement in my skills</span>, and I'm actually

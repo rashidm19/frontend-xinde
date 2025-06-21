@@ -57,7 +57,7 @@ export const Hero = () => {
             className='card-shadow rounded-[24rem] bg-white p-[24rem] tablet:col-span-2 tablet:flex tablet:justify-between tablet:pb-0 tablet:pl-[40rem] tablet:pr-[32rem] tablet:pt-[32rem] desktop:rounded-[40rem]'
           >
             <div className='mb-[24rem] flex flex-col gap-y-[4rem] tablet:mb-0 tablet:w-[252rem] tablet:gap-y-[16rem] desktop:w-[338rem] wide:w-[450rem]'>
-              <h3 className='font-poppins text-[24rem] font-medium leading-tight tablet:text-[32rem] wide:text-[40rem]'>Smart learning with AI</h3>
+              <h3 className='font-poppins text-[24rem] font-medium leading-tight tablet:text-[32rem] wide:text-[40rem]'>Smart learning with AI</h3>
               <p className='text-[14rem] font-medium leading-normal wide:text-[20rem]'>
                 Get ready for the future of IELTS prep with our high-tech platform powered by AI.{' '}
                 <span className='hidden tablet:block'>
@@ -83,6 +83,7 @@ export const Hero = () => {
             <img
               src='/images/illustration_worm.png'
               className='pointer-events-none absolute right-0 top-0 h-auto w-[103rem] mix-blend-soft-light tablet:w-[166rem] wide:w-[200rem]'
+              alt='illustration_worm'
             />
             <div className='mb-[24rem] flex flex-col gap-y-[4rem] pr-[34rem] tablet:mb-0 tablet:w-[374rem] tablet:pl-[20rem] tablet:pr-0 desktop:w-[398rem] wide:w-[474rem]'>
               <h3 className='font-poppins text-[24rem] font-medium leading-tight text-white tablet:text-[32rem] wide:text-[40rem]'>
@@ -147,6 +148,7 @@ export const Hero = () => {
             <img
               src='/images/illustration_flower.png'
               className='absolute right-0 top-0 h-auto w-[116rem] mix-blend-soft-light tablet:w-[153rem] desktop:w-[189rem] wide:w-[221rem]'
+              alt='illustration_flower'
             />
             <div className='mb-[24rem] flex flex-col gap-y-[4rem] tablet:mb-0 tablet:w-[374rem] tablet:pl-[20rem] desktop:w-[448rem] wide:w-[474rem]'>
               <h3 className='font-poppins text-[24rem] font-medium leading-tight text-white tablet:text-[32rem] wide:text-[40rem]'>

@@ -4,7 +4,6 @@ import React, { useEffect, useState } from 'react';
 
 import { GET_practice_speaking_feedback_id } from '@/api/GET_practice_speaking_feedback_id';
 import { HeaderDuringTest } from '@/components/HeaderDuringTest';
-import { Log } from '@/components/Log';
 import { useQuery } from '@tanstack/react-query';
 
 export default function Page({ params }: { params: { id: string } }) {

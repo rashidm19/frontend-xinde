@@ -23,7 +23,7 @@ export default function Page() {
   }, []);
 
   return (
-    <main className='bg-d-red-secondary min-h-screen overflow-hidden'>
+    <main className='min-h-screen overflow-hidden bg-d-red-secondary'>
       <div className='container relative max-w-[1440rem] px-[248rem] pb-[48rem] pt-[64rem]'>
         <img
           src='/images/illustration_halfspheres.png'
@@ -53,7 +53,7 @@ export default function Page() {
               <audio
                 controls
                 ref={audioRef}
-                onTimeUpdate={e => setCurrentTimestamp(audioRef?.current?.currentTime)}
+                onTimeUpdate={() => setCurrentTimestamp(audioRef?.current?.currentTime)}
                 onPause={() => setPlayStatus('paused')}
                 onPlay={() => setPlayStatus('playing')}
                 className='hidden'

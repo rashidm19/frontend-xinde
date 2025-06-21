@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
 import React from 'react';
+
 const perspective = {
   initial: {
     opacity: 0,

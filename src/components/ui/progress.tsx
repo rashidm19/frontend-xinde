@@ -9,6 +9,7 @@ interface Props extends React.ComponentPropsWithoutRef<typeof ProgressPrimitive.
   backgroundColor: string;
   barColor: string;
 }
+
 export const Progress = React.forwardRef<React.ElementRef<typeof ProgressPrimitive.Root>, Props>(({ className, value, backgroundColor, barColor, ...props }, ref) => (
   <ProgressPrimitive.Root
     ref={ref}

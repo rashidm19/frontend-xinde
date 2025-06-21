@@ -18,7 +18,7 @@ export default function Button({ isActive, toggleMenu }: { isActive: boolean; to
 
 function BurgerMenu({ color }: { color: string }) {
   return (
-    <div className='preserve-3d duration-[750ms] ease-[cubic-bezier(0.76,0,0.24,1)] group-hover:rotate-x-90 flex h-full w-full flex-col items-center justify-center transition-transform desktop:hidden'>
+    <div className='preserve-3d duration-[750ms] ease-[cubic-bezier(0.76,0,0.24,1)] flex h-full w-full flex-col items-center justify-center transition-transform group-hover:rotate-x-90 desktop:hidden'>
       <div className='duration-[750ms] ease-[cubic-bezier(0.76,0,0.24,1)] flex flex-col gap-[3rem] transition-all group-hover:-translate-y-full group-hover:opacity-0'>
         {[0, 1, 2].map(i => (
           <div key={i} style={{ backgroundColor: color }} className='h-[2rem] w-[18rem] shrink-0 rounded-full' />

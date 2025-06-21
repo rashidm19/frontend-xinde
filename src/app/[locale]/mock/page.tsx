@@ -13,22 +13,132 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
 const data_rows = [
-  { id: 1, score: 6.5, type: 'MOCK', reading: 5.5, listening: 6.0, speaking: 6.5, writing: 7.0, date: '01/01/24', time: '14:02:14', feedback: 'Feedback' },
-  { id: 2, score: 8.0, type: 'Listening', reading: 7.5, listening: 6.5, speaking: undefined, writing: 6.5, date: '01/01/24', time: '14:02:14', feedback: 'Feedback' },
-  { id: 3, score: 6.5, type: 'MOCK', reading: 5.5, listening: 6.0, speaking: 6.5, writing: 7.0, date: '01/01/24', time: '14:02:14', feedback: 'Feedback' },
-  { id: 4, score: 8.0, type: 'Listening', reading: 7.5, listening: 6.5, speaking: undefined, writing: 6.5, date: '01/01/24', time: '14:02:14', feedback: 'Feedback' },
-  { id: 5, score: 6.5, type: 'MOCK', reading: 5.5, listening: 6.0, speaking: 6.5, writing: 7.0, date: '01/01/24', time: '14:02:14', feedback: 'Feedback' },
-  { id: 6, score: 8.0, type: 'Listening', reading: 7.5, listening: 6.5, speaking: undefined, writing: 6.5, date: '01/01/24', time: '14:02:14', feedback: 'Feedback' },
-  { id: 7, score: 6.5, type: 'MOCK', reading: 5.5, listening: 6.0, speaking: 6.5, writing: 7.0, date: '01/01/24', time: '14:02:14', feedback: 'Feedback' },
-  { id: 8, score: 8.0, type: 'Listening', reading: 7.5, listening: 6.5, speaking: undefined, writing: 6.5, date: '01/01/24', time: '14:02:14', feedback: 'Feedback' },
-  { id: 9, score: 6.5, type: 'MOCK', reading: 5.5, listening: 6.0, speaking: 6.5, writing: 7.0, date: '01/01/24', time: '14:02:14', feedback: 'Feedback' },
-  { id: 10, score: 8.0, type: 'Listening', reading: 7.5, listening: 6.5, speaking: undefined, writing: 6.5, date: '01/01/24', time: '14:02:14', feedback: 'Feedback' },
+  {
+    id: 1,
+    score: 6.5,
+    type: 'MOCK',
+    reading: 5.5,
+    listening: 6.0,
+    speaking: 6.5,
+    writing: 7.0,
+    date: '01/01/24',
+    time: '14:02:14',
+    feedback: 'Feedback',
+  },
+  {
+    id: 2,
+    score: 8.0,
+    type: 'Listening',
+    reading: 7.5,
+    listening: 6.5,
+    speaking: undefined,
+    writing: 6.5,
+    date: '01/01/24',
+    time: '14:02:14',
+    feedback: 'Feedback',
+  },
+  {
+    id: 3,
+    score: 6.5,
+    type: 'MOCK',
+    reading: 5.5,
+    listening: 6.0,
+    speaking: 6.5,
+    writing: 7.0,
+    date: '01/01/24',
+    time: '14:02:14',
+    feedback: 'Feedback',
+  },
+  {
+    id: 4,
+    score: 8.0,
+    type: 'Listening',
+    reading: 7.5,
+    listening: 6.5,
+    speaking: undefined,
+    writing: 6.5,
+    date: '01/01/24',
+    time: '14:02:14',
+    feedback: 'Feedback',
+  },
+  {
+    id: 5,
+    score: 6.5,
+    type: 'MOCK',
+    reading: 5.5,
+    listening: 6.0,
+    speaking: 6.5,
+    writing: 7.0,
+    date: '01/01/24',
+    time: '14:02:14',
+    feedback: 'Feedback',
+  },
+  {
+    id: 6,
+    score: 8.0,
+    type: 'Listening',
+    reading: 7.5,
+    listening: 6.5,
+    speaking: undefined,
+    writing: 6.5,
+    date: '01/01/24',
+    time: '14:02:14',
+    feedback: 'Feedback',
+  },
+  {
+    id: 7,
+    score: 6.5,
+    type: 'MOCK',
+    reading: 5.5,
+    listening: 6.0,
+    speaking: 6.5,
+    writing: 7.0,
+    date: '01/01/24',
+    time: '14:02:14',
+    feedback: 'Feedback',
+  },
+  {
+    id: 8,
+    score: 8.0,
+    type: 'Listening',
+    reading: 7.5,
+    listening: 6.5,
+    speaking: undefined,
+    writing: 6.5,
+    date: '01/01/24',
+    time: '14:02:14',
+    feedback: 'Feedback',
+  },
+  {
+    id: 9,
+    score: 6.5,
+    type: 'MOCK',
+    reading: 5.5,
+    listening: 6.0,
+    speaking: 6.5,
+    writing: 7.0,
+    date: '01/01/24',
+    time: '14:02:14',
+    feedback: 'Feedback',
+  },
+  {
+    id: 10,
+    score: 8.0,
+    type: 'Listening',
+    reading: 7.5,
+    listening: 6.5,
+    speaking: undefined,
+    writing: 6.5,
+    date: '01/01/24',
+    time: '14:02:14',
+    feedback: 'Feedback',
+  },
 ];
 
 export default function Page() {
   const router = useRouter();
 
-  const { data, status } = useQuery({
+  const { data } = useQuery({
     queryKey: ['user'],
     queryFn: () =>
       fetch(`https://api.studybox.kz/auth/profile`, {
@@ -41,7 +151,7 @@ export default function Page() {
 
   const [isLoading, setIsLoading] = useState(false);
 
-  const { setMockData, mockData } = mockStore();
+  const { setMockData } = mockStore();
 
   const startMock = async () => {
     setIsLoading(true);

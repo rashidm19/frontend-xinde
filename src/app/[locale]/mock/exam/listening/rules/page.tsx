@@ -43,19 +43,19 @@ export default function Page() {
                 first question will be before the answer to the second question, and so on.
                 <br />
                 <br />
-                Parts 1 and 2 deal with everyday, social situations. There is a conversation between two speakers in Part 1 (for example, a conversation about travel
+                Parts 1 and 2 deal with everyday, social situations. There is a conversation between two speakers in Part 1 (for example, a conversation about travel
                 arrangements). Only one person speaks in Part 2 (for example, a speech about local facilities).
                 <br />
                 <br />
-                Parts 3 and 4 deal with educational and training situations. In Part 3 there is a conversation between two main speakers (for example, two university
+                Parts 3 and 4 deal with educational and training situations. In Part 3 there is a conversation between two main speakers (for example, two university
                 students in discussion, perhaps guided by a tutor). In Part 4 only one person speaks on an academic subject.
                 <br />
                 <br />
                 You will hear the recordings once only. Different accents, including British, Australian, New Zealand and North American, are used.
                 <br />
                 <br />
-                You will need to transfer your answers to an answer sheet. You will have 10 minutes at the end of the test to do this. You should be careful when writing
-                your answers on the answer sheet because you will lose marks for incorrect spelling and grammar.
+                You will need to transfer your answers to an answer sheet. You will have 10 minutes at the end of the test to do this. You should be careful when writing
+                your answers on the answer sheet because you will lose marks for incorrect spelling and grammar.
               </p>
               <h2 className='mb-[32rem] text-[32rem] font-medium leading-none'>Marking</h2>
               <p className='mb-[48rem] text-[20rem] font-medium leading-tight text-d-black/80'>

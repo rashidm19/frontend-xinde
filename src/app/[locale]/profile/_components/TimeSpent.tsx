@@ -1,6 +1,6 @@
 'use client';
 
-import { ChartComponent } from '../../../../components/ChartComponent';
+import { ChartComponent } from '@/components/ChartComponent';
 import Link from 'next/link';
 import React from 'react';
 
@@ -90,7 +90,7 @@ export const TimeSpent = ({ data }: Props) => {
           <>
             {/* // * Empty state */}
             <div className='mb-[108rem] mt-[90rem] flex w-full flex-col items-center gap-y-[24rem]'>
-              <div className='font-poppins text-[14rem]'>Start practicing by section or take MOCK test to view results </div>
+              <div className='font-poppins text-[14rem]'>Start practicing by section or take MOCK test to view results</div>
               <Link href='/practice' className='flex h-[50rem] w-[280rem] items-center justify-center rounded-[40rem] bg-d-light-gray px-[24rem] hover:bg-d-green/40'>
                 <span className='text-[14rem] font-semibold'>Practice by section</span>
               </Link>
@@ -106,6 +106,7 @@ export const TimeSpent = ({ data }: Props) => {
     </section>
   );
 };
+
 function useWindowSize(): { width?: 1512 | undefined } {
   throw new Error('Function not implemented.');
 }

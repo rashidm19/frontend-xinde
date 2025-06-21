@@ -3,7 +3,7 @@ import React from 'react';
 
 export default function Page() {
   return (
-    <main className='bg-d-red-secondary min-h-screen overflow-hidden'>
+    <main className='min-h-screen overflow-hidden bg-d-red-secondary'>
       <div className='container relative max-w-[1440rem] px-[270rem] pb-[150rem] pt-[80rem]'>
         <img
           src='/images/illustration_halfspheres.png'
@@ -23,7 +23,7 @@ export default function Page() {
 
           {/* // * Header */}
           <div className='flex items-center gap-x-[12rem]'>
-            <div className='bg-d-red-secondary flex size-[52rem] items-center justify-center'>
+            <div className='flex size-[52rem] items-center justify-center bg-d-red-secondary'>
               <img src='/images/icon_speakingSection.svg' className='size-[24rem]' alt='speaking' />
             </div>
             <div className='flex flex-col gap-y-[6rem]'>

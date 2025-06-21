@@ -1,5 +1,4 @@
 import Link from 'next/link';
-import { Progress } from '@/components/ui/progress';
 import React from 'react';
 
 export const Achievments = () => {

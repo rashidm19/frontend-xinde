@@ -1,8 +1,7 @@
 'use client';
 
-import { DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 import { PricesModal } from '@/components/PricesModal';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
 import Link from 'next/link';
 import React, { useState } from 'react';
 import Button from './Button';

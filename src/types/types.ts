@@ -6,5 +6,3 @@ export type User = {
   region?: string;
   target_grade?: number;
 };
-
-

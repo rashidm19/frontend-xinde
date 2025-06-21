@@ -143,7 +143,7 @@ export const MockProgressOverTime = ({ data }: Props) => {
           <>
             {/* // * Empty state */}
             <div className='mb-[102rem] mt-[110rem] flex w-full flex-col items-center gap-y-[24rem]'>
-              <div className='font-poppins text-[14rem]'>Complete exam by section or take MOCK test to view results </div>
+              <div className='font-poppins text-[14rem]'>Complete exam by section or take MOCK test to view results</div>
             </div>
             <img
               src='/images/illustration_flower3.png'

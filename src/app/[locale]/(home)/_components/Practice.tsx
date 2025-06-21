@@ -70,7 +70,7 @@ export const Practice = () => {
                   </p>
                 </div>
                 <div className='relative h-[140rem] w-full overflow-hidden rounded-[24rem] bg-[#F4F4F4] pb-[32rem] pl-[32rem] pt-[32rem]'>
-                  <div className='animate-scrollY relative aspect-[2032/780] w-[430rem]'>
+                  <div className='relative aspect-[2032/780] w-[430rem] animate-scrollY'>
                     <Image src='/images/img__mock-results.png' alt='mock-test-icon' fill quality={100} className='rounded-[16rem] object-cover' />
                   </div>
                 </div>

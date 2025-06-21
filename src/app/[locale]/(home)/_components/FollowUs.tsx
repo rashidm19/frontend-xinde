@@ -54,7 +54,11 @@ export const FollowUs = () => {
             <h2 data-aos='fade-down' data-aos-duration='500' className='font-poppins font-semibold leading-none text-white tablet:text-[40rem] wide:text-[56rem]'>
               Follow us on
             </h2>
-            <a href='/public' target='_blank' className='flex items-center justify-center rounded-full bg-d-green hover:bg-d-green/40 tablet:size-[48rem] wide:size-[68rem]'>
+            <a
+              href='/public'
+              target='_blank'
+              className='flex items-center justify-center rounded-full bg-d-green hover:bg-d-green/40 tablet:size-[48rem] wide:size-[68rem]'
+            >
               <img src='/images/icon_instagram.svg' className='tablet:size-[40rem] wide:size-[48rem]' alt='isntagramm' />
             </a>
           </div>

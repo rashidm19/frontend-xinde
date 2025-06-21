@@ -1,11 +1,11 @@
 'use client';
 
-import { ColumnDef, SortingState, flexRender, getCoreRowModel, getSortedRowModel, useReactTable } from '@tanstack/react-table';
+import { ColumnDef, flexRender, getCoreRowModel, getSortedRowModel, SortingState, useReactTable } from '@tanstack/react-table';
 import { Dialog, DialogClose, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 import React, { useState } from 'react';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../../../components/ui/table';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
-import { ScrollArea } from '../../../../components/ui/scroll-area';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface MockLastResults {
   id: number | undefined;
@@ -253,7 +253,7 @@ function DataTable({ data }: { data: MockLastResults[] }) {
           ) : (
             <TableRow>
               <TableCell colSpan={columns.length} className='mb-[140rem] mt-[110rem] flex w-full flex-col items-center gap-y-[24rem]'>
-                <div className='font-poppins text-[14rem]'>Complete exam by section or take MOCK test to view results </div>
+                <div className='font-poppins text-[14rem]'>Complete exam by section or take MOCK test to view results</div>
               </TableCell>
             </TableRow>
           )}
@@ -302,7 +302,7 @@ export const MockLastResults = ({ data }: { data: MockLastResults[] }) => {
           <DataTable data={data.slice(0, 5)} />
         ) : (
           <div className='mb-[140rem] mt-[110rem] flex w-full flex-col items-center gap-y-[24rem]'>
-            <div className='font-poppins text-[14rem]'>Complete exam by section or take MOCK test to view results </div>
+            <div className='font-poppins text-[14rem]'>Complete exam by section or take MOCK test to view results</div>
           </div>
         )}
       </div>

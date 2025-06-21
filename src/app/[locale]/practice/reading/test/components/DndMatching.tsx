@@ -44,9 +44,7 @@ export const DndMatching = ({ block, value, setFieldValue }: DndMatchingProps) =
     setContainerContents(initialState);
   }, [block.choices, block.questions, value]);
 
-  const placedChoices = new Set(
-    Object.values(containerContents).filter((id): id is string => !!id)
-  );
+  const placedChoices = new Set(Object.values(containerContents).filter((id): id is string => !!id));
 
   return (
     <div className='flex w-full flex-col gap-y-[48rem] rounded-[16rem] bg-white'>
@@ -81,7 +79,7 @@ export const DndMatching = ({ block, value, setFieldValue }: DndMatchingProps) =
             <Draggable key={option.choice} id={option.choice} isSelected={placedChoices.has(option.choice)}>
               {option.choice}
             </Draggable>
-        ))}
+          ))}
         </div>
       </DndContext>
     </div>

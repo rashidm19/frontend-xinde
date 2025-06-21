@@ -1,16 +1,12 @@
 'use client';
 
-import React, { useState } from 'react';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import React from 'react';
 
 import { Checkbox } from '@/components/ui/checkbox';
 import { Footer } from '@/components/Footer';
 import Link from 'next/link';
 
 export default function Page() {
-  // const [selectedTopic, setSelectedTopic] = useState<string>('random');
-  const selectedTopic = 'random'
-
   return (
     <>
       <main className='min-h-screen overflow-hidden bg-d-light-gray'>

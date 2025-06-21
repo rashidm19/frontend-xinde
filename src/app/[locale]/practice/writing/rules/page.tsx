@@ -4,8 +4,8 @@ import React from 'react';
 export default function Page() {
   return (
     <main className='realtive min-h-screen bg-d-blue-secondary'>
-      <img src='/images/illustration_torusArray--02.png' className='absolute bottom-0 left-0 h-auto w-[320rem] opacity-80' />
-      <img src='/images/illustration_molecule.png' className='absolute right-0 top-0 h-auto w-[250rem] opacity-50' />
+      <img src='/images/illustration_torusArray--02.png' className='absolute bottom-0 left-0 h-auto w-[320rem] opacity-80' alt='illustration_torusArray' />
+      <img src='/images/illustration_molecule.png' className='absolute right-0 top-0 h-auto w-[250rem] opacity-50' alt='illustration_molecule' />
       <div className='d container max-w-[1440rem] px-[270rem] pb-[150rem] pt-[80rem]'>
         <div className='shadow-car flex flex-col gap-[48rem] rounded-[16rem] bg-white p-[64rem]'>
           {/* // * Header */}
@@ -26,8 +26,8 @@ export default function Page() {
           <div>
             <h1 className='mb-[32rem] text-[32rem] font-medium leading-none'>What’s in the IELTS Academic Writing paper?</h1>
             <p className='mb-[48rem] text-[20rem] font-medium leading-tight text-d-black/80'>
-              There are two Writing tasks. In Task 1, you have to describe some visual information in your own words (a graph, table, chart or diagram). You need to write
-              at least 150 words in about 20 minutes. In Task 2, you are given a point of view, argument or problem which you need to discuss. You need to write at least
+              There are two Writing tasks. In Task 1, you have to describe some visual information in your own words (a graph, table, chart or diagram). You need to write
+              at least 150 words in about 20 minutes. In Task 2, you are given a point of view, argument or problem which you need to discuss. You need to write at least
               250 words in about 40 minutes. You must write your answers using full sentences. You must not write your answers as notes or bullet points. You must write
               your answers on the answer sheet. You are allowed to write notes on the question paper, but these will not be seen by the examiner.
             </p>

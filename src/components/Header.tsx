@@ -1,7 +1,5 @@
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
-import { Dialog, DialogContent } from './ui/dialog';
-
-import { DialogTrigger } from './ui/dialog';
+import { Dialog, DialogContent, DialogTrigger } from './ui/dialog';
 import Link from 'next/link';
 import { PricesModal } from './PricesModal';
 import React from 'react';

@@ -4,13 +4,10 @@ import { Form, FormControl, FormField, FormItem, FormMessage } from '@/component
 import React, { useEffect } from 'react';
 
 import { AutosizeTextarea } from '@/components/ui/autosize-textarea';
-import { GET_practice_writing_id } from '@/api/GET_practice_writing_id';
 import { HeaderDuringTest } from '@/components/HeaderDuringTest';
-import { POST_practice_writing_id } from '@/api/POST_practice_writing_id';
 import { mockStore } from '@/stores/mock';
 import nProgress from 'nprogress';
 import { useForm } from 'react-hook-form';
-import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';

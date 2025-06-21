@@ -1,11 +1,7 @@
-import Link from 'next/link';
-import { headers } from 'next/headers';
 import React from 'react';
 import Image from 'next/image';
-export default async function NotFound() {
-  const headersList = headers();
-  const domain = headersList.get('host');
 
+export default async function NotFound() {
   return (
     <div className='overrflow-visible relative flex h-[100vh] flex-col items-start justify-center pl-[120rem]'>
       <div className='relative z-40'>

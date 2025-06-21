@@ -32,29 +32,21 @@ export const metadata: Metadata = {
   },
 };
 
-export default async function LocaleLayout({
-                                             children,
-                                             params,
-                                           }: {
-  children: React.ReactNode;
-  params: Promise<{ locale: string }>;
-}) {
+export default async function LocaleLayout({ children, params }: { children: React.ReactNode; params: Promise<{ locale: string }> }) {
   const { locale } = await params;
   if (!hasLocale(routing.locales, locale)) {
     notFound();
   }
 
   return (
-    <html lang="en">
-    <body className={`body ${inter.className} ${poppins.variable}`}>
-    <NextTopLoader height={4} color="#636AFB" initialPosition={0.3} showSpinner={false} />
-    <Providers>
-      <AosInit />
-      <NextIntlClientProvider>
-        {children}
-      </NextIntlClientProvider>
-    </Providers>
-    </body>
+    <html lang='en'>
+      <body className={`body ${inter.className} ${poppins.variable}`}>
+        <NextTopLoader height={4} color='#636AFB' initialPosition={0.3} showSpinner={false} />
+        <Providers>
+          <AosInit />
+          <NextIntlClientProvider>{children}</NextIntlClientProvider>
+        </Providers>
+      </body>
     </html>
   );
 }

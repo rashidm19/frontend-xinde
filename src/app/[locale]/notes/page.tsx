@@ -1,24 +1,12 @@
 'use client';
 
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-
 import { Header } from '@/components/Header';
-import { HeaderDuringTest } from '@/components/HeaderDuringTest';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import React from 'react';
-import { useForm } from 'react-hook-form';
 import { useQuery } from '@tanstack/react-query';
-import { z } from 'zod';
-import { zodResolver } from '@hookform/resolvers/zod';
-
-const formSchema = z.object({
-  answer: z.string().min(500),
-});
 
 export default function Notes() {
-  const { data, status } = useQuery({
+  const { data } = useQuery({
     queryKey: ['user'],
     queryFn: () =>
       fetch(`https://api.studybox.kz/auth/profile`, {

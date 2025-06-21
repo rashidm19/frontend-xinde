@@ -46,11 +46,11 @@ export default function Page() {
             <h1 className='mb-[32rem] text-[32rem] font-medium leading-none'>What’s in the IELTS Academic Reading paper?</h1>
             <p className='mb-[48rem] text-[20rem] font-medium leading-tight text-d-black/80'>
               What’s in the IELTS Academic Reading paper? Texts come from books, journals, magazines, newspapers and online resources, written for a non-specialist
-              audience. All the topics are of general interest to students at undergraduate or postgraduate level. The texts may be written in different styles, for
+              audience. All the topics are of general interest to students at undergraduate or postgraduate level. The texts may be written in different styles, for
               example, narrative, descriptive or discursive/argumentative. At least one text contains detailed logical argument. Texts may also contain diagrams, graphs
               or illustrations. If texts use technical vocabulary, then a simple dictionary definition is provided. You will need to transfer your answers to an answer
               sheet. You must transfer your answers during the hour you are given for the Reading test. Unlike the Listening test, no extra transfer time is given. You
-              should be careful when writing your answers on the answer sheet because you will lose marks for incorrect spelling and grammar.
+              should be careful when writing your answers on the answer sheet because you will lose marks for incorrect spelling and grammar.
             </p>
             <h1 className='mb-[32rem] text-[32rem] font-medium leading-none'>Marking</h1>
             <p className='mb-[48rem] text-[20rem] font-medium leading-tight text-d-black/80'>

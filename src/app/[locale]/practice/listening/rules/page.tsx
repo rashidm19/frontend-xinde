@@ -9,11 +9,11 @@ export default function Page() {
   const [accepted, setAccepted] = useState(false);
 
   const handleClick = (e: React.MouseEvent) => {
-    if (!accepted)  {
-      e.preventDefault()
-      alert('Please accept the User Agreement before continuing.')
+    if (!accepted) {
+      e.preventDefault();
+      alert('Please accept the User Agreement before continuing.');
     }
-  }
+  };
 
   return (
     <>
@@ -33,7 +33,7 @@ export default function Page() {
             </Link>
             {/* // * Header */}
             <header className='flex items-center gap-x-[12rem]'>
-              <div className='bg-d-mint flex size-[52rem] items-center justify-center'>
+              <div className='flex size-[52rem] items-center justify-center bg-d-mint'>
                 <img src='/images/icon_listeningSection.svg' className='size-[24rem]' alt='listening' />
               </div>
               <div className='flex flex-col gap-y-[6rem]'>
@@ -54,26 +54,26 @@ export default function Page() {
                 first question will be before the answer to the second question, and so on.
                 <br />
                 <br />
-                Parts 1 and 2 deal with everyday, social situations. There is a conversation between two speakers in Part 1 (for example, a conversation about travel
+                Parts 1 and 2 deal with everyday, social situations. There is a conversation between two speakers in Part 1 (for example, a conversation about travel
                 arrangements). Only one person speaks in Part 2 (for example, a speech about local facilities).
                 <br />
                 <br />
-                Parts 3 and 4 deal with educational and training situations. In Part 3 there is a conversation between two main speakers (for example, two university
+                Parts 3 and 4 deal with educational and training situations. In Part 3 there is a conversation between two main speakers (for example, two university
                 students in discussion, perhaps guided by a tutor). In Part 4 only one person speaks on an academic subject.
                 <br />
                 <br />
                 You will hear the recordings once only. Different accents, including British, Australian, New Zealand and North American, are used.
                 <br />
                 <br />
-                You will need to transfer your answers to an answer sheet. You will have 10 minutes at the end of the test to do this. You should be careful when writing
-                your answers on the answer sheet because you will lose marks for incorrect spelling and grammar.
+                You will need to transfer your answers to an answer sheet. You will have 10 minutes at the end of the test to do this. You should be careful when writing
+                your answers on the answer sheet because you will lose marks for incorrect spelling and grammar.
               </p>
               <h2 className='mb-[32rem] text-[32rem] font-medium leading-none'>Marking</h2>
               <p className='mb-[48rem] text-[20rem] font-medium leading-tight text-d-black/80'>
                 Each correct answer receives 1 mark. Your final score is given as a band score in whole or half bands, e.g. 5.5 or 7.0.
               </p>
 
-              <label className='mb-[56rem] flex items-center gap-x-[12rem] select-none'>
+              <label className='mb-[56rem] flex select-none items-center gap-x-[12rem]'>
                 <Checkbox className='size-[20rem]' checked={accepted} onCheckedChange={newCheckedState => setAccepted(!!newCheckedState)} />
                 <div className='text-[16rem] font-medium leading-none'>
                   I accept the{' '}
@@ -86,7 +86,7 @@ export default function Page() {
               <Link
                 onClick={handleClick}
                 href={accepted ? '/src/app/%5Blocale%5D/practice/listening/audio-check/' : '#'}
-                className={`mx-auto flex h-[63rem] w-[280rem] items-center justify-center rounded-[40rem] text-[20rem] font-semibold ${accepted? 'bg-d-green hover:bg-d-green/40 cursor-pointer': 'bg-d-gray cursor-not-allowed pointer-events-none opacity-50'}`}
+                className={`mx-auto flex h-[63rem] w-[280rem] items-center justify-center rounded-[40rem] text-[20rem] font-semibold ${accepted ? 'cursor-pointer bg-d-green hover:bg-d-green/40' : 'pointer-events-none cursor-not-allowed bg-d-gray opacity-50'}`}
               >
                 Continue
               </Link>

@@ -1,6 +1,6 @@
 'use client';
 import Image from 'next/image';
-import React, { useEffect, useRef, useState } from 'react';
+import React from 'react';
 
 const RunningLineItem = ({ imageSrc, text }: { imageSrc: string; text: string }) => (
   <div className='ml-[24rem] flex items-center gap-x-[24rem]'>
@@ -86,11 +86,13 @@ export const RunningLine = () => {
             transform: translateX(-50%);
           }
         }
+
         .running-line {
           display: flex;
           animation: scroll 175s linear infinite;
           width: max-content;
         }
+
         .running-line:hover {
           animation-play-state: paused;
         }

@@ -1,7 +1,7 @@
 import { HorseshoeProgressBar } from './HorseshoeProgressBar';
 import React from 'react';
 
-export const ApproximateIeltsScore = () => {
+export const ApproximateIELTSScore = () => {
   return (
     <div className='relative flex flex-col items-center'>
       <h2 className='mb-[24rem] text-[20rem] leading-tight'>Approximate&nbsp;IELTS&nbsp;score </h2>

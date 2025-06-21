@@ -11,11 +11,11 @@ export default function Page({ params }: { params: { id: string } }) {
     queryKey: ['practice-writing-feedback', params.id],
     queryFn: () => GET_practice_writing_feedback_id(params.id),
     retry: false,
-    refetchInterval: (query) => {
-      const err = query.state.error as { status?: number } | null
+    refetchInterval: query => {
+      const err = query.state.error as { status?: number } | null;
 
       // Если статус 404 — вернуть 3000 (мс), иначе — false (не рефетчить)
-      return err?.status === 404 ? 10000 : false
+      return err?.status === 404 ? 10000 : false;
     },
   });
 

@@ -3,23 +3,20 @@
 import React, { useEffect, useState } from 'react';
 
 import { CheckboxSquare } from '@/components/ui/checkboxSquare';
-import { GET_practice_listening_id } from '@/api/GET_practice_listening_id';
 import { HeaderDuringTest } from '@/components/HeaderDuringTest';
 import { Input } from '@/components/ui/input';
-import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { RadioGroupItem } from '@/components/ui/radio-group';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Form, FormControl, FormField } from '@/components/ui/form';
-import { RadioGroup } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
-import { Log } from '@/components/Log';
 import { transformStringToArrayV4 } from '@/lib/utils';
 import { mockStore } from '@/stores/mock';
 import nProgress from 'nprogress';
+
 type FormValues = {
   [key: string]: string | undefined;
 };
@@ -28,7 +25,7 @@ export default function Page() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<string>('p1');
 
-  const { mockData, timer, setTimer } = mockStore();
+  const { mockData, setTimer } = mockStore();
   const data = mockData.listening;
 
   if (!data) {
@@ -223,7 +220,7 @@ export default function Page() {
                                     render={({ field }) => (
                                       <FormControl>
                                         <RadioGroup {...field} onValueChange={value => field.onChange(value)} className='flex flex-col items-start'>
-                                          {['A', 'B', 'C', 'D'].map((c, index) => (
+                                          {['A', 'B', 'C', 'D'].map(c => (
                                             <div
                                               className={`flex w-[640rem] items-center space-x-[30rem] rounded-[8rem] py-[12rem] pl-[6rem] pr-[10rem] ${field.value?.includes(c) && 'bg-d-light-gray'}`}
                                               key={`listening_${q.number}_${c}`}
@@ -355,14 +352,14 @@ export default function Page() {
                           <div className='mb-[40rem] flex flex-col items-center justify-center rounded-[13rem] bg-d-gray p-[20rem]'>
                             <p className='mb-[8rem] text-[20rem] font-bold leading-[24rem] tracking-[-0.2rem] text-d-black'>Questions 1-10 </p>
                             <p className='text-[16rem] font-medium leading-[19rem] text-[listening_0606060]'>
-                              Complete the notes. Write <span className='font-semibold uppercase text-d-black'>ONE WORD AND/OR A NUMBER</span>  for each answer.
+                              Complete the notes. Write <span className='font-semibold uppercase text-d-black'>ONE WORD AND/OR A NUMBER</span> for each answer.
                             </p>
                           </div>
 
                           <div className='mb-[32rem] flex items-start gap-x-[32rem] text-[20rem] font-medium leading-[24rem] tracking-[-0.2rem] text-d-black'>
                             Phone call about second-hand furniture
                           </div>
-                          <div className='mb-[24rem] flex items-start gap-x-[32rem] text-[20rem] font-medium leading-[24rem] tracking-[-0.2rem] text-d-black'>Items </div>
+                          <div className='mb-[24rem] flex items-start gap-x-[32rem] text-[20rem] font-medium leading-[24rem] tracking-[-0.2rem] text-d-black'>Items</div>
 
                           <div className='mb-[34rem] flex w-full items-start'>
                             {/* // * Тема */}
@@ -399,7 +396,7 @@ export default function Page() {
 
                           <div className='mb-[34rem] flex w-full items-start'>
                             {/* // * Тема */}
-                            <div className='mt-[4rem] w-[200rem] text-[16rem] font-medium leading-[19rem] tracking-[-0.2rem] text-d-black/80'>Dining chairs: </div>
+                            <div className='mt-[4rem] w-[200rem] text-[16rem] font-medium leading-[19rem] tracking-[-0.2rem] text-d-black/80'>Dining chairs:</div>
                             <div className='w-full'>
                               {/* // * Ответы */}
                               <ul className='flex list-outside list-none flex-col items-start justify-start gap-y-[24rem]'>
@@ -440,7 +437,7 @@ export default function Page() {
 
                           <div className='mb-[34rem] flex w-full items-start'>
                             {/* // * Тема */}
-                            <div className='mt-[4rem] w-[200rem] text-[16rem] font-medium leading-[19rem] tracking-[-0.2rem] text-d-black/80'>Desk: </div>
+                            <div className='mt-[4rem] w-[200rem] text-[16rem] font-medium leading-[19rem] tracking-[-0.2rem] text-d-black/80'>Desk:</div>
                             <div className='w-full'>
                               {/* // * Ответы */}
                               <ul className='flex list-outside list-none flex-col items-start justify-start gap-y-[24rem]'>
@@ -469,7 +466,7 @@ export default function Page() {
 
                           <div className='mb-[34rem] flex w-full items-start'>
                             {/* // * Тема */}
-                            <div className='mt-[4rem] flex w-[200rem] text-[20rem] font-medium leading-[24rem] tracking-[-0.2rem] text-d-black'>Address: </div>
+                            <div className='mt-[4rem] flex w-[200rem] text-[20rem] font-medium leading-[24rem] tracking-[-0.2rem] text-d-black'>Address:</div>
                             <div className='w-full'>
                               {/* // * Ответы */}
                               <ul className='flex list-outside list-none flex-col items-start justify-start gap-y-[24rem]'>
@@ -488,7 +485,7 @@ export default function Page() {
 
                           <div className='mb-[34rem] flex w-full items-start'>
                             {/* // * Тема */}
-                            <div className='mt-[4rem] flex w-[200rem] text-[20rem] font-medium leading-[24rem] tracking-[-0.2rem] text-d-black'>Directions: </div>
+                            <div className='mt-[4rem] flex w-[200rem] text-[20rem] font-medium leading-[24rem] tracking-[-0.2rem] text-d-black'>Directions:</div>
                             <div className='w-full'>
                               {/* // * Ответы */}
                               <ul className='flex list-outside list-none flex-col items-start justify-start gap-y-[24rem]'>

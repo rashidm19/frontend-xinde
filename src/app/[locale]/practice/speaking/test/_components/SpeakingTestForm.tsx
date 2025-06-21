@@ -2,10 +2,8 @@
 
 import { Audio } from './audio';
 import { Form } from '@/components/ui/form';
-import { GET_practice_speaking_id } from '@/api/GET_practice_speaking_id';
 import Record from './record';
 import { useForm } from 'react-hook-form';
-import { useQuery } from '@tanstack/react-query';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 
@@ -88,12 +86,12 @@ export default function SpeakingTestForm({ data }: FormProps) {
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className='relative z-10 mx-auto flex w-[672rem] flex-col rounded-[16rem] bg-white p-[40rem] shadow-card'>
             <div className='flex min-h-[515rem] flex-col gap-y-[16rem] rounded-t-[16rem] bg-d-gray p-[16rem]'>
-              {data.questions.map((quesiton: any, index: number) => (
+              {data.questions.map((question: any) => (
                 <>
-                  {quesiton.number === 1 && (
+                  {question.number === 1 && (
                     <>
-                      <Audio src={quesiton.intro_url} title={'Examiner Introduction'} />
-                      <Audio src={quesiton.question_url} title={`Question ${quesiton.number}`} />
+                      <Audio src={question.intro_url} title={'Examiner Introduction'} />
+                      <Audio src={question.question_url} title={`Question ${question.number}`} />
                       {formValues[1]?.recordingUrl && (
                         <div className='ml-auto'>
                           <Audio src={formValues[1]?.recordingUrl} title={`Your Answer`} blob={formValues[1]?.audioBlob} />
@@ -101,10 +99,10 @@ export default function SpeakingTestForm({ data }: FormProps) {
                       )}
                     </>
                   )}
-                  {quesiton.number === 2 && formValues[1]?.recordingUrl && (
+                  {question.number === 2 && formValues[1]?.recordingUrl && (
                     <>
-                      <Audio src={quesiton.intro_url} title={`Question ${quesiton.number}`} />
-                      <Audio src={quesiton.question_url} title={`Question ${quesiton.number}`} />
+                      <Audio src={question.intro_url} title={`Question ${question.number}`} />
+                      <Audio src={question.question_url} title={`Question ${question.number}`} />
                       {formValues[2]?.recordingUrl && (
                         <div className='ml-auto'>
                           <Audio src={formValues[2]?.recordingUrl} title={`Your Answer`} blob={formValues[2]?.audioBlob} />
@@ -112,10 +110,10 @@ export default function SpeakingTestForm({ data }: FormProps) {
                       )}
                     </>
                   )}
-                  {quesiton.number === 3 && formValues[2]?.recordingUrl && (
+                  {question.number === 3 && formValues[2]?.recordingUrl && (
                     <>
-                      <Audio src={quesiton.intro_url} title={`Question ${quesiton.number}`} />
-                      <Audio src={quesiton.question_url} title={`Question ${quesiton.number}`} />
+                      <Audio src={question.intro_url} title={`Question ${question.number}`} />
+                      <Audio src={question.question_url} title={`Question ${question.number}`} />
                       {formValues[3]?.recordingUrl && (
                         <div className='ml-auto'>
                           <Audio src={formValues[3]?.recordingUrl} title={`Your Answer`} blob={formValues[3]?.audioBlob} />
@@ -123,10 +121,10 @@ export default function SpeakingTestForm({ data }: FormProps) {
                       )}
                     </>
                   )}
-                  {quesiton.number === 4 && formValues[3]?.recordingUrl && (
+                  {question.number === 4 && formValues[3]?.recordingUrl && (
                     <>
-                      <Audio src={quesiton.intro_url} title={`Question ${quesiton.number}`} />
-                      <Audio src={quesiton.question_url} title={`Question ${quesiton.number}`} />
+                      <Audio src={question.intro_url} title={`Question ${question.number}`} />
+                      <Audio src={question.question_url} title={`Question ${question.number}`} />
                       {formValues[4]?.recordingUrl && (
                         <div className='ml-auto'>
                           <Audio src={formValues[4]?.recordingUrl} title={`Your Answer`} blob={formValues[4]?.audioBlob} />
@@ -134,10 +132,10 @@ export default function SpeakingTestForm({ data }: FormProps) {
                       )}
                     </>
                   )}
-                  {quesiton.number === 5 && formValues[4]?.recordingUrl && (
+                  {question.number === 5 && formValues[4]?.recordingUrl && (
                     <>
-                      <Audio src={quesiton.intro_url} title={`Question ${quesiton.number}`} />
-                      <Audio src={quesiton.question_url} title={`Question ${quesiton.number}`} />
+                      <Audio src={question.intro_url} title={`Question ${question.number}`} />
+                      <Audio src={question.question_url} title={`Question ${question.number}`} />
                       {formValues[5]?.recordingUrl && (
                         <div className='ml-auto'>
                           <Audio src={formValues[5]?.recordingUrl} title={`Your Answer`} blob={formValues[5]?.audioBlob} />
