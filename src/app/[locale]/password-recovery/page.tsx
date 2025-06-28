@@ -4,15 +4,15 @@ import { Form, FormControl, FormField, FormItem, FormMessage } from '@/component
 
 import Link from 'next/link';
 import { useForm } from 'react-hook-form';
-import { useRouter } from 'next/navigation';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useCustomTranslations } from '@/hooks/useCustomTranslations';
 
 export default function PasswordRecovery() {
-  const router = useRouter();
+  const { t, tImgAlts, tCommon, tActions, tForm, tMessages } = useCustomTranslations('passwordRecovery');
 
   const formSchema = z.object({
-    email: z.string().email('Incorrect email'),
+    email: z.string().min(1, tForm('validation.requiredField')).email(tForm('validation.invalidEmailAddress')),
   });
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -37,7 +37,7 @@ export default function PasswordRecovery() {
     }
 
     if (response.status === 404) {
-      form.setError('email', { message: "account doesn't exist" });
+      form.setError('email', { message: tMessages('accountNoExist') });
     }
   }
 
@@ -45,22 +45,22 @@ export default function PasswordRecovery() {
     return (
       <main>
         <section className='relative flex min-h-[1024rem] items-center'>
-          <img className='absolute left-0 top-[114rem] h-auto w-[951rem]' src='/images/illustration_flower2.png' />
+          <img className='absolute left-0 top-[114rem] h-auto w-[951rem]' src='/images/illustration_flower2.png' alt={tImgAlts('flower')} />
           <div className='container relative z-10 flex max-w-[1440rem] flex-col items-center py-[80rem]'>
             <div className='flex w-[560rem] flex-col gap-y-[30rem] rounded-[24rem] bg-white p-[40rem] shadow-card'>
               <div className='flex items-center justify-between'>
                 <figure className='flex items-center gap-x-[6rem]'>
-                  <img src='/images/logo.svg' className='size-[35rem]' alt='logo' />
-                  <div className='font-poppins text-[18rem] font-semibold'>studybox</div>
+                  <img src='/images/logo.svg' className='size-[35rem]' alt={tImgAlts('logo')} />
+                  <div className='font-poppins text-[18rem] font-semibold'>{tCommon('studybox')}</div>
                 </figure>
                 <div className='text-[18rem] leading-none text-d-black/60'>{form.getValues('email')}</div>
               </div>
               <div className='flex flex-col gap-y-[20rem]'>
-                <h1 className='text-center font-poppins text-[40rem] font-semibold leading-none tracking-[-2rem]'>Password recovery</h1>
-                <p className='text-center text-[20rem] font-medium leading-[26rem]'>We have sent an email with a password reset link to your email adress</p>
+                <h1 className='text-center font-poppins text-[40rem] font-semibold leading-none tracking-[-2rem]'>{t('title')}</h1>
+                <p className='text-center text-[20rem] font-medium leading-[26rem]'>{t('recoveryMessageSent')}</p>
               </div>
               <Link href='/login' className='mx-auto flex h-[65rem] w-[428rem] items-center justify-center gap-x-[24rem] rounded-full bg-d-green hover:bg-d-green/40'>
-                <span className='text-[20rem] font-medium leading-none'>Ok</span>
+                <span className='text-[20rem] font-medium leading-none'>{tActions('ok')}</span>
               </Link>
             </div>
           </div>
@@ -72,30 +72,30 @@ export default function PasswordRecovery() {
   return (
     <main>
       <section className='relative flex h-full min-h-[100vh] items-center'>
-        <img className='absolute bottom-0 left-0 h-auto w-[960rem]' src='/images/illustration_torusArray.png' />
+        <img className='absolute bottom-0 left-0 h-auto w-[960rem]' src='/images/illustration_torusArray.png' alt={tImgAlts('flower')} />
         <div className='container relative z-10 flex max-w-[1440rem] flex-col items-center py-[74rem]'>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className='flex w-[560rem] flex-col gap-y-[30rem] rounded-[24rem] bg-white p-[40rem] shadow-card'>
               {/* // * Go back & Logo */}
               <div className='flex justify-between'>
                 <Link href='/login' className='flex items-center gap-x-[8rem]'>
-                  <img src='/images/icon_back.svg' alt='go back' className='h-auto w-[16rem]' />
-                  <span className='text-[18rem] font-medium leading-tight text-d-black/60'>Back</span>
+                  <img src='/images/icon_back.svg' alt={tImgAlts('back')} className='h-auto w-[16rem]' />
+                  <span className='text-[18rem] font-medium leading-tight text-d-black/60'>{tActions('ok')}</span>
                 </Link>
                 <figure className='flex items-center gap-x-[6rem]'>
-                  <img src='/images/logo.svg' className='size-[35rem]' alt='logo' />
-                  <div className='font-poppins text-[18rem] font-semibold'>studybox</div>
+                  <img src='/images/logo.svg' className='size-[35rem]' alt={tImgAlts('logo')} />
+                  <div className='font-poppins text-[18rem] font-semibold'>{tCommon('studybox')}</div>
                 </figure>
-                <div className='w-[70rem]'></div>
+                <div className='w-[70rem]' />
               </div>
               {/* // * Title */}
-              <h1 className='text-center font-poppins text-[40rem] font-semibold leading-none tracking-[-2rem]'>Password recovery</h1>
+              <h1 className='text-center font-poppins text-[40rem] font-semibold leading-none tracking-[-2rem]'>{t('title')}</h1>
 
               {/* // * Input fields */}
               <div className='mt-[-20rem] flex flex-col gap-y-[12rem]'>
                 <FormField
-                  control={form.control}
                   name='email'
+                  control={form.control}
                   render={({ field }) => (
                     <FormItem className='flex flex-col gap-y-[8rem]'>
                       <div className='flex flex-row justify-end'>
@@ -104,8 +104,8 @@ export default function PasswordRecovery() {
                       <FormControl>
                         <input
                           {...field}
-                          placeholder='Enter your email'
                           type='text'
+                          placeholder={tForm('placeholders.email')}
                           className='h-[65rem] rounded-[40rem] bg-d-light-gray px-[32rem] text-[20rem] font-medium leading-none placeholder:text-d-black/60 data-[error=true]:bg-d-red-disabled'
                           // data-error={form.formState?.errors?.email?.message ? 'true' : 'false'}
                         />
@@ -117,7 +117,7 @@ export default function PasswordRecovery() {
                   type='submit'
                   className='mx-auto mt-[8rem] flex h-[65rem] w-[428rem] items-center justify-center gap-x-[24rem] rounded-full bg-d-green hover:bg-d-green/40'
                 >
-                  <span className='text-[20rem] font-medium leading-none'>Reset password</span>
+                  <span className='text-[20rem] font-medium leading-none'>{tActions('resetPassword')}</span>
                   {form.formState.isSubmitting && (
                     <svg className='size-[20rem] animate-spin text-black' xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24'>
                       <circle className='opacity-25' cx='12' cy='12' r='10' stroke='currentColor' stroke-width='4' />

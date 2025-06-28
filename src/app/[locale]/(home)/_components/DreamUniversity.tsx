@@ -93,8 +93,8 @@ export const DreamUniversity = () => {
           >
             <Carousel setApi={setApi}>
               <CarouselContent>
-                {[1, 2].map(() => (
-                  <CarouselItem>
+                {[1, 2].map(number => (
+                  <CarouselItem key={number}>
                     <div className='mb-[24rem] pr-[14rem] text-[16rem] font-medium leading-tight tracking-[-0.2rem] text-d-black/80 tablet:mb-[70rem] tablet:pr-[100rem] tablet:text-[24rem] desktop:mb-0 desktop:h-[575rem] desktop:pr-0 wide:h-[810rem] wide:text-[32rem]'>
                       “Thanks to this platform, I've seen a <span className='font-semibold text-d-violet'>significant improvement in my skills</span>, and I'm actually
                       having fun while preparing for the IELTS exam. Highly recommend it to anyone looking for a{' '}

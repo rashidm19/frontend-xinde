@@ -1,3 +1,154 @@
 {
-  "name": "privet"
+  "common": {
+    "studybox": "studybox",
+    "allRightsReserved": "© All rights reserved"
+  },
+  "actions": {
+    "backToHomepage": "Back to the homepage",
+    "upgradePlan": "Upgrade plan",
+    "exit": "Exit",
+    "upgrade": "Upgrade",
+    "previousSlide": "Previous slide",
+    "nextSlide": "Next slide",
+    "back": "Back",
+    "ok": "Ok",
+    "createAccount": "Create account",
+    "login": "Log in",
+    "resetPassword": "Reset password",
+    "goToLogin": "Go to login"
+  },
+  "form": {
+    "validation": {
+      "requiredField": "Required field",
+      "invalidEmailAddress": "Invalid email address",
+      "charactersMinimum": "{count} characters minimum"
+    },
+    "labels": {
+      "name": "Name",
+      "email": "Email",
+      "password": "Password",
+      "region": "Select your region"
+    },
+    "placeholders": {
+      "name": "Enter your name",
+      "email": "Enter your email",
+      "password": "Create your password"
+    }
+  },
+  "messages": {
+    "accountNoExist": "account doesn't exist",
+    "invalidOrExpiredToken": "Invalid or expired token"
+  },
+  "imgAlts": {
+    "logo": "logo",
+    "studybox": "studybox",
+    "illustrationSphere": "Illustration Sphere",
+    "audio": "audio",
+    "close": "Close",
+    "check": "check",
+    "premiumPlan": "Premium Plan",
+    "flower": "flower",
+    "back": "Back",
+    "chain": "Chain"
+  },
+  "header": {
+    "menu": {
+      "link_1": "Practice by section",
+      "link_2": "MOCK",
+      "link_3": "Notes"
+    },
+    "support": "Support"
+  },
+  "headerDuringTest": {
+    "audioIsPlaying": "Audio is playing"
+  },
+  "pricesModal": {
+    "demo": {
+      "title": "Demo",
+      "includes": [
+        "1 trail MOCK exam",
+        "1 trail Practice by section",
+        "Limited statistics"
+      ],
+      "price": "Free",
+      "about": "Activated for unlimited time"
+    },
+    "premium": {
+      "title": "Premium",
+      "includes": [
+        "Unlimited access to the MOCK exams",
+        "Unlimited access to the Practice by section",
+        "Personal Roadmap",
+        "Full statistics",
+        "Extended profile settings"
+      ],
+      "price": "{price}<span> /{monthCount, select, 3 { 3} other {}} month</span>",
+      "about": "Activated for unlimited time"
+    }
+  },
+  "notFound": {
+    "title": "Page not found",
+    "error": "Error 404",
+    "subtitle": "The page you are trying to access doesn’t exist.<br></br>Please go back and try again."
+  },
+  "userAgreement": {
+    "userAgreement": "User Agreement",
+    "effectiveDate": "Effective Date:",
+    "section1Title": "1. Introduction",
+    "section1Content": "Welcome to StudyBox. By accessing or using our service, you agree to be bound by the terms and conditions of this User Agreement. If you do not agree to these terms, you must not use our service.",
+    "section2Title": "2. Definitions",
+    "section2Content": "\"Service\" refers to [Service Name], including but not limited to any related websites, mobile applications, and other platforms operated by [Company Name].<br></br><br></br>\"User\" refers to any person or entity accessing or using the Service.<br></br><br></br>\"Content\" refers to all information, text, images, videos, and other material provided by the Service or its users.",
+    "section3Title": "3. Eligibility",
+    "section3Content": "To use the Service, you must be at least [minimum age, typically 13 or 18] years old and have the legal capacity to enter into this Agreement. By using the Service, you represent and warrant that you meet these requirements.",
+    "section4Title": "4. User Account",
+    "section4Content1": "Account Creation: You may be required to create an account to access certain features of the Service. You agree to provide accurate, complete, and up-to-date information during registration.",
+    "section4Content2": "Account Security: You are responsible for maintaining the confidentiality of your account credentials and for all activities that occur under your account. You must notify us immediately of any unauthorized use of your account.",
+    "section5Title": "5. Use of the Service",
+    "section5Content": "Permitted Use: You may use the Service for lawful purposes only. You agree not to use the Service in any way that could harm, disrupt, or impair the functioning of the Service or interfere with other users' enjoyment of it.",
+    "section6Title": "6. Intellectual Property",
+    "section6Content": "<span class='font-bold'>Ownership:</span> All intellectual property rights in the Service and its content are owned by [Company Name] or its licensors. You are granted a limited, non-exclusive, non-transferable license to use the Service for your personal use.<br></br><br></br><span class='font-bold'>User Content:</span> By submitting content to the Service, you grant [Company Name] a worldwide, royalty-free, perpetual license to use, modify, reproduce, and distribute your content in connection with the operation of the Service.",
+    "section7Title": "7. Privacy",
+    "section7Content": "Your use of the Service is also governed by our Privacy Policy, which can be found at [Privacy Policy URL]. By using the Service, you consent to the collection, use, and sharing of your information as described in the Privacy Policy.",
+    "section8Title": "8. Termination",
+    "section8Content": "We reserve the right to suspend or terminate your access to the Service at any time, without notice, for any reason, including but not limited to violation of this Agreement. Upon termination, your right to use the Service will immediately cease."
+  },
+  "registration": {
+    "confirmationTitle": "Confirmation",
+    "confirmationMessage": "We have sent a confirmation email to your email address",
+    "createAccountTitle": "Create your account",
+    "select": "Select",
+    "regionKZ": "Kazakhstan",
+    "regionKG": "Kyrgyzstan",
+    "regionMD": "Moldova",
+    "agreementText": "I accept the <link>user agreement</link>",
+    "userAgreement": "user agreement",
+    "alreadyHaveAccount": "Already have an account? <span>Log in</span>"
+  },
+  "login": {
+    "title": "Log into your account",
+    "forgotPassword": "Forgot your password?",
+    "dontHaveAccount": "Don’t have an account? <span>Sign up</span>"
+  },
+  "passwordRecovery": {
+    "title": "Password recovery",
+    "recoveryMessageSent": "We have sent an email with a password reset link to your email address"
+  },
+  "passwordReset": {
+    "success": "Success",
+    "successMessage": "You can now log in to your account using your new password",
+    "title": "Password reset"
+  },
+  "emailVerified": {
+    "confirmation": "Confirmation",
+    "confirmMessage": "You have confirmed the email"
+  },
+  "error500": {
+    "title": "Unexpected error",
+    "error": "Error 500",
+    "text": "The server encountered an internal error <br></br> and was unable to complete your request. <br></br> Please go back and try again."
+  },
+  "error503": {
+    "title": "No internet connection",
+    "text": "Your device is currently unable to reach the <br></br> internet. Once your connection is restored, try <br></br> accessing the platform again and start the <br></br> exam over."
+  }
 }

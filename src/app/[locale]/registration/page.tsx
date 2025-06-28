@@ -9,17 +9,25 @@ import img from '../../../../public/images/illustration_flower.png';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-
-const formSchema = z.object({
-  name: z.string().min(1, 'Required field'),
-  email: z.string().min(1, 'Required field').email('Invalid email address'),
-  password: z.string().min(1, 'Required field').min(8, '8 characters minimum'),
-  region: z.string().min(1, 'Required field'),
-  agreement: z.boolean().default(true),
-  avatar: z.string(),
-});
+import { useCustomTranslations } from '@/hooks/useCustomTranslations';
 
 export default function Registration() {
+  const { t, tImgAlts, tCommon, tActions, tForm, tMessages } = useCustomTranslations('registration');
+
+  const formErrorRequiredField = tForm('validation.requiredField');
+
+  const formSchema = z.object({
+    name: z.string().min(1, formErrorRequiredField),
+    email: z.string().min(1, formErrorRequiredField).email(tForm('validation.invalidEmailAddress')),
+    password: z
+      .string()
+      .min(1, formErrorRequiredField)
+      .min(8, tForm('validation.charactersMinimum', { count: 8 })),
+    region: z.string().min(1, formErrorRequiredField),
+    agreement: z.boolean().default(true),
+    avatar: z.string(),
+  });
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -60,7 +68,7 @@ export default function Registration() {
     }
 
     if (response.status === 404) {
-      form.setError('email', { message: "account doesn't exist" });
+      form.setError('email', { message: tMessages('accountNoExist') });
     }
   }
 
@@ -68,22 +76,22 @@ export default function Registration() {
     return (
       <main>
         <section className='relative flex min-h-[1024rem] items-center'>
-          <img className='absolute left-0 top-[114rem] h-auto w-[951rem]' src='/images/illustration_flower2.png' alt='Flower illustration' />
+          <img alt={tImgAlts('flower')} src='/images/illustration_flower2.png' className='absolute left-0 top-[114rem] h-auto w-[951rem]' />
           <div className='container relative z-10 flex max-w-[1440rem] flex-col items-center py-[80rem]'>
             <div className='flex w-[560rem] flex-col gap-y-[30rem] rounded-[24rem] bg-white p-[40rem] shadow-card'>
               <div className='flex items-center justify-between'>
                 <figure className='flex items-center gap-x-[6rem]'>
-                  <img src='/images/logo.svg' className='size-[35rem]' alt='logo' />
-                  <div className='font-poppins text-[18rem] font-semibold'>studybox</div>
+                  <img src='/images/logo.svg' alt={tImgAlts('logo')} className='size-[35rem]' />
+                  <div className='font-poppins text-[18rem] font-semibold'>{tCommon('studybox')}</div>
                 </figure>
                 <div className='text-[18rem] leading-none text-d-black/60'>{form.getValues('email')}</div>
               </div>
               <div className='flex flex-col gap-y-[32rem]'>
-                <h1 className='text-center font-poppins text-[40rem] font-semibold leading-none tracking-[-2rem]'>Confirmation</h1>
-                <p className='text-center text-[18rem] font-medium leading-none'>We have sent a confirmation email to your email adress</p>
+                <h1 className='text-center font-poppins text-[40rem] font-semibold leading-none tracking-[-2rem]'>{t('confirmationTitle')}</h1>
+                <p className='text-center text-[18rem] font-medium leading-none'>{t('confirmationMessage')}</p>
               </div>
               <Link href='/login' className='mx-auto flex h-[54rem] w-[428rem] items-center justify-center gap-x-[24rem] rounded-full bg-d-green hover:bg-d-green/40'>
-                <span className='text-[18rem] font-medium leading-none'>Ok</span>
+                <span className='text-[18rem] font-medium leading-none'>{tActions('ok')}</span>
               </Link>
             </div>
           </div>
@@ -95,41 +103,42 @@ export default function Registration() {
   return (
     <main>
       <section className='relative flex min-h-[1024rem] items-center'>
-        <img className='absolute left-0 top-[114rem] h-auto w-[951rem]' src='/images/illustration_flower2.png' alt='Flower illustration' />
+        <img alt={tImgAlts('flower')} src='/images/illustration_flower2.png' className='absolute left-0 top-[114rem] h-auto w-[951rem]' />
         <div className='container relative z-10 flex max-w-[1440rem] flex-col items-center py-[80rem]'>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className='flex w-[520rem] flex-col gap-y-[30rem] rounded-[24rem] bg-white p-[40rem] shadow-card'>
-              {/* // * Go back & Logo */}
+              {/* Go back & Logo */}
               <div className='flex justify-between'>
                 <Link href='/public' className='flex items-center gap-x-[8rem]'>
-                  <img src='/images/icon_back.svg' alt='go back' className='h-auto w-[16rem]' />
-                  <span className='text-[18rem] font-medium leading-tight text-d-black/60'>Back</span>
+                  <img src='/images/icon_back.svg' alt={tImgAlts('back')} className='h-auto w-[16rem]' />
+                  <span className='text-[18rem] font-medium leading-tight text-d-black/60'>{tActions('back')}</span>
                 </Link>
                 <figure className='flex items-center gap-x-[6rem]'>
-                  <img src='/images/logo.svg' className='size-[35rem]' alt='logo' />
-                  <div className='font-poppins text-[18rem] font-semibold'>studybox</div>
+                  <img src='/images/logo.svg' alt={tImgAlts('logo')} className='size-[35rem]' />
+                  <div className='font-poppins text-[18rem] font-semibold'>{tCommon('studybox')}</div>
                 </figure>
-                <div className='w-[70rem]'></div>
+                <div className='w-[70rem]' />
               </div>
-              {/* // * Title */}
-              <h1 className='text-center font-poppins text-[40rem] font-semibold leading-none tracking-[-2rem]'>Create your account</h1>
 
-              {/* // * Input fields */}
+              {/* Title */}
+              <h1 className='text-center font-poppins text-[40rem] font-semibold leading-none tracking-[-2rem]'>{t('createAccountTitle')}</h1>
+
+              {/* Input fields */}
               <div className='flex flex-col gap-y-[12rem]'>
                 <FormField
-                  control={form.control}
                   name='name'
+                  control={form.control}
                   render={({ field }) => (
                     <FormItem className='flex flex-col gap-y-[8rem]'>
                       <div className='flex flex-row justify-between'>
-                        <FormLabel className='font-poppins text-[18rem] font-medium leading-none'>Name</FormLabel>
+                        <FormLabel className='font-poppins text-[18rem] font-medium leading-none'>{tForm('labels.name')}</FormLabel>
                         <FormMessage className='font-poppins text-[14rem] font-medium leading-none text-d-red' />
                       </div>
                       <FormControl>
                         <input
                           {...field}
-                          placeholder='Enter your name'
                           type='text'
+                          placeholder={tForm('placeholders.name')}
                           className='h-[54rem] rounded-[40rem] bg-d-light-gray px-[32rem] text-[18rem] font-medium leading-none placeholder:text-d-black/60'
                         />
                       </FormControl>
@@ -142,14 +151,14 @@ export default function Registration() {
                   render={({ field }) => (
                     <FormItem className='flex flex-col gap-y-[8rem]'>
                       <div className='flex flex-row justify-between'>
-                        <FormLabel className='font-poppins text-[18rem] font-medium leading-none'>Email</FormLabel>
+                        <FormLabel className='font-poppins text-[18rem] font-medium leading-none'>{tForm('labels.email')}</FormLabel>
                         <FormMessage className='font-poppins text-[14rem] font-medium leading-none text-d-red' />
                       </div>
                       <FormControl>
                         <input
                           {...field}
-                          placeholder='Enter your email'
                           type='text'
+                          placeholder={tForm('placeholders.email')}
                           className='h-[54rem] rounded-[40rem] bg-d-light-gray px-[32rem] text-[18rem] font-medium leading-none placeholder:text-d-black/60'
                         />
                       </FormControl>
@@ -162,44 +171,49 @@ export default function Registration() {
                   render={({ field }) => (
                     <FormItem className='flex flex-col gap-y-[8rem]'>
                       <div className='flex flex-row justify-between'>
-                        <FormLabel className='font-poppins text-[18rem] font-medium leading-none'>Password</FormLabel>
+                        <FormLabel className='font-poppins text-[18rem] font-medium leading-none'>{tForm('labels.password')}</FormLabel>
                         <FormMessage className='font-poppins text-[14rem] font-medium leading-none text-d-red' />
                       </div>
                       <FormControl>
                         <input
                           {...field}
-                          placeholder='Create your password'
                           type='password'
+                          placeholder={tForm('placeholders.password')}
                           className='h-[54rem] rounded-[40rem] bg-d-light-gray px-[32rem] text-[18rem] font-medium leading-none placeholder:text-d-black/60'
                         />
                       </FormControl>
                     </FormItem>
                   )}
                 />
+
+                {/* Region */}
                 <FormField
-                  control={form.control}
                   name='region'
+                  control={form.control}
                   render={({ field }) => (
                     <FormItem className='flex flex-col gap-y-[8rem]'>
                       <div className='flex flex-row justify-between'>
-                        <FormLabel className='font-poppins text-[18rem] font-medium leading-none'>Select your region</FormLabel>
+                        <FormLabel className='font-poppins text-[18rem] font-medium leading-none'>{tForm('labels.region')}</FormLabel>
                         <FormMessage className='font-poppins text-[14rem] font-medium leading-none text-d-red' />
                       </div>
                       <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
                           <SelectTrigger className='h-[54rem] rounded-[40rem] bg-d-light-gray px-[32rem] text-[18rem] font-medium leading-normal data-[state=open]:rounded-b-none'>
-                            <SelectValue placeholder='Select' className='placeholder:text-d-black/60' />
+                            <SelectValue placeholder={t('select')} className='placeholder:text-d-black/60' />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent className='mt-0 max-h-[250rem] rounded-b-[40rem]'>
                           <SelectItem value='kz' className='h-[54rem] px-[32rem] text-[18rem] font-medium leading-none last:rounded-b-[40rem] hover:bg-d-light-gray'>
-                            <span className='mr-[16rem] text-d-black/60'>KZ</span> Kazakhstan
+                            <span className='mr-[16rem] text-d-black/60'>KZ </span>
+                            {t('regionKZ')}
                           </SelectItem>
                           <SelectItem value='kg' className='h-[54rem] px-[32rem] text-[18rem] font-medium leading-none last:rounded-b-[40rem] hover:bg-d-light-gray'>
-                            <span className='mr-[16rem] text-d-black/60'>KG</span> Kyrgyzstan
+                            <span className='mr-[16rem] text-d-black/60'>KG </span>
+                            {t('regionKG')}
                           </SelectItem>
                           <SelectItem value='md' className='h-[54rem] px-[32rem] text-[18rem] font-medium leading-none last:rounded-b-[40rem] hover:bg-d-light-gray'>
-                            <span className='mr-[16rem] text-d-black/60'>MD</span> Moldova
+                            <span className='mr-[16rem] text-d-black/60'>MD </span>
+                            {t('regionMD')}
                           </SelectItem>
                         </SelectContent>
                       </Select>
@@ -207,6 +221,7 @@ export default function Registration() {
                   )}
                 />
 
+                {/* Agreement */}
                 <FormField
                   control={form.control}
                   name='agreement'
@@ -216,19 +231,24 @@ export default function Registration() {
                         <Checkbox checked={field.value} onCheckedChange={field.onChange} />
                       </FormControl>
                       <FormLabel className='text-[18rem] font-medium leading-none'>
-                        I accept the{' '}
-                        <Link href='/user-agreement' className='border-b border-d-black'>
-                          user agreement
-                        </Link>
+                        {t.rich('agreementText', {
+                          link: chunks => (
+                            <Link href='/user-agreement' className='border-b border-d-black'>
+                              {chunks}
+                            </Link>
+                          ),
+                        })}
                       </FormLabel>
                     </FormItem>
                   )}
                 />
+
                 <button
                   type='submit'
                   className='mx-auto mt-[6rem] flex h-[54rem] w-[428rem] items-center justify-center gap-x-[24rem] rounded-full bg-d-green hover:bg-d-green/40'
                 >
-                  <span className='text-[18rem] font-medium leading-none'>Create account</span>
+                  <span className='text-[18rem] font-medium leading-none'>{tActions('createAccount')}</span>
+
                   {form.formState.isSubmitting && (
                     <svg className='size-[20rem] animate-spin text-black' xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24'>
                       <circle className='opacity-25' cx='12' cy='12' r='10' stroke='currentColor' stroke-width='4' />
@@ -240,8 +260,11 @@ export default function Registration() {
                     </svg>
                   )}
                 </button>
+
                 <Link href='/login' className='text-center text-[18rem] leading-none text-d-black/60'>
-                  Already have an account? <span className='text-d-black'>Log in</span>
+                  {t.rich('alreadyHaveAccount', {
+                    span: chunks => <span className='text-d-black'>{chunks}</span>,
+                  })}
                 </Link>
               </div>
 
@@ -258,7 +281,7 @@ export default function Registration() {
             </form>
           </Form>
 
-          <div className='mt-[24rem] text-center text-[12rem] leading-tight'>© All rights reserved</div>
+          <div className='mt-[24rem] text-center text-[12rem] leading-tight'>{tCommon('allRightsReserved')}</div>
         </div>
       </section>
     </main>

@@ -6,6 +6,7 @@ import { ArrowLeft, ArrowRight } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { useCustomTranslations } from '@/hooks/useCustomTranslations';
 
 type CarouselApi = UseEmblaCarouselType[1];
 type UseCarouselParameters = Parameters<typeof useEmblaCarousel>;
@@ -154,6 +155,7 @@ CarouselItem.displayName = 'CarouselItem';
 
 const CarouselPrevious = React.forwardRef<HTMLButtonElement, React.ComponentProps<typeof Button>>(({ className, variant = 'outline', size = 'icon', ...props }, ref) => {
   const { orientation, scrollPrev, canScrollPrev } = useCarousel();
+  const { tActions } = useCustomTranslations('pricesModal');
 
   return (
     <Button
@@ -170,7 +172,7 @@ const CarouselPrevious = React.forwardRef<HTMLButtonElement, React.ComponentProp
       {...props}
     >
       <ArrowLeft className='h-4 w-4' />
-      <span className='sr-only'>Previous slide</span>
+      <span className='sr-only'>{tActions('previousSlide')}</span>
     </Button>
   );
 });
@@ -178,6 +180,7 @@ CarouselPrevious.displayName = 'CarouselPrevious';
 
 const CarouselNext = React.forwardRef<HTMLButtonElement, React.ComponentProps<typeof Button>>(({ className, variant = 'outline', size = 'icon', ...props }, ref) => {
   const { orientation, scrollNext, canScrollNext } = useCarousel();
+  const { tActions } = useCustomTranslations('pricesModal');
 
   return (
     <Button
@@ -194,7 +197,7 @@ const CarouselNext = React.forwardRef<HTMLButtonElement, React.ComponentProps<ty
       {...props}
     >
       <ArrowRight className='h-4 w-4' />
-      <span className='sr-only'>Next slide</span>
+      <span className='sr-only'>{tActions('nextSlide')}</span>
     </Button>
   );
 });

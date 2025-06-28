@@ -9,13 +9,17 @@ import { useForm } from 'react-hook-form';
 import { useRouter } from 'next/navigation';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useCustomTranslations } from '@/hooks/useCustomTranslations';
 
 export default function Login() {
   const router = useRouter();
+  const { t, tImgAlts, tCommon, tActions, tForm, tMessages } = useCustomTranslations('login');
+
+  const formErrorRequiredField = tForm('validation.requiredField');
 
   const formSchema = z.object({
-    email: z.string().min(1, 'Required field').email('Invalid email address'),
-    password: z.string().min(1, 'Required field'),
+    email: z.string().min(1, formErrorRequiredField).email('validation.invalidEmailAddress'),
+    password: z.string().min(1, formErrorRequiredField),
   });
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -43,48 +47,48 @@ export default function Login() {
     }
 
     if (response.status === 404) {
-      form.setError('email', { message: "account doesn't exist" });
+      form.setError('email', { message: tMessages('accountNoExist') });
     }
   }
 
   return (
     <main>
       <section className='relative flex h-full min-h-[100vh] items-center'>
-        <img className='absolute bottom-0 left-0 h-auto w-[960rem]' src='/images/illustration_torusArray.png' alt='Flower illustration' />
+        <img className='absolute bottom-0 left-0 h-auto w-[960rem]' src='/images/illustration_torusArray.png' alt={tImgAlts('flower')} />
         <div className='container relative z-10 flex max-w-[1440rem] flex-col items-center py-[74rem]'>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className='flex w-[520rem] flex-col gap-y-[30rem] rounded-[24rem] bg-white p-[40rem] shadow-card'>
               {/* // * Go back & Logo */}
               <div className='flex justify-between'>
                 <Link href='/public' className='flex items-center gap-x-[8rem]'>
-                  <img src='/images/icon_back.svg' alt='go back' className='h-auto w-[16rem]' />
-                  <span className='text-[18rem] font-medium leading-tight text-d-black/60'>Back</span>
+                  <img src='/images/icon_back.svg' alt={tImgAlts('back')} className='h-auto w-[16rem]' />
+                  <span className='text-[18rem] font-medium leading-tight text-d-black/60'>{tActions('back')}</span>
                 </Link>
                 <figure className='flex items-center gap-x-[6rem]'>
-                  <img src='/images/logo.svg' className='size-[35rem]' alt='logo' />
-                  <div className='font-poppins text-[18rem] font-semibold'>studybox</div>
+                  <img src='/images/logo.svg' className='size-[35rem]' alt={tImgAlts('logo')} />
+                  <div className='font-poppins text-[18rem] font-semibold'>{tCommon('studybox')}</div>
                 </figure>
-                <div className='w-[70rem]'></div>
+                <div className='w-[70rem]' />
               </div>
               {/* // * Title */}
-              <h1 className='text-center font-poppins text-[40rem] font-semibold leading-none tracking-[-2rem]'>Log into your account</h1>
+              <h1 className='text-center font-poppins text-[40rem] font-semibold leading-none tracking-[-2rem]'>{t('title')}</h1>
 
               {/* // * Input fields */}
               <div className='flex flex-col gap-y-[12rem]'>
                 <FormField
-                  control={form.control}
                   name='email'
+                  control={form.control}
                   render={({ field }) => (
                     <FormItem className='flex flex-col gap-y-[8rem]'>
                       <div className='flex flex-row justify-between'>
-                        <FormLabel className='font-poppins text-[18rem] font-medium leading-none'>Email</FormLabel>
+                        <FormLabel className='font-poppins text-[18rem] font-medium leading-none'>{tForm('labels.email')}</FormLabel>
                         <FormMessage className='font-poppins text-[14rem] font-medium leading-none text-d-red' />
                       </div>
                       <FormControl>
                         <input
                           {...field}
-                          placeholder='Enter your email'
                           type='text'
+                          placeholder={tForm('placeholders.email')}
                           className='h-[54rem] rounded-[40rem] bg-d-light-gray px-[32rem] text-[18rem] font-medium leading-none placeholder:text-d-black/60'
                         />
                       </FormControl>
@@ -97,19 +101,19 @@ export default function Login() {
                   render={({ field }) => (
                     <FormItem className='flex flex-col gap-y-[8rem]'>
                       <div className='flex flex-row justify-between'>
-                        <FormLabel className='font-poppins text-[18rem] font-medium leading-none'>Password</FormLabel>
+                        <FormLabel className='font-poppins text-[18rem] font-medium leading-none'>{tForm('labels.password')}</FormLabel>
                         <FormMessage className='font-poppins text-[14rem] font-medium leading-none text-d-red' />
                       </div>
                       <FormControl>
                         <input
                           {...field}
-                          placeholder='Enter your password'
                           type='password'
+                          placeholder={tForm('placeholders.password')}
                           className='h-[54rem] rounded-[40rem] bg-d-light-gray px-[32rem] text-[18rem] font-medium leading-none placeholder:text-d-black/60'
                         />
                       </FormControl>
                       <Link href='/password-recovery' className='ml-auto text-[16rem] font-medium text-d-black/60'>
-                        Forgot your password?
+                        {t('forgotPassword')}
                       </Link>
                     </FormItem>
                   )}
@@ -128,11 +132,14 @@ export default function Login() {
                       />
                     </svg>
                   ) : (
-                    <span className='text-[18rem] font-medium leading-none'>Log in</span>
+                    <span className='text-[18rem] font-medium leading-none'>{tActions('login')}</span>
                   )}
                 </button>
+
                 <Link href='/registration' className='text-center text-[18rem] leading-none text-d-black/60'>
-                  Don’t have an account? <span className='text-d-black'>Sign up</span>
+                  {t.rich('dontHaveAccount', {
+                    span: chunks => <span className='text-d-black'>{chunks}</span>,
+                  })}
                 </Link>
               </div>
 
