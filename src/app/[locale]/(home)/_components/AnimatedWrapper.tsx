@@ -35,11 +35,11 @@ interface AnimatedWrapperProps {
 export const AnimatedWrapper: React.FC<AnimatedWrapperProps> = ({ index, children }) => {
   return (
     <motion.div
-      variants={perspective}
-      custom={index}
-      initial='initial'
-      animate='enter'
       exit='exit'
+      custom={index}
+      animate='enter'
+      initial='initial'
+      variants={perspective}
       // inline style for perspective (Tailwind doesn't include this by default)
       style={{ perspective: '120px', perspectiveOrigin: 'bottom' }}
     >

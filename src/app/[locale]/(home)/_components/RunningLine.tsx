@@ -1,6 +1,7 @@
 'use client';
 import Image from 'next/image';
 import React from 'react';
+import { useCustomTranslations } from '@/hooks/useCustomTranslations';
 
 const RunningLineItem = ({ imageSrc, text }: { imageSrc: string; text: string }) => (
   <div className='ml-[24rem] flex items-center gap-x-[24rem]'>
@@ -11,70 +12,19 @@ const RunningLineItem = ({ imageSrc, text }: { imageSrc: string; text: string })
   </div>
 );
 
-const items = [
-  { imageSrc: '/images/illustration_ball.png', text: 'Comprehensive Performance Analytics' },
-  { imageSrc: '/images/illustration_three-ball.png', text: 'Adaptive Test Preparation' },
-  { imageSrc: '/images/illustration_microbe.png', text: 'Real-time Feedback and Assessment' },
-  { imageSrc: '/images/illustration_pointy-microbe.png', text: 'Authorized partner of IDP IELTS in Kazakhstan' },
-  { imageSrc: '/images/illustration_orange-molecule.png', text: 'Interactive Study Materials' },
-  { imageSrc: '/images/illustration_ball.png', text: 'Comprehensive Performance Analytics' },
-  { imageSrc: '/images/illustration_three-ball.png', text: 'Adaptive Test Preparation' },
-  { imageSrc: '/images/illustration_microbe.png', text: 'Real-time Feedback and Assessment' },
-  { imageSrc: '/images/illustration_pointy-microbe.png', text: 'Authorized partner of IDP IELTS in Kazakhstan' },
-  { imageSrc: '/images/illustration_orange-molecule.png', text: 'Interactive Study Materials' },
-  { imageSrc: '/images/illustration_ball.png', text: 'Comprehensive Performance Analytics' },
-  { imageSrc: '/images/illustration_three-ball.png', text: 'Adaptive Test Preparation' },
-  { imageSrc: '/images/illustration_microbe.png', text: 'Real-time Feedback and Assessment' },
-  { imageSrc: '/images/illustration_pointy-microbe.png', text: 'Authorized partner of IDP IELTS in Kazakhstan' },
-  { imageSrc: '/images/illustration_orange-molecule.png', text: 'Interactive Study Materials' },
-  { imageSrc: '/images/illustration_ball.png', text: 'Comprehensive Performance Analytics' },
-  { imageSrc: '/images/illustration_three-ball.png', text: 'Adaptive Test Preparation' },
-  { imageSrc: '/images/illustration_microbe.png', text: 'Real-time Feedback and Assessment' },
-  { imageSrc: '/images/illustration_pointy-microbe.png', text: 'Authorized partner of IDP IELTS in Kazakhstan' },
-  { imageSrc: '/images/illustration_orange-molecule.png', text: 'Interactive Study Materials' },
-  { imageSrc: '/images/illustration_ball.png', text: 'Comprehensive Performance Analytics' },
-  { imageSrc: '/images/illustration_three-ball.png', text: 'Adaptive Test Preparation' },
-  { imageSrc: '/images/illustration_microbe.png', text: 'Real-time Feedback and Assessment' },
-  { imageSrc: '/images/illustration_pointy-microbe.png', text: 'Authorized partner of IDP IELTS in Kazakhstan' },
-  { imageSrc: '/images/illustration_orange-molecule.png', text: 'Interactive Study Materials' },
-  { imageSrc: '/images/illustration_ball.png', text: 'Comprehensive Performance Analytics' },
-  { imageSrc: '/images/illustration_three-ball.png', text: 'Adaptive Test Preparation' },
-  { imageSrc: '/images/illustration_microbe.png', text: 'Real-time Feedback and Assessment' },
-  { imageSrc: '/images/illustration_pointy-microbe.png', text: 'Authorized partner of IDP IELTS in Kazakhstan' },
-  { imageSrc: '/images/illustration_orange-molecule.png', text: 'Interactive Study Materials' },
-  { imageSrc: '/images/illustration_ball.png', text: 'Comprehensive Performance Analytics' },
-  { imageSrc: '/images/illustration_three-ball.png', text: 'Adaptive Test Preparation' },
-  { imageSrc: '/images/illustration_microbe.png', text: 'Real-time Feedback and Assessment' },
-  { imageSrc: '/images/illustration_pointy-microbe.png', text: 'Authorized partner of IDP IELTS in Kazakhstan' },
-  { imageSrc: '/images/illustration_orange-molecule.png', text: 'Interactive Study Materials' },
-  { imageSrc: '/images/illustration_ball.png', text: 'Comprehensive Performance Analytics' },
-  { imageSrc: '/images/illustration_three-ball.png', text: 'Adaptive Test Preparation' },
-  { imageSrc: '/images/illustration_microbe.png', text: 'Real-time Feedback and Assessment' },
-  { imageSrc: '/images/illustration_pointy-microbe.png', text: 'Authorized partner of IDP IELTS in Kazakhstan' },
-  { imageSrc: '/images/illustration_orange-molecule.png', text: 'Interactive Study Materials' },
-  { imageSrc: '/images/illustration_ball.png', text: 'Comprehensive Performance Analytics' },
-  { imageSrc: '/images/illustration_three-ball.png', text: 'Adaptive Test Preparation' },
-  { imageSrc: '/images/illustration_microbe.png', text: 'Real-time Feedback and Assessment' },
-  { imageSrc: '/images/illustration_pointy-microbe.png', text: 'Authorized partner of IDP IELTS in Kazakhstan' },
-  { imageSrc: '/images/illustration_orange-molecule.png', text: 'Interactive Study Materials' },
-  { imageSrc: '/images/illustration_ball.png', text: 'Comprehensive Performance Analytics' },
-  { imageSrc: '/images/illustration_three-ball.png', text: 'Adaptive Test Preparation' },
-  { imageSrc: '/images/illustration_microbe.png', text: 'Real-time Feedback and Assessment' },
-  { imageSrc: '/images/illustration_pointy-microbe.png', text: 'Authorized partner of IDP IELTS in Kazakhstan' },
-  { imageSrc: '/images/illustration_orange-molecule.png', text: 'Interactive Study Materials' },
-  { imageSrc: '/images/illustration_ball.png', text: 'Comprehensive Performance Analytics' },
-  { imageSrc: '/images/illustration_three-ball.png', text: 'Adaptive Test Preparation' },
-  { imageSrc: '/images/illustration_microbe.png', text: 'Real-time Feedback and Assessment' },
-  { imageSrc: '/images/illustration_pointy-microbe.png', text: 'Authorized partner of IDP IELTS in Kazakhstan' },
-  { imageSrc: '/images/illustration_orange-molecule.png', text: 'Interactive Study Materials' },
-  { imageSrc: '/images/illustration_ball.png', text: 'Comprehensive Performance Analytics' },
-  { imageSrc: '/images/illustration_three-ball.png', text: 'Adaptive Test Preparation' },
-  { imageSrc: '/images/illustration_microbe.png', text: 'Real-time Feedback and Assessment' },
-  { imageSrc: '/images/illustration_pointy-microbe.png', text: 'Authorized partner of IDP IELTS in Kazakhstan' },
-  { imageSrc: '/images/illustration_orange-molecule.png', text: 'Interactive Study Materials' },
+const itemsIcons = [
+  '/images/illustration_ball.png',
+  '/images/illustration_three-ball.png',
+  '/images/illustration_microbe.png',
+  '/images/illustration_pointy-microbe.png',
+  '/images/illustration_orange-molecule.png',
 ];
 
 export const RunningLine = () => {
+  const { t } = useCustomTranslations('home');
+
+  const items: string[] = t.raw('runningLine');
+
   return (
     <section className='overflow-hidden bg-white'>
       <style jsx>{`
@@ -98,8 +48,8 @@ export const RunningLine = () => {
         }
       `}</style>
       <div className='running-line py-[16rem]'>
-        {[...items, ...items].map((item, index) => (
-          <RunningLineItem key={index} imageSrc={item.imageSrc} text={item.text} />
+        {[...items, ...items].map((text, index) => (
+          <RunningLineItem key={index} text={text} imageSrc={itemsIcons[index % itemsIcons.length]} />
         ))}
       </div>
     </section>

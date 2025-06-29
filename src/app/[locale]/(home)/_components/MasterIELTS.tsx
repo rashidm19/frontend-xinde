@@ -1,10 +1,17 @@
 import Link from 'next/link';
 import React from 'react';
+import { useCustomTranslations } from '@/hooks/useCustomTranslations';
 
 export const MasterIELTS = () => {
+  const { t } = useCustomTranslations('home');
+
   return (
     <section className='relative bg-d-violet'>
-      <img src='/images/illustration_molecule.png' className='pointer-events-none absolute right-0 top-[7rem] h-auto w-[239rem] mix-blend-soft-light tablet:hidden' />
+      <img
+        alt='molecule'
+        src='/images/illustration_molecule.png'
+        className='pointer-events-none absolute right-0 top-[7rem] h-auto w-[239rem] mix-blend-soft-light tablet:hidden'
+      />
       <img
         data-aos='fade-down-left'
         data-aos-duration={500}
@@ -42,21 +49,21 @@ export const MasterIELTS = () => {
           data-aos-duration='500'
           className='text-poppins mb-[24rem] text-center text-[40rem] font-semibold leading-none text-white tablet:mb-[8rem] tablet:text-[72rem] desktop:mb-[24rem] desktop:text-[80rem] wide:text-[120rem]'
         >
-          Master IELTS On-the-Go
+          {t('masterIELTS.title')}
         </h2>
         <p
           data-aos='fade-right'
           data-aos-duration='500'
           className='mb-[32rem] text-center text-[24rem] font-medium italic leading-tight text-white tablet:text-[32rem] desktop:mb-[40rem] wide:text-[40rem]'
         >
-          Study anytime, anywhere, at your own pace
+          {t('masterIELTS.subtitle')}
         </p>
         {/* // * Auth button */}
         <Link
           href='/registration'
           className='flex items-center justify-center gap-x-[8rem] rounded-full bg-[#C9FF55] px-[32rem] py-[16rem] text-[16rem] font-medium leading-tight hover:bg-[#C9FF55]/40 tablet:px-[48rem] tablet:py-[22rem] tablet:text-[24rem] wide:px-[56rem] wide:py-[24rem] wide:text-[32rem]'
         >
-          Join for free now
+          {t('actions.joinForFreeNow')}
           <img src='/images/icon_arrow--right.svg' alt='arrow-right-icon' className='size-[20rem] tablet:size-[24rem] wide:size-[28rem]' />
         </Link>
       </div>

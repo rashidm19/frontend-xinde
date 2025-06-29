@@ -5,8 +5,11 @@ import React, { useEffect, useState } from 'react';
 
 import Image from 'next/image';
 import { BestResults } from './BestResults';
+import { useCustomTranslations } from '@/hooks/useCustomTranslations';
 
 export const Practice = () => {
+  const { t } = useCustomTranslations('home');
+
   const [api, setApi] = useState<CarouselApi>();
   const [current, setCurrent] = useState(0);
 
@@ -30,14 +33,14 @@ export const Practice = () => {
           data-aos-duration='500'
           className='mb-[16rem] font-poppins text-[40rem] font-semibold leading-none tablet:mb-[24rem] tablet:text-[80rem] wide:mb-[30rem] wide:text-[120rem]'
         >
-          Practice makes perfect
+          {t('practice.title')}
         </h2>
         <p
           data-aos='fade-up'
           data-aos-duration='500'
           className='mb-[32rem] w-[220rem] text-[16rem] font-medium leading-tight tablet:mb-[40rem] tablet:w-[535rem] tablet:text-[24rem] wide:mb-[50rem] wide:w-[750rem] wide:text-[32rem]'
         >
-          Consistent practice breeds excellence, mastering IELTS with us isn't rocket science
+          {t('practice.subtitle')}
         </p>
         <div className='absolute -right-[20rem] top-[115rem] aspect-[711/618] w-[85rem] tablet:right-[80rem] tablet:top-[95rem] tablet:w-[122rem] desktop:top-[125rem] desktop:w-[152rem] wide:top-[272rem] wide:w-[237rem]'>
           <Image fill alt='Illustration' src='/images/illustration_flower_full.png' className='object-cover' />
@@ -61,12 +64,10 @@ export const Practice = () => {
                     1
                   </p>
                   <h3 className='mb-[8rem] font-poppins text-[24rem] font-medium leading-none'>
-                    Follow Your <br /> Personal Road <br />
-                    Map
+                    {t('practice.card1.title')}
                   </h3>
                   <p className='text-[14rem] font-medium leading-normal'>
-                    Having a personal study roadmap for IELTS preparation allows you to set clear goals, track progress, and tailor your study plan to your individual
-                    strengths and weaknesses.
+                    {t('practice.card1.subtitle')}
                   </p>
                 </div>
                 <div className='relative h-[140rem] w-full overflow-hidden rounded-[24rem] bg-[#F4F4F4] pb-[32rem] pl-[32rem] pt-[32rem]'>
@@ -82,10 +83,9 @@ export const Practice = () => {
                   <p className='mb-[16rem] flex size-[32rem] items-center justify-center rounded-full bg-[#383838]/30 font-poppins text-[16rem] font-semibold leading-none text-white'>
                     2
                   </p>
-                  <h3 className='mb-[8rem] font-poppins text-[24rem] font-medium leading-none'>Train on Up-To-Date Tasks</h3>
+                  <h3 className='mb-[8rem] font-poppins text-[24rem] font-medium leading-none'>{t('practice.card2.title')}</h3>
                   <p className='mb-[24rem] text-[14rem] font-medium leading-normal'>
-                    By completing up-to-date tasks for the IELTS, you gain familiarity with current test formats and trends, offering a realistic preview of what to
-                    expect on exam day.
+                    {t('practice.card2.subtitle')}
                   </p>
                 </div>
                 <div className='relative flex h-[140rem] w-full flex-col gap-y-[12rem] overflow-hidden rounded-[24rem] bg-[#F4F4F4] px-[16rem] pb-[24rem] pt-[13rem]'>
@@ -95,7 +95,7 @@ export const Practice = () => {
                       data-aos-duration='500'
                       className='w-[220rem] self-end rounded-[16rem] bg-d-violet px-[8rem] py-[8rem] text-[11rem] leading-[15rem] text-d-light-gray tablet:w-[270rem] tablet:rounded-[80rem] tablet:px-[20rem] tablet:text-[13rem] tablet:leading-[18rem] desktop:w-[280rem] desktop:text-[12rem]'
                     >
-                      What are your thoughts on the use of artificial intelligence in everyday life?
+                      {t('practice.card2.message1')}
                     </div>
                     <div
                       data-aos='slide-right'
@@ -103,7 +103,7 @@ export const Practice = () => {
                       data-aos-delay='100'
                       className='w-[220rem] rounded-[16rem] bg-d-blue px-[8rem] py-[8rem] text-[11rem] leading-[15rem] text-d-light-gray tablet:w-[300rem] tablet:rounded-[80rem] tablet:px-[20rem] tablet:text-[13rem] tablet:leading-[18rem] desktop:w-[280rem] desktop:text-[12rem]'
                     >
-                      Do you think automation will significantly change your job in the future?
+                      {t('practice.card2.message2')}
                     </div>
                   </div>
                 </div>
@@ -115,9 +115,9 @@ export const Practice = () => {
                   <p className='mb-[16rem] flex size-[32rem] items-center justify-center rounded-full bg-[#383838]/30 font-poppins text-[16rem] font-semibold leading-none text-white'>
                     3
                   </p>
-                  <h3 className='mb-[8rem] font-poppins text-[24rem] font-medium leading-none'>Track Your Results</h3>
+                  <h3 className='mb-[8rem] font-poppins text-[24rem] font-medium leading-none'>{t('practice.card3.title')}</h3>
                   <p className='mb-[24rem] text-[14rem] font-medium leading-normal'>
-                    Results tracking in IELTS practice enables you to monitor your progress, identify areas for improvement, and adjust your study strategies accordingly.
+                    {t('practice.card3.subtitle')}
                   </p>
                 </div>
                 <div className='flex h-[140rem] w-full flex-col items-center justify-center overflow-hidden rounded-[24rem] bg-[#F4F4F4] p-[12rem] tablet:p-[24rem]'>
