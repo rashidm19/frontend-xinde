@@ -5,10 +5,11 @@ import React, { useState } from 'react';
 import { DialogClose } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
 import { postUser } from '@/api/POST_user';
-import { useRouter } from 'next/navigation';
+import { useCustomTranslations } from '@/hooks/useCustomTranslations';
 
 export default function TargetGoalModal() {
-  const router = useRouter();
+  const { t, tImgAlts, tActions } = useCustomTranslations('profile.targetGoalModal');
+
   const [selectedScore, setSelectedScore] = useState(5.0);
 
   const scores = [5.0, 5.5, 6.0, 6.5, 7.0, 7.5, 8.0, 8.5, 9.0];
@@ -20,12 +21,12 @@ export default function TargetGoalModal() {
   return (
     <section className='fixed flex max-h-[95dvh] w-[672rem] flex-col gap-y-[40rem] rounded-[16rem] bg-white p-[40rem] desktop:rounded-[40rem]'>
       <DialogClose className='absolute right-[24rem] top-[24rem]'>
-        <img src='/images/icon_close--black.svg' alt='Close' className='size-[20rem]' />
+        <img src='/images/icon_close--black.svg' alt={tImgAlts('close')} className='size-[20rem]' />
       </DialogClose>
 
       <div className='mx-auto flex w-[544rem] flex-col text-[14rem]'>
-        <h2 className='mb-[14rem] text-center text-[20rem] font-semibold text-d-black'>IELTS Target Assessment</h2>
-        <p className='mb-[70rem] text-center text-[14rem] text-d-black'>Select the score you would like to achieve</p>
+        <h2 className='mb-[14rem] text-center text-[20rem] font-semibold text-d-black'>{t('title')}</h2>
+        <p className='mb-[70rem] text-center text-[14rem] text-d-black'>{t('selectGoal')}</p>
         <div className='flex flex-col gap-y-[16rem]'>
           {/* Progress Bar Container */}
           <div className='relative flex h-[20rem] items-center'>
@@ -69,7 +70,7 @@ export default function TargetGoalModal() {
             window.location.reload();
           }}
         >
-          Confirm
+          {tActions('confirm')}
         </button>
       </div>
     </section>

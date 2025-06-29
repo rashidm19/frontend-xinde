@@ -12,13 +12,16 @@ import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useCustomTranslations } from '@/hooks/useCustomTranslations';
 
 export const dynamic = 'force-dynamic';
 
 export default function Page() {
   const router = useRouter();
+  const { t, tCommon, tActions, tForm } = useCustomTranslations('practice.writing.test');
+
   const { data, status } = useQuery({
-    queryKey: ['pracitce-writing'],
+    queryKey: ['practice-writing'],
     queryFn: () => GET_practice_writing_id(localStorage.getItem('practiceWritingId') as string),
   });
 
@@ -53,7 +56,7 @@ export default function Page() {
 
   return (
     <>
-      <HeaderDuringTest title={`Practice - part ${data?.picture ? '1' : '2'}`} tag='Writing' />
+      <HeaderDuringTest title={tCommon('practicePartNumber', { number: data?.picture ? 1 : 2 })} tag={tCommon('writing')} />
 
       <main className='min-h-[100dvh] bg-d-blue-secondary'>
         <div className='container flex min-h-[100dvh] max-w-[1440rem] items-start justify-between px-[40rem] pb-[24rem] pt-[40rem]'>
@@ -69,8 +72,8 @@ export default function Page() {
             </div>
           ) : (
             <div className='flex w-[672rem] flex-col gap-y-[24rem] rounded-[16rem] bg-white p-[40rem] pb-[60rem]'>
-              <div className='text-[20rem] font-medium leading-tight text-d-black/80'>Write about the following topic:</div>
-              {/* // * Текс вопроса */}
+              <div className='text-[20rem] font-medium leading-tight text-d-black/80'>{t('writeAboutTopic')}</div>
+              {/* // * Текст вопроса */}
               <div className='whitespace-pre-line rounded-[12rem] bg-d-light-gray px-[24rem] py-[20rem] text-[20rem] font-medium leading-[24rem]'>{data?.question}</div>
               <div className='text-[20rem] font-medium leading-tight text-d-black/80'>{data.text}</div>
             </div>
@@ -82,13 +85,12 @@ export default function Page() {
             <div className='flex justify-between'>
               <div className='whitespace-pre-line text-[14rem] leading-normal text-d-black/80'>{data.task}</div>
               <div className='text-[14rem] leading-normal text-d-black/80'>
-                Words:{' '}
-                {
-                  formValues.answer
+                {tCommon('wordsCount', {
+                  count: formValues.answer
                     .trim()
                     .split(/\s+/)
-                    .filter((word: string) => word.length > 1).length
-                }
+                    .filter((word: string) => word.length > 1).length,
+                })}
               </div>
             </div>
             {/* // * Разделитель */}
@@ -97,16 +99,16 @@ export default function Page() {
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)}>
                 <FormField
-                  control={form.control}
                   name='answer'
+                  control={form.control}
                   render={({ field }) => (
                     <FormItem className=''>
                       <FormControl>
                         <AutosizeTextarea
                           {...field}
                           minHeight={350}
+                          placeholder={tForm('placeholders.startTypingHere')}
                           className='mb-[54rem] w-full text-[20rem] font-medium leading-[24rem] outline-none placeholder:text-d-black/40'
-                          placeholder='Start typing here...'
                         />
                       </FormControl>
                     </FormItem>
@@ -116,7 +118,7 @@ export default function Page() {
                   type='submit'
                   className='flex h-[71rem] w-full items-center justify-center rounded-[40rem] bg-d-green text-[24rem] font-medium hover:bg-d-green/40'
                 >
-                  Submit
+                  {tActions('submit')}
                 </button>
               </form>
             </Form>

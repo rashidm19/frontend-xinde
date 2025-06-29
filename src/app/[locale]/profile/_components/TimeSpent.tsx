@@ -3,21 +3,24 @@
 import { ChartComponent } from '@/components/ChartComponent';
 import Link from 'next/link';
 import React from 'react';
+import { useCustomTranslations } from '@/hooks/useCustomTranslations';
 
 interface Props {
   data?: any;
 }
 
 export const TimeSpent = ({ data }: Props) => {
+  const { t, tImgAlts, tCommon, tActions } = useCustomTranslations('profile.timeSpent');
+
   return (
     <section>
       <div className='relative rounded-[16rem] bg-white p-[24rem] pt-[16rem]'>
         {/* // * Title & Full litst btn */}
         <div className='mb-[16rem] flex items-center justify-between'>
-          <h2 className='text-[20rem] font-medium leading-normal'>Time spent on studying</h2>
+          <h2 className='text-[20rem] font-medium leading-normal'>{t('title')}</h2>
           <button type='button' className='flex h-[30rem] items-center gap-x-[4rem] px-[16rem] disabled:cursor-not-allowed' disabled>
-            <span className='text-[14rem] font-medium leading-normal text-d-black/80'>This week</span>
-            <img src='/images/icon_chevron--down.svg' className='size-[14rem] rotate-90' alt='icon' />
+            <span className='text-[14rem] font-medium leading-normal text-d-black/80'>{tCommon('thisWeek')}</span>
+            <img src='/images/icon_chevron--down.svg' className='size-[14rem] rotate-90' alt={tImgAlts('chevronDown')} />
           </button>
         </div>
 
@@ -26,25 +29,32 @@ export const TimeSpent = ({ data }: Props) => {
             <div className='flex items-start gap-x-[32rem]'>
               {/* // * Daily Average */}
               <div className='flex flex-col text-[14rem] font-medium leading-normal tracking-[-0.2rem] text-d-black'>
-                <div>Daily average</div>
-                <div className='text-[20rem] font-medium text-d-black'>2h</div>
+                <div>{t('dailyAverage')}</div>
+                <div className='text-[20rem] font-medium text-d-black'>{tCommon('hCount', { count: 2 })}</div>
               </div>
 
               {/* // * Week total */}
               <div className='flex flex-col text-[14rem] font-medium leading-normal tracking-[-0.2rem] text-d-black'>
-                <div>Week total</div>
-                <div className='text-[20rem] font-medium text-d-black'>6h</div>
+                <div>{t('weekTotal')}</div>
+                <div className='text-[20rem] font-medium text-d-black'>{tCommon('hCount', { count: 2 })}</div>
               </div>
 
               {/* // * Weekly goal */}
               <div className='flex flex-col text-[14rem] font-medium leading-normal tracking-[-0.2rem] text-d-black'>
-                <div>Weekly goal</div>
+                <div>{t('weeklyGoal')}</div>
                 <div className='text-[20rem] font-medium text-d-black'>82%</div>
               </div>
             </div>
             <ChartComponent
-              chartData={[{ bar_01: 30, bar_02: 9, bar_03: 8, bar_04: 8 }]}
+              width={'100%'}
+              height={'300rem'}
               barGapNumber={80}
+              useGradient={false}
+              yAxisDomain={[0, 30]}
+              displayAsPercent={false}
+              titleClassName='ml-[-8rem] desktop:ml-[40rem]'
+              chartData={[{ bar_01: 30, bar_02: 9, bar_03: 8, bar_04: 8 }]}
+              containerClassName='desktop:pr-[12rem] desktop:pl-[0rem] desktop:col-span-2'
               barColors={{
                 bar_01: '#ECFFC3',
                 bar_02: '#ECFFC3',
@@ -77,28 +87,21 @@ export const TimeSpent = ({ data }: Props) => {
                   color: '#ECFFC3',
                 },
               }}
-              yAxisDomain={[0, 30]}
-              width={'100%'}
-              height={'300rem'}
-              useGradient={false}
-              displayAsPercent={false}
-              containerClassName='desktop:pr-[12rem] desktop:pl-[0rem] desktop:col-span-2'
-              titleClassName='ml-[-8rem] desktop:ml-[40rem]'
             />{' '}
           </>
         ) : (
           <>
             {/* // * Empty state */}
             <div className='mb-[108rem] mt-[90rem] flex w-full flex-col items-center gap-y-[24rem]'>
-              <div className='font-poppins text-[14rem]'>Start practicing by section or take MOCK test to view results</div>
+              <div className='font-poppins text-[14rem]'>{t('start')}</div>
               <Link href='/practice' className='flex h-[50rem] w-[280rem] items-center justify-center rounded-[40rem] bg-d-light-gray px-[24rem] hover:bg-d-green/40'>
-                <span className='text-[14rem] font-semibold'>Practice by section</span>
+                <span className='text-[14rem] font-semibold'>{tActions('practiceBySection')}</span>
               </Link>
             </div>
             <img
+              alt={tImgAlts('hairy')}
               src='/images/illustration_hairyknont.png'
               className='pointer-events-none absolute bottom-0 left-0 h-auto w-[410rem] mix-blend-luminosity'
-              alt='illustration'
             />
           </>
         )}

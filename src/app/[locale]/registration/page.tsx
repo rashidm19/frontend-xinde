@@ -10,9 +10,10 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useCustomTranslations } from '@/hooks/useCustomTranslations';
+import React from 'react';
 
 export default function Registration() {
-  const { t, tImgAlts, tCommon, tActions, tForm, tMessages } = useCustomTranslations('registration');
+  const { t, tImgAlts, tCommon, tCommonRich, tActions, tForm, tMessages } = useCustomTranslations('registration');
 
   const formErrorRequiredField = tForm('validation.requiredField');
 
@@ -199,21 +200,21 @@ export default function Registration() {
                       <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
                           <SelectTrigger className='h-[54rem] rounded-[40rem] bg-d-light-gray px-[32rem] text-[18rem] font-medium leading-normal data-[state=open]:rounded-b-none'>
-                            <SelectValue placeholder={t('select')} className='placeholder:text-d-black/60' />
+                            <SelectValue placeholder={tForm('placeholders.select')} className='placeholder:text-d-black/60' />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent className='mt-0 max-h-[250rem] rounded-b-[40rem]'>
                           <SelectItem value='kz' className='h-[54rem] px-[32rem] text-[18rem] font-medium leading-none last:rounded-b-[40rem] hover:bg-d-light-gray'>
                             <span className='mr-[16rem] text-d-black/60'>KZ </span>
-                            {t('regionKZ')}
+                            {tForm('regionKZ')}
                           </SelectItem>
                           <SelectItem value='kg' className='h-[54rem] px-[32rem] text-[18rem] font-medium leading-none last:rounded-b-[40rem] hover:bg-d-light-gray'>
                             <span className='mr-[16rem] text-d-black/60'>KG </span>
-                            {t('regionKG')}
+                            {tForm('regionKG')}
                           </SelectItem>
                           <SelectItem value='md' className='h-[54rem] px-[32rem] text-[18rem] font-medium leading-none last:rounded-b-[40rem] hover:bg-d-light-gray'>
                             <span className='mr-[16rem] text-d-black/60'>MD </span>
-                            {t('regionMD')}
+                            {tForm('regionMD')}
                           </SelectItem>
                         </SelectContent>
                       </Select>
@@ -231,8 +232,8 @@ export default function Registration() {
                         <Checkbox checked={field.value} onCheckedChange={field.onChange} />
                       </FormControl>
                       <FormLabel className='text-[18rem] font-medium leading-none'>
-                        {t.rich('agreementText', {
-                          link: chunks => (
+                        {tCommonRich('acceptUserAgreement', {
+                          link: (chunks: any) => (
                             <Link href='/user-agreement' className='border-b border-d-black'>
                               {chunks}
                             </Link>

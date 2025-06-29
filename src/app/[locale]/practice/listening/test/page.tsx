@@ -16,6 +16,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Form, FormControl, FormField } from '@/components/ui/form';
 import { Label } from '@/components/ui/label';
 import { transformStringToArrayV4 } from '@/lib/utils';
+import { useCustomTranslations } from '@/hooks/useCustomTranslations';
 
 type FormValues = {
   [key: string]: string | undefined;
@@ -23,6 +24,8 @@ type FormValues = {
 
 export default function Page() {
   const router = useRouter();
+  const { tCommon } = useCustomTranslations();
+
   const [activeTab, setActiveTab] = useState<string>('p1');
 
   const { data, status } = useQuery({
@@ -109,7 +112,7 @@ export default function Page() {
 
   return (
     <>
-      <HeaderDuringTest title='Practice' tag='Listening' audio={data.audio_url} />
+      <HeaderDuringTest title={tCommon('practice')} tag={tCommon('listening')} audio={data.audio_url} />
 
       <main className='min-h-screen overflow-hidden bg-d-light-gray'>
         <Form {...form}>
@@ -128,25 +131,25 @@ export default function Page() {
                     value='p1'
                     className='flex h-[58rem] w-[101rem] items-center justify-center rounded-[64rem] bg-white data-[state=active]:bg-d-green hover:bg-d-green'
                   >
-                    Part 1
+                    {tCommon('partNumber', { number: 1 })}
                   </TabsTrigger>
                   <TabsTrigger
                     value='p2'
                     className='flex h-[58rem] w-[101rem] items-center justify-center rounded-[64rem] bg-white data-[state=active]:bg-d-green hover:bg-d-green'
                   >
-                    Part 2
+                    {tCommon('partNumber', { number: 2 })}
                   </TabsTrigger>
                   <TabsTrigger
                     value='p3'
                     className='flex h-[58rem] w-[101rem] items-center justify-center rounded-[64rem] bg-white data-[state=active]:bg-d-green hover:bg-d-green'
                   >
-                    Part 3
+                    {tCommon('partNumber', { number: 3 })}
                   </TabsTrigger>
                   <TabsTrigger
                     value='p4'
                     className='flex h-[58rem] w-[101rem] items-center justify-center rounded-[64rem] bg-white data-[state=active]:bg-d-green hover:bg-d-green'
                   >
-                    Part 4
+                    {tCommon('partNumber', { number: 4 })}
                   </TabsTrigger>
                 </TabsList>
 
@@ -192,14 +195,14 @@ export default function Page() {
                   value={`p${tab}`}
                   className='flex w-full flex-col gap-y-[40rem] rounded-[16rem] bg-white p-[40rem] data-[state=inactive]:hidden'
                 >
-                  {/* // *  Текст */}
+                  {/* // * Текст */}
                   {data[`part_${tab}`].blocks.map((block: any, index: number) => (
                     <div key={`questions-block-${index}`}>
                       <div className='mb-[40rem] flex flex-col items-center justify-center rounded-[13rem] bg-d-gray p-[20rem]'>
                         <p className='mb-[8rem] text-[20rem] font-bold leading-[24rem] tracking-[-0.2rem] text-d-black'>{block.task_questions} </p>
                         <p className='text-[16rem] font-medium leading-[19rem] text-[listening_0606060]'>{block.task}</p>
                       </div>
-                      {/* A,B,C,D тесты */}
+                      {/* A, B, C, D тесты */}
                       {block.kind === 'test' && (
                         <div className='flex flex-col gap-y-[48rem]'>
                           {block.questions.map((q: any) => (

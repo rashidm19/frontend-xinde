@@ -19,6 +19,7 @@ import { GET_practice_reading_id } from '@/api/GET_practice_reading_id';
 import { transformStringToArrayV2, transformStringToArrayV4 } from '@/lib/utils';
 
 import { useRouter } from 'next/navigation';
+import { useCustomTranslations } from '@/hooks/useCustomTranslations';
 
 type FormValues = {
   [key: string]: string | undefined;
@@ -26,6 +27,8 @@ type FormValues = {
 
 export default function Page() {
   const router = useRouter();
+  const { t, tCommon, tActions } = useCustomTranslations('practice.reading.test');
+
   const [activeTab, setActiveTab] = useState<string>('p1');
 
   const { data, status } = useQuery({
@@ -150,15 +153,15 @@ export default function Page() {
 
   return (
     <>
-      <HeaderDuringTest title='Practice' tag='Reading' />
+      <HeaderDuringTest title={tCommon('practice')} tag={tCommon('reading')} />
 
       <main className='min-h-screen overflow-hidden bg-d-yellow-secondary'>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
             <Tabs
+              defaultValue='p1'
               value={activeTab}
               onValueChange={setActiveTab}
-              defaultValue='p1'
               className='container flex min-h-[100dvh] max-w-[1440rem] flex-col px-[40rem] pb-[24rem] pt-[40rem]'
             >
               {/* // * Навигация */}
@@ -169,19 +172,19 @@ export default function Page() {
                     value='p1'
                     className='flex h-[58rem] w-[101rem] items-center justify-center rounded-[64rem] bg-white data-[state=active]:bg-d-green hover:bg-d-green'
                   >
-                    Part 1
+                    {tCommon('partNumber', { number: 1 })}
                   </TabsTrigger>
                   <TabsTrigger
                     value='p2'
                     className='flex h-[58rem] w-[101rem] items-center justify-center rounded-[64rem] bg-white data-[state=active]:bg-d-green hover:bg-d-green'
                   >
-                    Part 2
+                    {tCommon('partNumber', { number: 2 })}
                   </TabsTrigger>
                   <TabsTrigger
                     value='p3'
                     className='flex h-[58rem] w-[101rem] items-center justify-center rounded-[64rem] bg-white data-[state=active]:bg-d-green hover:bg-d-green'
                   >
-                    Part 3
+                    {tCommon('partNumber', { number: 3 })}
                   </TabsTrigger>
                 </TabsList>
 
@@ -204,8 +207,8 @@ export default function Page() {
                       >
                         <span>{qNumber}</span>
                         <div
-                          className='h-[4rem] w-[16rem] rounded-[16rem] bg-d-light-gray data-[state=active]:bg-d-green'
                           data-state={values[qNumber] ? 'active' : 'inactive'}
+                          className='h-[4rem] w-[16rem] rounded-[16rem] bg-d-light-gray data-[state=active]:bg-d-green'
                         />
                       </div>
                     ))}
@@ -215,12 +218,12 @@ export default function Page() {
 
               {/* // * Инструкция */}
               <div className='relative mb-[40rem] flex w-full items-center justify-center rounded-[13rem] bg-d-light-gray py-[24rem] text-[20rem] font-medium leading-[24rem] tracking-[-0.2rem] text-d-black'>
-                Read the text and answer questions {questionsCountString()}
+                {t('readTextAndAnswerQuestions')} {questionsCountString()}
               </div>
 
               {[1, 2, 3].map(tab => (
                 <TabsContent key={`questions-content-tab-${tab}`} value={`p${tab}`} className='flex items-start justify-between'>
-                  {/* // *  Текст */}
+                  {/* // * Текст */}
                   <div className='w-[672rem] whitespace-pre-line rounded-[16rem] bg-white p-[40rem] text-[16rem] font-normal leading-tight'>
                     {data[`part_${tab}`].text}
                   </div>
@@ -245,9 +248,9 @@ export default function Page() {
                                     <FormControl>
                                       <Input
                                         {...field}
-                                        onChange={e => field.onChange(e.target.value.toUpperCase())}
                                         type='text'
                                         placeholder={q.number}
+                                        onChange={e => field.onChange(e.target.value.toUpperCase())}
                                         className='!inline !h-[32rem] !w-[180rem] !items-center !justify-center !rounded-[8rem] !border-[1.5rem] !border-d-black/60 !p-[10rem] text-center !text-[16rem] !font-normal uppercase !leading-[25rem] !tracking-[-0.2rem] !text-d-black placeholder:text-center placeholder:!text-d-black focus:!border-d-black focus:bg-d-yellow-secondary focus-visible:!border-d-black'
                                       />
                                     </FormControl>
@@ -434,8 +437,8 @@ export default function Page() {
                             {block.cells.map((row: string[], rowIndex: number) =>
                               row.map((cell: string, cellIndex: number) => (
                                 <div
-                                  className={`flex h-auto flex-col items-center justify-center hyphens-auto text-wrap border-b border-b-d-black p-[16rem] text-center text-[14rem] leading-[120%] tracking-[-0.2rem] text-d-black ${rowIndex === 0 ? 'font-semibold' : ''} ${cellIndex !== 0 ? 'border-l' : ''}`}
                                   lang='en'
+                                  className={`flex h-auto flex-col items-center justify-center hyphens-auto text-wrap border-b border-b-d-black p-[16rem] text-center text-[14rem] leading-[120%] tracking-[-0.2rem] text-d-black ${rowIndex === 0 ? 'font-semibold' : ''} ${cellIndex !== 0 ? 'border-l' : ''}`}
                                 >
                                   {cell === '___' && (
                                     <FormField
@@ -599,25 +602,25 @@ export default function Page() {
                     {activeTab === 'p1' && (
                       <button
                         type='button'
+                        className='flex h-[71rem] w-full items-center justify-center rounded-[40rem] bg-d-green text-[20rem] font-normal leading-[24rem] tracking-[-0.2rem] text-d-black'
                         onClick={() => {
                           setActiveTab('p2');
                           window.scrollTo({ top: 0, behavior: 'smooth' });
                         }}
-                        className='flex h-[71rem] w-full items-center justify-center rounded-[40rem] bg-d-green text-[20rem] font-normal leading-[24rem] tracking-[-0.2rem] text-d-black'
                       >
-                        Next
+                        {tActions('next')}
                       </button>
                     )}
                     {activeTab === 'p2' && (
                       <button
                         type='button'
+                        className='flex h-[71rem] w-full items-center justify-center rounded-[40rem] bg-d-green text-[20rem] font-normal leading-[24rem] tracking-[-0.2rem] text-d-black'
                         onClick={() => {
                           setActiveTab('p3');
                           window.scrollTo({ top: 0, behavior: 'smooth' });
                         }}
-                        className='flex h-[71rem] w-full items-center justify-center rounded-[40rem] bg-d-green text-[20rem] font-normal leading-[24rem] tracking-[-0.2rem] text-d-black'
                       >
-                        Next
+                        {tActions('next')}
                       </button>
                     )}
                     {activeTab === 'p3' && (
@@ -625,7 +628,7 @@ export default function Page() {
                         type='submit'
                         className='flex h-[71rem] w-full items-center justify-center rounded-[40rem] bg-d-green text-[20rem] font-normal leading-[24rem] tracking-[-0.2rem] text-d-black'
                       >
-                        Submit
+                        {tActions('submit')}
                       </button>
                     )}
                   </div>

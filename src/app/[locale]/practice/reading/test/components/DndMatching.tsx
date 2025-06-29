@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { DndContext } from '@dnd-kit/core';
 import { Draggable } from '@/components/ui/Draggable';
 import { Droppable } from '@/components/ui/Droppable';
+import { useCustomTranslations } from '@/hooks/useCustomTranslations';
 
 interface DndMatchingProps {
   block: {
@@ -20,6 +21,8 @@ interface DndMatchingProps {
 }
 
 export const DndMatching = ({ block, value, setFieldValue }: DndMatchingProps) => {
+  const { tImgAlts } = useCustomTranslations();
+
   // Define the draggable options
   const draggableOptions = block.choices;
   const [containerContents, setContainerContents] = useState<Record<string, string | null>>({});
@@ -62,10 +65,10 @@ export const DndMatching = ({ block, value, setFieldValue }: DndMatchingProps) =
 
                 {value[q.number] && (
                   <img
+                    alt={tImgAlts('close')}
                     src='/images/icon_close--black.svg'
-                    alt='Close'
-                    className='absolute left-full top-1/2 size-[16rem] shrink-0 -translate-y-1/2'
                     onClick={() => handleClearAnswer(q.number)}
+                    className='absolute left-full top-1/2 size-[16rem] shrink-0 -translate-y-1/2'
                   />
                 )}
               </Droppable>{' '}

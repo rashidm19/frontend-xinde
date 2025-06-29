@@ -62,7 +62,7 @@ export default function Page() {
                 Each correct answer receives 1 mark. Your final score is given as a band score in whole or half bands, e.g. 5.5 or 7.0.
               </p>
               <Link
-                href='/[locale]/mock/exam/listening/audio-check/'
+                href='/mock/exam/listening/audio-check/'
                 className='mx-auto flex h-[63rem] w-[280rem] items-center justify-center rounded-[40rem] bg-d-green text-[20rem] font-semibold hover:bg-d-green/40'
               >
                 Continue

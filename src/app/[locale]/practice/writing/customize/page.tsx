@@ -8,11 +8,13 @@ import Link from 'next/link';
 import nProgress from 'nprogress';
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
+import { useCustomTranslations } from '@/hooks/useCustomTranslations';
 
 export default function Page() {
   const router = useRouter();
+  const { t, tImgAlts, tCommon, tCommonRich, tActions, tForm } = useCustomTranslations('practice.writing.customize');
 
-  const { data, status } = useQuery({
+  const { data } = useQuery({
     queryKey: ['categories'],
     queryFn: () =>
       fetch(`https://api.studybox.kz/practice/writing/categories `, {
@@ -48,66 +50,66 @@ export default function Page() {
 
   return (
     <main className='realtive min-h-screen bg-d-blue-secondary'>
-      <img src='/images/illustration_torusArray--02.png' className='absolute bottom-0 left-0 h-auto w-[320rem] opacity-80' />
-      <img src='/images/illustration_molecule.png' className='absolute right-0 top-0 h-auto w-[250rem] opacity-50' />s
+      <img src='/images/illustration_torusArray--02.png' alt={tImgAlts('flower')} className='absolute bottom-0 left-0 h-auto w-[320rem] opacity-80' />
+      <img src='/images/illustration_molecule.png' alt={tImgAlts('molecule')} className='absolute right-0 top-0 h-auto w-[250rem] opacity-50' />s
       {data && (
         <div className='container min-h-[100dvh] max-w-[1440rem] px-[270rem] pt-[80rem]'>
           <div className='shadow-car flex flex-col gap-[48rem] rounded-[16rem] bg-white p-[64rem]'>
             {/* // * Header */}
             <div className='flex items-center gap-x-[12rem]'>
               <div className='flex size-[52rem] items-center justify-center bg-d-blue-secondary'>
-                <img src='/images/icon_writingSection.svg' className='size-[24rem]' alt='writing' />
+                <img src='/images/icon_writingSection.svg' className='size-[24rem]' alt={tImgAlts('writing')} />
               </div>
               <div className='flex flex-col gap-y-[6rem]'>
-                <div className='text-[16rem] font-medium leading-none text-d-black/80'>Writing</div>
-                <div className='text-[20rem] font-medium leading-none'>60 min</div>
+                <div className='text-[16rem] font-medium leading-none text-d-black/80'>{tCommon('writing')}</div>
+                <div className='text-[20rem] font-medium leading-none'>{tCommon('minCount', { count: 60 })}</div>
               </div>
               <div className='ml-[12rem] flex flex-col gap-y-[6rem]'>
-                <div className='text-[16rem] font-medium leading-none text-d-black/80'>Parts</div>
+                <div className='text-[16rem] font-medium leading-none text-d-black/80'>{tCommon('parts')}</div>
                 <div className='text-[20rem] font-medium leading-none'>2</div>
               </div>
             </div>
             {/* // * Seclection */}
             <div>
-              <h1 className='mb-[40rem] text-[32rem] font-medium leading-none'>Tasks selection</h1>
+              <h1 className='mb-[40rem] text-[32rem] font-medium leading-none'>{tCommon('tasksSelection')}</h1>
               {/* // * Part Selection */}
               <div className='mb-[32rem]'>
-                <label className='mb-[16rem] block text-[20rem] leading-none'>Please select a part of Writing section you want to practice.</label>
+                <label className='mb-[16rem] block text-[20rem] leading-none'>{t('subtitle')}</label>
                 <div className='grid grid-cols-2 gap-x-[16rem]'>
                   <button
                     type='button'
+                    className={`flex h-[70rem] items-center justify-center rounded-[16rem] border-[3rem] border-d-light-gray text-[20rem] font-medium ${selectedPart === 1 ? 'bg-d-light-gray' : 'bg-transparent'}`}
                     onClick={() => {
                       selectedPart !== 1 ? setSelectedTopic('random') : null;
                       setSelectedPart(1);
                     }}
-                    className={`flex h-[70rem] items-center justify-center rounded-[16rem] border-[3rem] border-d-light-gray text-[20rem] font-medium ${selectedPart === 1 ? 'bg-d-light-gray' : 'bg-transparent'}`}
                   >
-                    Part 1
+                    {tCommon('partNumber', { number: 1 })}
                   </button>
                   <button
                     type='button'
+                    className={`flex h-[70rem] items-center justify-center rounded-[16rem] border-[3rem] border-d-light-gray text-[20rem] font-medium ${selectedPart === 2 ? 'bg-d-light-gray' : 'bg-transparent'}`}
                     onClick={() => {
                       selectedPart !== 2 ? setSelectedTopic('random') : null;
                       setSelectedPart(2);
                     }}
-                    className={`flex h-[70rem] items-center justify-center rounded-[16rem] border-[3rem] border-d-light-gray text-[20rem] font-medium ${selectedPart === 2 ? 'bg-d-light-gray' : 'bg-transparent'}`}
                   >
-                    Part 2
+                    {tCommon('partNumber', { number: 2 })}
                   </button>
                 </div>
               </div>
 
               {/* // * Topic Selection */}
               <div className='mb-[32rem]'>
-                <label className='mb-[16rem] block text-[20rem] leading-none'>Please select a topic.</label>
+                <label className='mb-[16rem] block text-[20rem] leading-none'>{tCommon('pleaseSelectTopic')}</label>
                 <Select defaultValue='random' value={selectedTopic} onValueChange={setSelectedTopic}>
                   <SelectTrigger className='h-[70rem] rounded-[16rem] bg-d-light-gray px-[40rem] text-[20rem] font-medium leading-normal data-[state=open]:rounded-b-none'>
-                    <SelectValue placeholder='Random' className='placeholder:text-d-black/60' />
+                    <SelectValue placeholder={tForm('placeholders.random')} className='placeholder:text-d-black/60' />
                   </SelectTrigger>
 
                   <SelectContent className='mt-0 max-h-[250rem] rounded-b-[40rem]'>
                     <SelectItem value='random' className='h-[50rem] px-[40rem] text-[20rem] font-medium leading-none last:rounded-b-[8rem] hover:bg-d-light-gray'>
-                      Random
+                      {tCommon('random')}
                     </SelectItem>
 
                     {data.data
@@ -122,7 +124,7 @@ export default function Page() {
               </div>
 
               {/* // * Without part selection */}
-              {/* 
+              {/*
                 <div className='mb-[32rem]'>
                   <label className='mb-[16rem] block text-[20rem] leading-none'>Please select a type of visual information you want to describe in Part 1</label>
                   <Select>
@@ -177,23 +179,26 @@ export default function Page() {
                       </SelectItem>
                     </SelectContent>
                   </Select>
-                </div> 
+                </div>
               */}
 
               <div className='mb-[56rem] flex items-center gap-x-[12rem]'>
                 <Checkbox className='size-[20rem]' checked />
                 <div className='text-[16rem] font-medium leading-none'>
-                  I accept the{' '}
-                  <Link href='/user-agreement' className='border-b border-d-black'>
-                    user agreement
-                  </Link>
+                  {tCommonRich('acceptUserAgreement', {
+                    link: (chunks: any) => (
+                      <Link href='/user-agreement' className='border-b border-d-black'>
+                        {chunks}
+                      </Link>
+                    ),
+                  })}
                 </div>
               </div>
               <button
                 onClick={startPractice}
                 className='mx-auto flex h-[63rem] w-[280rem] items-center justify-center rounded-[40rem] bg-d-green text-[20rem] font-semibold hover:bg-d-green/40'
               >
-                Continue
+                {tActions('continue')}
               </button>
             </div>
           </div>

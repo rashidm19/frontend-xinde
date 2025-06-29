@@ -4,6 +4,7 @@ import { transformStringToArrayV3 } from '@/lib/utils';
 import { DndContext } from '@dnd-kit/core';
 import { Draggable } from '@/components/ui/Draggable';
 import { Droppable } from '@/components/ui/Droppable';
+import { useCustomTranslations } from '@/hooks/useCustomTranslations';
 
 interface DndMatchingProps {
   block: {
@@ -22,6 +23,8 @@ interface DndMatchingProps {
 }
 
 export const DndText = ({ block, value, setFieldValue }: DndMatchingProps) => {
+  const { tImgAlts } = useCustomTranslations();
+
   // Define the draggable options
   const draggableOptions = block.choices;
   const textSplitAsArray = transformStringToArrayV3(block.text);
@@ -70,10 +73,10 @@ export const DndText = ({ block, value, setFieldValue }: DndMatchingProps) => {
 
                   {value[actualQNumber] && (
                     <img
+                      alt={tImgAlts('close')}
                       src='/images/icon_close--black.svg'
-                      alt='Close'
-                      className='absolute right-0 top-1/2 z-10 size-[16rem] shrink-0 -translate-y-1/2 cursor-pointer'
                       onClick={() => handleClearAnswer(String(actualQNumber))}
+                      className='absolute right-0 top-1/2 z-10 size-[16rem] shrink-0 -translate-y-1/2 cursor-pointer'
                     />
                   )}
                 </Droppable>

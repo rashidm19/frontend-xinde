@@ -49,7 +49,7 @@ export default function Page() {
               about when deciding what score to give you):
             </p>
             <Link
-              href='/[locale]/practice/speaking/audio-check/'
+              href='/practice/speaking/audio-check/'
               className='mx-auto flex h-[63rem] w-[280rem] items-center justify-center rounded-[40rem] bg-d-green text-[20rem] font-semibold hover:bg-d-green/40'
             >
               Continue

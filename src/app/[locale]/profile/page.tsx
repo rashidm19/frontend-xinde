@@ -1,11 +1,11 @@
 'use client';
 
-import { Achievments } from './_components/Achievments';
+import { Achievements } from './_components/Achievements';
 import { BestResults } from './_components/BestResults';
 import { Header } from '@/components/Header';
 import { IeltsGoal } from './_components/IeltsGoal';
 import { Notifications } from './_components/Notifications';
-import { Referals } from './_components/Referals';
+import { Referrals } from './_components/Referrals';
 import { TimeSpent } from './_components/TimeSpent';
 import { getUser } from '@/api/GET_user';
 import { useQuery } from '@tanstack/react-query';
@@ -33,7 +33,7 @@ export default function Page() {
           ) : (
             <>
               <BestResults />
-              <Achievments />
+              <Achievements />
               <TimeSpent />
             </>
           )}
@@ -48,7 +48,7 @@ export default function Page() {
           ) : (
             <>
               <Notifications />
-              <Referals />
+              <Referrals />
               <IeltsGoal grade={data?.target_grade} />
             </>
           )}

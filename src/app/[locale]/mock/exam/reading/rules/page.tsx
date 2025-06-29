@@ -57,7 +57,7 @@ export default function Page() {
               Each correct answer receives 1 mark. Your final score is given as a band score from 1–9 in whole or half bands, e.g. 4 or 6.5
             </p>
             <Link
-              href='/[locale]/mock/exam/reading/test'
+              href='/mock/exam/reading/test'
               className='mx-auto flex h-[63rem] w-[280rem] items-center justify-center rounded-[40rem] bg-d-green text-[20rem] font-semibold hover:bg-d-green/40'
             >
               Continue

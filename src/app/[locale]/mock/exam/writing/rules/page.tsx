@@ -41,7 +41,7 @@ export default function Page() {
               deciding what score to give you):
             </p>
             <Link
-              href='/[locale]/mock/exam/writing/test/part-1'
+              href='/mock/exam/writing/test/part-1'
               className='mx-auto flex h-[63rem] w-[280rem] items-center justify-center rounded-[40rem] bg-d-green text-[20rem] font-semibold hover:bg-d-green/40'
             >
               Continue

@@ -77,7 +77,7 @@ export default function Page() {
               </div>
               {/* // * Next */}
               <Link
-                href='/[locale]/practice/listening/rules'
+                href='/practice/listening/rules'
                 className='mx-auto flex h-[63rem] w-[280rem] items-center justify-center rounded-[40rem] bg-d-green text-[20rem] font-semibold hover:bg-d-green/40'
               >
                 Continue

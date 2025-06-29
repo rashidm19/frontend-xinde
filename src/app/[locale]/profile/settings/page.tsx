@@ -4,9 +4,12 @@ import { ProfileEditForm } from './_components/ProfileEditForm';
 import nProgress from 'nprogress';
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
+import { useCustomTranslations } from '@/hooks/useCustomTranslations';
 
 export default function ProfileSettings() {
   const router = useRouter();
+  const { tCommon, tActions } = useCustomTranslations();
+
   const { data, status } = useQuery({
     queryKey: ['user'],
     queryFn: () =>
@@ -32,7 +35,7 @@ export default function ProfileSettings() {
               <div className='relative size-[96rem] rounded-full bg-d-light-gray'>
                 <img src={`${data.avatar}`} alt='avatar' className='absolute left-1 top-1 size-[94rem] rounded-full' />
                 <div className='absolute left-[72rem] top-[-4rem] flex h-[34rem] w-[98rem] items-center whitespace-nowrap rounded-full bg-gradient-to-r from-d-violet to-[#6fdbfa6b] px-[20rem] text-[14rem] font-medium text-white'>
-                  Free trial
+                  {tCommon('freeTrial')}
                 </div>
               </div>
               <div className='mb-[16rem] flex flex-col gap-y-[8rem]'>
@@ -48,17 +51,17 @@ export default function ProfileSettings() {
             <div className='flex justify-start gap-x-[6rem]'>
               <button
                 type='button'
+                className='flex h-[50rem] items-center justify-center rounded-full bg-d-light-gray px-[32rem] hover:bg-d-green/40'
                 onClick={() => {
                   localStorage.removeItem('token');
                   nProgress.start();
                   router.push('/');
                 }}
-                className='flex h-[50rem] items-center justify-center rounded-full bg-d-light-gray px-[32rem] hover:bg-d-green/40'
               >
-                <span className='text-[14rem] font-medium leading-none'>Log out</span>
+                <span className='text-[14rem] font-medium leading-none'>{tActions('logout')}</span>
               </button>
               <button type='button' className='flex h-[50rem] items-center justify-center rounded-full bg-white px-[32rem]'>
-                <span className='text-[14rem] font-medium leading-none'>Delete account</span>
+                <span className='text-[14rem] font-medium leading-none'>{tActions('deleteAccount')}</span>
               </button>
             </div>
           </div>

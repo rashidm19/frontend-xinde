@@ -5,8 +5,11 @@ import React, { useEffect, useState } from 'react';
 import { GET_practice_writing_feedback_id } from '@/api/GET_practice_writing_feedback_id';
 import { HeaderDuringTest } from '@/components/HeaderDuringTest';
 import { useQuery } from '@tanstack/react-query';
+import { useCustomTranslations } from '@/hooks/useCustomTranslations';
 
 export default function Page({ params }: { params: { id: string } }) {
+  const { t, tImgAlts, tCommon } = useCustomTranslations('practice.writing.feedback');
+
   const { data: feedbackData, status: feedbackStatus } = useQuery({
     queryKey: ['practice-writing-feedback', params.id],
     queryFn: () => GET_practice_writing_feedback_id(params.id),
@@ -33,11 +36,11 @@ export default function Page({ params }: { params: { id: string } }) {
 
   return (
     <>
-      <HeaderDuringTest title='Writing section feedback' tag={'Writing'} />
+      <HeaderDuringTest title={t('title')} tag={tCommon('writing')} />
 
       {(feedbackStatus === 'pending' || !feedbackData) && (
         <main className='flex h-[100dvh] items-center justify-center gap-x-[5rem] bg-d-blue-secondary'>
-          <div className='text-[20rem] font-medium leading-tight text-d-black/80'>Evaluating your answer. It usually takes 1-2 minutes...</div>
+          <div className='text-[20rem] font-medium leading-tight text-d-black/80'>{t('evaluating')}</div>
           <svg className='size-[20rem] animate-spin text-black' xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24'>
             <circle className='opacity-25' cx='12' cy='12' r='10' stroke='currentColor' stroke-width='4' />
             <path
@@ -59,7 +62,7 @@ export default function Page({ params }: { params: { id: string } }) {
                 {/* // * Question */}
                 <div className='whitespace-pre-line text-[20rem] font-medium leading-tight text-d-black/80'>{feedbackData.task}</div>
                 <div className='rounded-[12rem] bg-d-gray px-[24rem] py-[20rem] text-[20rem] font-medium leading-tight'>{feedbackData[part].question}</div>
-                {feedbackData.picture && <img src={feedbackData.picture} alt='picture' className='mx-auto w-[600rem] rounded-[12rem]' />}
+                {feedbackData.picture && <img src={feedbackData.picture} alt={tImgAlts('writing')} className='mx-auto w-[600rem] rounded-[12rem]' />}
                 <div className='text-[20rem] font-medium leading-tight text-d-black/80'>{feedbackData.text}</div>
                 <hr className='my-[16rem] border-b-2 border-d-gray' />
                 {/* // * Answer */}
@@ -73,15 +76,15 @@ export default function Page({ params }: { params: { id: string } }) {
                   <header className='flex items-center justify-between'>
                     <div className='flex items-center gap-x-[12rem]'>
                       <div className='flex size-[52rem] items-center justify-center rounded-[8rem] bg-d-blue-secondary'>
-                        <img src='/images/icon_writingSection.svg' alt='writing section' className='size-[24rem]' />
+                        <img src='/images/icon_writingSection.svg' alt={tImgAlts('writing')} className='size-[24rem]' />
                       </div>
-                      <div className='text-[20rem] font-medium'>Overall recommendation</div>
+                      <div className='text-[20rem] font-medium'>{tCommon('overallRecommendation')}</div>
                     </div>
                     <button type='button' className='flex size-[40rem] items-center justify-center rounded-full border border-d-gray'>
-                      <img src='/images/icon_bookmark--empty.svg' className='size-[16rem]' alt='bookmark' />
+                      <img src='/images/icon_bookmark--empty.svg' className='size-[16rem]' alt={tImgAlts('bookmark')} />
                     </button>
                   </header>
-                  {/* // * Recomendation */}
+                  {/* // * Recommendation */}
                   <div className='text-[14rem] font-medium leading-tight'>
                     {feedbackData[part].ml_output['General Feedback'].feedback}
                     <br />
@@ -95,9 +98,9 @@ export default function Page({ params }: { params: { id: string } }) {
                   <header className='flex items-center justify-between'>
                     <div className='flex items-center gap-x-[12rem]'>
                       <div className='flex size-[52rem] items-center justify-center rounded-[8rem] bg-d-blue-secondary'>
-                        <img src='/images/icon_writingSection.svg' alt='writing section' className='size-[24rem]' />
+                        <img src='/images/icon_writingSection.svg' alt={tImgAlts('writing')} className='size-[24rem]' />
                       </div>
-                      <div className='text-[20rem] font-medium'>Recommendations by bands</div>
+                      <div className='text-[20rem] font-medium'>{tCommon('recommendationsByBands')}</div>
                     </div>
                   </header>
                   {/* // * Coherence & cohesion */}
@@ -112,7 +115,7 @@ export default function Page({ params }: { params: { id: string } }) {
                       </div>
                     </div>
                     <button type='button' className='flex size-[40rem] items-center justify-center rounded-full border border-d-gray'>
-                      <img src='/images/icon_bookmark--empty.svg' className='size-[16rem]' alt='bookmark' />
+                      <img src='/images/icon_bookmark--empty.svg' className='size-[16rem]' alt={tImgAlts('bookmark')} />
                     </button>
                   </div>
                   {/* // * Coherence & cohesion */}
@@ -127,7 +130,7 @@ export default function Page({ params }: { params: { id: string } }) {
                       </div>
                     </div>
                     <button type='button' className='flex size-[40rem] items-center justify-center rounded-full border border-d-gray'>
-                      <img src='/images/icon_bookmark--empty.svg' className='size-[16rem]' alt='bookmark' />
+                      <img src='/images/icon_bookmark--empty.svg' className='size-[16rem]' alt={tImgAlts('bookmark')} />
                     </button>
                   </div>
                   {/* // * Grammatical range & accuracy */}
@@ -142,7 +145,7 @@ export default function Page({ params }: { params: { id: string } }) {
                       </div>
                     </div>
                     <button type='button' className='flex size-[40rem] items-center justify-center rounded-full border border-d-gray'>
-                      <img src='/images/icon_bookmark--empty.svg' className='size-[16rem]' alt='bookmark' />
+                      <img src='/images/icon_bookmark--empty.svg' className='size-[16rem]' alt={tImgAlts('bookmark')} />
                     </button>
                   </div>
                   {/* // * Task achievement< */}
@@ -157,7 +160,7 @@ export default function Page({ params }: { params: { id: string } }) {
                       </div>
                     </div>
                     <button type='button' className='flex size-[40rem] items-center justify-center rounded-full border border-d-gray'>
-                      <img src='/images/icon_bookmark--empty.svg' className='size-[16rem]' alt='bookmark' />
+                      <img src='/images/icon_bookmark--empty.svg' className='size-[16rem]' alt={tImgAlts('bookmark')} />
                     </button>
                   </div>
                 </section>
@@ -168,7 +171,7 @@ export default function Page({ params }: { params: { id: string } }) {
               {/* // * Overall score */}
               <section className='flex h-[84rem] items-center justify-start gap-x-[8rem] bg-gradient-to-br from-d-green to-d-green-secondary px-[34rem]'>
                 <div className='text-[32rem] font-medium'>{feedbackData.score.toFixed(1)}</div>
-                <div className='text-[20rem] font-semibold'>Overall band score</div>
+                <div className='text-[20rem] font-semibold'>{tCommon('overallBandScore')}</div>
               </section>
               {/* // * Grammar score */}
               {/* <section className='flex flex-col gap-[24rem] bg-white p-[24rem]'>
@@ -207,8 +210,8 @@ export default function Page({ params }: { params: { id: string } }) {
                 {feedbackData[part].ml_output['Coherence & Cohesion'].breakdown.map((item: any) => (
                   <div key={`coherence-cohesion-${item.name}`} className='flex items-center gap-x-[12rem]'>
                     <div
-                      className={`flex size-[34rem] items-center justify-center rounded-[4rem] text-[14rem] font-medium data-[grade=bad]:bg-d-red-disabled data-[grade=good]:bg-d-green-secondary`}
                       data-grade={+item.score >= 6 ? 'good' : 'bad'}
+                      className={`flex size-[34rem] items-center justify-center rounded-[4rem] text-[14rem] font-medium data-[grade=bad]:bg-d-red-disabled data-[grade=good]:bg-d-green-secondary`}
                     >
                       {item.score}
                     </div>
@@ -222,8 +225,8 @@ export default function Page({ params }: { params: { id: string } }) {
                 {feedbackData[part].ml_output['Lexical Resource'].breakdown.map((item: any) => (
                   <div key={`lexical-resource-${item.name}`} className='flex items-center gap-x-[12rem]'>
                     <div
-                      className={`flex size-[34rem] items-center justify-center rounded-[4rem] text-[14rem] font-medium data-[grade=bad]:bg-d-red-disabled data-[grade=good]:bg-d-green-secondary`}
                       data-grade={+item.score >= 6 ? 'good' : 'bad'}
+                      className={`flex size-[34rem] items-center justify-center rounded-[4rem] text-[14rem] font-medium data-[grade=bad]:bg-d-red-disabled data-[grade=good]:bg-d-green-secondary`}
                     >
                       {item.score}
                     </div>
@@ -239,8 +242,8 @@ export default function Page({ params }: { params: { id: string } }) {
                 {feedbackData[part].ml_output['Grammatical Range & Accuracy'].breakdown.map((item: any) => (
                   <div key={`grammatical-range-${item.name}`} className='flex items-center gap-x-[12rem]'>
                     <div
-                      className={`flex size-[34rem] items-center justify-center rounded-[4rem] text-[14rem] font-medium data-[grade=bad]:bg-d-red-disabled data-[grade=good]:bg-d-green-secondary`}
                       data-grade={+item.score >= 6 ? 'good' : 'bad'}
+                      className={`flex size-[34rem] items-center justify-center rounded-[4rem] text-[14rem] font-medium data-[grade=bad]:bg-d-red-disabled data-[grade=good]:bg-d-green-secondary`}
                     >
                       {item.score}
                     </div>
@@ -263,7 +266,7 @@ export default function Page({ params }: { params: { id: string } }) {
         </main>
       )}
 
-      <footer className='bg-d-blue-secondary pb-[24rem] text-center text-[12rem]'>© All rights reserved</footer>
+      <footer className='bg-d-blue-secondary pb-[24rem] text-center text-[12rem]'>{tCommon('allRightsReserved')}</footer>
     </>
   );
 }

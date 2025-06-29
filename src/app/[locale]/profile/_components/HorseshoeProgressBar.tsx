@@ -1,5 +1,6 @@
 import React from 'react';
 import { cn } from '@/lib/utils';
+import { useCustomTranslations } from '@/hooks/useCustomTranslations';
 
 interface ProgressBarProps {
   value: number;
@@ -33,6 +34,8 @@ export const HorseshoeProgressBar: React.FC<ProgressBarProps> = ({
   const radius = Math.min(width, height) / 2 - strokeWidth / 2;
   const startAngle = Math.PI * 0.8; // 144 degrees
   const endAngle = Math.PI * 2.2; // 396 degrees
+
+  const { tCommon } = useCustomTranslations();
 
   const polarToCartesian = (centerX: number, centerY: number, radius: number, angleInRadians: number) => {
     return {
@@ -71,7 +74,7 @@ export const HorseshoeProgressBar: React.FC<ProgressBarProps> = ({
         {value > 0 ? (
           <div className='flex flex-col'>
             <div className='text-[20rem] font-semibold tracking-[-0.2rem]'>{value.toFixed(1)}</div>
-            <div className='-mt-[6rem] text-[14rem] tracking-[-0.2rem]'>points</div>
+            <div className='-mt-[6rem] text-[14rem] tracking-[-0.2rem]'>{tCommon('points')}</div>
           </div>
         ) : (
           <div className='max-w-[80rem] text-[14rem] tracking-[-0.2rem]'>{no_results_text}</div>

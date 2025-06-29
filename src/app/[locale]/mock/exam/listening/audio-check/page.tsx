@@ -22,7 +22,7 @@ export default function Page() {
             </p>
 
             <Link
-              href='/[locale]/mock/exam/listening/test/'
+              href='/mock/exam/listening/test/'
               className='mx-auto flex h-[63rem] w-[280rem] items-center justify-center gap-x-[8rem] rounded-[40rem] bg-d-green text-[20rem] font-semibold hover:bg-d-green/40'
             >
               <img src='/images/icon_audioPlay.svg' alt='play' className='size-[16rem]' />

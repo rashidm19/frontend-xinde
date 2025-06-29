@@ -19,6 +19,7 @@ import { GET_practice_reading_id } from '@/api/GET_practice_reading_id';
 import { transformStringToArrayV2, transformStringToArrayV4 } from '@/lib/utils';
 
 import { useRouter } from 'next/navigation';
+import { useCustomTranslations } from '@/hooks/useCustomTranslations';
 
 type FormValues = {
   [key: string]: string | undefined;
@@ -26,6 +27,8 @@ type FormValues = {
 
 export default function Page({ params }: { params: { id: string } }) {
   const router = useRouter();
+  const { t, tCommon, tActions } = useCustomTranslations('practice.reading.test');
+
   const [activeTab, setActiveTab] = useState<string>('p1');
 
   const { data, status } = useQuery({
@@ -149,15 +152,15 @@ export default function Page({ params }: { params: { id: string } }) {
 
   return (
     <>
-      <HeaderDuringTest title='Practice' tag='Reading' />
+      <HeaderDuringTest title={tCommon('practice')} tag={tCommon('reading')} />
 
       <main className='min-h-screen overflow-hidden bg-d-yellow-secondary'>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
             <Tabs
+              defaultValue='p1'
               value={activeTab}
               onValueChange={setActiveTab}
-              defaultValue='p1'
               className='container flex min-h-[100dvh] max-w-[1440rem] flex-col px-[40rem] pb-[24rem] pt-[40rem]'
             >
               {/* // * Навигация */}
@@ -168,19 +171,19 @@ export default function Page({ params }: { params: { id: string } }) {
                     value='p1'
                     className='flex h-[58rem] w-[101rem] items-center justify-center rounded-[64rem] bg-white data-[state=active]:bg-d-green hover:bg-d-green'
                   >
-                    Part 1
+                    {tCommon('partNumber', { number: 1 })}
                   </TabsTrigger>
                   <TabsTrigger
                     value='p2'
                     className='flex h-[58rem] w-[101rem] items-center justify-center rounded-[64rem] bg-white data-[state=active]:bg-d-green hover:bg-d-green'
                   >
-                    Part 2
+                    {tCommon('partNumber', { number: 2 })}
                   </TabsTrigger>
                   <TabsTrigger
                     value='p3'
                     className='flex h-[58rem] w-[101rem] items-center justify-center rounded-[64rem] bg-white data-[state=active]:bg-d-green hover:bg-d-green'
                   >
-                    Part 3
+                    {tCommon('partNumber', { number: 3 })}
                   </TabsTrigger>
                 </TabsList>
 
@@ -203,8 +206,8 @@ export default function Page({ params }: { params: { id: string } }) {
                       >
                         <span>{qNumber}</span>
                         <div
-                          className='h-[4rem] w-[16rem] rounded-[16rem] bg-d-light-gray data-[state=active]:bg-d-green'
                           data-state={values[qNumber] ? 'active' : 'inactive'}
+                          className='h-[4rem] w-[16rem] rounded-[16rem] bg-d-light-gray data-[state=active]:bg-d-green'
                         />
                       </div>
                     ))}
@@ -214,12 +217,12 @@ export default function Page({ params }: { params: { id: string } }) {
 
               {/* // * Инструкция */}
               <div className='relative mb-[40rem] flex w-full items-center justify-center rounded-[13rem] bg-d-light-gray py-[24rem] text-[20rem] font-medium leading-[24rem] tracking-[-0.2rem] text-d-black'>
-                Read the text and answer questions {questionsCountString()}
+                {t('readTextAndAnswerQuestions')} {questionsCountString()}
               </div>
 
               {[1, 2, 3].map(tab => (
                 <TabsContent key={`questions-content-tab-${tab}`} value={`p${tab}`} className='flex items-start justify-between'>
-                  {/* // *  Текст */}
+                  {/* // * Текст */}
                   <div className='w-[672rem] whitespace-pre-line rounded-[16rem] bg-white p-[40rem] text-[16rem] font-normal leading-tight'>
                     {data[`part_${tab}`].text}
                   </div>
@@ -604,7 +607,7 @@ export default function Page({ params }: { params: { id: string } }) {
                         }}
                         className='flex h-[71rem] w-full items-center justify-center rounded-[40rem] bg-d-green text-[20rem] font-normal leading-[24rem] tracking-[-0.2rem] text-d-black'
                       >
-                        Next
+                        {tActions('next')}
                       </button>
                     )}
                     {activeTab === 'p2' && (
@@ -616,7 +619,7 @@ export default function Page({ params }: { params: { id: string } }) {
                         }}
                         className='flex h-[71rem] w-full items-center justify-center rounded-[40rem] bg-d-green text-[20rem] font-normal leading-[24rem] tracking-[-0.2rem] text-d-black'
                       >
-                        Next
+                        {tActions('next')}
                       </button>
                     )}
                     {activeTab === 'p3' && (
@@ -624,7 +627,7 @@ export default function Page({ params }: { params: { id: string } }) {
                         type='submit'
                         className='flex h-[71rem] w-full items-center justify-center rounded-[40rem] bg-d-green text-[20rem] font-normal leading-[24rem] tracking-[-0.2rem] text-d-black'
                       >
-                        Submit
+                        {tActions('submit')}
                       </button>
                     )}
                   </div>

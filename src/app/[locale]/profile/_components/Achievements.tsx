@@ -1,15 +1,18 @@
 import Link from 'next/link';
 import React from 'react';
+import { useCustomTranslations } from '@/hooks/useCustomTranslations';
 
-export const Achievments = () => {
+export const Achievements = () => {
+  const { t, tImgAlts, tActions } = useCustomTranslations('profile.achievements');
+
   return (
     <section>
       <div className='relative overflow-hidden rounded-[16rem] bg-white p-[24rem] pt-[16rem]'>
         {/* // * Title & Full litst btn */}
         <div className='mb-[10rem] flex items-center justify-between'>
-          <h2 className='text-[20rem] font-medium leading-normal'>Achievements</h2>
+          <h2 className='text-[20rem] font-medium leading-normal'>{t('title')}</h2>
           <button type='button' className='flex h-[30rem] items-center gap-x-[4rem] px-[16rem] disabled:cursor-not-allowed' disabled>
-            <span className='text-[14rem] font-medium leading-normal text-d-black/80'>View full list</span>
+            <span className='text-[14rem] font-medium leading-normal text-d-black/80'>{tActions('viewFullList')}</span>
             <img src='/images/icon_chevron--down.svg' className='size-[14rem]' alt='icon' />
           </button>
         </div>
@@ -76,12 +79,16 @@ export const Achievments = () => {
         </div> */}
         {/* // * Empty state */}
         <div className='mb-[140rem] mt-[110rem] flex w-full flex-col items-center gap-y-[24rem]'>
-          <div className='font-poppins text-[14rem]'>You don’t have any achievements yet</div>
+          <div className='font-poppins text-[14rem]'>{t('noHaveAchievements')}</div>
           <Link href='/mock' className='flex h-[50rem] w-[280rem] items-center justify-center rounded-[40rem] bg-d-light-gray px-[24rem] hover:bg-d-green/40'>
-            <span className='text-[14rem] font-semibold'>Complete MOCK</span>
+            <span className='text-[14rem] font-semibold'>{tActions('completeMOCK')}</span>
           </Link>
         </div>
-        <img src='/images/illustration_flower3.png' className='pointer-events-none absolute bottom-0 right-0 h-auto w-[462rem] mix-blend-luminosity' alt='illustration' />
+        <img
+          alt={tImgAlts('flower')}
+          src='/images/illustration_flower3.png'
+          className='pointer-events-none absolute bottom-0 right-0 h-auto w-[462rem] mix-blend-luminosity'
+        />
       </div>
     </section>
   );

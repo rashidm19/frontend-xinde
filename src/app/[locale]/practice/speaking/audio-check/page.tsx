@@ -92,7 +92,7 @@ export default function Page() {
           )}
 
           <Link
-            href='/[locale]/practice/speaking/mic-check/'
+            href='/practice/speaking/mic-check/'
             className='mx-auto flex h-[63rem] w-[280rem] items-center justify-center rounded-[40rem] bg-d-green text-[20rem] font-semibold hover:bg-d-green/40'
           >
             Continue
