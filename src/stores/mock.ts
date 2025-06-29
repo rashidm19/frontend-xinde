@@ -13,7 +13,7 @@ interface MockStore {
   setTimer: (value: MockStore['timer']) => void;
 }
 
-export const mockStore = create<MockStore>((set) => ({
+export const mockStore = create<MockStore>(set => ({
   mockData: {
     listening: null,
     reading: null,

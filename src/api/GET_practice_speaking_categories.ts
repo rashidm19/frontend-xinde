@@ -6,6 +6,5 @@ export const GET_practice_speaking_categories = async () => {
     },
   });
 
-
   return res.json();
 };

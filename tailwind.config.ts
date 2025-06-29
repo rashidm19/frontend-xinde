@@ -3,15 +3,7 @@ import type { Config } from 'tailwindcss';
 const config = {
   darkMode: ['class'],
   content: ['./pages/**/*.{ts,tsx}', './components/**/*.{ts,tsx}', './app/**/*.{ts,tsx}', './src/**/*.{ts,tsx}'],
-  safelist: [
-    'grid-cols-2',
-    'grid-cols-3',
-    'grid-cols-4',
-    'grid-cols-5',
-    'grid-cols-6',
-    'grid-cols-7',
-    'grid-cols-8',
-  ],
+  safelist: ['grid-cols-2', 'grid-cols-3', 'grid-cols-4', 'grid-cols-5', 'grid-cols-6', 'grid-cols-7', 'grid-cols-8'],
   prefix: '',
   theme: {
     screens: {

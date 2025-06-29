@@ -10,7 +10,7 @@ export const POST_practice_speaking_id_begin = async () => {
   });
 
   const data = await res.json();
-  
+
   if (data.id) {
     localStorage.setItem('practiceSpeakingIdStarted', data.id);
   }

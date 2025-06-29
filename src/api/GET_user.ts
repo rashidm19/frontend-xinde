@@ -1,4 +1,4 @@
-import { User } from "@/types/types";
+import { User } from '@/types/types';
 
 export async function getUser() {
   const response = await fetch('https://api.studybox.kz/auth/profile', {

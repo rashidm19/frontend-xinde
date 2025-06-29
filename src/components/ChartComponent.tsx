@@ -1,7 +1,7 @@
 import React from 'react';
 import { Bar, BarChart, CartesianGrid, LabelList, ResponsiveContainer, XAxis, YAxis } from 'recharts';
-import { ChartConfig, ChartContainer, ChartLegend, ChartLegendContent } from './ui/chart';
-import { cn } from '../lib/utils';
+import { ChartConfig, ChartContainer } from './ui/chart';
+import { cn } from '@/lib/utils';
 
 interface ChartComponentProps {
   chartData: { [key: string]: number | string }[];

@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { format } from 'date-fns';
 import { mockStore } from '@/stores/mock';
 import { usePathname } from 'next/navigation';
+import { useCustomTranslations } from '@/hooks/useCustomTranslations';
 
 interface Props {
   title: string;
@@ -16,6 +17,7 @@ export const HeaderDuringTest = ({ title, tag, time, audio }: Props) => {
   const { timer, setTimer } = mockStore();
 
   const pathname = usePathname();
+  const { t, tImgAlts, tActions } = useCustomTranslations('headerDuringTest');
 
   useEffect(() => {
     if (!timer) return;
@@ -58,8 +60,8 @@ export const HeaderDuringTest = ({ title, tag, time, audio }: Props) => {
             <div className='flex items-center gap-x-[16rem]'>
               {audio && (
                 <div className='flex h-[42rem] items-center justify-center gap-x-[8rem] rounded-[40rem] border-2 border-d-gray bg-white px-[24rem]'>
-                  <img src='/images/icon_listeningSection.svg' className='size-[16rem]' alt='audio' />
-                  <span className='text-[14rem] font-semibold'>Audio is playing</span>
+                  <img src='/images/icon_listeningSection.svg' className='size-[16rem]' alt={tImgAlts('audio')} />
+                  <span className='text-[14rem] font-semibold'>{t('audioIsPlaying')}</span>
                   <audio src={audio} autoPlay className='h-0 w-0' />
                 </div>
               )}
@@ -74,7 +76,7 @@ export const HeaderDuringTest = ({ title, tag, time, audio }: Props) => {
                 </div>
               )}
               <Link href='/profile' className='flex h-[42rem] w-[74rem] items-center justify-center rounded-[40rem] bg-d-gray hover:bg-d-green/40'>
-                <span className='text-[14rem] font-semibold'>Exit</span>
+                <span className='text-[14rem] font-semibold'>{tActions('exit')}</span>
               </Link>
             </div>
           </div>

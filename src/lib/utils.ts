@@ -18,7 +18,7 @@ export const transformStringToArrayV4 = (input: string) => {
   let inputCount = 0;
   let breakCount = 0;
   let stringCount = 0;
-  
+
   return input
     .split(/(\n|___|[^\n___]+)/)
     .filter(Boolean)
@@ -32,4 +32,3 @@ export const transformStringToArrayV4 = (input: string) => {
       }
     });
 };
-
