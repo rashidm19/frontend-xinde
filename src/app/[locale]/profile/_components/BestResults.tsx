@@ -11,6 +11,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { ApproximateIELTSScore } from './ApproximateIELTSScore';
 import { useCustomTranslations } from '@/hooks/useCustomTranslations';
+import { ChangeLangModal } from '@/app/[locale]/profile/settings/_components/ChangeLangModal';
 
 export const BestResults = () => {
   const { tImgAlts, tCommon } = useCustomTranslations();
@@ -46,6 +47,16 @@ export const BestResults = () => {
             </div>
           </div>
           <div className='flex gap-x-[6rem]'>
+            <Dialog>
+              <DialogTrigger className='flex size-[46rem] items-center justify-center rounded-full bg-d-light-gray hover:bg-d-green/40'>
+                <img src='/images/icon_globe.svg' alt={tImgAlts('globe')} className='size-[18rem]' />
+              </DialogTrigger>
+
+              <DialogContent className='fixed left-0 top-0 flex h-full min-h-[100dvh] w-full max-w-full flex-col items-start justify-start overflow-hidden backdrop-brightness-90 desktop:items-center desktop:justify-center'>
+                <ChangeLangModal />
+              </DialogContent>
+            </Dialog>
+
             <Dialog>
               <DialogTrigger className='flex size-[46rem] items-center justify-center rounded-full bg-d-light-gray hover:bg-d-green/40'>
                 <img src='/images/icon_gear.svg' alt={tImgAlts('settings')} className='size-[18rem]' />

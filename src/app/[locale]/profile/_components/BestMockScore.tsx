@@ -3,11 +3,11 @@ import React from 'react';
 import { useCustomTranslations } from '@/hooks/useCustomTranslations';
 
 export const BestMockScore = () => {
-  const { t } = useCustomTranslations('profile.approximateIELTSSCore');
+  const { t } = useCustomTranslations('profile.bestMOCKScore');
 
   return (
     <div className='relative mr-[20rem] flex flex-col items-center'>
-      <h2 className='mb-[24rem] text-[20rem] leading-tight'>{t('title')}</h2>
+      <h2 className='mb-[24rem] text-[20rem] leading-tight text-center'>{t('title')}</h2>
 
       <HorseshoeProgressBar
         value={0}

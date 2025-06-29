@@ -1,7 +1,38 @@
 {
   "common": {
     "studybox": "studybox",
-    "allRightsReserved": "© All rights reserved"
+    "allRightsReserved": "© All rights reserved",
+    "freeTrial": "Free trial",
+    "points": "points",
+    "thisWeek": "This week",
+    "hCount": "{count}h",
+    "writing": "Writing",
+    "reading": "Reading",
+    "speaking": "Speaking",
+    "listening": "Listening",
+    "minutesCount": "{count} minutes",
+    "partsCount": "{count} parts",
+    "questionsCount": "{count} questions",
+    "minCount": "{count} min",
+    "parts": "Parts",
+    "marking": "Marking",
+    "acceptUserAgreement": "I accept the <link>user agreement</link>",
+    "partNumber": "Part {number}",
+    "practice": "Practice",
+    "answersSheet": "Answers Sheet",
+    "yourAnswer": "Your answer",
+    "correctAnswer": "Correct answer",
+    "overallScore": "Overall score",
+    "tasksSelection": "Tasks selection",
+    "pleaseSelectTopic": "Please select a topic.",
+    "random": "Random",
+    "practicePartNumber": "Practice - part {number}",
+    "wordsCount": "Words: {count}",
+    "overallRecommendation": "Overall recommendation",
+    "recommendationsByBands": "Recommendations by bands",
+    "overallBandScore": "Overall band score",
+    "questions": "Questions",
+    "viewYourResults": "View your results"
   },
   "actions": {
     "backToHomepage": "Back to the homepage",
@@ -15,7 +46,21 @@
     "createAccount": "Create account",
     "login": "Log in",
     "resetPassword": "Reset password",
-    "goToLogin": "Go to login"
+    "goToLogin": "Go to login",
+    "viewFullList": "View full list",
+    "completeMOCK": "Complete MOCK",
+    "copyInviteLink": "Copy invite link",
+    "confirm": "Confirm",
+    "practiceBySection": "Practice by section",
+    "logout": "Log out",
+    "deleteAccount": "Delete account",
+    "save": "Save",
+    "takeTheTest": "Take the test",
+    "continue": "Continue",
+    "play": "Play",
+    "submit": "Submit",
+    "next": "Next",
+    "cancel": "Cancel"
   },
   "form": {
     "validation": {
@@ -27,29 +72,67 @@
       "name": "Name",
       "email": "Email",
       "password": "Password",
-      "region": "Select your region"
+      "region": "Select your region",
+      "oldPassword": "Old password",
+      "newPassword": "New password",
+      "language": "Select language"
     },
     "placeholders": {
       "name": "Enter your name",
       "email": "Enter your email",
-      "password": "Create your password"
-    }
+      "password": "Create your password",
+      "select": "Select",
+      "oldPassword": "Enter old password",
+      "newPassword": "Enter new password",
+      "random": "Random",
+      "startTypingHere": "Start typing here..."
+    },
+    "regionKZ": "Kazakhstan",
+    "regionKG": "Kyrgyzstan",
+    "regionMD": "Moldova"
   },
   "messages": {
     "accountNoExist": "account doesn't exist",
-    "invalidOrExpiredToken": "Invalid or expired token"
+    "invalidOrExpiredToken": "Invalid or expired token",
+    "linkCopied": "Link copied",
+    "acceptUserAgreement": "Please accept the User Agreement before continuing."
   },
   "imgAlts": {
-    "logo": "logo",
-    "studybox": "studybox",
+    "logo": "Logo",
+    "studybox": "Studybox",
     "illustrationSphere": "Illustration Sphere",
-    "audio": "audio",
+    "audio": "Audio",
     "close": "Close",
-    "check": "check",
+    "check": "Check",
     "premiumPlan": "Premium Plan",
-    "flower": "flower",
+    "flower": "Flower",
     "back": "Back",
-    "chain": "Chain"
+    "chain": "Chain",
+    "settings": "Settings",
+    "logout": "Logout",
+    "rotate": "Rotate",
+    "trophy": "Trophy",
+    "copy": "Copy",
+    "chevronDown": "Chevron down",
+    "hairy": "Hairy",
+    "edit": "Edit",
+    "writing": "Writing",
+    "reading": "Reading",
+    "listening": "Listening",
+    "speaking": "Speaking",
+    "molecule": "Molecule",
+    "halfspheres": "Halfspheres",
+    "pyramid": "Pyramid",
+    "softball": "Softball",
+    "bread": "Bread",
+    "abstract": "Abstract",
+    "play": "Play",
+    "layers": "Layers",
+    "star": "Star",
+    "bookmark": "Bookmark",
+    "cross": "Cross",
+    "start": "Start",
+    "globe": "Globe"
   },
   "header": {
     "menu": {
@@ -116,11 +199,6 @@
     "confirmationTitle": "Confirmation",
     "confirmationMessage": "We have sent a confirmation email to your email address",
     "createAccountTitle": "Create your account",
-    "select": "Select",
-    "regionKZ": "Kazakhstan",
-    "regionKG": "Kyrgyzstan",
-    "regionMD": "Moldova",
-    "agreementText": "I accept the <link>user agreement</link>",
     "userAgreement": "user agreement",
     "alreadyHaveAccount": "Already have an account? <span>Log in</span>"
   },
@@ -150,5 +228,116 @@
   "error503": {
     "title": "No internet connection",
     "text": "Your device is currently unable to reach the <br></br> internet. Once your connection is restored, try <br></br> accessing the platform again and start the <br></br> exam over."
+  },
+  "profile": {
+    "achievements": {
+      "title": "Achievements",
+      "noHaveAchievements": "You don’t have any achievements yet"
+    },
+    "approximateIELTSSCore": {
+      "title": "Approximate IELTS score",
+      "noResults": "achieve your goal"
+    },
+    "bestMOCKScore": {
+      "title": "Best MOCK score",
+      "noResults": "test your skills"
+    },
+    "bestSectionsResults": {
+      "title": "Best sections results",
+      "subtitle": "Start practicing by section or take MOCK test to view results"
+    },
+    "ieltsGoal": {
+      "title": "IELTS Target Assessment",
+      "noResults": "set your goal",
+      "changeTarget": "Change target score",
+      "setTarget": "Set target score"
+    },
+    "notifications": {
+      "title": "Notifications",
+      "welcome": "Welcome to Studybox!",
+      "description": "Welcome to your AI-powered IELTS training platform! Get yourself prepared for your next exam.",
+      "sell": "-10% for the Premium plan",
+      "signupAction": "Sign up now and enjoy an exclusive discount for both Mock Exams & Practice"
+    },
+    "referrals": {
+      "title": "Build your dream-team",
+      "invite": "Invite your friends to join the journey and experience the power of AI-driven IELTS preparation together!"
+    },
+    "targetGoalModal": {
+      "title": "IELTS Target Assessment",
+      "selectGoal": "Select the score you would like to achieve"
+    },
+    "timeSpent": {
+      "title": "Time spent on studying",
+      "dailyAverage": "Daily average",
+      "weekTotal": "Week total",
+      "weeklyGoal": "Weekly goal",
+      "start": "Start practicing by section or take MOCK test to view results"
+    }
+  },
+  "profileSettings": {
+    "profileEditForm": {
+      "title": "Profile editing"
+    },
+    "changeLangModal": {
+      "title": "Change language"
+    }
+  },
+  "practice": {
+    "listening": {
+      "title": "Practice listening section",
+      "subtitle": "The points received will not be displayed <br></br> in the overall statistics",
+      "rules": {
+        "title": "What’s in the IELTS Academic Listening paper?",
+        "text": "The paper has four parts, with ten questions in each part. The questions are in the same order as the information in the recording, so the answer to the first question will be before the answer to the second question, and so on. <br></br> <br></br> Parts 1 and 2 deal with everyday, social situations. There is a conversation between two speakers in Part 1 (for example, a conversation about travel arrangements). Only one person speaks in Part 2 (for example, a speech about local facilities). <br></br> <br></br> Parts 3 and 4 deal with educational and training situations. In Part 3 there is a conversation between two main speakers (for example, two university students in discussion, perhaps guided by a tutor). In Part 4 only one person speaks on an academic subject. <br></br> <br></br> You will hear the recordings once only. Different accents, including British, Australian, New Zealand and North American, are used. <br></br> <br></br> You will need to transfer your answers to an answer sheet. You will have 10 minutes at the end of the test to do this. You should be careful when writing your answers on the answer sheet because you will lose marks for incorrect spelling and grammar.",
+        "marking": "Each correct answer receives 1 mark. Your final score is given as a band score in whole or half bands, e.g. 5.5 or 7.0."
+      },
+      "audioCheck": {
+        "title": "Play the record",
+        "subtitle": "You will be listening to an audio clip during this test. <br></br> You will not be permitted to pause or rewind the audio while answering the questions."
+      },
+      "results": {
+        "title": "Listening section results"
+      }
+    },
+    "reading": {
+      "title": "Practice reading section",
+      "subtitle": "The points received will not be displayed <br></br> in the overall statistics",
+      "rules": {
+        "title": "What’s in the IELTS Academic Reading paper?",
+        "text": "What’s in the IELTS Academic Reading paper? Texts come from books, journals, magazines, newspapers and online resources, written for a non-specialist audience. All the topics are of general interest to students at undergraduate or postgraduate level. The texts may be written in different styles, for example, narrative, descriptive or discursive/argumentative. At least one text contains detailed logical argument. Texts may also contain diagrams, graphs or illustrations. If texts use technical vocabulary, then a simple dictionary definition is provided. You will need to transfer your answers to an answer sheet. You must transfer your answers during the hour you are given for the Reading test. Unlike the Listening test, no extra transfer time is given. You should be careful when writing your answers on the answer sheet because you will lose marks for incorrect spelling and grammar.",
+        "marking": "Each correct answer receives 1 mark. Your final score is given as a band score from 1–9 in whole or half bands, e.g. 4 or 6.5"
+      },
+      "test": {
+        "readTextAndAnswerQuestions": "Read the text and answer questions "
+      },
+      "results": {
+        "title": "Reading section results",
+        "": ""
+      }
+    },
+    "speaking": {
+      "title": "Practice speaking section",
+      "subtitle": "The points received will not be displayed <br></br> in the overall statistics"
+    },
+    "writing": {
+      "title": "Practice writing section",
+      "subtitle": "The points received will not be displayed <br></br> in the overall statistics",
+      "customize": {
+        "subtitle": "Please select a part of Writing section you want to practice."
+      },
+      "rules": {
+        "title": "What’s in the IELTS Academic Writing paper?",
+        "text": "There are two Writing tasks. In Task 1, you have to describe some visual information in your own words (a graph, table, chart or diagram). You need to write at least 150 words in about 20 minutes. In Task 2, you are given a point of view, argument or problem which you need to discuss. You need to write at least 250 words in about 40 minutes. You must write your answers using full sentences. You must not write your answers as notes or bullet points. You must write your answers on the answer sheet. You are allowed to write notes on the question paper, but these will not be seen by the examiner.",
+        "marking": "Certificated IELTS examiners assess your performance on each Writing task. There are four assessment criteria (things which the examiner thinks about when deciding what score to give you):"
+      },
+      "test": {
+        "writeAboutTopic": "Write about the following topic:"
+      },
+      "feedback": {
+        "title": "Writing section feedback",
+        "evaluating": "Evaluating your answer. It usually takes 1-2 minutes..."
+      }
+    }
   }
 }

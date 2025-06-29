@@ -1,336 +1,341 @@
 {
   "common": {
     "studybox": "studybox",
-    "allRightsReserved": "© All rights reserved",
-    "freeTrial": "Free trial",
-    "points": "points",
-    "thisWeek": "This week",
-    "hCount": "{count}h",
-    "writing": "Writing",
-    "reading": "Reading",
-    "speaking": "Speaking",
-    "listening": "Listening",
-    "minutesCount": "{count} minutes",
-    "partsCount": "{count} parts",
-    "questionsCount": "{count} questions",
-    "minCount": "{count} min",
-    "parts": "Parts",
-    "marking": "Marking",
-    "acceptUserAgreement": "I accept the <link>user agreement</link>",
-    "partNumber": "Part {number}",
-    "practice": "Practice",
-    "answersSheet": "Answers Sheet",
-    "yourAnswer": "Your answer",
-    "correctAnswer": "Correct answer",
-    "overallScore": "Overall score",
-    "tasksSelection": "Tasks selection",
-    "pleaseSelectTopic": "Please select a topic.",
-    "random": "Random",
-    "practicePartNumber": "Practice - part {number}",
-    "wordsCount": "Words: {count}",
-    "overallRecommendation": "Overall recommendation",
-    "recommendationsByBands": "Recommendations by bands",
-    "overallBandScore": "Overall band score",
-    "questions": "Questions",
-    "viewYourResults": "View your results"
+    "allRightsReserved": "© Все права защищены",
+    "freeTrial": "Бесплатный пробный период",
+    "points": "баллы",
+    "thisWeek": "Эта неделя",
+    "hCount": "{count}ч",
+    "writing": "Письмо",
+    "reading": "Чтение",
+    "speaking": "Говорение",
+    "listening": "Аудирование",
+    "minutesCount": "{count} минут",
+    "partsCount": "{count} частей",
+    "questionsCount": "{count} вопросов",
+    "minCount": "{count} мин",
+    "parts": "Части",
+    "marking": "Оценивание",
+    "acceptUserAgreement": "Я принимаю <link>пользовательское соглашение</link>",
+    "partNumber": "Часть {number}",
+    "practice": "Практика",
+    "answersSheet": "Бланк ответов",
+    "yourAnswer": "Ваш ответ",
+    "correctAnswer": "Правильный ответ",
+    "overallScore": "Итоговый балл",
+    "tasksSelection": "Выбор заданий",
+    "pleaseSelectTopic": "Пожалуйста, выберите тему.",
+    "random": "Случайный",
+    "practicePartNumber": "Практика – часть {number}",
+    "wordsCount": "Слов: {count}",
+    "overallRecommendation": "Общая рекомендация",
+    "recommendationsByBands": "Рекомендации по диапазонам",
+    "overallBandScore": "Итоговый балл по шкале",
+    "questions": "Вопросы",
+    "viewYourResults": "Посмотреть ваши результаты"
   },
   "actions": {
-    "backToHomepage": "Back to the homepage",
-    "upgradePlan": "Upgrade plan",
-    "exit": "Exit",
-    "upgrade": "Upgrade",
-    "previousSlide": "Previous slide",
-    "nextSlide": "Next slide",
-    "back": "Back",
-    "ok": "Ok",
-    "createAccount": "Create account",
-    "login": "Log in",
-    "resetPassword": "Reset password",
-    "goToLogin": "Go to login",
-    "viewFullList": "View full list",
-    "completeMOCK": "Complete MOCK",
-    "copyInviteLink": "Copy invite link",
-    "confirm": "Confirm",
-    "practiceBySection": "Practice by section",
-    "logout": "Log out",
-    "deleteAccount": "Delete account",
-    "save": "Save",
-    "takeTheTest": "Take the test",
-    "continue": "Continue",
-    "play": "Play",
-    "submit": "Submit",
-    "next": "Next"
+    "backToHomepage": "На главную страницу",
+    "upgradePlan": "Обновить план",
+    "exit": "Выход",
+    "upgrade": "Обновить",
+    "previousSlide": "Предыдущий слайд",
+    "nextSlide": "Следующий слайд",
+    "back": "Назад",
+    "ok": "Ок",
+    "createAccount": "Создать аккаунт",
+    "login": "Войти",
+    "resetPassword": "Сбросить пароль",
+    "goToLogin": "Перейти к входу",
+    "viewFullList": "Просмотреть полный список",
+    "completeMOCK": "Пройти MOCK",
+    "copyInviteLink": "Скопировать ссылку-приглашение",
+    "confirm": "Подтвердить",
+    "practiceBySection": "Практика по разделам",
+    "logout": "Выйти из аккаунта",
+    "deleteAccount": "Удалить аккаунт",
+    "save": "Сохранить",
+    "takeTheTest": "Начать тест",
+    "continue": "Продолжить",
+    "play": "Воспроизвести",
+    "submit": "Отправить",
+    "next": "Далее",
+    "cancel": "Отменить"
   },
   "form": {
     "validation": {
-      "requiredField": "Required field",
-      "invalidEmailAddress": "Invalid email address",
-      "charactersMinimum": "{count} characters minimum"
+      "requiredField": "Обязательное поле",
+      "invalidEmailAddress": "Неверный адрес электронной почты",
+      "charactersMinimum": "Минимум {count} символов"
     },
     "labels": {
-      "name": "Name",
-      "email": "Email",
-      "password": "Password",
-      "region": "Select your region",
-      "oldPassword": "Old password",
-      "newPassword": "New password"
+      "name": "Имя",
+      "email": "Электронная почта",
+      "password": "Пароль",
+      "region": "Выберите ваш регион",
+      "oldPassword": "Старый пароль",
+      "newPassword": "Новый пароль",
+      "language": "Выберите язык"
     },
     "placeholders": {
-      "name": "Enter your name",
-      "email": "Enter your email",
-      "password": "Create your password",
-      "select": "Select",
-      "oldPassword": "Enter old password",
-      "newPassword": "Enter new password",
-      "random": "Random",
-      "startTypingHere": "Start typing here..."
+      "name": "Введите ваше имя",
+      "email": "Введите вашу электронную почту",
+      "password": "Придумайте пароль",
+      "select": "Выбрать",
+      "oldPassword": "Введите старый пароль",
+      "newPassword": "Введите новый пароль",
+      "random": "Случайно",
+      "startTypingHere": "Начните ввод здесь..."
     },
-    "regionKZ": "Kazakhstan",
-    "regionKG": "Kyrgyzstan",
-    "regionMD": "Moldova"
+    "regionKZ": "Казахстан",
+    "regionKG": "Кыргызстан",
+    "regionMD": "Молдова"
   },
   "messages": {
-    "accountNoExist": "account doesn't exist",
-    "invalidOrExpiredToken": "Invalid or expired token",
-    "linkCopied": "Link copied",
-    "acceptUserAgreement": "Please accept the User Agreement before continuing."
+    "accountNoExist": "аккаунт не существует",
+    "invalidOrExpiredToken": "Недействительный или истекший токен",
+    "linkCopied": "Ссылка скопирована",
+    "acceptUserAgreement": "Пожалуйста, примите Пользовательское соглашение перед продолжением."
   },
   "imgAlts": {
-    "logo": "Logo",
+    "logo": "Логотип",
     "studybox": "Studybox",
-    "illustrationSphere": "Illustration Sphere",
-    "audio": "Audio",
-    "close": "Close",
-    "check": "Check",
-    "premiumPlan": "Premium Plan",
-    "flower": "Flower",
-    "back": "Back",
-    "chain": "Chain",
-    "settings": "Settings",
-    "logout": "Logout",
-    "rotate": "Rotate",
-    "trophy": "Trophy",
-    "copy": "Copy",
-    "chevronDown": "Chevron down",
-    "hairy": "Hairy",
-    "edit": "Edit",
-    "writing": "Writing",
-    "reading": "Reading",
-    "listening": "Listening",
-    "speaking": "Speaking",
-    "molecule": "Molecule",
-    "halfspheres": "Halfspheres",
-    "pyramid": "Pyramid",
-    "softball": "Softball",
-    "bread": "Bread",
-    "abstract": "Abstract",
-    "play": "Play",
-    "layers": "Layers",
-    "star": "Star",
-    "bookmark": "Bookmark",
-    "cross": "Cross",
-    "start": "Start"
+    "illustrationSphere": "Иллюстрация сферы",
+    "audio": "Аудио",
+    "close": "Закрыть",
+    "check": "Проверить",
+    "premiumPlan": "Премиум-план",
+    "flower": "Цветок",
+    "back": "Назад",
+    "chain": "Цепь",
+    "settings": "Настройки",
+    "logout": "Выход",
+    "rotate": "Повернуть",
+    "trophy": "Трофей",
+    "copy": "Копировать",
+    "chevronDown": "Стрелка вниз",
+    "hairy": "Волосатый",
+    "edit": "Редактировать",
+    "writing": "Письмо",
+    "reading": "Чтение",
+    "listening": "Аудирование",
+    "speaking": "Говорение",
+    "molecule": "Молекула",
+    "halfspheres": "Полусферы",
+    "pyramid": "Пирамида",
+    "softball": "Софтбол",
+    "bread": "Хлеб",
+    "abstract": "Абстракция",
+    "play": "Воспроизвести",
+    "layers": "Слои",
+    "star": "Звезда",
+    "bookmark": "Закладка",
+    "cross": "Крестик",
+    "start": "Начать",
+    "globe": "Глобус"
   },
   "header": {
     "menu": {
-      "link_1": "Practice by section",
+      "link_1": "Практика по разделам",
       "link_2": "MOCK",
-      "link_3": "Notes"
+      "link_3": "Заметки"
     },
-    "support": "Support"
+    "support": "Служба поддержки"
   },
   "headerDuringTest": {
-    "audioIsPlaying": "Audio is playing"
+    "audioIsPlaying": "Аудио воспроизводится"
   },
   "pricesModal": {
     "demo": {
-      "title": "Demo",
+      "title": "Демо",
       "includes": [
-        "1 trail MOCK exam",
-        "1 trail Practice by section",
-        "Limited statistics"
+        "1 пробный экзамен MOCK",
+        "1 пробная практика по разделам",
+        "Ограниченная статистика"
       ],
-      "price": "Free",
-      "about": "Activated for unlimited time"
+      "price": "Бесплатно",
+      "about": "Активировано на неограниченное время"
     },
     "premium": {
-      "title": "Premium",
+      "title": "Премиум",
       "includes": [
-        "Unlimited access to the MOCK exams",
-        "Unlimited access to the Practice by section",
-        "Personal Roadmap",
-        "Full statistics",
-        "Extended profile settings"
+        "Неограниченный доступ к экзаменам MOCK",
+        "Неограниченный доступ к практике по разделам",
+        "Индивидуальный план обучения",
+        "Полная статистика",
+        "Расширенные настройки профиля"
       ],
-      "price": "{price}<span> /{monthCount, select, 3 { 3} other {}} month</span>",
-      "about": "Activated for unlimited time"
+      "price": "{price}<span>/{monthCount, select, 3 { 3} other {}} месяц</span>",
+      "about": "Активировано на неограниченное время"
     }
   },
   "notFound": {
-    "title": "Page not found",
-    "error": "Error 404",
-    "subtitle": "The page you are trying to access doesn’t exist.<br></br>Please go back and try again."
+    "title": "Страница не найдена",
+    "error": "Ошибка 404",
+    "subtitle": "Страница, к которой вы пытаетесь получить доступ, не существует.<br></br>Пожалуйста, вернитесь назад и попробуйте снова."
   },
   "userAgreement": {
-    "userAgreement": "User Agreement",
-    "effectiveDate": "Effective Date:",
-    "section1Title": "1. Introduction",
-    "section1Content": "Welcome to StudyBox. By accessing or using our service, you agree to be bound by the terms and conditions of this User Agreement. If you do not agree to these terms, you must not use our service.",
-    "section2Title": "2. Definitions",
-    "section2Content": "\"Service\" refers to [Service Name], including but not limited to any related websites, mobile applications, and other platforms operated by [Company Name].<br></br><br></br>\"User\" refers to any person or entity accessing or using the Service.<br></br><br></br>\"Content\" refers to all information, text, images, videos, and other material provided by the Service or its users.",
-    "section3Title": "3. Eligibility",
-    "section3Content": "To use the Service, you must be at least [minimum age, typically 13 or 18] years old and have the legal capacity to enter into this Agreement. By using the Service, you represent and warrant that you meet these requirements.",
-    "section4Title": "4. User Account",
-    "section4Content1": "Account Creation: You may be required to create an account to access certain features of the Service. You agree to provide accurate, complete, and up-to-date information during registration.",
-    "section4Content2": "Account Security: You are responsible for maintaining the confidentiality of your account credentials and for all activities that occur under your account. You must notify us immediately of any unauthorized use of your account.",
-    "section5Title": "5. Use of the Service",
-    "section5Content": "Permitted Use: You may use the Service for lawful purposes only. You agree not to use the Service in any way that could harm, disrupt, or impair the functioning of the Service or interfere with other users' enjoyment of it.",
-    "section6Title": "6. Intellectual Property",
-    "section6Content": "<span class='font-bold'>Ownership:</span> All intellectual property rights in the Service and its content are owned by [Company Name] or its licensors. You are granted a limited, non-exclusive, non-transferable license to use the Service for your personal use.<br></br><br></br><span class='font-bold'>User Content:</span> By submitting content to the Service, you grant [Company Name] a worldwide, royalty-free, perpetual license to use, modify, reproduce, and distribute your content in connection with the operation of the Service.",
-    "section7Title": "7. Privacy",
-    "section7Content": "Your use of the Service is also governed by our Privacy Policy, which can be found at [Privacy Policy URL]. By using the Service, you consent to the collection, use, and sharing of your information as described in the Privacy Policy.",
-    "section8Title": "8. Termination",
-    "section8Content": "We reserve the right to suspend or terminate your access to the Service at any time, without notice, for any reason, including but not limited to violation of this Agreement. Upon termination, your right to use the Service will immediately cease."
+    "userAgreement": "Пользовательское соглашение",
+    "effectiveDate": "Дата вступления в силу:",
+    "section1Title": "1. Введение",
+    "section1Content": "Добро пожаловать в StudyBox. Получая доступ к нашему сервису или используя его, вы соглашаетесь с условиями данного Пользовательского соглашения. Если вы не согласны с этими условиями, вы не должны использовать наш сервис.",
+    "section2Title": "2. Определения",
+    "section2Content": "\"Сервис\" относится к [Service Name], включая, но не ограничиваясь, любыми связанными веб-сайтами, мобильными приложениями и другими платформами, управляемыми [Company Name].<br></br><br></br>\"Пользователь\" относится к любому лицу или организации, получающему доступ к Сервису или использующему его.<br></br><br></br>\"Контент\" относится ко всей информации, текстам, изображениям, видео и другим материалам, предоставляемым Сервисом или его пользователями.",
+    "section3Title": "3. Право на использование",
+    "section3Content": "Для использования Сервиса вы должны быть не моложе [minimum age, typically 13 or 18] лет и иметь правоспособность заключать настоящее Соглашение. Используя Сервис, вы подтверждаете и гарантируете, что соответствуете этим требованиям.",
+    "section4Title": "4. Учетная запись пользователя",
+    "section4Content1": "Создание учетной записи: для доступа к некоторым функциям Сервиса может потребоваться создание учетной записи. Вы соглашаетесь предоставлять точную, полную и актуальную информацию при регистрации.",
+    "section4Content2": "Безопасность учетной записи: вы несете ответственность за сохранность учетных данных и за все действия, выполняемые под вашей учетной записью. Вы должны немедленно уведомить нас о любом несанкционированном использовании вашей учетной записи.",
+    "section5Title": "5. Использование Сервиса",
+    "section5Content": "Разрешенное использование: вы можете использовать Сервис только в законных целях. Вы соглашаетесь не использовать Сервис таким образом, который может нанести ущерб, нарушить или ухудшить работу Сервиса или помешать другим пользователям пользоваться им.",
+    "section6Title": "6. Интеллектуальная собственность",
+    "section6Content": "<span class='font-bold'>Право собственности:</span> Все права интеллектуальной собственности на Сервис и его контент принадлежат [Company Name] или ее лицензиарам. Вам предоставляется ограниченная, неисключительная, непередаваемая лицензия на использование Сервиса в личных целях.<br></br><br></br><span class='font-bold'>Контент пользователя:</span> При отправке контента в Сервис вы предоставляете [Company Name] неисключительную всемирную бессрочную и безроялти лицензию на использование, изменение, воспроизведение и распространение вашего контента в рамках работы Сервиса.",
+    "section7Title": "7. Конфиденциальность",
+    "section7Content": "Использование Сервиса также регулируется нашей Политикой конфиденциальности, которую можно найти по адресу [Privacy Policy URL]. Используя Сервис, вы соглашаетесь на сбор, использование и распространение вашей информации в соответствии с Политикой конфиденциальности.",
+    "section8Title": "8. Прекращение действия",
+    "section8Content": "Мы оставляем за собой право приостановить или прекратить ваш доступ к Сервису в любое время без уведомления и по любой причине, включая, но не ограничиваясь, нарушением данного Соглашения. После прекращения действия ваше право на использование Сервиса немедленно прекращается."
   },
   "registration": {
-    "confirmationTitle": "Confirmation",
-    "confirmationMessage": "We have sent a confirmation email to your email address",
-    "createAccountTitle": "Create your account",
-    "userAgreement": "user agreement",
-    "alreadyHaveAccount": "Already have an account? <span>Log in</span>"
+    "confirmationTitle": "Подтверждение",
+    "confirmationMessage": "Мы отправили письмо для подтверждения на ваш электронный адрес",
+    "createAccountTitle": "Создайте учетную запись",
+    "userAgreement": "пользовательское соглашение",
+    "alreadyHaveAccount": "Уже есть аккаунт? <span>Войти</span>"
   },
   "login": {
-    "title": "Log into your account",
-    "forgotPassword": "Forgot your password?",
-    "dontHaveAccount": "Don’t have an account? <span>Sign up</span>"
+    "title": "Войдите в свою учетную запись",
+    "forgotPassword": "Забыли пароль?",
+    "dontHaveAccount": "Нет аккаунта? <span>Зарегистрироваться</span>"
   },
   "passwordRecovery": {
-    "title": "Password recovery",
-    "recoveryMessageSent": "We have sent an email with a password reset link to your email address"
+    "title": "Восстановление пароля",
+    "recoveryMessageSent": "Мы отправили сообщение со ссылкой для сброса пароля на ваш электронный адрес"
   },
   "passwordReset": {
-    "success": "Success",
-    "successMessage": "You can now log in to your account using your new password",
-    "title": "Password reset"
+    "success": "Успешно",
+    "successMessage": "Теперь вы можете войти в учетную запись, используя новый пароль",
+    "title": "Сброс пароля"
   },
   "emailVerified": {
-    "confirmation": "Confirmation",
-    "confirmMessage": "You have confirmed the email"
+    "confirmation": "Подтверждение",
+    "confirmMessage": "Вы подтвердили электронную почту"
   },
   "error500": {
-    "title": "Unexpected error",
-    "error": "Error 500",
-    "text": "The server encountered an internal error <br></br> and was unable to complete your request. <br></br> Please go back and try again."
+    "title": "Неожиданная ошибка",
+    "error": "Ошибка 500",
+    "text": "Сервер столкнулся с внутренней ошибкой <br></br> и не смог выполнить ваш запрос. <br></br> Пожалуйста, вернитесь назад и попробуйте снова."
   },
   "error503": {
-    "title": "No internet connection",
-    "text": "Your device is currently unable to reach the <br></br> internet. Once your connection is restored, try <br></br> accessing the platform again and start the <br></br> exam over."
+    "title": "Нет подключения к интернету",
+    "text": "Ваше устройство в настоящее время не может подключиться к <br></br> интернету. Как только соединение восстановится, попробуйте <br></br> снова получить доступ к платформе и начать <br></br> тест заново."
   },
   "profile": {
     "achievements": {
-      "title": "Achievements",
-      "noHaveAchievements": "You don’t have any achievements yet"
+      "title": "Достижения",
+      "noHaveAchievements": "У вас пока нет достижений"
     },
     "approximateIELTSSCore": {
-      "title": "Approximate IELTS score",
-      "noResults": "achieve your goal"
+      "title": "Приблизительный балл IELTS",
+      "noResults": "достигните вашу цель"
     },
     "bestMOCKScore": {
-      "title": "Best MOCK score",
-      "noResults": "test your skills"
+      "title": "Лучший результат MOCK",
+      "noResults": "проверьте свои навыки"
     },
     "bestSectionsResults": {
-      "title": "Best sections results",
-      "subtitle": "Start practicing by section or take MOCK test to view results"
+      "title": "Лучшие результаты по разделам",
+      "subtitle": "Начните практиковаться по разделам или пройдите тест MOCK, чтобы увидеть результаты"
     },
     "ieltsGoal": {
-      "title": "IELTS Target Assessment",
-      "noResults": "set your goal",
-      "changeTarget": "Change target score",
-      "setTarget": "Set target score"
+      "title": "Оценка целевого балла IELTS",
+      "noResults": "установите вашу цель",
+      "changeTarget": "Изменить целевой балл",
+      "setTarget": "Установить целевой балл"
     },
     "notifications": {
-      "title": "Notifications",
-      "welcome": "Welcome to Studybox!",
-      "description": "Welcome to your AI-powered IELTS training platform! Get yourself prepared for your next exam.",
-      "sell": "-10% for the Premium plan",
-      "signupAction": "Sign up now and enjoy an exclusive discount for both Mock Exams & Practice"
+      "title": "Уведомления",
+      "welcome": "Добро пожаловать в Studybox!",
+      "description": "Добро пожаловать на вашу AI-платформу подготовки к IELTS! Подготовьтесь к вашему следующему экзамену.",
+      "sell": "-10% на Премиум-план",
+      "signupAction": "Зарегистрируйтесь сейчас и получите эксклюзивную скидку на экзамены MOCK и практику"
     },
     "referrals": {
-      "title": "Build your dream-team",
-      "invite": "Invite your friends to join the journey and experience the power of AI-driven IELTS preparation together!"
+      "title": "Соберите свою команду мечты",
+      "invite": "Пригласите друзей присоединиться и вместе ощутить силу AI-подготовки к IELTS!"
     },
     "targetGoalModal": {
-      "title": "IELTS Target Assessment",
-      "selectGoal": "Select the score you would like to achieve"
+      "title": "Оценка целевого балла IELTS",
+      "selectGoal": "Выберите балл, который хотите достичь"
     },
     "timeSpent": {
-      "title": "Time spent on studying",
-      "dailyAverage": "Daily average",
-      "weekTotal": "Week total",
-      "weeklyGoal": "Weekly goal",
-      "start": "Start practicing by section or take MOCK test to view results"
+      "title": "Время, затраченное на обучение",
+      "dailyAverage": "Среднее за день",
+      "weekTotal": "Всего за неделю",
+      "weeklyGoal": "Недельная цель",
+      "start": "Начните практиковаться по разделам или пройдите тест MOCK, чтобы увидеть результаты"
     }
   },
   "profileSettings": {
     "profileEditForm": {
-      "title": "Profile editing"
+      "title": "Редактирование профиля"
+    },
+    "changeLangModal": {
+      "title": "Сменить язык"
     }
   },
   "practice": {
     "listening": {
-      "title": "Practice listening section",
-      "subtitle": "The points received will not be displayed <br></br> in the overall statistics",
+      "title": "Практика раздела аудирования",
+      "subtitle": "Набранные баллы не будут отображаться <br></br> в общей статистике",
       "rules": {
-        "title": "What’s in the IELTS Academic Listening paper?",
-        "text": "The paper has four parts, with ten questions in each part. The questions are in the same order as the information in the recording, so the answer to the first question will be before the answer to the second question, and so on. <br></br> <br></br> Parts 1 and 2 deal with everyday, social situations. There is a conversation between two speakers in Part 1 (for example, a conversation about travel arrangements). Only one person speaks in Part 2 (for example, a speech about local facilities). <br></br> <br></br> Parts 3 and 4 deal with educational and training situations. In Part 3 there is a conversation between two main speakers (for example, two university students in discussion, perhaps guided by a tutor). In Part 4 only one person speaks on an academic subject. <br></br> <br></br> You will hear the recordings once only. Different accents, including British, Australian, New Zealand and North American, are used. <br></br> <br></br> You will need to transfer your answers to an answer sheet. You will have 10 minutes at the end of the test to do this. You should be careful when writing your answers on the answer sheet because you will lose marks for incorrect spelling and grammar.",
-        "marking": "Each correct answer receives 1 mark. Your final score is given as a band score in whole or half bands, e.g. 5.5 or 7.0."
+        "title": "Что входит в академическую секцию аудирования IELTS?",
+        "text": "Билет состоит из четырех частей, в каждой части по десять вопросов. Вопросы следуют в том же порядке, что и информация в записи, поэтому ответ на первый вопрос будет до ответа на второй и так далее. <br></br><br></br>Части 1 и 2 посвящены повседневным социальным ситуациям. В Части 1 ведется диалог между двумя говорящими (например, о планах путешествия). В Части 2 говорит только один человек (например, лекция о местных учреждениях). <br></br><br></br>Части 3 и 4 посвящены образовательным и учебным ситуациям. В Части 3 происходит разговор между двумя основными участниками (например, двое студентов университета обсуждают тему под руководством преподавателя). В Части 4 говорит только один человек на академическую тему. <br></br><br></br>Вы прослушаете записи только один раз. Используются различные акценты, включая британский, австралийский, новозеландский и североамериканский. <br></br><br></br>Вам нужно будет перенести свои ответы на бланк ответов. У вас будет 10 минут в конце теста для этого. Будьте внимательны при записи ответов на бланк, так как вы потеряете баллы за неправильное написание и грамматику.",
+        "marking": "За каждый правильный ответ начисляется 1 балл. Ваш итоговый результат выражается в баллах по шкале целыми или половинными значениями, например 5.5 или 7.0."
       },
       "audioCheck": {
-        "title": "Play the record",
-        "subtitle": "You will be listening to an audio clip during this test. <br></br> You will not be permitted to pause or rewind the audio while answering the questions."
+        "title": "Воспроизвести запись",
+        "subtitle": "Во время теста вы будете слушать аудиозапись. <br></br> Вам не разрешается ставить запись на паузу или перематывать ее назад при ответах на вопросы."
       },
       "results": {
-        "title": "Listening section results"
+        "title": "Результаты раздела аудирования"
       }
     },
     "reading": {
-      "title": "Practice reading section",
-      "subtitle": "The points received will not be displayed <br></br> in the overall statistics",
+      "title": "Практика раздела чтения",
+      "subtitle": "Набранные баллы не будут отображаться <br></br> в общей статистике",
       "rules": {
-        "title": "What’s in the IELTS Academic Reading paper?",
-        "text": "What’s in the IELTS Academic Reading paper? Texts come from books, journals, magazines, newspapers and online resources, written for a non-specialist audience. All the topics are of general interest to students at undergraduate or postgraduate level. The texts may be written in different styles, for example, narrative, descriptive or discursive/argumentative. At least one text contains detailed logical argument. Texts may also contain diagrams, graphs or illustrations. If texts use technical vocabulary, then a simple dictionary definition is provided. You will need to transfer your answers to an answer sheet. You must transfer your answers during the hour you are given for the Reading test. Unlike the Listening test, no extra transfer time is given. You should be careful when writing your answers on the answer sheet because you will lose marks for incorrect spelling and grammar.",
-        "marking": "Each correct answer receives 1 mark. Your final score is given as a band score from 1–9 in whole or half bands, e.g. 4 or 6.5"
+        "title": "Что входит в академическую секцию чтения IELTS?",
+        "text": "Тексты берутся из книг, журналов, газет и онлайн-ресурсов, предназначенных для неспециализированной аудитории. Все темы представляют общий интерес для студентов бакалавриата и магистратуры. Тексты могут быть написаны в разных стилях, например, повествовательном, описательном или дискуссионно-аргументативном. По крайней мере один текст содержит подробный логический аргумент. Тексты могут также содержать диаграммы, графики или иллюстрации. Если в текстах используется техническая лексика, дается простое определение из словаря. Вам потребуется перенести свои ответы на бланк ответов. Вы должны перенести ответы в течение отведенного часа на раздел чтения. В отличие от раздела аудирования, дополнительное время на перенос ответов не предоставляется. Будьте внимательны при записи ответов на бланк, так как вы потеряете баллы за неправильное написание и грамматику.",
+        "marking": "За каждый правильный ответ начисляется 1 балл. Ваш итоговый балл по шкале от 1 до 9 выражается целыми или половинными значениями, например 4 или 6.5."
       },
       "test": {
-        "readTextAndAnswerQuestions": "Read the text and answer questions "
+        "readTextAndAnswerQuestions": "Прочитайте текст и ответьте на вопросы "
       },
       "results": {
-        "title": "Reading section results",
-        "": ""
+        "title": "Результаты раздела чтения"
       }
     },
     "speaking": {
-      "title": "Practice speaking section",
-      "subtitle": "The points received will not be displayed <br></br> in the overall statistics"
+      "title": "Практика раздела говорения",
+      "subtitle": "Набранные баллы не будут отображаться <br></br> в общей статистике"
     },
     "writing": {
-      "title": "Practice writing section",
-      "subtitle": "The points received will not be displayed <br></br> in the overall statistics",
+      "title": "Практика раздела письма",
+      "subtitle": "Набранные баллы не будут отображаться <br></br> в общей статистике",
       "customize": {
-        "subtitle": "Please select a part of Writing section you want to practice."
+        "subtitle": "Пожалуйста, выберите часть раздела письма, которую хотите практиковать."
       },
       "rules": {
-        "title": "What’s in the IELTS Academic Writing paper?",
-        "text": "There are two Writing tasks. In Task 1, you have to describe some visual information in your own words (a graph, table, chart or diagram). You need to write at least 150 words in about 20 minutes. In Task 2, you are given a point of view, argument or problem which you need to discuss. You need to write at least 250 words in about 40 minutes. You must write your answers using full sentences. You must not write your answers as notes or bullet points. You must write your answers on the answer sheet. You are allowed to write notes on the question paper, but these will not be seen by the examiner.",
-        "marking": "Certificated IELTS examiners assess your performance on each Writing task. There are four assessment criteria (things which the examiner thinks about when deciding what score to give you):"
+        "title": "Что входит в академическую секцию письма IELTS?",
+        "text": "В секции письма два задания. В Задании 1 вам нужно описать некоторую визуальную информацию собственными словами (график, таблицу, диаграмму). Необходимо написать не менее 150 слов примерно за 20 минут. В Задании 2 вам дается точка зрения, аргумент или проблема, которую нужно обсудить. Требуется написать не менее 250 слов примерно за 40 минут. Вы должны писать ответы полными предложениями. Нельзя писать ответы в виде заметок или пунктов. Необходимо записывать ответы на бланк ответов. Вам разрешается делать заметки на вопросном листе, но экзаменатор их не увидит.",
+        "marking": "Сертифицированные экзаменаторы IELTS оценивают ваше выполнение каждого задания по письму. Существуют четыре критерия оценки, которые экзаменатор учитывает при выставлении балла:"
       },
       "test": {
-        "writeAboutTopic": "Write about the following topic:"
+        "writeAboutTopic": "Напишите на заданную тему:"
       },
       "feedback": {
-        "title": "Writing section feedback",
-        "evaluating": "Evaluating your answer. It usually takes 1-2 minutes..."
+        "title": "Обратная связь раздела письма",
+        "evaluating": "Оценка вашего ответа. Обычно занимает 1-2 минуты..."
       }
     }
   }

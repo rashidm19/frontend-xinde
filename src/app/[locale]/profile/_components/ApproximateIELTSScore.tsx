@@ -7,7 +7,7 @@ export const ApproximateIELTSScore = () => {
 
   return (
     <div className='relative flex flex-col items-center'>
-      <h2 className='mb-[24rem] text-[20rem] leading-tight'>{t('title')}</h2>
+      <h2 className='mb-[24rem] text-[20rem] leading-tight text-center'>{t('title')}</h2>
 
       <HorseshoeProgressBar
         value={0}
