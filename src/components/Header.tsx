@@ -51,7 +51,7 @@ export const Header = ({ name, avatar }: Props) => {
 
           <div className='flex items-center gap-x-[16rem]'>
             <a
-              href='mailto:support@studybox.kz'
+              href='mailto:info@studybox.kz'
               className='flex h-[46rem] items-center justify-center gap-x-[8rem] rounded-[40rem] bg-d-gray px-[24rem] hover:bg-d-green/40'
             >
               <img src='/images/icon_support.svg' alt='stars' className='size-[14rem]' />
