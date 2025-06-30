@@ -1,8 +1,11 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useCustomTranslations } from '@/hooks/useCustomTranslations';
 
 export const IdiomGenerator = () => {
+  const { t } = useCustomTranslations('home');
+
   const [status, setStatus] = useState<'init' | 'in-process' | 'generated' | 'try-again'>('init');
   const [counter, setCounter] = useState(-1);
 
@@ -15,13 +18,14 @@ export const IdiomGenerator = () => {
           {status === 'generated' || status === 'try-again' ? (
             <>
               <img
+                alt={t('common.worm')}
                 src='/images/illustration_worm2.png'
                 className='pointer-events-none absolute hidden tablet:bottom-[-70rem] tablet:right-[-95rem] tablet:block tablet:w-[305rem] tablet:rotate-[-60deg] desktop:bottom-[-112rem] desktop:right-[-37rem] wide:bottom-[-257rem] wide:right-[-219rem] wide:w-[593rem] wide:rotate-[-73deg]'
-                alt='img'
               />
               <div dangerouslySetInnerHTML={{ __html: idioms[counter] }} className='idiom-generator-wysywig mb-[32rem]' />
               <button
                 type='button'
+                className='mx-auto flex items-center justify-center gap-x-[8rem] rounded-full bg-[#C9FF55] px-[32rem] py-[16rem] text-[16rem] font-medium leading-tight hover:bg-[#C9FF55]/40 tablet:w-[260rem] tablet:py-[22rem] tablet:text-[24rem] wide:w-[320rem] wide:py-[24rem] wide:text-[32rem]'
                 onClick={async () => {
                   setStatus('try-again');
                   setTimeout(() => {
@@ -29,7 +33,6 @@ export const IdiomGenerator = () => {
                     counter === 5 ? setCounter(0) : setCounter(counter + 1);
                   }, 3000);
                 }}
-                className='mx-auto flex items-center justify-center gap-x-[8rem] rounded-full bg-[#C9FF55] px-[32rem] py-[16rem] text-[16rem] font-medium leading-tight hover:bg-[#C9FF55]/40 tablet:w-[260rem] tablet:py-[22rem] tablet:text-[24rem] wide:w-[320rem] wide:py-[24rem] wide:text-[32rem]'
               >
                 {status === 'try-again' ? (
                   <>
@@ -68,19 +71,20 @@ export const IdiomGenerator = () => {
                 data-aos-duration='500'
                 className='relative z-10 mb-[16rem] text-center font-poppins text-[40rem] font-semibold leading-none tablet:mb-[24rem] tablet:text-[80rem] wide:text-[120rem]'
               >
-                Idiom Generator
+                {t('idiomGenerator.title')}
               </h2>
               <p
                 data-aos='fade-up'
                 data-aos-duration='500'
                 className='relative z-10 mb-[32rem] text-center text-[24rem] font-medium leading-tight text-d-black/80 tablet:mb-[40rem] tablet:text-[32rem] wide:mb-[56rem] wide:text-[40rem]'
               >
-                Push the button to learn new English idiom
+                {t('idiomGenerator.subtitle')}
               </p>
               <button
                 data-aos='fade-up'
                 data-aos-duration='500'
                 type='button'
+                className='talbet:text-[24rem] relative z-10 flex w-[228rem] items-center justify-center gap-x-[8rem] rounded-full bg-[#C9FF55] px-[32rem] py-[16rem] text-[16rem] font-medium leading-tight hover:bg-[#C9FF55]/40 tablet:min-w-[260rem] tablet:py-[22rem] tablet:text-[24rem] wide:min-w-[320rem] wide:py-[24rem] wide:text-[32rem]'
                 onClick={async () => {
                   setStatus('in-process');
                   setTimeout(() => {
@@ -88,11 +92,10 @@ export const IdiomGenerator = () => {
                     counter === 5 ? setCounter(0) : setCounter(counter + 1);
                   }, 3000);
                 }}
-                className='talbet:text-[24rem] relative z-10 flex w-[228rem] items-center justify-center gap-x-[8rem] rounded-full bg-[#C9FF55] px-[32rem] py-[16rem] text-[16rem] font-medium leading-tight hover:bg-[#C9FF55]/40 tablet:min-w-[260rem] tablet:py-[22rem] tablet:text-[24rem] wide:min-w-[320rem] wide:py-[24rem] wide:text-[32rem]'
               >
                 {status === 'in-process' ? (
                   <>
-                    Generating...
+                    {t('idiomGenerator.generating')}...
                     <svg
                       className='size-[20rem] shrink-0 animate-spin text-black tablet:size-[24rem] wide:size-[26rem]'
                       xmlns='http://www.w3.org/2000/svg'
@@ -109,7 +112,7 @@ export const IdiomGenerator = () => {
                   </>
                 ) : (
                   <>
-                    Generate
+                    {t('actions.generate')}
                     <img src='/images/icon_stars--black.svg' alt='arrow-right-icon' className='size-[20rem] tablet:size-[24rem] wide:size-[26rem]' />
                   </>
                 )}

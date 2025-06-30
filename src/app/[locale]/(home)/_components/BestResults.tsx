@@ -1,7 +1,10 @@
 import React from 'react';
 import { useInView } from 'react-intersection-observer';
+import { useCustomTranslations } from '@/hooks/useCustomTranslations';
 
 export const BestResults = () => {
+  const { t } = useCustomTranslations('home');
+
   const [ref, inView] = useInView({
     triggerOnce: true,
     threshold: 0.1,
@@ -34,11 +37,11 @@ export const BestResults = () => {
       <div className='grid grid-cols-2 gap-x-[10rem] gap-y-[10rem] tablet:grid-cols-4 tablet:gap-x-[40rem] tablet:gap-y-[24rem] desktop:grid-cols-2 desktop:gap-x-[12rem] desktop:gap-y-[16rem] wide:gap-x-[24rem]'>
         <button type='button' className='flex items-center'>
           <div className='mr-[12rem] flex size-[32rem] shrink-0 items-center justify-center rounded-[8rem] bg-d-green-secondary tablet:size-[52rem] desktop:size-[44rem]'>
-            <img src='/images/icon_listeningSection.svg' className='size-[18rem] tablet:size-[24rem]' alt='icon' />
+            <img src='/images/icon_listeningSection.svg' className='size-[18rem] tablet:size-[24rem]' alt={t('common.listening')} />
           </div>
           <div className='flex flex-col items-start'>
             <div className='mb-[4rem] flex items-center gap-x-[8rem] desktop:mb-0'>
-              <div className='text-[14rem] font-medium tracking-[-0.2rem] text-d-black'>Listening</div>
+              <div className='text-[14rem] font-medium tracking-[-0.2rem] text-d-black'>{t('common.listening')}</div>
               <div
                 data-aos='fade-up'
                 data-aos-duration='duration-500'
@@ -52,11 +55,11 @@ export const BestResults = () => {
         </button>
         <button type='button' className='flex items-center'>
           <div className='mr-[12rem] flex size-[32rem] shrink-0 items-center justify-center rounded-[8rem] bg-d-yellow-secondary tablet:size-[52rem] desktop:size-[44rem]'>
-            <img src='/images/icon_readingSection.svg' className='size-[18rem] tablet:size-[24rem]' alt='icon' />
+            <img src='/images/icon_readingSection.svg' className='size-[18rem] tablet:size-[24rem]' alt={t('common.reading')} />
           </div>
           <div className='flex flex-col items-start'>
             <div className='mb-[4rem] flex items-center gap-x-[8rem] desktop:mb-0'>
-              <div className='text-[14rem] font-medium tracking-[-0.2rem] text-d-black'>Reading</div>
+              <div className='text-[14rem] font-medium tracking-[-0.2rem] text-d-black'>{t('common.reading')}</div>
               <div
                 data-aos='fade-up'
                 data-aos-duration='duration-500'
@@ -70,11 +73,11 @@ export const BestResults = () => {
         </button>
         <button type='button' className='flex items-center'>
           <div className='mr-[12rem] flex size-[32rem] shrink-0 items-center justify-center rounded-[8rem] bg-d-blue-secondary tablet:size-[52rem] desktop:size-[44rem]'>
-            <img src='/images/icon_writingSection.svg' className='size-[18rem] tablet:size-[24rem]' alt='icon' />
+            <img src='/images/icon_writingSection.svg' className='size-[18rem] tablet:size-[24rem]' alt={t('common.writing')} />
           </div>
           <div className='flex flex-col items-start'>
             <div className='mb-[4rem] flex items-center gap-x-[8rem] desktop:mb-0'>
-              <div className='text-[14rem] font-medium tracking-[-0.2rem] text-d-black'>Writing</div>
+              <div className='text-[14rem] font-medium tracking-[-0.2rem] text-d-black'>{t('common.writing')}</div>
               <div
                 data-aos='fade-up'
                 data-aos-duration='duration-500'
@@ -88,11 +91,11 @@ export const BestResults = () => {
         </button>
         <button type='button' className='flex items-center'>
           <div className='mr-[12rem] flex size-[32rem] shrink-0 items-center justify-center rounded-[8rem] bg-d-violet-secondary tablet:size-[52rem] desktop:size-[44rem]'>
-            <img src='/images/icon_speakingSection.svg' className='size-[18rem] tablet:size-[24rem]' alt='icon' />
+            <img src='/images/icon_speakingSection.svg' className='size-[18rem] tablet:size-[24rem]' alt={t('common.speaking')} />
           </div>
           <div className='flex flex-col items-start'>
             <div className='mb-[4rem] flex items-center gap-x-[8rem] desktop:mb-0'>
-              <div className='text-[14rem] font-medium tracking-[-0.2rem] text-d-black'>Speaking</div>
+              <div className='text-[14rem] font-medium tracking-[-0.2rem] text-d-black'>{t('common.speaking')}</div>
               <div
                 data-aos='fade-up'
                 data-aos-duration='duration-500'

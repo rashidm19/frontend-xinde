@@ -339,5 +339,113 @@
         "evaluating": "Evaluating your answer. It usually takes 1-2 minutes..."
       }
     }
+  },
+  "home": {
+    "common": {
+      "points": "Points",
+      "listening": "Listening",
+      "writing": "Writing",
+      "reading": "Reading",
+      "speaking": "Speaking",
+      "illustration": "Illustration",
+      "logo": "Logo",
+      "arrowRight": "Arrow right",
+      "mockTest": "MOCK test",
+      "feedback": "Feedback",
+      "worm": "Worm",
+      "flower": "Flower"
+    },
+    "actions": {
+      "subscribe": "Subscribe",
+      "login": "Login",
+      "try": "Try",
+      "tryForFree": "Try for free",
+      "generate": "Generate",
+      "startNowForFree": "Start now for free",
+      "joinForFreeNow": "Join for free now"
+    },
+    "animatedHorseshoeProgressBar": {
+      "noResults": "No results"
+    },
+    "dreamUniversity": {
+      "title": "Your dream university awaits",
+      "subtitle": "Unleash your potential with us",
+      "firstEnding": "st",
+      "firstCompany": "company in <br></br> the CIS market",
+      "averageFinalScore": "average final <br></br> exam score",
+      "approvalRate": "approval rate"
+    },
+    "followUs": {
+      "title": "Follow us on",
+      "dontMiss": "Don't miss the latest IELTS news",
+      "subscribe": "Subscribe for exclusive tips, practice resources, exam strategies delivered straight to your inbox"
+    },
+    "menu": {
+      "about": "About",
+      "prices": "Prices",
+      "community": "Community"
+    },
+    "header": {
+      "desktopOnlyText": "For now our service is desktop only"
+    },
+    "hero": {
+      "studySmarter": "Study smarter, <br></br> not harder",
+      "startJourney": "Start Your Journey to IELTS Success <br></br> with AI Support Now!",
+      "smartLearningWithAI": "Smart learning with AI",
+      "getReadyText": "Get ready for the future of IELTS prep with our high-tech platform powered by AI. <span>Our AI carefully looks at your work, gives you helpful feedback, and figures out how good you are at IELTS stuff. No need for old-school teachers anymore — our platform does it all!</span>",
+      "unlimitedMockTests": "Unlimited <br></br> MOCK Tests",
+      "unlimitedMockText": "Unlimited access to mock exams allows you to practice at your own pace and refine your skills without time constraints or pressure.",
+      "bestMockScore": "Best MOCK score",
+      "IELTSTargetAssessment": "IELTS Target Assessment",
+      "practiceBySection": "Practice by <br></br> Section",
+      "practiceBySectionText": "By practicing for the IELTS exam by sections, you can effectively target and improve specific skills such as reading, writing, listening, and speaking, leading to overall enhancement in your proficiency."
+    },
+    "idiomGenerator": {
+      "title": "Idiom Generator",
+      "subtitle": "Push the button to learn new English idiom",
+      "generating": "Generating"
+    },
+    "makeYourWay": {
+      "title": "Make your way to the highest score effective and fun"
+    },
+    "masterIELTS": {
+      "title": "Master IELTS On-the-Go",
+      "subtitle": "Study anytime, anywhere, at your own pace"
+    },
+    "practice": {
+      "title": "Practice makes perfect",
+      "subtitle": "Consistent practice breeds excellence, mastering IELTS with us isn't rocket science",
+      "card1": {
+        "title": "Follow Your <br></br> Personal Road <br></br> Map",
+        "subtitle": "Having a personal study roadmap for IELTS preparation allows you to set clear goals, track progress, and tailor your study plan to your individual strengths and weaknesses."
+      },
+      "card2": {
+        "title": "Train on Up-To-Date Tasks",
+        "subtitle": "By completing up-to-date tasks for the IELTS, you gain familiarity with current test formats and trends, offering a realistic preview of what to expect on exam day.",
+        "message1": "What are your thoughts on the use of artificial intelligence in everyday life?",
+        "message2": "Do you think automation will significantly change your job in the future?"
+      },
+      "card3": {
+        "title": "Track Your Results",
+        "subtitle": "Results tracking in IELTS practice enables you to monitor your progress, identify areas for improvement, and adjust your study strategies accordingly."
+      }
+    },
+    "runningLine": [
+      "Comprehensive Performance Analytics",
+      "Adaptive Test Preparation",
+      "Real-time Feedback and Assessment",
+      "Authorized partner of IDP IELTS in Kazakhstan",
+      "Interactive Study Materials",
+      "Comprehensive Performance Analytics",
+      "Adaptive Test Preparation",
+      "Real-time Feedback and Assessment",
+      "Authorized partner of IDP IELTS in Kazakhstan",
+      "Interactive Study Materials",
+      "Comprehensive Performance Analytics",
+      "Adaptive Test Preparation",
+      "Real-time Feedback and Assessment",
+      "Authorized partner of IDP IELTS in Kazakhstan",
+      "Interactive Study Materials"
+    ]
   }
 }

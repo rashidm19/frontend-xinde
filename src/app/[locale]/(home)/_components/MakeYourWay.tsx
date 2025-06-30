@@ -1,8 +1,11 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import React from 'react';
+import { useCustomTranslations } from '@/hooks/useCustomTranslations';
 
 export const MakeYourWay = () => {
+  const { t } = useCustomTranslations('home');
+
   return (
     <section className='relative'>
       <div className='absolute -bottom-[30rem] -left-[6rem] -z-[10] aspect-[198/215] w-[139rem] tablet:-left-[60rem] tablet:-top-[80rem] tablet:bottom-auto tablet:w-[190rem] tablet:-rotate-[10deg] desktop:-top-[0rem] desktop:left-[0rem] desktop:w-[200rem] desktop:rotate-0 wide:-top-[300rem] wide:left-[0rem] wide:aspect-[360/536] wide:w-[360rem]'>
@@ -16,7 +19,7 @@ export const MakeYourWay = () => {
             data-aos-duration='500'
             className='font-poppins text-[40rem] font-semibold leading-[44rem] -tracking-[0.2rem] text-white tablet:mr-[155rem] tablet:text-[80rem] tablet:leading-[84rem] desktop:pr-[20rem] desktop:text-[80rem] desktop:leading-[84rem] wide:text-[120rem] wide:leading-[126rem]'
           >
-            Make your way to the highest score effective and fun
+            {t('makeYourWay.title')}
           </h2>
           <Link
             href='/registration'
@@ -24,7 +27,9 @@ export const MakeYourWay = () => {
             data-aos-duration='500'
             className='flex w-full flex-row items-center justify-center gap-x-[8rem] rounded-[32rem] bg-d-green py-[20rem] hover:bg-[#C9FF55]/70 tablet:w-[536rem]'
           >
-            <span className='leading-tighter font-inter text-[16rem] font-medium text-d-black/80 tablet:text-[24rem] wide:text-[32rem]'>Start now for free</span>
+            <span className='leading-tighter font-inter text-[16rem] font-medium text-d-black/80 tablet:text-[24rem] wide:text-[32rem]'>
+              {t('actions.startNowForFree')}
+            </span>
             <img src='/images/icon_arrow--right.svg' className='size-[20rem]' alt='Icon Right' />
           </Link>
           <div className='absolute -bottom-[104rem] -right-[60rem] z-[30] hidden aspect-[341/366] w-[341rem] mix-blend-soft-light tablet:block desktop:-bottom-[40rem] desktop:-right-[10rem] desktop:w-[280rem] wide:-bottom-[10rem] wide:right-0'>
@@ -37,7 +42,7 @@ export const MakeYourWay = () => {
             data-aos-duration='500'
             className='mb-[8rem] flex w-full items-center justify-between rounded-[32rem] bg-white p-[24rem] text-[24rem] font-medium leading-none text-d-black/80 tablet:pl-[40rem] tablet:pr-[72rem] tablet:text-[32rem] desktop:rounded-[40rem] desktop:py-[65rem] wide:text-[40rem]'
           >
-            <span>About</span>
+            <span>{t('menu.about')}</span>
             <img src='/images/icon_arrow--right.svg' className='size-[20rem] tablet:size-[30rem]' alt='Icon Right' />
           </button>
           <button
@@ -46,7 +51,7 @@ export const MakeYourWay = () => {
             data-aos-duration='500'
             className='mb-[8rem] flex w-full items-center justify-between rounded-[32rem] bg-white p-[24rem] text-[24rem] font-medium leading-none text-d-black/80 tablet:pl-[40rem] tablet:pr-[72rem] tablet:text-[32rem] desktop:rounded-[40rem] desktop:py-[65rem] wide:text-[40rem]'
           >
-            <span>Community</span>
+            <span>{t('menu.community')}</span>
             <img src='/images/icon_arrow--right.svg' className='size-[20rem] tablet:size-[30rem]' alt='Icon Right' />
           </button>
         </div>

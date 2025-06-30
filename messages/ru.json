@@ -2,7 +2,7 @@
   "common": {
     "studybox": "studybox",
     "allRightsReserved": "© Все права защищены",
-    "freeTrial": "Бесплатный пробный период",
+    "freeTrial": "Демо",
     "points": "баллы",
     "thisWeek": "Эта неделя",
     "hCount": "{count}ч",
@@ -203,7 +203,7 @@
     "alreadyHaveAccount": "Уже есть аккаунт? <span>Войти</span>"
   },
   "login": {
-    "title": "Войдите в свою учетную запись",
+    "title": "Войти",
     "forgotPassword": "Забыли пароль?",
     "dontHaveAccount": "Нет аккаунта? <span>Зарегистрироваться</span>"
   },

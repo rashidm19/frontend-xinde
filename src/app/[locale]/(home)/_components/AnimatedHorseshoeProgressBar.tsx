@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { cn } from '@/lib/utils';
+import { useCustomTranslations } from '@/hooks/useCustomTranslations';
 
 interface AnimatedProgressBarProps {
   startValue: number;
@@ -32,9 +33,11 @@ export const AnimatedHorseshoeProgressBar: React.FC<AnimatedProgressBarProps> = 
   circleColor = '#e5e7eb',
   progressGradient,
   textColor = '#000000',
-  no_results_text = 'No results',
+  no_results_text,
   containerClassName,
 }) => {
+  const { t } = useCustomTranslations('home');
+
   const [currentValue, setCurrentValue] = useState(startValue);
   const animationRef = useRef<number>();
   const startTimeRef = useRef<number>();
@@ -124,12 +127,12 @@ export const AnimatedHorseshoeProgressBar: React.FC<AnimatedProgressBarProps> = 
               {currentValue.toFixed(1)}
             </div>
             <div className='-mt-[3rem] text-[14rem] tracking-[-0.1rem] tablet:-mt-[6rem] tablet:text-[13rem] tablet:tracking-[-0.2rem] desktop:-mt-[8rem] desktop:text-[18rem] desktop:tracking-[-0.3rem] wide:-mt-[10rem] wide:text-[24rem]'>
-              points
+              {t('common.points')}
             </div>
           </div>
         ) : (
           <div className='max-w-[40rem] text-[14rem] tracking-[-0.1rem] tablet:max-w-[80rem] tablet:text-[13rem] tablet:tracking-[-0.2rem] desktop:max-w-[100rem] desktop:text-[18rem] desktop:tracking-[-0.3rem] wide:max-w-[120rem] wide:text-[24rem]'>
-            {no_results_text}
+            {no_results_text || t('animatedHorseshoeProgressBar.noResults')}
           </div>
         )}
       </div>
