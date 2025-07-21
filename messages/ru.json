@@ -20,6 +20,7 @@
     "partNumber": "Часть {number}",
     "practice": "Практика",
     "answersSheet": "Бланк ответов",
+    "noAnswer": "Без ответа",
     "yourAnswer": "Ваш ответ",
     "correctAnswer": "Правильный ответ",
     "overallScore": "Итоговый балл",
