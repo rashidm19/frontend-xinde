@@ -33,7 +33,8 @@
     "recommendationsByBands": "Recommendations by bands",
     "overallBandScore": "Overall band score",
     "questions": "Questions",
-    "viewYourResults": "View your results"
+    "viewYourResults": "View your results",
+    "soon": "soon"
   },
   "actions": {
     "backToHomepage": "Back to the homepage",
@@ -274,6 +275,10 @@
       "weekTotal": "Week total",
       "weeklyGoal": "Weekly goal",
       "start": "Start practicing by section or take MOCK test to view results"
+    },
+    "practiceList": {
+      "title": "Practice by section",
+      "subtitle": "Practice by selecting the necessary section"
     }
   },
   "profileSettings": {

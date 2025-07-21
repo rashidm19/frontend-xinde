@@ -33,7 +33,8 @@
     "recommendationsByBands": "Рекомендации по диапазонам",
     "overallBandScore": "Итоговый балл по шкале",
     "questions": "Вопросы",
-    "viewYourResults": "Посмотреть ваши результаты"
+    "viewYourResults": "Посмотреть ваши результаты",
+    "soon": "Скоро"
   },
   "actions": {
     "backToHomepage": "На главную страницу",
@@ -274,6 +275,10 @@
       "weekTotal": "Всего за неделю",
       "weeklyGoal": "Недельная цель",
       "start": "Начните практиковаться по разделам или пройдите тест MOCK, чтобы увидеть результаты"
+    },
+    "practiceList": {
+      "title": "Практика по разделам",
+      "subtitle": "Практикуйтесь, выбирая нужный раздел"
     }
   },
   "profileSettings": {
