@@ -46,7 +46,7 @@ export default function Page({ params }: { params: { id: string } }) {
                 <AccordionTrigger className='flex items-center justify-between'>
                   <h2 className='text-[20rem] font-medium leading-none'>
                     {index + 1}.{'  '}
-                    {q.answer}
+                    {q.answer ? q.answer : tCommon('noAnswer')}
                   </h2>
                   {q.correct ? (
                     <div className='flex size-[32rem] items-center justify-center rounded-full bg-d-green'>
@@ -67,9 +67,11 @@ export default function Page({ params }: { params: { id: string } }) {
                 </AccordionTrigger>
                 {!q.correct && (
                   <AccordionContent className='flex flex-col gap-y-[24rem] pt-[40rem]'>
-                    <div className='text-[20rem] font-medium leading-none text-d-black'>
-                      {tCommon('yourAnswer')}: {q.answer}
-                    </div>
+                    {q.answer && (
+                      <div className='text-[20rem] font-medium leading-none text-d-black'>
+                        {tCommon('yourAnswer')}: {q.answer}
+                      </div>
+                    )}
                     <div className='text-[20rem] font-medium leading-none text-black'>
                       {tCommon('correctAnswer')}: {q.correct_answer}
                     </div>

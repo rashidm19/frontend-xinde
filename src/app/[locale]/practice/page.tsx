@@ -24,9 +24,9 @@ export default function Page() {
 
   const tabs = [
     { icon: '/images/icon_writingSection.svg', key: 'writing' },
-    { icon: '/images/icon_speakingSection.svg', key: 'speaking' },
     { icon: '/images/icon_readingSection.svg', key: 'reading' },
     { icon: '/images/icon_listeningSection.svg', key: 'listening' },
+    { icon: '/images/icon_speakingSection.svg', key: 'speaking' },
   ];
 
   return (
@@ -34,7 +34,7 @@ export default function Page() {
       <Header name={data?.name} avatar={data?.avatar} />
       <main>
         <div className='container max-w-[1440rem] p-[40rem]'>
-          <Tabs defaultValue='reading'>
+          <Tabs defaultValue='writing'>
             <TabsList className='mb-[24rem] gap-x-[8rem] rounded-[40rem] bg-white p-[8rem]'>
               {tabs.map((tab, index) => (
                 <TabsTrigger key={index} className='h-[45rem] w-[118rem] gap-x-[8rem] rounded-[40rem] bg-white data-[state=active]:bg-d-blue-secondary' value={tab.key}>
@@ -76,44 +76,6 @@ export default function Page() {
                 </p>
                 <Link
                   href='/practice/writing/customize'
-                  className='flex h-[64rem] w-[328rem] items-center justify-center rounded-[40rem] bg-d-green text-[14rem] font-semibold hover:bg-d-green/40'
-                >
-                  {tActions('takeTheTest')}
-                </Link>
-              </div>
-            </TabsContent>
-            <TabsContent value='speaking' className='practice-tabs-shadow relative h-[738rem] overflow-hidden rounded-[16rem] bg-d-red-secondary p-[16rem]'>
-              <img
-                alt={tImgAlts('flower')}
-                src='/images/illustration_flowerOrange.png'
-                className='pointer-events-none absolute bottom-[-100rem] left-[-10rem] h-auto w-[392rem] rotate-[-16deg] opacity-20 mix-blend-multiply'
-              />
-              <img
-                alt={tImgAlts('halfspheres')}
-                src='/images/illustration_halfspheres.png'
-                className='pointer-events-none absolute bottom-[-40rem] right-[40rem] h-auto w-[264rem] rotate-[-8deg] opacity-20 mix-blend-multiply'
-              />
-
-              <div className='flex justify-between'>
-                <div className='flex gap-x-[8rem]'>
-                  <div className='flex h-[37rem] items-center justify-center rounded-[32rem] bg-white px-[20rem] text-[14rem] font-medium'>
-                    ~ {tCommon('minutesCount', { count: 14 })}
-                  </div>
-                  <div className='flex h-[37rem] items-center justify-center rounded-[32rem] bg-white px-[20rem] text-[14rem] font-medium'>
-                    {tCommon('partsCount', { count: 3 })}
-                  </div>
-                </div>
-              </div>
-
-              <div className='mt-[228rem] flex w-full flex-col items-center gap-y-[32rem]'>
-                <h1 className='text-[32rem] font-medium leading-none'>{t('speaking.title')}</h1>
-                <p className='text-center text-[14rem] font-medium leading-tight'>
-                  {t.rich('speaking.subtitle', {
-                    br: () => <br />,
-                  })}
-                </p>
-                <Link
-                  href='/practice/speaking/customize'
                   className='flex h-[64rem] w-[328rem] items-center justify-center rounded-[40rem] bg-d-green text-[14rem] font-semibold hover:bg-d-green/40'
                 >
                   {tActions('takeTheTest')}
@@ -196,6 +158,44 @@ export default function Page() {
                 </p>
                 <Link
                   href='/practice/listening/rules'
+                  className='flex h-[64rem] w-[328rem] items-center justify-center rounded-[40rem] bg-d-green text-[14rem] font-semibold hover:bg-d-green/40'
+                >
+                  {tActions('takeTheTest')}
+                </Link>
+              </div>
+            </TabsContent>
+            <TabsContent value='speaking' className='practice-tabs-shadow relative h-[738rem] overflow-hidden rounded-[16rem] bg-d-red-secondary p-[16rem]'>
+              <img
+                alt={tImgAlts('flower')}
+                src='/images/illustration_flowerOrange.png'
+                className='pointer-events-none absolute bottom-[-100rem] left-[-10rem] h-auto w-[392rem] rotate-[-16deg] opacity-20 mix-blend-multiply'
+              />
+              <img
+                alt={tImgAlts('halfspheres')}
+                src='/images/illustration_halfspheres.png'
+                className='pointer-events-none absolute bottom-[-40rem] right-[40rem] h-auto w-[264rem] rotate-[-8deg] opacity-20 mix-blend-multiply'
+              />
+
+              <div className='flex justify-between'>
+                <div className='flex gap-x-[8rem]'>
+                  <div className='flex h-[37rem] items-center justify-center rounded-[32rem] bg-white px-[20rem] text-[14rem] font-medium'>
+                    ~ {tCommon('minutesCount', { count: 14 })}
+                  </div>
+                  <div className='flex h-[37rem] items-center justify-center rounded-[32rem] bg-white px-[20rem] text-[14rem] font-medium'>
+                    {tCommon('partsCount', { count: 3 })}
+                  </div>
+                </div>
+              </div>
+
+              <div className='mt-[228rem] flex w-full flex-col items-center gap-y-[32rem]'>
+                <h1 className='text-[32rem] font-medium leading-none'>{t('speaking.title')}</h1>
+                <p className='text-center text-[14rem] font-medium leading-tight'>
+                  {t.rich('speaking.subtitle', {
+                    br: () => <br />,
+                  })}
+                </p>
+                <Link
+                  href='/practice/speaking/customize'
                   className='flex h-[64rem] w-[328rem] items-center justify-center rounded-[40rem] bg-d-green text-[14rem] font-semibold hover:bg-d-green/40'
                 >
                   {tActions('takeTheTest')}

@@ -1,15 +1,14 @@
 'use client';
 
-import { Achievements } from './_components/Achievements';
 import { BestResults } from './_components/BestResults';
 import { Header } from '@/components/Header';
 import { IeltsGoal } from './_components/IeltsGoal';
-import { Notifications } from './_components/Notifications';
-import { Referrals } from './_components/Referrals';
 import { TimeSpent } from './_components/TimeSpent';
 import { getUser } from '@/api/GET_user';
 import { useQuery } from '@tanstack/react-query';
 import { Skeleton } from '@/components/ui/skeleton';
+import { PracticeBySections } from '@/app/[locale]/profile/_components/PracticeList';
+import { getPracticeTimeStats } from '@/api/GET_stats_practice_time';
 
 export default function Page() {
   const { data, status } = useQuery({
@@ -18,6 +17,11 @@ export default function Page() {
   });
 
   const isLoading = status === 'pending';
+
+  const { data: practiceTimeStats, isLoading: practiceTimeStatsLoading } = useQuery({
+    queryKey: ['practiceTimeStats'],
+    queryFn: getPracticeTimeStats,
+  });
 
   return (
     <>
@@ -33,8 +37,8 @@ export default function Page() {
           ) : (
             <>
               <BestResults />
-              <Achievements />
-              <TimeSpent />
+              {/*<Achievements />*/}
+              <TimeSpent data={practiceTimeStats} loading={practiceTimeStatsLoading} />
             </>
           )}
         </div>
@@ -47,8 +51,9 @@ export default function Page() {
             </>
           ) : (
             <>
-              <Notifications />
-              <Referrals />
+              <PracticeBySections />
+              {/*<Notifications />*/}
+              {/*<Referrals />*/}
               <IeltsGoal grade={data?.target_grade} />
             </>
           )}

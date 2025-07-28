@@ -2,15 +2,15 @@ import { HorseshoeProgressBar } from './HorseshoeProgressBar';
 import React from 'react';
 import { useCustomTranslations } from '@/hooks/useCustomTranslations';
 
-export const ApproximateIELTSScore = () => {
+export const ApproximateIELTSScore = ({ score = 0 }: { score?: number }) => {
   const { t } = useCustomTranslations('profile.approximateIELTSSCore');
 
   return (
     <div className='relative flex flex-col items-center'>
-      <h2 className='mb-[24rem] text-[20rem] leading-tight text-center'>{t('title')}</h2>
+      <h2 className='mb-[24rem] text-center text-[20rem] leading-tight'>{t('title')}</h2>
 
       <HorseshoeProgressBar
-        value={0}
+        value={score}
         width={220}
         height={140}
         maxValue={10}
