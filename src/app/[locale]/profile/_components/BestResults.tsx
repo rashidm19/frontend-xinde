@@ -2,8 +2,6 @@
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
-
-import { BestMockScore } from './BestMockScore';
 import { BestSectionsResults } from './BestSectionsResults';
 import { ProfileEditFormModal } from '../settings/_components/ProfileEditFormModal';
 import nProgress from 'nprogress';
@@ -12,6 +10,8 @@ import { useRouter } from 'next/navigation';
 import { ApproximateIELTSScore } from './ApproximateIELTSScore';
 import { useCustomTranslations } from '@/hooks/useCustomTranslations';
 import { ChangeLangModal } from '@/app/[locale]/profile/settings/_components/ChangeLangModal';
+import { getPracticeScoresStats } from '@/api/GET_stats_practice_scores';
+import { calculateIeltsOverall } from '@/lib/utils';
 
 export const BestResults = () => {
   const { tImgAlts, tCommon } = useCustomTranslations();
@@ -26,6 +26,11 @@ export const BestResults = () => {
           Authorization: `Bearer ${localStorage.getItem('token')}`,
         },
       }).then(res => res.json()),
+  });
+
+  const { data: practiceStats, isLoading: practiceStatsLoading } = useQuery({
+    queryKey: ['bestPracticeScores'],
+    queryFn: getPracticeScoresStats,
   });
 
   return (
@@ -80,10 +85,17 @@ export const BestResults = () => {
             </button>
           </div>
         </div>
-        <div className='flex justify-start'>
-          <BestSectionsResults />
-          <BestMockScore />
-          <ApproximateIELTSScore />
+        <div className='flex justify-between'>
+          <BestSectionsResults stats={practiceStats} loading={practiceStatsLoading} />
+          {/*<BestMockScore />*/}
+          <ApproximateIELTSScore
+            score={calculateIeltsOverall(
+              practiceStats?.best_listening_score,
+              practiceStats?.best_reading_score,
+              practiceStats?.best_writing_score,
+              practiceStats?.best_speaking_score
+            )}
+          />
         </div>
       </div>
     </section>

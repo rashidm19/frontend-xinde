@@ -4,10 +4,10 @@ import { useCustomTranslations } from '@/hooks/useCustomTranslations';
 
 const list = [
   {
-    text: 'listening',
-    link: '/practice/listening/rules',
-    icon: '/images/icon_listeningSection.svg',
-    bg: 'bg-d-green-secondary',
+    text: 'writing',
+    link: '/practice/writing/customize',
+    icon: '/images/icon_writingSection.svg',
+    bg: 'bg-d-blue-secondary',
   },
   {
     text: 'reading',
@@ -16,10 +16,10 @@ const list = [
     bg: 'bg-d-yellow-secondary',
   },
   {
-    text: 'writing',
-    link: '/practice/writing/customize',
-    icon: '/images/icon_writingSection.svg',
-    bg: 'bg-d-blue-secondary',
+    text: 'listening',
+    link: '/practice/listening/rules',
+    icon: '/images/icon_listeningSection.svg',
+    bg: 'bg-d-green-secondary',
   },
   {
     text: 'speaking',

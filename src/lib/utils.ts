@@ -32,3 +32,18 @@ export const transformStringToArrayV4 = (input: string) => {
       }
     });
 };
+
+export function calculateIeltsOverall(listening: number = 0, reading: number = 0, writing: number = 0, speaking: number = 0): number {
+  const scores = [listening, reading, writing, speaking];
+
+  scores.forEach(s => {
+    if (s < 0 || s > 9 || s % 0.5 !== 0) {
+      return 0;
+    }
+  });
+
+  const rawAvg = scores.reduce((sum, s) => sum + s, 0) / scores.length;
+  const rounded = Math.round(rawAvg * 2) / 2;
+
+  return parseFloat(rounded.toFixed(1));
+}

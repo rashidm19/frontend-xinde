@@ -8,6 +8,7 @@ import { getUser } from '@/api/GET_user';
 import { useQuery } from '@tanstack/react-query';
 import { Skeleton } from '@/components/ui/skeleton';
 import { PracticeBySections } from '@/app/[locale]/profile/_components/PracticeList';
+import { getPracticeTimeStats } from '@/api/GET_stats_practice_time';
 
 export default function Page() {
   const { data, status } = useQuery({
@@ -16,6 +17,11 @@ export default function Page() {
   });
 
   const isLoading = status === 'pending';
+
+  const { data: practiceTimeStats, isLoading: practiceTimeStatsLoading } = useQuery({
+    queryKey: ['practiceTimeStats'],
+    queryFn: getPracticeTimeStats,
+  });
 
   return (
     <>
@@ -32,7 +38,7 @@ export default function Page() {
             <>
               <BestResults />
               {/*<Achievements />*/}
-              <TimeSpent />
+              <TimeSpent data={practiceTimeStats} loading={practiceTimeStatsLoading} />
             </>
           )}
         </div>
