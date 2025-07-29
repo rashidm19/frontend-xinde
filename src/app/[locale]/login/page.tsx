@@ -60,10 +60,10 @@ export default function Login() {
             <form onSubmit={form.handleSubmit(onSubmit)} className='flex w-[520rem] flex-col gap-y-[30rem] rounded-[24rem] bg-white p-[40rem] shadow-card'>
               {/* // * Go back & Logo */}
               <div className='flex justify-between'>
-                <Link href='/public' className='flex items-center gap-x-[8rem]'>
+                <button type='button' onClick={() => router.back()} className='flex items-center gap-x-[8rem]'>
                   <img src='/images/icon_back.svg' alt={tImgAlts('back')} className='h-auto w-[16rem]' />
                   <span className='text-[18rem] font-medium leading-tight text-d-black/60'>{tActions('back')}</span>
-                </Link>
+                </button>
                 <figure className='flex items-center gap-x-[6rem]'>
                   <img src='/images/logo.svg' className='size-[35rem]' alt={tImgAlts('logo')} />
                   <div className='font-poppins text-[18rem] font-semibold'>{tCommon('studybox')}</div>
