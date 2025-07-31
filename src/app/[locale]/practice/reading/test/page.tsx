@@ -33,7 +33,7 @@ export default function Page() {
 
   const { data, status } = useQuery({
     queryKey: ['practice-reading'],
-    queryFn: () => GET_practice_reading_id('2'),
+    queryFn: () => GET_practice_reading_id(localStorage.getItem('practiceReadingId') as string),
   });
 
   const formSchema = z.object({
@@ -114,7 +114,7 @@ export default function Page() {
 
     formattedValues.answers = formattedValues.answers.filter(item => item.answer);
 
-    const response = await fetch('https://api.studybox.kz/practice/reading/2', {
+    const response = await fetch(`https://api.studybox.kz/practice/reading/${localStorage.getItem('practiceReadingId')}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json;',
