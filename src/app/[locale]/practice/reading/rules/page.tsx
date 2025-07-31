@@ -1,9 +1,35 @@
+'use client'
+
 import Link from 'next/link';
 import React from 'react';
 import { useCustomTranslations } from '@/hooks/useCustomTranslations';
+import nProgress from 'nprogress';
+import { useRouter } from 'next/navigation';
 
 export default function Page() {
+  const router = useRouter();
   const { t, tImgAlts, tCommon, tActions } = useCustomTranslations('practice.reading.rules');
+
+  const startPractice = async () => {
+    const result = await fetch('https://api.studybox.kz/practice/reading', {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('token')}`,
+      },
+    });
+    if (result?.ok) {
+      nProgress.start();
+      const json = await result.json();
+      if (Array.isArray(json.data) && json.data.length > 0) {
+        const randomIndex = Math.floor(Math.random() * json.data.length);
+        const randomReadingId = json.data[randomIndex].reading_id;
+        localStorage.setItem('practiceReadingId', randomReadingId);
+        router.push('/practice/reading/test');
+      } else {
+        console.error('Нет доступных reading_id');
+      }
+    }
+  };
 
   return (
     <main className='min-h-screen overflow-hidden bg-d-yellow-secondary'>
@@ -50,12 +76,12 @@ export default function Page() {
             <p className='mb-[48rem] text-[20rem] font-medium leading-tight text-d-black/80'>{t('text')}</p>
             <h1 className='mb-[32rem] text-[32rem] font-medium leading-none'>{tCommon('marking')}</h1>
             <p className='mb-[48rem] text-[20rem] font-medium leading-tight text-d-black/80'>{t('marking')}</p>
-            <Link
-              href='/practice/reading/test/'
+            <button
+              onClick={startPractice}
               className='mx-auto flex h-[63rem] w-[280rem] items-center justify-center rounded-[40rem] bg-d-green text-[20rem] font-semibold hover:bg-d-green/40'
             >
               {tActions('continue')}
-            </Link>
+            </button>
           </section>
         </div>
       </div>

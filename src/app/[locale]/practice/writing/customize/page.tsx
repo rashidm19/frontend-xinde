@@ -38,8 +38,14 @@ export default function Page() {
     if (result?.ok) {
       nProgress.start();
       const json = await result.json();
-      localStorage.setItem('practiceWritingId', json.data[0].writing_id);
-      router.push('/practice/writing/rules/');
+      if (Array.isArray(json.data) && json.data.length > 0) {
+        const randomIndex = Math.floor(Math.random() * json.data.length);
+        const randomWritingId = json.data[randomIndex].writing_id;
+        localStorage.setItem('practiceWritingId', randomWritingId);
+        router.push('/practice/writing/rules/');
+      } else {
+        console.error('Нет доступных writing_id');
+      }
     }
   };
 

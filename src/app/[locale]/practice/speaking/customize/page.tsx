@@ -37,6 +37,7 @@ export default function Page() {
       nProgress.start();
       const json = await result.json();
       localStorage.setItem('practiceSpeakingId', json.data[0].speaking_id);
+      localStorage.setItem('practiceSpeakingPart', String(selectedPart));
       router.push('/practice/speaking/rules/');
     }
   };
