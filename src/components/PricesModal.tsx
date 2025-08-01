@@ -81,7 +81,7 @@ export const PricesModal = () => {
                   <div className='mt-auto'>
                     <h3 className='text-[32rem] font-medium'>
                       {t.rich('premium.price', {
-                        price: type === 'quarterly' ? '12$' : '5$',
+                        price: type === 'quarterly' ? '6 600 ₸' : '2 750 ₸',
                         monthCount: type === 'quarterly' ? '3' : '',
                         span: chunks => <span className='text-[14rem] font-normal tablet:text-[16rem]'>{chunks}</span>,
                       })}
