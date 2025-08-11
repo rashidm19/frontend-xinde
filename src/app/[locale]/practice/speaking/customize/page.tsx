@@ -5,7 +5,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 
 import { Checkbox } from '@/components/ui/checkbox';
 import { GET_practice_speaking_categories } from '@/api/GET_practice_speaking_categories';
-import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import nProgress from 'nprogress';
@@ -144,9 +143,9 @@ export default function Page() {
                 <Checkbox className='size-[20rem]' checked />
                 <div className='text-[16rem] font-medium leading-none'>
                   I accept the{' '}
-                  <Link href='/user-agreement' className='border-b border-d-black'>
+                  <a target='_blank' href='https://www.studybox.kz/en/privacy' className='border-b border-d-black'>
                     user agreement
-                  </Link>
+                  </a>
                 </div>
               </div>
               <button
