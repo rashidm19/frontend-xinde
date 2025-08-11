@@ -70,9 +70,9 @@ export default function Page() {
                 <Checkbox className='size-[20rem]' checked />
                 <div className='text-[16rem] font-medium leading-none'>
                   I accept the{' '}
-                  <Link href='/user-agreement' className='border-b border-d-black'>
+                  <a target='_blank' href='https://www.studybox.kz/en/privacy' className='border-b border-d-black'>
                     user agreement
-                  </Link>
+                  </a>
                 </div>
               </div>
               {/* // * Next */}

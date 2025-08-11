@@ -237,9 +237,9 @@ export default function Registration() {
                       <FormLabel className='text-[18rem] font-medium leading-none'>
                         {tCommonRich('acceptUserAgreement', {
                           link: (chunks: any) => (
-                            <Link href='/user-agreement' className='border-b border-d-black'>
+                            <a target='_blank' href='https://www.studybox.kz/en/privacy' className='border-b border-d-black'>
                               {chunks}
-                            </Link>
+                            </a>
                           ),
                         })}
                       </FormLabel>

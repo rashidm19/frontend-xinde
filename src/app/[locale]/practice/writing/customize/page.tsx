@@ -4,7 +4,6 @@ import React, { useState } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 import { Checkbox } from '@/components/ui/checkbox';
-import Link from 'next/link';
 import nProgress from 'nprogress';
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
@@ -193,9 +192,9 @@ export default function Page() {
                 <div className='text-[16rem] font-medium leading-none'>
                   {tCommonRich('acceptUserAgreement', {
                     link: (chunks: any) => (
-                      <Link href='/user-agreement' className='border-b border-d-black'>
+                      <a target='_blank' href='https://www.studybox.kz/en/privacy' className='border-b border-d-black'>
                         {chunks}
-                      </Link>
+                      </a>
                     ),
                   })}
                 </div>
