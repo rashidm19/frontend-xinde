@@ -1,3 +1,5 @@
+import { API_URL } from '@/lib/config';
+
 interface Props {
   grade?: string;
   name?: string;
@@ -11,7 +13,7 @@ export async function postUser({ grade, name, region }: Props) {
     ...(region && { region }),
   };
 
-  await fetch('https://api.studybox.kz/auth/profile', {
+  await fetch(`${API_URL}/auth/profile`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json;charset=utf-8',

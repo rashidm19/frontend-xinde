@@ -10,6 +10,7 @@ import { useRouter } from 'next/navigation';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useCustomTranslations } from '@/hooks/useCustomTranslations';
+import { API_URL } from '@/lib/config';
 
 export default function Login() {
   const router = useRouter();
@@ -31,7 +32,7 @@ export default function Login() {
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    const response = await fetch('https://api.studybox.kz/auth/login', {
+    const response = await fetch(`${API_URL}/auth/login`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json;charset=utf-8',

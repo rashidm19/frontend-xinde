@@ -1,5 +1,7 @@
+import { API_URL } from '@/lib/config';
+
 export const POST_mock_start = async () => {
-  const res = await fetch(`https://api.studybox.kz/mock/test`, {
+  const res = await fetch(`${API_URL}/mock/test`, {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${localStorage.getItem('token')}`,

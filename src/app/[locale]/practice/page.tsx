@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 import { useCustomTranslations } from '@/hooks/useCustomTranslations';
 import React from 'react';
+import { API_URL } from '@/lib/config';
 
 export default function Page() {
   const { t, tImgAlts, tCommon, tActions } = useCustomTranslations('practice');
@@ -14,7 +15,7 @@ export default function Page() {
   const { data } = useQuery({
     queryKey: ['user'],
     queryFn: () =>
-      fetch(`https://api.studybox.kz/auth/profile`, {
+      fetch(`${API_URL}/auth/profile`, {
         method: 'GET',
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`,

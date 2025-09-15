@@ -8,6 +8,7 @@ import { GET_practice_speaking_categories } from '@/api/GET_practice_speaking_ca
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import nProgress from 'nprogress';
+import { API_URL } from '@/lib/config';
 
 export default function Page() {
   const router = useRouter();
@@ -25,7 +26,7 @@ export default function Page() {
     params.append('part', String(selectedPart));
     params.append('tag_id', selectedTopic === 'random' ? randomTopic() : selectedTopic);
 
-    const result = await fetch(`https://api.studybox.kz/practice/speaking?${params.toString()}`, {
+    const result = await fetch(`${API_URL}/practice/speaking?${params.toString()}`, {
       method: 'GET',
       headers: {
         Authorization: `Bearer ${localStorage.getItem('token')}`,

@@ -12,6 +12,7 @@ import { useCustomTranslations } from '@/hooks/useCustomTranslations';
 import { ChangeLangModal } from '@/app/[locale]/profile/settings/_components/ChangeLangModal';
 import { getPracticeScoresStats } from '@/api/GET_stats_practice_scores';
 import { calculateIeltsOverall } from '@/lib/utils';
+import { API_URL } from '@/lib/config';
 
 export const BestResults = () => {
   const { tImgAlts, tCommon } = useCustomTranslations();
@@ -20,7 +21,7 @@ export const BestResults = () => {
   const { data } = useQuery({
     queryKey: ['user'],
     queryFn: () =>
-      fetch(`https://api.studybox.kz/auth/profile`, {
+      fetch(`${API_URL}/auth/profile`, {
         method: 'GET',
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`,

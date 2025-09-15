@@ -20,6 +20,7 @@ import { transformStringToArrayV2, transformStringToArrayV4 } from '@/lib/utils'
 
 import { useRouter } from 'next/navigation';
 import { useCustomTranslations } from '@/hooks/useCustomTranslations';
+import { API_URL } from '@/lib/config';
 
 type FormValues = {
   [key: string]: string | undefined;
@@ -114,7 +115,7 @@ export default function Page() {
 
     formattedValues.answers = formattedValues.answers.filter(item => item.answer);
 
-    const response = await fetch(`https://api.studybox.kz/practice/reading/${localStorage.getItem('practiceReadingId')}`, {
+    const response = await fetch(`${API_URL}/practice/reading/${localStorage.getItem('practiceReadingId')}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json;',

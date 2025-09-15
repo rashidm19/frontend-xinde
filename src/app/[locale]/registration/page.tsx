@@ -12,6 +12,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useCustomTranslations } from '@/hooks/useCustomTranslations';
 import React from 'react';
 import { useRouter } from 'next/navigation';
+import { API_URL } from '@/lib/config';
 
 export default function Registration() {
   const router = useRouter();
@@ -61,7 +62,7 @@ export default function Registration() {
         req.append('avatar', blob);
       });
 
-    const response = await fetch('https://api.studybox.kz/auth/register', {
+    const response = await fetch(`${API_URL}/auth/register`, {
       method: 'POST',
       body: req,
     });

@@ -5,12 +5,13 @@ import React, { useEffect, useState } from 'react';
 import { GET_practice_speaking_feedback_id } from '@/api/GET_practice_speaking_feedback_id';
 import { HeaderDuringTest } from '@/components/HeaderDuringTest';
 import { useQuery } from '@tanstack/react-query';
+import { API_URL } from '@/lib/config';
 
 export default function Page({ params }: { params: { id: string } }) {
   const { data, status } = useQuery({
     queryKey: ['pracitce-speaking-feedbacks'],
     queryFn: () =>
-      fetch(`https://api.studybox.kz/practice/speaking/passed`, {
+      fetch(`${API_URL}/practice/speaking/passed`, {
         method: 'GET',
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`,

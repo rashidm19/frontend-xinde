@@ -17,6 +17,7 @@ import { Form, FormControl, FormField } from '@/components/ui/form';
 import { Label } from '@/components/ui/label';
 import { transformStringToArrayV4 } from '@/lib/utils';
 import { useCustomTranslations } from '@/hooks/useCustomTranslations';
+import { API_URL } from '@/lib/config';
 
 type FormValues = {
   [key: string]: string | undefined;
@@ -70,7 +71,7 @@ export default function Page() {
 
     formattedValues.answers = formattedValues.answers.filter(item => item.answer);
 
-    const response = await fetch('https://api.studybox.kz/practice/listening/1', {
+    const response = await fetch(`${API_URL}/practice/listening/1`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json;',

@@ -8,6 +8,7 @@ import nProgress from 'nprogress';
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { useCustomTranslations } from '@/hooks/useCustomTranslations';
+import { API_URL } from '@/lib/config';
 
 export default function Page() {
   const router = useRouter();
@@ -16,7 +17,7 @@ export default function Page() {
   const { data } = useQuery({
     queryKey: ['categories'],
     queryFn: () =>
-      fetch(`https://api.studybox.kz/practice/writing/categories `, {
+      fetch(`${API_URL}/practice/writing/categories `, {
         method: 'GET',
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`,
@@ -28,7 +29,7 @@ export default function Page() {
   const [selectedTopic, setSelectedTopic] = useState<string>('random');
 
   const startPractice = async () => {
-    const result = await fetch(`https://api.studybox.kz/practice/writing?part=${selectedPart}&tag_id=${selectedTopic === 'random' ? randomTopic() : selectedTopic}`, {
+    const result = await fetch(`${API_URL}/practice/writing?part=${selectedPart}&tag_id=${selectedTopic === 'random' ? randomTopic() : selectedTopic}`, {
       method: 'GET',
       headers: {
         Authorization: `Bearer ${localStorage.getItem('token')}`,
