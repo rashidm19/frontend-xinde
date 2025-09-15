@@ -1,5 +1,7 @@
+import { API_URL } from '@/lib/config';
+
 export const GET_practice_reading_results_id = async (id: string) => {
-  const res = await fetch(`https://api.studybox.kz/practice/reading/passed/${id}`, {
+  const res = await fetch(`${API_URL}/practice/reading/passed/${id}`, {
     method: 'GET',
     headers: {
       Authorization: `Bearer ${localStorage.getItem('token')}`,

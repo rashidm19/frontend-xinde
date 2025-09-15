@@ -5,13 +5,14 @@ import React from 'react';
 import { useCustomTranslations } from '@/hooks/useCustomTranslations';
 import nProgress from 'nprogress';
 import { useRouter } from 'next/navigation';
+import { API_URL } from '@/lib/config';
 
 export default function Page() {
   const router = useRouter();
   const { t, tImgAlts, tCommon, tActions } = useCustomTranslations('practice.reading.rules');
 
   const startPractice = async () => {
-    const result = await fetch('https://api.studybox.kz/practice/reading', {
+    const result = await fetch(`${API_URL}/practice/reading`, {
       method: 'GET',
       headers: {
         Authorization: `Bearer ${localStorage.getItem('token')}`,

@@ -9,6 +9,7 @@ import nProgress from 'nprogress';
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { useCustomTranslations } from '@/hooks/useCustomTranslations';
+import { API_URL } from '@/lib/config';
 
 export const ProfileEditFormModal = () => {
   const router = useRouter();
@@ -17,7 +18,7 @@ export const ProfileEditFormModal = () => {
   const { data, status } = useQuery({
     queryKey: ['user'],
     queryFn: () =>
-      fetch(`https://api.studybox.kz/auth/profile`, {
+      fetch(`${API_URL}/auth/profile`, {
         method: 'GET',
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`,

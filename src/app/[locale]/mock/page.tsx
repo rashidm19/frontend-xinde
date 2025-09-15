@@ -11,6 +11,7 @@ import nProgress from 'nprogress';
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { API_URL } from '@/lib/config';
 
 const data_rows = [
   {
@@ -141,7 +142,7 @@ export default function Page() {
   const { data } = useQuery({
     queryKey: ['user'],
     queryFn: () =>
-      fetch(`https://api.studybox.kz/auth/profile`, {
+      fetch(`${API_URL}/auth/profile`, {
         method: 'GET',
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`,

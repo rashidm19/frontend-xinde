@@ -6,29 +6,53 @@ import Record from './record';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useRouter } from 'next/navigation';
+import { API_URL } from '@/lib/config';
 
 interface FormProps {
   data: any;
 }
 
 export default function SpeakingTestForm({ data }: FormProps) {
+  const router = useRouter();
+
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    let formData = new FormData();
+    const practice_id = localStorage.getItem('practiceSpeakingIdStarted');
 
-    formData.append('practice_id', '78');
-    formData.append('question', '5');
-    formData.append('audio', values[1].audioBlob as Blob);
+    const promises = Object.entries(values).map(async ([questionNumber, value]) => {
+      const formData = new FormData();
 
-    const res = await fetch('https://api.studybox.kz/practice/send/speaking', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem('token')}`,
-      },
-      body: formData,
+      formData.append('practice_id', practice_id || '');
+      formData.append('question', questionNumber);
+      formData.append('audio', value?.audioBlob as Blob, `record_${questionNumber}.webm`);
+
+      return await fetch(`${API_URL}/practice/send/speaking`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+        body: formData,
+      });
     });
-    console.log(res);
-    const data = await res.json();
-    console.log(data);
+    try {
+      await Promise.all(promises);
+
+      const finishRes = await fetch(`${API_URL}/practice/speaking/${practice_id}/finish`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
+      const finishData = await finishRes.json();
+
+      if (finishData?.id) {
+        router.push(`/practice/speaking/feedback/${finishData.id}`);
+      } else {
+        router.push('/error500');
+      }
+    } catch (err) {
+      console.error('Ошибка при отправке:', err);
+    }
   }
 
   const formSchema = z.object({

@@ -4,12 +4,13 @@ import { Header } from '@/components/Header';
 import { Input } from '@/components/ui/input';
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { API_URL } from '@/lib/config';
 
 export default function Notes() {
   const { data } = useQuery({
     queryKey: ['user'],
     queryFn: () =>
-      fetch(`https://api.studybox.kz/auth/profile`, {
+      fetch(`${API_URL}/auth/profile`, {
         method: 'GET',
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`,

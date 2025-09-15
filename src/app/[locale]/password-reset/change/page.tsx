@@ -11,6 +11,7 @@ import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useEffect, useState } from 'react';
 import { useCustomTranslations } from '@/hooks/useCustomTranslations';
+import { API_URL } from '@/lib/config';
 
 export default function PasswordReset() {
   const router = useRouter();
@@ -45,7 +46,7 @@ export default function PasswordReset() {
   async function onSubmit(values: z.infer<typeof formSchema>) {
     NProgress.start();
     try {
-      const response = await fetch('https://api.studybox.kz/auth/reset-password/confirm', {
+      const response = await fetch(`${API_URL}/auth/reset-password/confirm`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

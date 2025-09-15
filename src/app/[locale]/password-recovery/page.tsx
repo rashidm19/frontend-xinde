@@ -7,6 +7,7 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useCustomTranslations } from '@/hooks/useCustomTranslations';
+import { API_URL } from '@/lib/config';
 
 export default function PasswordRecovery() {
   const { t, tImgAlts, tCommon, tActions, tForm, tMessages } = useCustomTranslations('passwordRecovery');
@@ -23,7 +24,7 @@ export default function PasswordRecovery() {
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    const response = await fetch('https://api.studybox.kz/auth/reset-password', {
+    const response = await fetch(`${API_URL}/auth/reset-password`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json;charset=utf-8',

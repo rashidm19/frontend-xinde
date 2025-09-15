@@ -20,6 +20,7 @@ import { transformStringToArrayV2, transformStringToArrayV4 } from '@/lib/utils'
 
 import { useRouter } from 'next/navigation';
 import { useCustomTranslations } from '@/hooks/useCustomTranslations';
+import { API_URL } from '@/lib/config';
 
 type FormValues = {
   [key: string]: string | undefined;
@@ -113,7 +114,7 @@ export default function Page({ params }: { params: { id: string } }) {
       });
     });
 
-    const response = await fetch('https://api.studybox.kz/practice/reading/2', {
+    const response = await fetch(`${API_URL}/practice/reading/2`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json;',
