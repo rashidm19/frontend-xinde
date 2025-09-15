@@ -83,3 +83,13 @@ export interface GeneralFeedback {
   transcription: string[]
   score: number
 }
+export interface PracticeSpeakingPassed {
+  data: PracticeSpeakingPassedItem[]
+}
+
+export interface PracticeSpeakingPassedItem {
+  id: number
+  speaking_id: number
+  speaking_task_id: any
+  feedback_ready: boolean
+}

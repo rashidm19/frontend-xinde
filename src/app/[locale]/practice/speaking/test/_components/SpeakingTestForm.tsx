@@ -19,13 +19,12 @@ export default function SpeakingTestForm({ data }: FormProps) {
   async function onSubmit(values: z.infer<typeof formSchema>) {
     const practice_id = localStorage.getItem('practiceSpeakingIdStarted');
 
-    const promises = Object.entries(values).map(async ([key, value], idx) => {
+    const promises = Object.entries(values).map(async ([questionNumber, value]) => {
       const formData = new FormData();
-      formData.append('id', key);
 
       formData.append('practice_id', practice_id || '');
-      formData.append('question', String(idx + 1));
-      formData.append('audio', value?.audioBlob as Blob, `record_${key}.webm`);
+      formData.append('question', questionNumber);
+      formData.append('audio', value?.audioBlob as Blob, `record_${questionNumber}.webm`);
 
       return await fetch(`${API_URL}/practice/send/speaking`, {
         method: 'POST',

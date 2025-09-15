@@ -6,27 +6,34 @@ import { GET_practice_speaking_feedback_id } from '@/api/GET_practice_speaking_f
 import { HeaderDuringTest } from '@/components/HeaderDuringTest';
 import { useQuery } from '@tanstack/react-query';
 import { API_URL } from '@/lib/config';
-import { ISpeakingPracticeFeedback } from '@/types/SpeakingFeedback';
+import { ISpeakingPracticeFeedback, PracticeSpeakingPassed } from '@/types/SpeakingFeedback';
 
 export default function Page({ params }: { params: { id: string } }) {
-  const { status } = useQuery({
+  const { data: passedData, status } = useQuery<PracticeSpeakingPassed>({
     queryKey: ['practice-speaking-feedbacks'],
-    queryFn: () =>
-      fetch(`${API_URL}/practice/speaking/passed`, {
+    queryFn: async () => {
+      const response = await fetch(`${API_URL}/practice/speaking/passed`, {
         method: 'GET',
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`,
         },
-      }).then(res => res.json()),
-    refetchInterval: 3000,
+      });
+      return (await response.json()) as PracticeSpeakingPassed;
+    },
+    refetchInterval: queryData => {
+      const found = queryData?.state.data?.data.find(item => String(item.id) === params.id);
+      return found?.feedback_ready ? false : 3000;
+    },
+    retry: false,
+    enabled: !!params.id,
   });
 
-  const { data: feedbackData, status: feedbackStatus } = useQuery({
+  const isFeedbackReady = passedData?.data.find(item => String(item.id) === params.id)?.feedback_ready === true;
+
+  const { data: feedbackData, status: feedbackStatus } = useQuery<ISpeakingPracticeFeedback>({
     queryKey: ['practice-speaking-feedback', params.id],
-    queryFn: async () => {
-      const response = await GET_practice_speaking_feedback_id(params.id);
-      return response as ISpeakingPracticeFeedback;
-    },
+    queryFn: async () => await GET_practice_speaking_feedback_id(params.id),
+    enabled: isFeedbackReady,
   });
 
   return (
