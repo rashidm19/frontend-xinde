@@ -58,7 +58,7 @@ export const BestResults = () => {
                 <img src='/images/icon_globe.svg' alt={tImgAlts('globe')} className='size-[18rem]' />
               </DialogTrigger>
 
-              <DialogContent className='fixed left-0 top-0 flex h-full min-h-[100dvh] w-full max-w-full flex-col items-start justify-start overflow-hidden backdrop-brightness-90 desktop:items-center desktop:justify-center'>
+              <DialogContent className='fixed left-[50%] top-[50%] flex h-auto w-[1280rem] -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center backdrop-brightness-90'>
                 <ChangeLangModal />
               </DialogContent>
             </Dialog>
@@ -68,7 +68,7 @@ export const BestResults = () => {
                 <img src='/images/icon_gear.svg' alt={tImgAlts('settings')} className='size-[18rem]' />
               </DialogTrigger>
 
-              <DialogContent className='fixed left-0 top-0 flex h-full min-h-[100dvh] w-full max-w-full flex-col items-start justify-start overflow-hidden backdrop-brightness-90 desktop:items-center desktop:justify-center'>
+              <DialogContent className='fixed left-[50%] top-[50%] flex h-auto w-[1280rem] -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center backdrop-brightness-90'>
                 <ProfileEditFormModal />
               </DialogContent>
             </Dialog>
