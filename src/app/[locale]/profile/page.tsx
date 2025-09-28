@@ -11,7 +11,7 @@ import { PracticeBySections } from '@/app/[locale]/profile/_components/PracticeL
 import { getPracticeTimeStats } from '@/api/GET_stats_practice_time';
 
 export default function Page() {
-  const { data, status } = useQuery({
+  const { data: profile, status } = useQuery({
     queryKey: ['user'],
     queryFn: getUser,
   });
@@ -25,7 +25,7 @@ export default function Page() {
 
   return (
     <>
-      <Header name={data?.name} avatar={data?.avatar} />
+      <Header name={profile?.name} avatar={profile?.avatar} />
       <main className='container flex max-w-[1440rem] flex-wrap justify-between gap-x-[16rem] px-[40rem] pb-[80rem] pt-[40rem]'>
         <div className='flex w-[1016rem] flex-col gap-y-[16rem]'>
           {isLoading ? (
@@ -54,7 +54,7 @@ export default function Page() {
               <PracticeBySections />
               {/*<Notifications />*/}
               {/*<Referrals />*/}
-              <IeltsGoal grade={data?.target_grade} />
+              <IeltsGoal grade={profile?.target_grade} />
             </>
           )}
         </div>

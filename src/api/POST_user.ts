@@ -13,7 +13,7 @@ export async function postUser({ grade, name, region }: Props) {
     ...(region && { region }),
   };
 
-  await fetch(`${API_URL}/auth/profile`, {
+  const res = await fetch(`${API_URL}/auth/profile`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json;charset=utf-8',
@@ -21,4 +21,11 @@ export async function postUser({ grade, name, region }: Props) {
     },
     body: JSON.stringify(values),
   });
+
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`POST /auth/profile failed: ${res.status} ${text}`);
+  }
+
+  return res.json(); // <- { ...updatedUser }
 }
