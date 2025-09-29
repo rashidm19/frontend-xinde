@@ -1,6 +1,6 @@
 'use client';
 
-import { ProfileEditForm } from './_components/ProfileEditForm';
+// import { ProfileEditForm } from './_components/ProfileEditForm';
 import nProgress from 'nprogress';
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
@@ -46,7 +46,7 @@ export default function ProfileSettings() {
             </div>
 
             {/* // * Profile Edit */}
-            <ProfileEditForm name={data.name} email={data.email} />
+            {/*<ProfileEditForm name={data.name} email={data.email} />*/}
 
             {/* // * Logout & Delete */}
             <div className='flex justify-start gap-x-[6rem]'>
