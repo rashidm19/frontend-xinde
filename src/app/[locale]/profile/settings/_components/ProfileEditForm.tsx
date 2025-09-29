@@ -2,43 +2,16 @@
 
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-
-import { useForm } from 'react-hook-form';
-import { useState } from 'react';
-import { z } from 'zod';
-import { zodResolver } from '@hookform/resolvers/zod';
 import { useCustomTranslations } from '@/hooks/useCustomTranslations';
 
-const formSchema = z.object({
-  name: z.string().min(2),
-  email: z.string().min(2),
-  password: z.string(),
-  old_password: z.string().min(8),
-  new_password: z.string().min(8),
-  region: z.string().min(2),
-});
-
 interface Props {
-  name: string;
-  email: string;
+  form: any;
+  isChangingPassword: boolean;
+  setIsChangingPassword: (v: boolean) => void;
 }
 
-export const ProfileEditForm = ({ name, email }: Props) => {
+export const ProfileEditForm = ({ form, isChangingPassword, setIsChangingPassword }: Props) => {
   const { t, tImgAlts, tActions, tForm } = useCustomTranslations('profileSettings.profileEditForm');
-
-  const [isChangingPassword, setIsChangingPassword] = useState(false);
-
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      name: name,
-      email: email,
-      password: '*********',
-      old_password: '',
-      new_password: '',
-      region: 'kz',
-    },
-  });
 
   return (
     <Form {...form}>

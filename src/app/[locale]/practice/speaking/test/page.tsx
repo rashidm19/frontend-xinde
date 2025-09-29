@@ -11,12 +11,12 @@ const SpeakingTestForm = dynamic(() => import('./_components/SpeakingTestForm').
 
 export default function Page() {
   const { data, status } = useQuery({
-    queryKey: ['pracitce-speaking'],
+    queryKey: ['practice-speaking'],
     queryFn: GET_practice_speaking_id,
   });
 
   useEffect(() => {
-    const test = POST_practice_speaking_id_begin();
+    POST_practice_speaking_id_begin().then(() => null);
   }, []);
 
   return (

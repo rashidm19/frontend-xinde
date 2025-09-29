@@ -1,16 +1,24 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 
 import { DialogClose } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
 import { postUser } from '@/api/POST_user';
 import { useCustomTranslations } from '@/hooks/useCustomTranslations';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 
-export default function TargetGoalModal() {
+interface Props {
+  grade: number;
+}
+
+export default function TargetGoalModal({ grade }: Props) {
   const { t, tImgAlts, tActions } = useCustomTranslations('profile.targetGoalModal');
+  const queryClient = useQueryClient();
+  const closeRef = useRef<HTMLButtonElement>(null);
 
-  const [selectedScore, setSelectedScore] = useState(5.0);
+  const [selectedScore, setSelectedScore] = useState(grade);
+  const [loading, setLoading] = useState(false);
 
   const scores = [5.0, 5.5, 6.0, 6.5, 7.0, 7.5, 8.0, 8.5, 9.0];
 
@@ -18,9 +26,29 @@ export default function TargetGoalModal() {
     return score <= selectedScore;
   };
 
+  const mutation = useMutation({
+    mutationFn: postUser,
+    onSuccess: (updatedUser: any) => {
+      queryClient.setQueryData(['user'], updatedUser);
+    },
+  });
+
+  const handleSubmit = async () => {
+    setLoading(true);
+
+    try {
+      await mutation.mutateAsync({ grade: selectedScore.toString() });
+      closeRef.current?.click();
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <section className='fixed flex max-h-[95dvh] w-[672rem] flex-col gap-y-[40rem] rounded-[16rem] bg-white p-[40rem] desktop:rounded-[40rem]'>
-      <DialogClose className='absolute right-[24rem] top-[24rem]'>
+      <DialogClose ref={closeRef} className='absolute right-[24rem] top-[24rem]'>
         <img src='/images/icon_close--black.svg' alt={tImgAlts('close')} className='size-[20rem]' />
       </DialogClose>
 
@@ -64,13 +92,21 @@ export default function TargetGoalModal() {
           </div>
         </div>
         <button
-          className='mx-auto mt-[60rem] h-[50rem] w-[280rem] rounded-full bg-d-green px-[16rem] py-[8rem] font-semibold text-d-black transition-colors hover:bg-d-green-secondary'
-          onClick={() => {
-            postUser({ grade: selectedScore.toString() });
-            window.location.reload();
-          }}
+          className='mx-auto mt-[60rem] flex h-[50rem] w-[280rem] items-center justify-center rounded-full bg-d-green px-[16rem] py-[8rem] font-semibold text-d-black transition-colors hover:bg-d-green-secondary'
+          onClick={handleSubmit}
         >
-          {tActions('confirm')}
+          {loading ? (
+            <svg className='size-[20rem] animate-spin text-black' xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24'>
+              <circle className='opacity-25' cx='12' cy='12' r='10' stroke='currentColor' stroke-width='4' />
+              <path
+                className='opacity-75'
+                fill='currentColor'
+                d='M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z'
+              />
+            </svg>
+          ) : (
+            tActions('confirm')
+          )}
         </button>
       </div>
     </section>

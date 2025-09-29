@@ -8,6 +8,7 @@ import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'next/navigation';
 import { API_URL } from '@/lib/config';
+import { Fragment, useMemo } from 'react';
 
 interface FormProps {
   data: any;
@@ -16,7 +17,20 @@ interface FormProps {
 export default function SpeakingTestForm({ data }: FormProps) {
   const router = useRouter();
 
-  async function onSubmit(values: z.infer<typeof formSchema>) {
+  const createDynamicFormSchema = useMemo(() => {
+    const schemaObject: Record<string, any> = {};
+
+    data.questions.forEach((question: any) => {
+      schemaObject[question.number] = z.object({
+        audioBlob: z.instanceof(Blob).optional(),
+        recordingUrl: z.string().optional(),
+      });
+    });
+
+    return z.object(schemaObject);
+  }, [data.questions]);
+
+  async function onSubmit(values: z.infer<typeof createDynamicFormSchema>) {
     const practice_id = localStorage.getItem('practiceSpeakingIdStarted');
 
     const promises = Object.entries(values).map(async ([questionNumber, value]) => {
@@ -55,53 +69,37 @@ export default function SpeakingTestForm({ data }: FormProps) {
     }
   }
 
-  const formSchema = z.object({
-    1: z.object({
-      audioBlob: z.instanceof(Blob).optional(),
-      recordingUrl: z.string().optional(),
-    }),
-    2: z.object({
-      audioBlob: z.instanceof(Blob).optional(),
-      recordingUrl: z.string().optional(),
-    }),
-    3: z.object({
-      audioBlob: z.instanceof(Blob).optional(),
-      recordingUrl: z.string().optional(),
-    }),
-    4: z.object({
-      audioBlob: z.instanceof(Blob).optional(),
-      recordingUrl: z.string().optional(),
-    }),
-    5: z.object({
-      audioBlob: z.instanceof(Blob).optional(),
-      recordingUrl: z.string().optional(),
-    }),
-  });
-
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
+  const form = useForm<z.infer<typeof createDynamicFormSchema>>({
+    resolver: zodResolver(createDynamicFormSchema),
   });
 
   const formValues = form.watch();
 
-  const currectQuestionNumber = () => {
-    if (!formValues[1]?.recordingUrl) {
-      return 1;
+  const currentQuestionNumber = () => {
+    const sortedQuestions = data.questions.sort((a: any, b: any) => a.number - b.number);
+
+    for (let i = 0; i < sortedQuestions.length; i++) {
+      const questionNumber = sortedQuestions[i].number;
+      if (!formValues[questionNumber]?.recordingUrl) {
+        return questionNumber;
+      }
     }
-    // @ts-ignore
-    if (formValues[1]?.recordingUrl && !formValues[2]?.recordingUrl) {
-      return 2;
-    }
-    // @ts-ignore
-    if (formValues[1]?.recordingUrl && formValues[2]?.recordingUrl && !formValues[3]?.recordingUrl) {
-      return 3;
-    }
-    // @ts-ignore
-    if (formValues[1]?.recordingUrl && formValues[2]?.recordingUrl && formValues[3]?.recordingUrl && !formValues[4]?.recordingUrl) {
-      return 4;
-    } else {
-      return 5;
-    }
+
+    return sortedQuestions[sortedQuestions.length - 1]?.number || 1;
+  };
+
+  const isAllQuestionsCompleted = () => {
+    return data.questions.every((question: any) => formValues[question.number]?.recordingUrl);
+  };
+
+  const isPreviousQuestionCompleted = (questionNumber: number) => {
+    const sortedQuestions = data.questions.sort((a: any, b: any) => a.number - b.number);
+    const currentIndex = sortedQuestions.findIndex((q: any) => q.number === questionNumber);
+
+    if (currentIndex === 0) return true;
+
+    const previousQuestion = sortedQuestions[currentIndex - 1];
+    return !!formValues[previousQuestion.number]?.recordingUrl;
   };
 
   return (
@@ -110,80 +108,41 @@ export default function SpeakingTestForm({ data }: FormProps) {
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className='relative z-10 mx-auto flex w-[672rem] flex-col rounded-[16rem] bg-white p-[40rem] shadow-card'>
             <div className='flex min-h-[515rem] flex-col gap-y-[16rem] rounded-t-[16rem] bg-d-gray p-[16rem]'>
-              {data.questions.map((question: any) => (
-                <>
-                  {question.number === 1 && (
-                    <>
-                      <Audio src={question.intro_url} title={'Examiner Introduction'} />
+              {data.questions
+                .sort((a: any, b: any) => a.number - b.number)
+                .map((question: any) => {
+                  const shouldShow = isPreviousQuestionCompleted(question.number);
+
+                  if (!shouldShow) return null;
+
+                  return (
+                    <Fragment key={question.number}>
+                      {question.number === 1 && question.intro_url && <Audio src={question.intro_url} title={'Examiner Introduction'} />}
                       <Audio src={question.question_url} title={`Question ${question.number}`} />
-                      {formValues[1]?.recordingUrl && (
+                      {formValues[question.number]?.recordingUrl && (
                         <div className='ml-auto'>
-                          <Audio src={formValues[1]?.recordingUrl} title={`Your Answer`} blob={formValues[1]?.audioBlob} />
+                          <Audio src={formValues[question.number]?.recordingUrl} title={`Your Answer`} blob={formValues[question.number]?.audioBlob} />
                         </div>
                       )}
-                    </>
-                  )}
-                  {question.number === 2 && formValues[1]?.recordingUrl && (
-                    <>
-                      <Audio src={question.intro_url} title={`Question ${question.number}`} />
-                      <Audio src={question.question_url} title={`Question ${question.number}`} />
-                      {formValues[2]?.recordingUrl && (
-                        <div className='ml-auto'>
-                          <Audio src={formValues[2]?.recordingUrl} title={`Your Answer`} blob={formValues[2]?.audioBlob} />
-                        </div>
-                      )}
-                    </>
-                  )}
-                  {question.number === 3 && formValues[2]?.recordingUrl && (
-                    <>
-                      <Audio src={question.intro_url} title={`Question ${question.number}`} />
-                      <Audio src={question.question_url} title={`Question ${question.number}`} />
-                      {formValues[3]?.recordingUrl && (
-                        <div className='ml-auto'>
-                          <Audio src={formValues[3]?.recordingUrl} title={`Your Answer`} blob={formValues[3]?.audioBlob} />
-                        </div>
-                      )}
-                    </>
-                  )}
-                  {question.number === 4 && formValues[3]?.recordingUrl && (
-                    <>
-                      <Audio src={question.intro_url} title={`Question ${question.number}`} />
-                      <Audio src={question.question_url} title={`Question ${question.number}`} />
-                      {formValues[4]?.recordingUrl && (
-                        <div className='ml-auto'>
-                          <Audio src={formValues[4]?.recordingUrl} title={`Your Answer`} blob={formValues[4]?.audioBlob} />
-                        </div>
-                      )}
-                    </>
-                  )}
-                  {question.number === 5 && formValues[4]?.recordingUrl && (
-                    <>
-                      <Audio src={question.intro_url} title={`Question ${question.number}`} />
-                      <Audio src={question.question_url} title={`Question ${question.number}`} />
-                      {formValues[5]?.recordingUrl && (
-                        <div className='ml-auto'>
-                          <Audio src={formValues[5]?.recordingUrl} title={`Your Answer`} blob={formValues[5]?.audioBlob} />
-                        </div>
-                      )}
-                    </>
-                  )}
-                </>
-              ))}
+                    </Fragment>
+                  );
+                })}
             </div>
-            {/* @ts-ignore */}
-            {!formValues[5]?.recordingUrl && (
+            {!isAllQuestionsCompleted() && (
               <div className='flex h-[104rem] w-full items-center justify-between rounded-b-[16rem] bg-d-light-gray px-[16rem]'>
-                {currectQuestionNumber() === 1 && <Record setFieldValue={form.setValue} currentQuestionNumber={1} />}
-                {currectQuestionNumber() === 2 && <Record setFieldValue={form.setValue} currentQuestionNumber={2} />}
-                {currectQuestionNumber() === 3 && <Record setFieldValue={form.setValue} currentQuestionNumber={3} />}
-                {currectQuestionNumber() === 4 && <Record setFieldValue={form.setValue} currentQuestionNumber={4} />}
-                {currectQuestionNumber() === 5 && <Record setFieldValue={form.setValue} currentQuestionNumber={5} />}
+                {data.questions
+                  .sort((a: any, b: any) => a.number - b.number)
+                  .map((question: any) => (
+                    <Fragment key={question.number}>
+                      {currentQuestionNumber() === question.number && <Record setFieldValue={form.setValue} currentQuestionNumber={question.number} />}
+                    </Fragment>
+                  ))}
               </div>
             )}
 
             <button
               type='submit'
-              // disabled={!formValues[5]?.recordingUrl}
+              disabled={!isAllQuestionsCompleted()}
               className='mx-auto mt-[48rem] flex h-[63rem] w-[280rem] items-center justify-center rounded-[40rem] bg-d-green text-[20rem] font-semibold hover:bg-d-green/40 disabled:bg-d-light-gray'
             >
               Submit

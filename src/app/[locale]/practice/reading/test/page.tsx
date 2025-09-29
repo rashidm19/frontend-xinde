@@ -144,6 +144,20 @@ export default function Page() {
     }
   };
 
+  const getQuestionAt = (block: any, x: number, y: number) => block.questions?.find((q: any) => q.x === x && q.y === y);
+
+  const safeFieldName = (block: any, x: number, y: number) => {
+    const q = getQuestionAt(block, x, y);
+    return q?.number != null ? String(q.number) : `cell_${y}_${x}`;
+  };
+
+  const safePlaceholder = (block: any, x: number, y: number) => {
+    const q = getQuestionAt(block, x, y);
+    return q?.number != null ? String(q.number) : '';
+  };
+
+  const isBlank = (cell: unknown) => typeof cell === 'string' && cell.includes('___');
+
   if (status === 'pending') {
     return <></>;
   }
@@ -433,25 +447,25 @@ export default function Page() {
                         )}
                         {/* Таблица с ради-баттонами */}
                         {block.kind === 'table' && (
-                          <div className={`grid grid-cols-${block.cells[0].length} rounded-[8rem] border border-d-black`}>
-                            {/* 1st row */}
+                          <div className='grid' style={{ gridTemplateColumns: `repeat(${block.cells[0].length}, minmax(0,1fr))` }}>
                             {block.cells.map((row: string[], rowIndex: number) =>
                               row.map((cell: string, cellIndex: number) => (
                                 <div
+                                  key={`${rowIndex}_${cellIndex}`}
                                   lang='en'
                                   className={`flex h-auto flex-col items-center justify-center hyphens-auto text-wrap border-b border-b-d-black p-[16rem] text-center text-[14rem] leading-[120%] tracking-[-0.2rem] text-d-black ${rowIndex === 0 ? 'font-semibold' : ''} ${cellIndex !== 0 ? 'border-l' : ''}`}
                                 >
                                   {cell === '___' && (
                                     <FormField
                                       control={form.control}
-                                      name={block.questions.find((q: any) => q.x === cellIndex && q.y === rowIndex)?.number.toString()}
+                                      name={safeFieldName(block, cellIndex, rowIndex)}
                                       render={({ field }) => (
                                         <FormControl>
                                           <Input
                                             {...field}
                                             type='text'
-                                            placeholder={block.questions.find((q: any) => q.x === cellIndex && q.y === rowIndex)?.number}
-                                            className='inline h-[32rem] w-full items-center justify-center rounded-[8rem] !border !border-d-black p-[10rem] text-center text-[14rem] font-normal lowercase leading-[25rem] !tracking-[-0.2rem] !text-d-black/80 placeholder:text-center placeholder:!text-d-black focus:!border-d-black focus:bg-d-yellow-secondary focus-visible:!border-d-black'
+                                            placeholder={safePlaceholder(block, cellIndex, rowIndex)}
+                                            className='inline h-[32rem] w-full items-center justify-center rounded-[8rem] !border !border-d-black p-[10rem] text-center text-[14rem] font-normal leading-[25rem] !tracking-[-0.2rem] !text-d-black/80 placeholder:text-center placeholder:!text-d-black focus:!border-d-black focus:bg-d-yellow-secondary focus-visible:!border-d-black'
                                           />
                                         </FormControl>
                                       )}
@@ -459,20 +473,20 @@ export default function Page() {
                                   )}
 
                                   {cell !== '___' &&
-                                    cell.includes('___') &&
-                                    transformStringToArrayV2(cell).map(s => (
-                                      <>
+                                    isBlank(cell) &&
+                                    transformStringToArrayV2(cell).map((s, i) => (
+                                      <React.Fragment key={i}>
                                         {s === '___' ? (
                                           <FormField
                                             control={form.control}
-                                            name={block.questions.find((q: any) => q.x === cellIndex && q.y === rowIndex)?.number.toString()}
+                                            name={safeFieldName(block, cellIndex, rowIndex)}
                                             render={({ field }) => (
                                               <FormControl>
                                                 <Input
                                                   {...field}
                                                   type='text'
-                                                  placeholder={block.questions.find((q: any) => q.x === cellIndex && q.y === rowIndex)?.number}
-                                                  className='my-[2rem] inline h-[32rem] w-full !items-center justify-center rounded-[8rem] !border-[1.5rem] !border-d-black/60 p-[10rem] text-center text-[14rem] font-normal lowercase leading-tight tracking-[-0.2rem] !text-d-black placeholder:text-center placeholder:!text-d-black focus:!border-d-black focus:bg-d-yellow-secondary focus-visible:!border-d-black'
+                                                  placeholder={safePlaceholder(block, cellIndex, rowIndex)}
+                                                  className='my-[2rem] inline h-[32rem] w-full !items-center justify-center rounded-[8rem] !border-[1.5rem] !border-d-black/60 p-[10rem] text-center text-[14rem] font-normal leading-tight tracking-[-0.2rem] !text-d-black placeholder:text-center placeholder:!text-d-black focus:!border-d-black focus:bg-d-yellow-secondary focus-visible:!border-d-black'
                                                 />
                                               </FormControl>
                                             )}
@@ -480,10 +494,10 @@ export default function Page() {
                                         ) : (
                                           <div>{s}</div>
                                         )}
-                                      </>
+                                      </React.Fragment>
                                     ))}
 
-                                  {!cell.includes('___') && cell}
+                                  {!isBlank(cell) && cell}
                                 </div>
                               ))
                             )}

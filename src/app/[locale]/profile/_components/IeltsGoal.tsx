@@ -3,6 +3,7 @@ import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 import { HorseshoeProgressBar } from './HorseshoeProgressBar';
 import TargetGoalModal from './TargetGoalModal';
 import { useCustomTranslations } from '@/hooks/useCustomTranslations';
+import React from 'react';
 
 interface Props {
   grade?: number;
@@ -46,9 +47,11 @@ export const IeltsGoal = ({ grade }: Props) => {
           )}
         </DialogTrigger>
 
-        <DialogContent className='fixed left-0 top-0 flex h-full min-h-[100dvh] w-full max-w-full flex-col items-start justify-start overflow-hidden backdrop-brightness-90 desktop:items-center desktop:justify-center'>
-          <TargetGoalModal />
-        </DialogContent>
+        {grade && (
+          <DialogContent className='fixed left-[50%] top-[50%] flex h-auto w-[1280rem] -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center backdrop-brightness-90'>
+            <TargetGoalModal grade={grade} />
+          </DialogContent>
+        )}
       </Dialog>
     </section>
   );
