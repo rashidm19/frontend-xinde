@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { ScrollArea } from './ui/scroll-area';
 import { useCustomTranslations } from '@/hooks/useCustomTranslations';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { API_URL } from '@/lib/config';
+import { API_URL, EPAY_PROD_URL, EPAY_TEST_URL } from '@/lib/config';
 import { IService } from '@/types/Billing';
 import { IPaymentOrder } from '@/types/Payments';
 import { POST_payment_checkout_order } from '@/api/POST_payment_checkout_order';
@@ -42,7 +42,7 @@ export const PricesModal = () => {
 
   async function pay(order: IPaymentOrder) {
     // 1) Подключаем скрипт
-    const src = order.isSandbox ? 'https://test-epay.homebank.kz/payform/payment-api.js' : 'https://epay.homebank.kz/payform/payment-api.js';
+    const src = order.isSandbox ? EPAY_TEST_URL : EPAY_PROD_URL;
     if (!document.querySelector(`script[src="${src}"]`)) {
       await new Promise<void>((res, rej) => {
         const s = document.createElement('script');
