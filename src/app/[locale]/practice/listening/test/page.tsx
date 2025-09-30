@@ -17,7 +17,7 @@ import { Form, FormControl, FormField } from '@/components/ui/form';
 import { Label } from '@/components/ui/label';
 import { transformStringToArrayV4 } from '@/lib/utils';
 import { useCustomTranslations } from '@/hooks/useCustomTranslations';
-import { API_URL } from '@/lib/config';
+import axiosInstance from '@/lib/axiosInstance';
 
 type FormValues = {
   [key: string]: string | undefined;
@@ -71,17 +71,12 @@ export default function Page() {
 
     formattedValues.answers = formattedValues.answers.filter(item => item.answer);
 
-    const response = await fetch(`${API_URL}/practice/listening/1`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json;',
-        Authorization: `Bearer ${localStorage.getItem('token')}`,
-      },
-      body: JSON.stringify(formattedValues),
+    const response = await axiosInstance.post('/practice/listening/1', formattedValues, {
+      validateStatus: () => true,
     });
 
-    if (response.ok) {
-      const result = await response.json();
+    if (response.status >= 200 && response.status < 300) {
+      const result = response.data;
       router.push(`/practice/listening/results/${result.id}`);
       console.log(result);
     } else {

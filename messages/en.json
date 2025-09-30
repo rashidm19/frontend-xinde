@@ -97,7 +97,8 @@
     "accountNoExist": "account doesn't exist",
     "invalidOrExpiredToken": "Invalid or expired token",
     "linkCopied": "Link copied",
-    "acceptUserAgreement": "Please accept the User Agreement before continuing."
+    "acceptUserAgreement": "Please accept the User Agreement before continuing.",
+    "unexpectedError": "Something went wrong. Please try again."
   },
   "imgAlts": {
     "logo": "Logo",
@@ -283,7 +284,11 @@
   },
   "profileSettings": {
     "profileEditForm": {
-      "title": "Profile editing"
+      "title": "Profile editing",
+      "deleteAccount": {
+        "title": "Delete account",
+        "description": "This action will permanently remove your profile and all related data. This cannot be undone."
+      }
     },
     "changeLangModal": {
       "title": "Change language"

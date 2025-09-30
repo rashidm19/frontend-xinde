@@ -4,24 +4,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 import { Header } from '@/components/Header';
 import Link from 'next/link';
-import { useQuery } from '@tanstack/react-query';
 import { useCustomTranslations } from '@/hooks/useCustomTranslations';
 import React from 'react';
-import { API_URL } from '@/lib/config';
+import { useProfile } from '@/hooks/useProfile';
 
 export default function Page() {
   const { t, tImgAlts, tCommon, tActions } = useCustomTranslations('practice');
 
-  const { data } = useQuery({
-    queryKey: ['user'],
-    queryFn: () =>
-      fetch(`${API_URL}/auth/profile`, {
-        method: 'GET',
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
-      }).then(res => res.json()),
-  });
+  const { profile } = useProfile();
 
   const tabs = [
     { icon: '/images/icon_writingSection.svg', key: 'writing' },
@@ -32,7 +22,7 @@ export default function Page() {
 
   return (
     <>
-      <Header name={data?.name} avatar={data?.avatar} />
+      <Header name={profile?.name} avatar={profile?.avatar} />
       <main>
         <div className='container max-w-[1440rem] p-[40rem]'>
           <Tabs defaultValue='writing'>

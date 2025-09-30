@@ -1,26 +1,23 @@
-'use client'
+'use client';
 
 import Link from 'next/link';
 import React from 'react';
 import { useCustomTranslations } from '@/hooks/useCustomTranslations';
 import nProgress from 'nprogress';
 import { useRouter } from 'next/navigation';
-import { API_URL } from '@/lib/config';
+import axiosInstance from '@/lib/axiosInstance';
 
 export default function Page() {
   const router = useRouter();
   const { t, tImgAlts, tCommon, tActions } = useCustomTranslations('practice.reading.rules');
 
   const startPractice = async () => {
-    const result = await fetch(`${API_URL}/practice/reading`, {
-      method: 'GET',
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem('token')}`,
-      },
+    const result = await axiosInstance.get('/practice/reading', {
+      validateStatus: () => true,
     });
-    if (result?.ok) {
+    if (result.status >= 200 && result.status < 300) {
       nProgress.start();
-      const json = await result.json();
+      const json = result.data;
       if (Array.isArray(json.data) && json.data.length > 0) {
         const randomIndex = Math.floor(Math.random() * json.data.length);
         const randomReadingId = json.data[randomIndex].reading_id;

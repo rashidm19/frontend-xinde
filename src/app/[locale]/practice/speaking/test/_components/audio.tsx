@@ -3,6 +3,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 
 import { AudioVisualizer } from 'react-audio-visualize';
+import axiosInstance from '@/lib/axiosInstance';
 
 interface Props {
   src: string;
@@ -19,9 +20,11 @@ export const Audio = ({ src, title, blob }: Props) => {
 
   useEffect(() => {
     const fetchAudioFile = async () => {
-      const response = await fetch(src);
-      const blob = await response.blob();
-      setAudioBlob(blob);
+      const absoluteSrc = src.startsWith('http') || src.startsWith('blob:') ? src : `${window.location.origin}${src}`;
+      const { data } = await axiosInstance.get(absoluteSrc, {
+        responseType: 'blob',
+      });
+      setAudioBlob(data);
     };
 
     if (!audioBlob) {
@@ -40,7 +43,7 @@ export const Audio = ({ src, title, blob }: Props) => {
           <audio
             controls
             ref={audioRef}
-            onTimeUpdate={e => setCurrentTimestamp(audioRef?.current?.currentTime)}
+            onTimeUpdate={() => setCurrentTimestamp(audioRef?.current?.currentTime)}
             onPause={() => setPlayStatus('paused')}
             onPlay={() => setPlayStatus('playing')}
             className='hidden'

@@ -4,19 +4,16 @@ import { BestResults } from './_components/BestResults';
 import { Header } from '@/components/Header';
 import { IeltsGoal } from './_components/IeltsGoal';
 import { TimeSpent } from './_components/TimeSpent';
-import { getUser } from '@/api/GET_user';
-import { useQuery } from '@tanstack/react-query';
 import { Skeleton } from '@/components/ui/skeleton';
 import { PracticeBySections } from '@/app/[locale]/profile/_components/PracticeList';
 import { getPracticeTimeStats } from '@/api/GET_stats_practice_time';
+import { useProfile } from '@/hooks/useProfile';
+import { useQuery } from '@tanstack/react-query';
 
 export default function Page() {
-  const { data: profile, status } = useQuery({
-    queryKey: ['user'],
-    queryFn: getUser,
-  });
+  const { profile, status } = useProfile();
 
-  const isLoading = status === 'pending';
+  const isLoading = !profile && (status === 'idle' || status === 'loading');
 
   const { data: practiceTimeStats, isLoading: practiceTimeStatsLoading } = useQuery({
     queryKey: ['practiceTimeStats'],
@@ -54,7 +51,7 @@ export default function Page() {
               <PracticeBySections />
               {/*<Notifications />*/}
               {/*<Referrals />*/}
-              <IeltsGoal grade={profile?.target_grade} />
+              <IeltsGoal grade={profile?.target_grade || 9} />
             </>
           )}
         </div>

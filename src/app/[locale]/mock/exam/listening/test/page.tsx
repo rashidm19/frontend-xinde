@@ -13,7 +13,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Form, FormControl, FormField } from '@/components/ui/form';
 import { Label } from '@/components/ui/label';
-import { API_URL } from '@/lib/config';
 import { transformStringToArrayV4 } from '@/lib/utils';
 import { mockStore } from '@/stores/mock';
 import nProgress from 'nprogress';
@@ -90,7 +89,7 @@ export default function Page() {
 
   const values = form.watch();
 
-  async function onSubmit(values: z.infer<typeof formSchema>) {
+  async function onSubmit() {
     nProgress.start();
     router.push('/mock/exam/reading/rules');
   }

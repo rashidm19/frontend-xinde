@@ -4,80 +4,143 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 import { DialogClose } from '@/components/ui/dialog';
 import { ProfileEditForm } from './ProfileEditForm';
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import nProgress from 'nprogress';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { useCustomTranslations } from '@/hooks/useCustomTranslations';
-import { API_URL } from '@/lib/config';
 import { postUser } from '@/api/POST_user';
-import { useForm } from 'react-hook-form';
+import { SubmitHandler, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
 
-const formSchema = z.object({
-  name: z.string().min(2),
-  email: z.string().min(2),
-  password: z.string(),
-  old_password: z.string().min(8),
-  new_password: z.string().min(8),
-  region: z.string().min(2),
-});
+import { profileEditFormSchema, ProfileEditFormValues } from './profileEditSchema';
+import { deleteProfile, ProfileUpdateRequest, ProfileUpdateResponse } from '@/api/profile';
+import { regionSchema } from '@/types/types';
+import { useProfile } from '@/hooks/useProfile';
+import { refreshProfile, resetProfile } from '@/stores/profileStore';
+import { openConfirmationModal } from '@/stores/confirmationModalStore';
+
+const DEFAULT_REGION = 'kz';
+
+const resolveRegion = (region?: string | null): string => {
+  const parsed = regionSchema.safeParse(region ?? undefined);
+  if (parsed.success) {
+    return parsed.data;
+  }
+
+  return DEFAULT_REGION;
+};
 
 export const ProfileEditFormModal = () => {
   const router = useRouter();
-  const queryClient = useQueryClient();
   const closeRef = useRef<HTMLButtonElement>(null);
   const { tImgAlts, tCommon, tActions } = useCustomTranslations();
+  const { t: tProfileSettings } = useCustomTranslations('profileSettings.profileEditForm');
+  const { profile, status, setProfile: setProfileInStore } = useProfile();
 
-  const [loading, setLoading] = useState(false);
-
-  const { data, status } = useQuery({
-    queryKey: ['user'],
-    queryFn: () =>
-      fetch(`${API_URL}/auth/profile`, {
-        method: 'GET',
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
-      }).then(res => res.json()),
+  const form = useForm<ProfileEditFormValues>({
+    resolver: zodResolver(profileEditFormSchema),
+    defaultValues: {
+      name: '',
+      email: '',
+      region: DEFAULT_REGION,
+      oldPassword: '',
+      newPassword: '',
+    },
   });
 
-  const mutation = useMutation({
+  const mutation = useMutation<ProfileUpdateResponse, Error, ProfileUpdateRequest>({
     mutationFn: postUser,
-    onSuccess: (updatedUser: any) => {
-      queryClient.setQueryData(['user'], updatedUser);
+    onSuccess: async updatedUser => {
+      setProfileInStore(updatedUser);
+      let syncedProfile = updatedUser;
+
+      try {
+        const refreshed = await refreshProfile();
+        if (refreshed) {
+          syncedProfile = refreshed;
+        }
+      } catch (error) {
+        console.error(error);
+      }
+
+      setProfileInStore(syncedProfile);
+      form.reset({
+        name: syncedProfile.name ?? '',
+        email: syncedProfile.email,
+        region: resolveRegion(syncedProfile.region ?? undefined),
+        oldPassword: '',
+        newPassword: '',
+      });
+      setIsChangingPassword(false);
+      closeRef.current?.click();
+    },
+  });
+
+  const deleteAccountMutation = useMutation<void, Error>({
+    mutationFn: deleteProfile,
+    onSuccess: () => {
+      localStorage.removeItem('token');
+      resetProfile();
+      closeRef.current?.click();
+      nProgress.start();
+      router.push('/');
+    },
+    onError: error => {
+      console.error(error);
     },
   });
 
   const [isChangingPassword, setIsChangingPassword] = useState(false);
 
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      name: data?.name,
-      email: data?.email,
-      password: '*********',
-      old_password: '',
-      new_password: '',
-      region: 'kz',
-    },
-  });
+  useEffect(() => {
+    if (!profile) {
+      return;
+    }
 
-  const handleSubmit = async () => {
-    setLoading(true);
+    form.reset({
+      name: profile.name ?? '',
+      email: profile.email,
+      region: resolveRegion(profile.region ?? undefined),
+      oldPassword: '',
+      newPassword: '',
+    });
+    setIsChangingPassword(false);
+  }, [form, profile]);
+
+  const onSubmit: SubmitHandler<ProfileEditFormValues> = async values => {
+    const payload: ProfileUpdateRequest = {
+      name: values.name.trim(),
+      region: values.region,
+    };
+
+    if (values.oldPassword && values.newPassword) {
+      payload.oldPassword = values.oldPassword;
+      payload.newPassword = values.newPassword;
+    }
 
     try {
-      await mutation.mutateAsync({});
-      closeRef.current?.click();
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setLoading(false);
+      await mutation.mutateAsync(payload);
+    } catch (error) {
+      console.error(error);
     }
   };
+  const submitForm = form.handleSubmit(onSubmit);
 
-  if (status === 'pending') {
+  const handleDeleteAccount = () => {
+    openConfirmationModal({
+      title: tProfileSettings('deleteAccount.title'),
+      message: tProfileSettings('deleteAccount.description'),
+      confirmText: tActions('deleteAccount'),
+      cancelText: tActions('cancel'),
+      variant: 'destructive',
+      onConfirm: () => deleteAccountMutation.mutateAsync(),
+    });
+
+    closeRef.current?.click();
+  };
+
+  if (status === 'idle' || status === 'loading') {
     return <></>;
   }
 
@@ -90,25 +153,36 @@ export const ProfileEditFormModal = () => {
       {/* // * Avatar, status, name, email */}
       <div className='flex items-end gap-x-[16rem]'>
         <Avatar className='relative size-[96rem] overflow-visible rounded-full bg-d-light-gray'>
-          <AvatarImage src={data?.avatar} />
-          <AvatarFallback className='text-[18rem]'>{data?.name?.slice(0, 2)?.toUpperCase()}</AvatarFallback>
+          <AvatarImage src={profile?.avatar ?? undefined} />
+          <AvatarFallback className='text-[18rem]'>{profile?.name?.slice(0, 2)?.toUpperCase()}</AvatarFallback>
           <span className='absolute left-[72rem] top-[-4rem] flex h-[34rem] w-[98rem] items-center whitespace-nowrap rounded-full bg-gradient-to-r from-d-violet to-[#6fdbfa6b] px-[20rem] text-[14rem] font-medium text-white'>
             {tCommon('freeTrial')}
           </span>
         </Avatar>
         <div className='mb-[16rem] flex flex-col gap-y-[8rem]'>
-          <div className='text-[24rem] font-medium leading-none'>{data?.name}</div>
-          <div className='font-poppins text-[14rem] leading-none'>{data?.email}</div>
+          <div className='text-[24rem] font-medium leading-none'>{profile?.name}</div>
+          <div className='font-poppins text-[14rem] leading-none'>{profile?.email}</div>
         </div>
       </div>
 
       {/* // * Profile Edit */}
-      <ProfileEditForm isChangingPassword={isChangingPassword} setIsChangingPassword={setIsChangingPassword} form={form} />
+      <ProfileEditForm
+        form={form}
+        isChangingPassword={isChangingPassword}
+        setIsChangingPassword={setIsChangingPassword}
+        onSubmit={onSubmit}
+        isSubmitting={mutation.isPending}
+      />
 
       {/* // * Logout & Delete */}
       <div className='flex justify-between'>
-        <button type='button' onClick={handleSubmit} className='flex h-[50rem] items-center justify-center rounded-full bg-d-green px-[32rem] hover:bg-d-green/40'>
-          {loading ? (
+        <button
+          type='button'
+          onClick={submitForm}
+          className='flex h-[50rem] items-center justify-center rounded-full bg-d-green px-[32rem] hover:bg-d-green/40 disabled:cursor-not-allowed disabled:bg-d-green/60'
+          disabled={mutation.isPending}
+        >
+          {mutation.isPending ? (
             <svg className='size-[20rem] animate-spin text-black' xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24'>
               <circle className='opacity-25' cx='12' cy='12' r='10' stroke='currentColor' stroke-width='4' />
               <path
@@ -118,7 +192,7 @@ export const ProfileEditFormModal = () => {
               />
             </svg>
           ) : (
-            <span className='text-[14rem] font-medium leading-none'>{tActions('editProfile')}</span>
+            <span className='text-[14rem] font-medium leading-none'>{tActions('save')}</span>
           )}
         </button>
 
@@ -135,7 +209,12 @@ export const ProfileEditFormModal = () => {
             <span className='text-[14rem] font-medium leading-none'>{tActions('logout')}</span>
           </button>
 
-          <button type='button' className='flex h-[50rem] items-center justify-center rounded-full bg-white px-[32rem]'>
+          <button
+            type='button'
+            onClick={handleDeleteAccount}
+            disabled={deleteAccountMutation.isPending}
+            className='flex h-[50rem] items-center justify-center rounded-full bg-white px-[32rem] transition-colors hover:bg-d-red/10 disabled:cursor-not-allowed disabled:opacity-60'
+          >
             <span className='text-[14rem] font-medium leading-none'>{tActions('deleteAccount')}</span>
           </button>
         </div>

@@ -42,10 +42,13 @@ export default async function LocaleLayout({ children, params }: { children: Rea
     <html lang='en'>
       <body className={`body ${inter.className} ${poppins.variable}`}>
         <NextTopLoader height={4} color='#636AFB' initialPosition={0.3} showSpinner={false} />
-        <Providers>
-          <AosInit />
-          <NextIntlClientProvider>{children}</NextIntlClientProvider>
-        </Providers>
+
+        <NextIntlClientProvider>
+          <Providers>
+            <AosInit />
+            {children}
+          </Providers>
+        </NextIntlClientProvider>
       </body>
     </html>
   );

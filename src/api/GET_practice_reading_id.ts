@@ -1,12 +1,7 @@
-import { API_URL } from '@/lib/config';
+import axiosInstance from '@/lib/axiosInstance';
 
 export const GET_practice_reading_id = async (id: string) => {
-  const res = await fetch(`${API_URL}/practice/reading/${id}`, {
-    method: 'GET',
-    headers: {
-      Authorization: `Bearer ${localStorage.getItem('token')}`,
-    },
-  });
+  const { data } = await axiosInstance.get(`/practice/reading/${id}`);
 
-  return res.json();
+  return data;
 };

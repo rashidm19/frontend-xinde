@@ -6,7 +6,8 @@ import Image from 'next/image';
 import { ScrollArea } from './ui/scroll-area';
 import { useCustomTranslations } from '@/hooks/useCustomTranslations';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { API_URL } from '@/lib/config';
+import axiosInstance from '@/lib/axiosInstance';
+import { EPAY_PROD_URL, EPAY_TEST_URL } from '@/lib/config';
 import { IService } from '@/types/Billing';
 import { IPaymentOrder } from '@/types/Payments';
 import { POST_payment_checkout_order } from '@/api/POST_payment_checkout_order';
@@ -26,13 +27,9 @@ export const PricesModal = () => {
   const { data: services, status } = useQuery<IService[]>({
     queryKey: ['/billing/services'],
     queryFn: () =>
-      fetch(`${API_URL}/billing/services`, {
-        method: 'GET',
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
-      })
-        .then(res => res.json())
+      axiosInstance
+        .get('/billing/services')
+        .then(res => res.data)
         .then(res => res.data),
   });
 
@@ -42,7 +39,7 @@ export const PricesModal = () => {
 
   async function pay(order: IPaymentOrder) {
     // 1) Подключаем скрипт
-    const src = order.isSandbox ? 'https://test-epay.homebank.kz/payform/payment-api.js' : 'https://epay.homebank.kz/payform/payment-api.js';
+    const src = order.isSandbox ? EPAY_TEST_URL : EPAY_PROD_URL;
     if (!document.querySelector(`script[src="${src}"]`)) {
       await new Promise<void>((res, rej) => {
         const s = document.createElement('script');

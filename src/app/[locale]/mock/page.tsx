@@ -8,10 +8,9 @@ import { POST_mock_start } from '@/api/POST_mock_start';
 import { RecentRecomendations } from './_components/RecentRecomendations';
 import { mockStore } from '@/stores/mock';
 import nProgress from 'nprogress';
-import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { API_URL } from '@/lib/config';
+import { useProfile } from '@/hooks/useProfile';
 
 const data_rows = [
   {
@@ -138,17 +137,7 @@ const data_rows = [
 
 export default function Page() {
   const router = useRouter();
-
-  const { data } = useQuery({
-    queryKey: ['user'],
-    queryFn: () =>
-      fetch(`${API_URL}/auth/profile`, {
-        method: 'GET',
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
-      }).then(res => res.json()),
-  });
+  const { profile } = useProfile();
 
   const [isLoading, setIsLoading] = useState(false);
 
@@ -165,7 +154,7 @@ export default function Page() {
 
   return (
     <>
-      <Header name={data?.name} avatar={data?.avatar} />
+      <Header name={profile?.name} avatar={profile?.avatar} />
       <main>
         <div className='container grid max-w-[1440rem] grid-cols-[1016rem,328rem] gap-x-[16rem] gap-y-[16rem] px-[40rem] pb-[150rem] pt-[40rem]'>
           <div className='relative flex h-[420rem] w-[1016rem] items-center justify-center overflow-hidden rounded-[16rem] bg-d-violet'>

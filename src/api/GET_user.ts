@@ -1,15 +1,5 @@
-import { User } from '@/types/types';
-import { API_URL } from '@/lib/config';
+import { fetchProfile } from './profile';
 
 export async function getUser() {
-  const response = await fetch(`${API_URL}/auth/profile`, {
-    method: 'GET',
-    headers: {
-      Authorization: `Bearer ${localStorage.getItem('token')}`,
-    },
-  });
-
-  const data = await response.json();
-
-  return data as User;
+  return fetchProfile();
 }

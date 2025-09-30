@@ -1,31 +1,36 @@
-import { API_URL } from '@/lib/config';
+import axiosInstance from '@/lib/axiosInstance';
 
-interface Props {
-  grade?: string;
-  name?: string;
-  region?: string;
-}
+import {
+  profileUpdatePayloadSchema,
+  profileUpdateRequestSchema,
+  profileUpdateResponseSchema,
+  ProfileUpdateRequest,
+  ProfileUpdateResponse,
+} from './profile';
 
-export async function postUser({ grade, name, region }: Props) {
-  const values = {
-    ...(grade && { grade }),
-    ...(name && { name }),
-    ...(region && { region }),
-  };
+export async function postUser(input: ProfileUpdateRequest): Promise<ProfileUpdateResponse> {
+  const parsedInput = profileUpdateRequestSchema.parse(input);
 
-  const res = await fetch(`${API_URL}/auth/profile`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json;charset=utf-8',
-      Authorization: `Bearer ${localStorage.getItem('token')}`,
-    },
-    body: JSON.stringify(values),
+  const payload = profileUpdatePayloadSchema.parse({
+    ...(parsedInput.grade !== undefined ? { grade: parsedInput.grade.toString() } : {}),
+    ...(parsedInput.name !== undefined ? { name: parsedInput.name } : {}),
+    ...(parsedInput.region ? { region: parsedInput.region } : {}),
+    ...(parsedInput.oldPassword && parsedInput.newPassword
+      ? { old_password: parsedInput.oldPassword, new_password: parsedInput.newPassword }
+      : {}),
   });
 
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(`POST /auth/profile failed: ${res.status} ${text}`);
+  const response = await axiosInstance.post('/auth/profile', payload, {
+    headers: {
+      'Content-Type': 'application/json;charset=utf-8',
+    },
+    validateStatus: () => true,
+  });
+
+  if (response.status < 200 || response.status >= 300) {
+    const text = typeof response.data === 'string' ? response.data : JSON.stringify(response.data);
+    throw new Error(`POST /auth/profile failed: ${response.status} ${text}`);
   }
 
-  return res.json(); // <- { ...updatedUser }
+  return profileUpdateResponseSchema.parse(response.data);
 }

@@ -7,7 +7,7 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'next/navigation';
-import { API_URL } from '@/lib/config';
+import axiosInstance from '@/lib/axiosInstance';
 import { Fragment, useMemo } from 'react';
 
 interface FormProps {
@@ -40,24 +40,13 @@ export default function SpeakingTestForm({ data }: FormProps) {
       formData.append('question', questionNumber);
       formData.append('audio', value?.audioBlob as Blob, `record_${questionNumber}.webm`);
 
-      return await fetch(`${API_URL}/practice/send/speaking`, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
-        body: formData,
-      });
+      return await axiosInstance.post('/practice/send/speaking', formData);
     });
     try {
       await Promise.all(promises);
 
-      const finishRes = await fetch(`${API_URL}/practice/speaking/${practice_id}/finish`, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
-      });
-      const finishData = await finishRes.json();
+      const finishRes = await axiosInstance.post(`/practice/speaking/${practice_id}/finish`, undefined);
+      const finishData = finishRes.data;
 
       if (finishData?.id) {
         router.push(`/practice/speaking/feedback/${finishData.id}`);

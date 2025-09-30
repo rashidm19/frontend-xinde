@@ -1,14 +1,7 @@
-import { API_URL } from '@/lib/config';
+import axiosInstance from '@/lib/axiosInstance';
 
 export const POST_mock_start = async () => {
-  const res = await fetch(`${API_URL}/mock/test`, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${localStorage.getItem('token')}`,
-    },
-  });
-
-  const data = await res.json();
+  const { data } = await axiosInstance.post('/mock/test');
   console.log(data);
   return data;
 };

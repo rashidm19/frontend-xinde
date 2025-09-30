@@ -3,24 +3,14 @@
 import { Header } from '@/components/Header';
 import { Input } from '@/components/ui/input';
 import React from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { API_URL } from '@/lib/config';
+import { useProfile } from '@/hooks/useProfile';
 
 export default function Notes() {
-  const { data } = useQuery({
-    queryKey: ['user'],
-    queryFn: () =>
-      fetch(`${API_URL}/auth/profile`, {
-        method: 'GET',
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
-      }).then(res => res.json()),
-  });
+  const { profile } = useProfile();
 
   return (
     <>
-      <Header name={data?.name} avatar={data?.avatar} />
+      <Header name={profile?.name} avatar={profile?.avatar} />
 
       <main className='min-h-screen overflow-hidden bg-d-gray'>
         <div className='container mt-[40rem] flex w-[1360rem] max-w-[1440rem] flex-col rounded-[16rem] bg-white p-[40rem]'>

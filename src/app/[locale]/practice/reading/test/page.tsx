@@ -16,11 +16,11 @@ import { CheckboxSquare } from '@/components/ui/checkboxSquare';
 import { DndMatching } from './components/DndMatching';
 import { DndText } from './components/DndText';
 import { GET_practice_reading_id } from '@/api/GET_practice_reading_id';
+import axiosInstance from '@/lib/axiosInstance';
 import { transformStringToArrayV2, transformStringToArrayV4 } from '@/lib/utils';
 
 import { useRouter } from 'next/navigation';
 import { useCustomTranslations } from '@/hooks/useCustomTranslations';
-import { API_URL } from '@/lib/config';
 
 type FormValues = {
   [key: string]: string | undefined;
@@ -115,17 +115,12 @@ export default function Page() {
 
     formattedValues.answers = formattedValues.answers.filter(item => item.answer);
 
-    const response = await fetch(`${API_URL}/practice/reading/${localStorage.getItem('practiceReadingId')}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json;',
-        Authorization: `Bearer ${localStorage.getItem('token')}`,
-      },
-      body: JSON.stringify(formattedValues),
+    const response = await axiosInstance.post(`/practice/reading/${localStorage.getItem('practiceReadingId')}`, formattedValues, {
+      validateStatus: () => true,
     });
 
-    if (response.ok) {
-      const result = await response.json();
+    if (response.status >= 200 && response.status < 300) {
+      const result = response.data;
       router.push(`/practice/reading/results/${result.id}`);
     } else {
       router.push('/error500');
