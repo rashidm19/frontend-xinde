@@ -7,7 +7,7 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useCustomTranslations } from '@/hooks/useCustomTranslations';
-import { API_URL } from '@/lib/config';
+import axiosInstance from '@/lib/axiosInstance';
 
 export default function PasswordRecovery() {
   const { t, tImgAlts, tCommon, tActions, tForm, tMessages } = useCustomTranslations('passwordRecovery');
@@ -24,16 +24,15 @@ export default function PasswordRecovery() {
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    const response = await fetch(`${API_URL}/auth/reset-password`, {
-      method: 'POST',
+    const response = await axiosInstance.post('/auth/reset-password', values, {
       headers: {
         'Content-Type': 'application/json;charset=utf-8',
       },
-      body: JSON.stringify(values),
+      validateStatus: () => true,
     });
 
-    if (response?.ok) {
-      const result = await response.json();
+    if (response.status >= 200 && response.status < 300) {
+      const result = response.data;
       localStorage.setItem('token', result.token);
     }
 

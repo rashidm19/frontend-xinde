@@ -11,8 +11,8 @@ import { ApproximateIELTSScore } from './ApproximateIELTSScore';
 import { useCustomTranslations } from '@/hooks/useCustomTranslations';
 import { ChangeLangModal } from '@/app/[locale]/profile/settings/_components/ChangeLangModal';
 import { getPracticeScoresStats } from '@/api/GET_stats_practice_scores';
+import axiosInstance from '@/lib/axiosInstance';
 import { calculateIeltsOverall } from '@/lib/utils';
-import { API_URL } from '@/lib/config';
 
 export const BestResults = () => {
   const { tImgAlts, tCommon } = useCustomTranslations();
@@ -21,12 +21,7 @@ export const BestResults = () => {
   const { data } = useQuery({
     queryKey: ['user'],
     queryFn: () =>
-      fetch(`${API_URL}/auth/profile`, {
-        method: 'GET',
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
-      }).then(res => res.json()),
+      axiosInstance.get('/auth/profile').then(res => res.data),
   });
 
   const { data: practiceStats, isLoading: practiceStatsLoading } = useQuery({

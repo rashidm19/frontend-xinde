@@ -1,23 +1,20 @@
-import { API_URL } from '@/lib/config';
+import axiosInstance from '@/lib/axiosInstance';
 
 export const GET_practice_writing_feedback_id = async (id: string) => {
-  const res = await fetch(`${API_URL}/practice/writing/passed/${id}`, {
-    method: 'GET',
-    headers: {
-      Authorization: `Bearer ${localStorage.getItem('token')}`,
-    },
+  const response = await axiosInstance.get(`/practice/writing/passed/${id}`, {
+    validateStatus: () => true,
   });
 
-  if (res.status === 404) {
+  if (response.status === 404) {
     const error = new Error('Not Found');
     // @ts-expect-error добавляем статус внутрь объекта ошибки
     error.status = 404;
     throw error;
   }
 
-  if (!res.ok) {
-    throw new Error(`Backend responded with status ${res.status}`);
+  if (response.status < 200 || response.status >= 300) {
+    throw new Error(`Backend responded with status ${response.status}`);
   }
 
-  return res.json();
+  return response.data;
 };

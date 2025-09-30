@@ -4,6 +4,7 @@ import React, { useEffect, useRef, useState } from 'react';
 
 import { AudioVisualizer } from 'react-audio-visualize';
 import { useReactMediaRecorder } from 'react-media-recorder';
+import axiosInstance from '@/lib/axiosInstance';
 
 interface RecordProps {
   setFieldValue: any;
@@ -18,12 +19,13 @@ export default function Record({ setFieldValue, currentQuestionNumber }: RecordP
   const [playStatus, setPlayStatus] = useState<'paused' | 'playing'>('paused');
   const [fetchStatus, setFetchStatus] = useState<boolean>(false);
 
-  const { status, startRecording, stopRecording, mediaBlobUrl, clearBlobUrl } = useReactMediaRecorder({ video: false });
+  const { status, startRecording, stopRecording, mediaBlobUrl } = useReactMediaRecorder({ video: false });
 
   useEffect(() => {
     const fetchAudioFile = async () => {
-      const response = await fetch(mediaBlobUrl as string);
-      const blob = await response.blob();
+      const { data: blob } = await axiosInstance.get(mediaBlobUrl as string, {
+        responseType: 'blob',
+      });
       setAudioBlob(blob);
       setFetchStatus(false);
     };
@@ -66,7 +68,7 @@ export default function Record({ setFieldValue, currentQuestionNumber }: RecordP
             <audio
               controls
               ref={audioRef}
-              onTimeUpdate={e => setCurrentTimestamp(audioRef?.current?.currentTime)}
+              onTimeUpdate={() => setCurrentTimestamp(audioRef?.current?.currentTime)}
               onPause={() => setPlayStatus('paused')}
               onPlay={() => setPlayStatus('playing')}
               className='hidden'

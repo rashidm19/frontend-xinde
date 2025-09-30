@@ -5,20 +5,15 @@ import React from 'react';
 import { GET_practice_speaking_feedback_id } from '@/api/GET_practice_speaking_feedback_id';
 import { HeaderDuringTest } from '@/components/HeaderDuringTest';
 import { useQuery } from '@tanstack/react-query';
-import { API_URL } from '@/lib/config';
+import axiosInstance from '@/lib/axiosInstance';
 import { ISpeakingPracticeFeedback, PracticeSpeakingPassed } from '@/types/SpeakingFeedback';
 
 export default function Page({ params }: { params: { id: string } }) {
   const { data: passedData, status } = useQuery<PracticeSpeakingPassed>({
     queryKey: ['practice-speaking-feedbacks'],
     queryFn: async () => {
-      const response = await fetch(`${API_URL}/practice/speaking/passed`, {
-        method: 'GET',
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
-      });
-      return (await response.json()) as PracticeSpeakingPassed;
+      const response = await axiosInstance.get('/practice/speaking/passed');
+      return response.data as PracticeSpeakingPassed;
     },
     refetchInterval: queryData => {
       const found = queryData?.state.data?.data.find(item => String(item.id) === params.id);

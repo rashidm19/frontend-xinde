@@ -1,15 +1,8 @@
+import axiosInstance from '@/lib/axiosInstance';
 import { IPracticeScoresStats } from '@/types/Stats';
-import { API_URL } from '@/lib/config';
 
 export async function getPracticeScoresStats() {
-  const response = await fetch(`${API_URL}/stats/practice/scores`, {
-    method: 'GET',
-    headers: {
-      Authorization: `Bearer ${localStorage.getItem('token')}`,
-    },
-  });
-
-  const data = await response.json();
+  const { data } = await axiosInstance.get('/stats/practice/scores');
 
   return data as IPracticeScoresStats;
 }

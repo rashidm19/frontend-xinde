@@ -1,4 +1,4 @@
-import { API_URL } from '@/lib/config';
+import axiosInstance from '@/lib/axiosInstance';
 import { IPaymentOrder } from '@/types/Payments';
 
 interface IValues {
@@ -7,14 +7,11 @@ interface IValues {
 }
 
 export const POST_payment_checkout_order = async (values: IValues): Promise<IPaymentOrder> => {
-  const res = await fetch(`${API_URL}/checkout/orders`, {
-    method: 'POST',
+  const { data } = await axiosInstance.post('/checkout/orders', values, {
     headers: {
       'Content-Type': 'application/json;charset=utf-8',
-      Authorization: `Bearer ${localStorage.getItem('token')}`,
     },
-    body: JSON.stringify(values),
   });
 
-  return await res.json();
+  return data;
 };

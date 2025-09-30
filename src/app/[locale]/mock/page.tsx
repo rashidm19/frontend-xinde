@@ -11,7 +11,7 @@ import nProgress from 'nprogress';
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { API_URL } from '@/lib/config';
+import axiosInstance from '@/lib/axiosInstance';
 
 const data_rows = [
   {
@@ -141,13 +141,7 @@ export default function Page() {
 
   const { data } = useQuery({
     queryKey: ['user'],
-    queryFn: () =>
-      fetch(`${API_URL}/auth/profile`, {
-        method: 'GET',
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
-      }).then(res => res.json()),
+    queryFn: () => axiosInstance.get('/auth/profile').then(res => res.data),
   });
 
   const [isLoading, setIsLoading] = useState(false);

@@ -4,18 +4,12 @@ import { Header } from '@/components/Header';
 import { Input } from '@/components/ui/input';
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { API_URL } from '@/lib/config';
+import axiosInstance from '@/lib/axiosInstance';
 
 export default function Notes() {
   const { data } = useQuery({
     queryKey: ['user'],
-    queryFn: () =>
-      fetch(`${API_URL}/auth/profile`, {
-        method: 'GET',
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
-      }).then(res => res.json()),
+    queryFn: () => axiosInstance.get('/auth/profile').then(res => res.data),
   });
 
   return (

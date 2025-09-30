@@ -10,7 +10,7 @@ import { useRouter } from 'next/navigation';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useCustomTranslations } from '@/hooks/useCustomTranslations';
-import { API_URL } from '@/lib/config';
+import axiosInstance from '@/lib/axiosInstance';
 
 export default function Login() {
   const router = useRouter();
@@ -32,16 +32,15 @@ export default function Login() {
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    const response = await fetch(`${API_URL}/auth/login`, {
-      method: 'POST',
+    const response = await axiosInstance.post('/auth/login', values, {
       headers: {
         'Content-Type': 'application/json;charset=utf-8',
       },
-      body: JSON.stringify(values),
+      validateStatus: () => true,
     });
 
-    if (response?.ok) {
-      const result = await response.json();
+    if (response.status >= 200 && response.status < 300) {
+      const result = response.data;
       localStorage.setItem('token', result.token);
       NProgress.start();
       router.push('/profile/');

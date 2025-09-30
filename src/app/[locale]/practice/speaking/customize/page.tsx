@@ -8,7 +8,7 @@ import { GET_practice_speaking_categories } from '@/api/GET_practice_speaking_ca
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import nProgress from 'nprogress';
-import { API_URL } from '@/lib/config';
+import axiosInstance from '@/lib/axiosInstance';
 
 export default function Page() {
   const router = useRouter();
@@ -26,16 +26,14 @@ export default function Page() {
     params.append('part', String(selectedPart));
     params.append('tag_id', selectedTopic === 'random' ? randomTopic() : selectedTopic);
 
-    const result = await fetch(`${API_URL}/practice/speaking?${params.toString()}`, {
-      method: 'GET',
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem('token')}`,
-      },
+    const result = await axiosInstance.get('/practice/speaking', {
+      params: Object.fromEntries(params.entries()),
+      validateStatus: () => true,
     });
 
-    if (result?.ok) {
+    if (result.status >= 200 && result.status < 300) {
       nProgress.start();
-      const json = await result.json();
+      const json = result.data;
       localStorage.setItem('practiceSpeakingId', json.data[0].speaking_id);
       localStorage.setItem('practiceSpeakingPart', String(selectedPart));
       router.push('/practice/speaking/rules/');

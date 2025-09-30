@@ -12,7 +12,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useCustomTranslations } from '@/hooks/useCustomTranslations';
 import React from 'react';
 import { useRouter } from 'next/navigation';
-import { API_URL } from '@/lib/config';
+import axiosInstance from '@/lib/axiosInstance';
 
 export default function Registration() {
   const router = useRouter();
@@ -52,22 +52,20 @@ export default function Registration() {
     req.append('password', values.password);
     req.append('region', values.region);
 
-    // @ts-ignore
-    await fetch(img)
-      .then(response => {
-        return response.blob();
-      })
-      .then(blob => {
-        console.log(blob);
-        req.append('avatar', blob);
-      });
+    const imageSrc = typeof img === 'string' ? img : img.src;
+    const absoluteImageUrl = imageSrc.startsWith('http') ? imageSrc : `${window.location.origin}${imageSrc}`;
 
-    const response = await fetch(`${API_URL}/auth/register`, {
-      method: 'POST',
-      body: req,
+    const { data: blob } = await axiosInstance.get(absoluteImageUrl, {
+      responseType: 'blob',
+    });
+    console.log(blob);
+    req.append('avatar', blob);
+
+    const response = await axiosInstance.post('/auth/register', req, {
+      validateStatus: () => true,
     });
 
-    if (response.ok && response.status === 200) {
+    if (response.status === 200) {
       // const result = await response.json();
       // router.push(`/email-verification?email=${values.email}`);
     }

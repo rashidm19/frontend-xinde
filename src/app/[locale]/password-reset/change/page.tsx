@@ -11,7 +11,7 @@ import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useEffect, useState } from 'react';
 import { useCustomTranslations } from '@/hooks/useCustomTranslations';
-import { API_URL } from '@/lib/config';
+import axiosInstance from '@/lib/axiosInstance';
 
 export default function PasswordReset() {
   const router = useRouter();
@@ -46,16 +46,19 @@ export default function PasswordReset() {
   async function onSubmit(values: z.infer<typeof formSchema>) {
     NProgress.start();
     try {
-      const response = await fetch(`${API_URL}/auth/reset-password/confirm`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          token: token,
+      const response = await axiosInstance.post(
+        '/auth/reset-password/confirm',
+        {
+          token,
           password: values.password,
-        }),
-      });
+        },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          validateStatus: () => true,
+        }
+      );
 
       if (response.status === 400) {
         form.setError('password', { message: tMessages('invalidOrExpiredToken') });

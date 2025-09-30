@@ -9,7 +9,7 @@ import nProgress from 'nprogress';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { useCustomTranslations } from '@/hooks/useCustomTranslations';
-import { API_URL } from '@/lib/config';
+import axiosInstance from '@/lib/axiosInstance';
 import { postUser } from '@/api/POST_user';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -35,12 +35,7 @@ export const ProfileEditFormModal = () => {
   const { data, status } = useQuery({
     queryKey: ['user'],
     queryFn: () =>
-      fetch(`${API_URL}/auth/profile`, {
-        method: 'GET',
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
-      }).then(res => res.json()),
+      axiosInstance.get('/auth/profile').then(res => res.data),
   });
 
   const mutation = useMutation({

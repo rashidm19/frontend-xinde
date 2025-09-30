@@ -13,7 +13,6 @@ import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { CheckboxSquare } from '@/components/ui/checkboxSquare';
 import { transformStringToArrayV2, transformStringToArrayV4 } from '@/lib/utils';
-import { API_URL } from '@/lib/config';
 
 import { useRouter } from 'next/navigation';
 import { DndMatching } from '@/app/[locale]/practice/reading/test/components/DndMatching';
@@ -134,7 +133,7 @@ export default function Page() {
     setTimer(3600000);
   }, []);
 
-  async function onSubmit(values: z.infer<typeof formSchema>) {
+  async function onSubmit() {
     nProgress.start();
     router.push('/mock/exam/writing/rules');
   }

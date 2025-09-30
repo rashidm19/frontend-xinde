@@ -8,7 +8,7 @@ import nProgress from 'nprogress';
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { useCustomTranslations } from '@/hooks/useCustomTranslations';
-import { API_URL } from '@/lib/config';
+import axiosInstance from '@/lib/axiosInstance';
 
 export default function Page() {
   const router = useRouter();
@@ -17,27 +17,23 @@ export default function Page() {
   const { data } = useQuery({
     queryKey: ['categories'],
     queryFn: () =>
-      fetch(`${API_URL}/practice/writing/categories `, {
-        method: 'GET',
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
-      }).then(res => res.json()),
+      axiosInstance.get('/practice/writing/categories').then(res => res.data),
   });
 
   const [selectedPart, setSelectedPart] = useState<1 | 2>(1);
   const [selectedTopic, setSelectedTopic] = useState<string>('random');
 
   const startPractice = async () => {
-    const result = await fetch(`${API_URL}/practice/writing?part=${selectedPart}&tag_id=${selectedTopic === 'random' ? randomTopic() : selectedTopic}`, {
-      method: 'GET',
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem('token')}`,
+    const result = await axiosInstance.get('/practice/writing', {
+      params: {
+        part: selectedPart,
+        tag_id: selectedTopic === 'random' ? randomTopic() : selectedTopic,
       },
+      validateStatus: () => true,
     });
-    if (result?.ok) {
+    if (result.status >= 200 && result.status < 300) {
       nProgress.start();
-      const json = await result.json();
+      const json = result.data;
       if (Array.isArray(json.data) && json.data.length > 0) {
         const randomIndex = Math.floor(Math.random() * json.data.length);
         const randomWritingId = json.data[randomIndex].writing_id;

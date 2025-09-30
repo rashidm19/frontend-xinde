@@ -4,6 +4,7 @@ import React, { useEffect, useRef, useState } from 'react';
 
 import { AudioVisualizer } from 'react-audio-visualize';
 import Link from 'next/link';
+import axiosInstance from '@/lib/axiosInstance';
 
 export default function Page() {
   const visualizerRef = useRef<HTMLCanvasElement>(null);
@@ -14,9 +15,11 @@ export default function Page() {
 
   useEffect(() => {
     const fetchAudioFile = async () => {
-      const response = await fetch('/files/audio-check.mp3');
-      const blob = await response.blob();
-      setAudioBlob(blob);
+      const absoluteSrc = `${window.location.origin}/files/audio-check.mp3`;
+      const { data } = await axiosInstance.get(absoluteSrc, {
+        responseType: 'blob',
+      });
+      setAudioBlob(data);
     };
 
     fetchAudioFile();

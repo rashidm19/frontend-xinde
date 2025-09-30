@@ -1,12 +1,7 @@
-import { API_URL } from '@/lib/config';
+import axiosInstance from '@/lib/axiosInstance';
 
 export const GET_practice_speaking_categories = async () => {
-  const res = await fetch(`${API_URL}/practice/speaking/categories`, {
-    method: 'GET',
-    headers: {
-      Authorization: `Bearer ${localStorage.getItem('token')}`,
-    },
-  });
+  const { data } = await axiosInstance.get('/practice/speaking/categories');
 
-  return res.json();
+  return data;
 };

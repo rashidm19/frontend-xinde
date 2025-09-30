@@ -7,20 +7,14 @@ import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 import { useCustomTranslations } from '@/hooks/useCustomTranslations';
 import React from 'react';
-import { API_URL } from '@/lib/config';
+import axiosInstance from '@/lib/axiosInstance';
 
 export default function Page() {
   const { t, tImgAlts, tCommon, tActions } = useCustomTranslations('practice');
 
   const { data } = useQuery({
     queryKey: ['user'],
-    queryFn: () =>
-      fetch(`${API_URL}/auth/profile`, {
-        method: 'GET',
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
-      }).then(res => res.json()),
+    queryFn: () => axiosInstance.get('/auth/profile').then(res => res.data),
   });
 
   const tabs = [

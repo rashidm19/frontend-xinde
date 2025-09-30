@@ -4,6 +4,7 @@ import React, { useEffect, useRef, useState } from 'react';
 
 import { AudioVisualizer } from 'react-audio-visualize';
 import { useReactMediaRecorder } from 'react-media-recorder';
+import axiosInstance from '@/lib/axiosInstance';
 
 export default function Mic() {
   const visualizerRef = useRef<HTMLCanvasElement>(null);
@@ -16,9 +17,10 @@ export default function Mic() {
 
   useEffect(() => {
     const fetchAudioFile = async () => {
-      const response = await fetch(mediaBlobUrl as string);
-      const blob = await response.blob();
-      setAudioBlob(blob);
+      const { data } = await axiosInstance.get(mediaBlobUrl as string, {
+        responseType: 'blob',
+      });
+      setAudioBlob(data);
     };
 
     if (mediaBlobUrl !== undefined && status === 'stopped') {
@@ -58,7 +60,7 @@ export default function Mic() {
             <audio
               controls
               ref={audioRef}
-              onTimeUpdate={e => setCurrentTimestamp(audioRef?.current?.currentTime)}
+              onTimeUpdate={() => setCurrentTimestamp(audioRef?.current?.currentTime)}
               onPause={() => setPlayStatus('paused')}
               onPlay={() => setPlayStatus('playing')}
               className='hidden'

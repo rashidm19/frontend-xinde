@@ -1,4 +1,4 @@
-import { API_URL } from '@/lib/config';
+import axiosInstance from '@/lib/axiosInstance';
 
 interface Props {
   grade?: string;
@@ -13,19 +13,17 @@ export async function postUser({ grade, name, region }: Props) {
     ...(region && { region }),
   };
 
-  const res = await fetch(`${API_URL}/auth/profile`, {
-    method: 'POST',
+  const response = await axiosInstance.post('/auth/profile', values, {
     headers: {
       'Content-Type': 'application/json;charset=utf-8',
-      Authorization: `Bearer ${localStorage.getItem('token')}`,
     },
-    body: JSON.stringify(values),
+    validateStatus: () => true,
   });
 
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(`POST /auth/profile failed: ${res.status} ${text}`);
+  if (response.status < 200 || response.status >= 300) {
+    const text = typeof response.data === 'string' ? response.data : JSON.stringify(response.data);
+    throw new Error(`POST /auth/profile failed: ${response.status} ${text}`);
   }
 
-  return res.json(); // <- { ...updatedUser }
+  return response.data; // <- { ...updatedUser }
 }
