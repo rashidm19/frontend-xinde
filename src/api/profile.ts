@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
-import { regionSchema, userSchema } from '@/types/types';
+import axiosInstance from '@/lib/axiosInstance';
+import { regionSchema, userSchema, User } from '@/types/types';
 
 export const PASSWORD_MIN_LENGTH = 8;
 
@@ -52,3 +53,14 @@ export type ProfileUpdatePayload = z.infer<typeof profileUpdatePayloadSchema>;
 export const profileUpdateResponseSchema = userSchema;
 
 export type ProfileUpdateResponse = z.infer<typeof profileUpdateResponseSchema>;
+
+export const profileResponseSchema = userSchema;
+
+export type ProfileResponse = z.infer<typeof profileResponseSchema>;
+
+export const PROFILE_ENDPOINT = '/auth/profile';
+
+export const fetchProfile = async (): Promise<User> => {
+  const response = await axiosInstance.get(PROFILE_ENDPOINT);
+  return profileResponseSchema.parse(response.data);
+};

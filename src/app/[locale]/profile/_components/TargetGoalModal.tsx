@@ -6,8 +6,9 @@ import { DialogClose } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
 import { postUser } from '@/api/POST_user';
 import { useCustomTranslations } from '@/hooks/useCustomTranslations';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation } from '@tanstack/react-query';
 import { ProfileUpdateRequest, ProfileUpdateResponse } from '@/api/profile';
+import { setProfile, refreshProfile } from '@/stores/profileStore';
 
 interface Props {
   grade: number;
@@ -15,7 +16,6 @@ interface Props {
 
 export default function TargetGoalModal({ grade }: Props) {
   const { t, tImgAlts, tActions } = useCustomTranslations('profile.targetGoalModal');
-  const queryClient = useQueryClient();
   const closeRef = useRef<HTMLButtonElement>(null);
 
   const [selectedScore, setSelectedScore] = useState(grade);
@@ -29,8 +29,13 @@ export default function TargetGoalModal({ grade }: Props) {
 
   const mutation = useMutation<ProfileUpdateResponse, Error, ProfileUpdateRequest>({
     mutationFn: postUser,
-    onSuccess: updatedUser => {
-      queryClient.setQueryData(['user'], updatedUser);
+    onSuccess: async updatedUser => {
+      setProfile(updatedUser);
+      try {
+        await refreshProfile();
+      } catch (error) {
+        console.error(error);
+      }
     },
   });
 

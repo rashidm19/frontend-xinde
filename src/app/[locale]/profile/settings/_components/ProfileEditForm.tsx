@@ -22,7 +22,7 @@ interface Props {
 }
 
 export const ProfileEditForm = ({ form, isChangingPassword, setIsChangingPassword, onSubmit, isSubmitting }: Props) => {
-  const { t, tImgAlts, tForm } = useCustomTranslations('profileSettings.profileEditForm');
+  const { tImgAlts, tForm, t } = useCustomTranslations('profileSettings.profileEditForm');
 
   const handleFormSubmit = form.handleSubmit(onSubmit);
 

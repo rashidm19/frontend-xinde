@@ -6,17 +6,18 @@ import { DialogClose } from '@/components/ui/dialog';
 import { ProfileEditForm } from './ProfileEditForm';
 import React, { useEffect, useRef, useState } from 'react';
 import nProgress from 'nprogress';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { useCustomTranslations } from '@/hooks/useCustomTranslations';
 import { postUser } from '@/api/POST_user';
 import { useForm, SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 
-import { getUser } from '@/api/GET_user';
 import { ProfileEditFormValues, profileEditFormSchema } from './profileEditSchema';
 import { ProfileUpdateRequest, ProfileUpdateResponse } from '@/api/profile';
 import { PROFILE_REGIONS, Region } from '@/types/types';
+import { useProfile } from '@/hooks/useProfile';
+import { refreshProfile } from '@/stores/profileStore';
 
 const DEFAULT_REGION: Region = 'kz';
 
@@ -27,9 +28,9 @@ const resolveRegion = (region?: string | null): Region => (isRegion(region) ? re
 
 export const ProfileEditFormModal = () => {
   const router = useRouter();
-  const queryClient = useQueryClient();
   const closeRef = useRef<HTMLButtonElement>(null);
   const { tImgAlts, tCommon, tActions } = useCustomTranslations();
+  const { profile, status, setProfile: setProfileInStore } = useProfile();
 
   const form = useForm<ProfileEditFormValues>({
     resolver: zodResolver(profileEditFormSchema),
@@ -42,19 +43,26 @@ export const ProfileEditFormModal = () => {
     },
   });
 
-  const { data: user, status } = useQuery({
-    queryKey: ['user'],
-    queryFn: getUser,
-  });
-
   const mutation = useMutation<ProfileUpdateResponse, Error, ProfileUpdateRequest>({
     mutationFn: postUser,
-    onSuccess: updatedUser => {
-      queryClient.setQueryData(['user'], updatedUser);
+    onSuccess: async updatedUser => {
+      setProfileInStore(updatedUser);
+      let syncedProfile = updatedUser;
+
+      try {
+        const refreshed = await refreshProfile();
+        if (refreshed) {
+          syncedProfile = refreshed;
+        }
+      } catch (error) {
+        console.error(error);
+      }
+
+      setProfileInStore(syncedProfile);
       form.reset({
-        name: updatedUser.name ?? '',
-        email: updatedUser.email,
-        region: resolveRegion(updatedUser.region ?? undefined),
+        name: syncedProfile.name ?? '',
+        email: syncedProfile.email,
+        region: resolveRegion(syncedProfile.region ?? undefined),
         oldPassword: '',
         newPassword: '',
       });
@@ -66,19 +74,19 @@ export const ProfileEditFormModal = () => {
   const [isChangingPassword, setIsChangingPassword] = useState(false);
 
   useEffect(() => {
-    if (!user) {
+    if (!profile) {
       return;
     }
 
     form.reset({
-      name: user.name ?? '',
-      email: user.email,
-      region: resolveRegion(user.region ?? undefined),
+      name: profile.name ?? '',
+      email: profile.email,
+      region: resolveRegion(profile.region ?? undefined),
       oldPassword: '',
       newPassword: '',
     });
     setIsChangingPassword(false);
-  }, [form, user]);
+  }, [form, profile]);
 
   const onSubmit: SubmitHandler<ProfileEditFormValues> = async values => {
     const payload: ProfileUpdateRequest = {
@@ -97,10 +105,9 @@ export const ProfileEditFormModal = () => {
       console.error(error);
     }
   };
-
   const submitForm = form.handleSubmit(onSubmit);
 
-  if (status === 'pending') {
+  if (status === 'idle' || status === 'loading') {
     return <></>;
   }
 
@@ -113,15 +120,15 @@ export const ProfileEditFormModal = () => {
       {/* // * Avatar, status, name, email */}
       <div className='flex items-end gap-x-[16rem]'>
         <Avatar className='relative size-[96rem] overflow-visible rounded-full bg-d-light-gray'>
-          <AvatarImage src={user?.avatar ?? undefined} />
-          <AvatarFallback className='text-[18rem]'>{user?.name?.slice(0, 2)?.toUpperCase()}</AvatarFallback>
+          <AvatarImage src={profile?.avatar ?? undefined} />
+          <AvatarFallback className='text-[18rem]'>{profile?.name?.slice(0, 2)?.toUpperCase()}</AvatarFallback>
           <span className='absolute left-[72rem] top-[-4rem] flex h-[34rem] w-[98rem] items-center whitespace-nowrap rounded-full bg-gradient-to-r from-d-violet to-[#6fdbfa6b] px-[20rem] text-[14rem] font-medium text-white'>
             {tCommon('freeTrial')}
           </span>
         </Avatar>
         <div className='mb-[16rem] flex flex-col gap-y-[8rem]'>
-          <div className='text-[24rem] font-medium leading-none'>{user?.name}</div>
-          <div className='font-poppins text-[14rem] leading-none'>{user?.email}</div>
+          <div className='text-[24rem] font-medium leading-none'>{profile?.name}</div>
+          <div className='font-poppins text-[14rem] leading-none'>{profile?.email}</div>
         </div>
       </div>
 
@@ -152,7 +159,7 @@ export const ProfileEditFormModal = () => {
               />
             </svg>
           ) : (
-            <span className='text-[14rem] font-medium leading-none'>{tActions('editProfile')}</span>
+            <span className='text-[14rem] font-medium leading-none'>{tActions('save')}</span>
           )}
         </button>
 

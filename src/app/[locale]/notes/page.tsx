@@ -3,18 +3,14 @@
 import { Header } from '@/components/Header';
 import { Input } from '@/components/ui/input';
 import React from 'react';
-import { useQuery } from '@tanstack/react-query';
-import axiosInstance from '@/lib/axiosInstance';
+import { useProfile } from '@/hooks/useProfile';
 
 export default function Notes() {
-  const { data } = useQuery({
-    queryKey: ['user'],
-    queryFn: () => axiosInstance.get('/auth/profile').then(res => res.data),
-  });
+  const { profile } = useProfile();
 
   return (
     <>
-      <Header name={data?.name} avatar={data?.avatar} />
+      <Header name={profile?.name} avatar={profile?.avatar} />
 
       <main className='min-h-screen overflow-hidden bg-d-gray'>
         <div className='container mt-[40rem] flex w-[1360rem] max-w-[1440rem] flex-col rounded-[16rem] bg-white p-[40rem]'>

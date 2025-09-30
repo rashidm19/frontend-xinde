@@ -6,7 +6,7 @@ import { useCustomTranslations } from '@/hooks/useCustomTranslations';
 import React from 'react';
 
 interface Props {
-  grade?: number;
+  grade?: number | string;
 }
 
 export const IeltsGoal = ({ grade }: Props) => {
@@ -49,7 +49,7 @@ export const IeltsGoal = ({ grade }: Props) => {
 
         {grade && (
           <DialogContent className='fixed left-[50%] top-[50%] flex h-auto w-[1280rem] -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center backdrop-brightness-90'>
-            <TargetGoalModal grade={grade} />
+            <TargetGoalModal grade={Number(grade)} />
           </DialogContent>
         )}
       </Dialog>
