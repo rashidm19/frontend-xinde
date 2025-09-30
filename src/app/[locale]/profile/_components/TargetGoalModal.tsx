@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils';
 import { postUser } from '@/api/POST_user';
 import { useCustomTranslations } from '@/hooks/useCustomTranslations';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { ProfileUpdateRequest, ProfileUpdateResponse } from '@/api/profile';
 
 interface Props {
   grade: number;
@@ -26,9 +27,9 @@ export default function TargetGoalModal({ grade }: Props) {
     return score <= selectedScore;
   };
 
-  const mutation = useMutation({
+  const mutation = useMutation<ProfileUpdateResponse, Error, ProfileUpdateRequest>({
     mutationFn: postUser,
-    onSuccess: (updatedUser: any) => {
+    onSuccess: updatedUser => {
       queryClient.setQueryData(['user'], updatedUser);
     },
   });
