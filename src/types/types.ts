@@ -2,7 +2,15 @@ import { z } from 'zod';
 
 export const PROFILE_REGIONS = ['kz', 'kg', 'md'] as const;
 
-export const regionSchema = z.enum(PROFILE_REGIONS);
+export type KnownRegionCode = (typeof PROFILE_REGIONS)[number];
+
+export const regionSchema = z.preprocess(
+  value => (typeof value === 'string' ? value.trim().toLowerCase() : value),
+  z
+    .string()
+    .min(2, { message: 'Region is required.' })
+    .max(10, { message: 'Region code is too long.' })
+);
 
 export type Region = z.infer<typeof regionSchema>;
 

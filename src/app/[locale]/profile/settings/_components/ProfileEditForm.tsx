@@ -3,11 +3,12 @@
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useCustomTranslations } from '@/hooks/useCustomTranslations';
-import { PROFILE_REGIONS, Region } from '@/types/types';
+import { PROFILE_REGIONS } from '@/types/types';
 import { ProfileEditFormValues } from './profileEditSchema';
 import { SubmitHandler, UseFormReturn } from 'react-hook-form';
+import { useMemo } from 'react';
 
-const REGION_LABEL_MAP: Record<Region, 'regionKZ' | 'regionKG' | 'regionMD'> = {
+const REGION_LABEL_KEYS: Record<string, string> = {
   kz: 'regionKZ',
   kg: 'regionKG',
   md: 'regionMD',
@@ -24,7 +25,27 @@ interface Props {
 export const ProfileEditForm = ({ form, isChangingPassword, setIsChangingPassword, onSubmit, isSubmitting }: Props) => {
   const { tImgAlts, tForm, t } = useCustomTranslations('profileSettings.profileEditForm');
 
+  const currentRegion = form.watch('region');
+
   const handleFormSubmit = form.handleSubmit(onSubmit);
+
+  const getRegionLabel = (code: string) => {
+    const key = REGION_LABEL_KEYS[code];
+    if (key) {
+      return tForm(key);
+    }
+
+    return code.toUpperCase();
+  };
+
+  const regionOptions = useMemo(() => {
+    const codes = new Set<string>(PROFILE_REGIONS);
+    const normalizedRegion = currentRegion?.toLowerCase().trim();
+    if (normalizedRegion) {
+      codes.add(normalizedRegion);
+    }
+    return Array.from(codes);
+  }, [currentRegion]);
 
   const handleEnablePasswordChange = () => {
     if (isSubmitting) {
@@ -153,21 +174,25 @@ export const ProfileEditForm = ({ form, isChangingPassword, setIsChangingPasswor
                 <FormLabel className='font-poppins text-[14rem] leading-none'>{tForm('labels.region')}</FormLabel>
                 <FormMessage className='font-poppins text-[10rem] leading-none text-d-red' />
               </div>
-              <Select onValueChange={field.onChange} value={field.value as Region} disabled={isSubmitting}>
+              <Select
+                onValueChange={value => field.onChange(value.toLowerCase())}
+                value={typeof field.value === 'string' ? field.value.toLowerCase() : undefined}
+                disabled={isSubmitting}
+              >
                 <FormControl>
                   <SelectTrigger className='h-[50rem] rounded-[8rem] bg-d-light-gray px-[18rem] text-[14rem] font-medium leading-normal data-[state=open]:rounded-b-none'>
                     <SelectValue placeholder={tForm('placeholders.select')} className='placeholder:text-d-black/60' />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent className='mt-0 max-h-[250rem] rounded-b-[40rem]'>
-                  {PROFILE_REGIONS.map(region => (
+                  {regionOptions.map(regionCode => (
                     <SelectItem
-                      key={region}
-                      value={region}
+                      key={regionCode}
+                      value={regionCode}
                       className='h-[50rem] px-[18rem] text-[14rem] font-medium leading-none last:rounded-b-[8rem] hover:bg-d-light-gray'
                     >
-                      <span className='mr-[8rem] text-d-black/60'>{region.toUpperCase()} </span>
-                      {tForm(REGION_LABEL_MAP[region])}
+                      <span className='mr-[8rem] text-d-black/60'>{regionCode.toUpperCase()} </span>
+                      {getRegionLabel(regionCode)}
                     </SelectItem>
                   ))}
                 </SelectContent>

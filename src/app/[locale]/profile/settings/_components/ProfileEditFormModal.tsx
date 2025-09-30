@@ -10,26 +10,32 @@ import { useMutation } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { useCustomTranslations } from '@/hooks/useCustomTranslations';
 import { postUser } from '@/api/POST_user';
-import { useForm, SubmitHandler } from 'react-hook-form';
+import { SubmitHandler, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 
-import { ProfileEditFormValues, profileEditFormSchema } from './profileEditSchema';
-import { ProfileUpdateRequest, ProfileUpdateResponse } from '@/api/profile';
-import { PROFILE_REGIONS, Region } from '@/types/types';
+import { profileEditFormSchema, ProfileEditFormValues } from './profileEditSchema';
+import { deleteProfile, ProfileUpdateRequest, ProfileUpdateResponse } from '@/api/profile';
+import { regionSchema } from '@/types/types';
 import { useProfile } from '@/hooks/useProfile';
-import { refreshProfile } from '@/stores/profileStore';
+import { refreshProfile, resetProfile } from '@/stores/profileStore';
+import { openConfirmationModal } from '@/stores/confirmationModalStore';
 
-const DEFAULT_REGION: Region = 'kz';
+const DEFAULT_REGION = 'kz';
 
-const isRegion = (value: string | null | undefined): value is Region =>
-  typeof value === 'string' && PROFILE_REGIONS.includes(value as Region);
+const resolveRegion = (region?: string | null): string => {
+  const parsed = regionSchema.safeParse(region ?? undefined);
+  if (parsed.success) {
+    return parsed.data;
+  }
 
-const resolveRegion = (region?: string | null): Region => (isRegion(region) ? region : DEFAULT_REGION);
+  return DEFAULT_REGION;
+};
 
 export const ProfileEditFormModal = () => {
   const router = useRouter();
   const closeRef = useRef<HTMLButtonElement>(null);
   const { tImgAlts, tCommon, tActions } = useCustomTranslations();
+  const { t: tProfileSettings } = useCustomTranslations('profileSettings.profileEditForm');
   const { profile, status, setProfile: setProfileInStore } = useProfile();
 
   const form = useForm<ProfileEditFormValues>({
@@ -71,6 +77,20 @@ export const ProfileEditFormModal = () => {
     },
   });
 
+  const deleteAccountMutation = useMutation<void, Error>({
+    mutationFn: deleteProfile,
+    onSuccess: () => {
+      localStorage.removeItem('token');
+      resetProfile();
+      closeRef.current?.click();
+      nProgress.start();
+      router.push('/');
+    },
+    onError: error => {
+      console.error(error);
+    },
+  });
+
   const [isChangingPassword, setIsChangingPassword] = useState(false);
 
   useEffect(() => {
@@ -106,6 +126,19 @@ export const ProfileEditFormModal = () => {
     }
   };
   const submitForm = form.handleSubmit(onSubmit);
+
+  const handleDeleteAccount = () => {
+    openConfirmationModal({
+      title: tProfileSettings('deleteAccount.title'),
+      message: tProfileSettings('deleteAccount.description'),
+      confirmText: tActions('deleteAccount'),
+      cancelText: tActions('cancel'),
+      variant: 'destructive',
+      onConfirm: () => deleteAccountMutation.mutateAsync(),
+    });
+
+    closeRef.current?.click();
+  };
 
   if (status === 'idle' || status === 'loading') {
     return <></>;
@@ -176,7 +209,12 @@ export const ProfileEditFormModal = () => {
             <span className='text-[14rem] font-medium leading-none'>{tActions('logout')}</span>
           </button>
 
-          <button type='button' className='flex h-[50rem] items-center justify-center rounded-full bg-white px-[32rem]'>
+          <button
+            type='button'
+            onClick={handleDeleteAccount}
+            disabled={deleteAccountMutation.isPending}
+            className='flex h-[50rem] items-center justify-center rounded-full bg-white px-[32rem] transition-colors hover:bg-d-red/10 disabled:cursor-not-allowed disabled:opacity-60'
+          >
             <span className='text-[14rem] font-medium leading-none'>{tActions('deleteAccount')}</span>
           </button>
         </div>

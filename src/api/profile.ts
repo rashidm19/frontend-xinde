@@ -64,3 +64,7 @@ export const fetchProfile = async (): Promise<User> => {
   const response = await axiosInstance.get(PROFILE_ENDPOINT);
   return profileResponseSchema.parse(response.data);
 };
+
+export const deleteProfile = async (): Promise<void> => {
+  await axiosInstance.delete(PROFILE_ENDPOINT);
+};
