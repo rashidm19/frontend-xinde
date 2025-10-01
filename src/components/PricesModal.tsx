@@ -8,7 +8,7 @@ import { useCustomTranslations } from '@/hooks/useCustomTranslations';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import axiosInstance from '@/lib/axiosInstance';
 import { EPAY_PROD_URL, EPAY_TEST_URL } from '@/lib/config';
-import { IService } from '@/types/Billing';
+import { ISubscriptionPlan } from '@/types/Billing';
 import { IPaymentOrder } from '@/types/Payments';
 import { POST_payment_checkout_order } from '@/api/POST_payment_checkout_order';
 
@@ -24,14 +24,64 @@ export const PricesModal = () => {
   const demoIncludes: string[] = t.raw('demo.includes');
   const premiumIncludes: string[] = t.raw('premium.includes');
 
-  const { data: services, status } = useQuery<IService[]>({
-    queryKey: ['/billing/services'],
-    queryFn: () =>
-      axiosInstance
-        .get('/billing/services')
-        .then(res => res.data)
-        .then(res => res.data),
+  const { data: subscriptionPlans, status: subscriptionStatus } = useQuery<ISubscriptionPlan[]>({
+    queryKey: ['/billing/subscriptions/plans'],
+    queryFn: async () => {
+      const { data } = await axiosInstance.get('/billing/subscriptions/plans');
+      return (data?.data ?? []) as ISubscriptionPlan[];
+    },
   });
+
+  const activePlans = React.useMemo(() => (subscriptionPlans ?? []).filter(plan => plan.is_active), [subscriptionPlans]);
+
+  const currencyFormatter = React.useMemo(() => new Intl.NumberFormat('ru-RU'), []);
+
+  const getPlanPeriodLabel = React.useCallback((plan: ISubscriptionPlan) => {
+    if (plan.is_period_manual && plan.period_start && plan.period_end) {
+      const startDate = new Date(plan.period_start).toLocaleDateString();
+      const endDate = new Date(plan.period_end).toLocaleDateString();
+      return `${startDate} - ${endDate}`;
+    }
+
+    if (!plan.interval) {
+      return '';
+    }
+
+    const interval = plan.interval.toLowerCase();
+    if (plan.interval_count <= 1) {
+      return interval;
+    }
+
+    const pluralInterval = interval.endsWith('s') ? interval : `${interval}s`;
+
+    return `${plan.interval_count} ${pluralInterval}`;
+  }, []);
+
+  const getPlanMonths = React.useCallback((plan: ISubscriptionPlan) => {
+    if (plan.is_period_manual && plan.period_start && plan.period_end) {
+      const startDate = new Date(plan.period_start);
+      const endDate = new Date(plan.period_end);
+      const monthDiff = (endDate.getFullYear() - startDate.getFullYear()) * 12 + (endDate.getMonth() - startDate.getMonth());
+
+      return monthDiff > 0 ? monthDiff : 1;
+    }
+
+    if (!plan.interval) {
+      return 1;
+    }
+
+    const interval = plan.interval.toLowerCase();
+
+    if (interval === 'year') {
+      return Math.max(plan.interval_count, 1) * 12;
+    }
+
+    if (interval === 'month') {
+      return Math.max(plan.interval_count, 1);
+    }
+
+    return Math.max(plan.interval_count, 1);
+  }, []);
 
   const mutation = useMutation({
     mutationFn: POST_payment_checkout_order,
@@ -66,8 +116,8 @@ export const PricesModal = () => {
     });
   }
 
-  const handleSubmit = async (service_id: string) => {
-    const order = await mutation.mutateAsync({ service_id });
+  const handleSubmit = async (subscription_plan_id: string) => {
+    const order = await mutation.mutateAsync({ subscription_plan_id });
     await pay(order);
   };
 
@@ -104,59 +154,57 @@ export const PricesModal = () => {
                 </div>
               </div>
 
-              {/* Premium/Premium_long Plans */}
-              {status === 'success' &&
-                services.map(service => (
-                  <div
-                    key={service.id}
-                    className={`relative flex h-[430rem] w-[342rem] flex-col gap-y-[12rem] rounded-[16rem] ${service.name === 'premium' ? 'bg-d-violet' : 'bg-d-blue'} p-[32rem] text-white tablet:h-[500rem] tablet:w-[300rem] tablet:gap-y-[20rem] desktop:h-[500rem] desktop:w-[370rem] desktop:gap-y-[32rem]`}
-                  >
-                    {service.name === 'premium' && (
-                      <div className='absolute -top-[18rem] right-0 flex items-center gap-x-[8rem] rounded-full bg-d-black px-[34rem] py-[6rem] text-[14rem] text-white'>
-                        <div className='size-[10rem] rounded-full bg-d-green'></div>
-                        <span className='font-poppins text-[14rem] font-medium tablet:text-[16rem]'>save 20% monthly</span>
-                      </div>
-                    )}
+              {/* Subscription Plans */}
+              {subscriptionStatus === 'success' &&
+                activePlans.map((plan, index) => {
+                  const isPrimaryPlan = index === 0;
+                  const planFeatures = plan.features && plan.features.length ? plan.features : premiumIncludes;
+                  const priceLabel = `${currencyFormatter.format(plan.price)} ₸`;
+                  const periodLabel = getPlanPeriodLabel(plan);
+                  const monthCount = getPlanMonths(plan);
+                  const imageIndex = (index % 2) + 1;
 
+                  return (
                     <div
-                      className={`absolute -bottom-[0rem] right-0 ${service.name === 'premium' ? 'aspect-[462/428]' : 'aspect-[458/330]'} w-[213rem] mix-blend-soft-light`}
+                      key={plan.id}
+                      className={`relative flex h-[430rem] w-[342rem] flex-col gap-y-[12rem] rounded-[16rem] ${isPrimaryPlan ? 'bg-d-violet' : 'bg-d-blue'} p-[32rem] text-white tablet:h-[500rem] tablet:w-[300rem] tablet:gap-y-[20rem] desktop:h-[500rem] desktop:w-[370rem] desktop:gap-y-[32rem]`}
                     >
-                      <Image
-                        src={`/images/icon_subscription--0${service.name === 'premium' ? '1' : '2'}.png`}
-                        alt={tImgAlts('premiumPlan')}
-                        className='rounded-br-[16rem] object-cover'
-                        fill
-                      />
-                    </div>
+                      <div className={`absolute -bottom-[0rem] right-0 ${isPrimaryPlan ? 'aspect-[462/428]' : 'aspect-[458/330]'} w-[213rem] mix-blend-soft-light`}>
+                        <Image src={`/images/icon_subscription--0${imageIndex}.png`} alt={tImgAlts('premiumPlan')} className='rounded-br-[16rem] object-cover' fill />
+                      </div>
 
-                    <h2 className='font-poppins text-[32rem] font-medium'>{t('premium.title')}</h2>
+                      <h2 className='font-poppins text-[32rem] font-medium'>{plan.name}</h2>
 
-                    <div className='flex flex-col gap-y-[12rem] tablet:gap-y-[16rem] desktop:gap-y-[20rem]'>
-                      {premiumIncludes?.map((item, index) => (
-                        <div key={index} className='flex items-center gap-x-[12rem]'>
-                          <img src='/images/icon_check--white.svg' alt={tImgAlts('check')} className='size-[16rem]' />
-                          <span className='text-[14rem] leading-[120%] tablet:text-[16rem] tablet:leading-[130%] desktop:leading-[120%]'>{item}</span>
-                        </div>
-                      ))}
-                    </div>
+                      <div className='flex flex-col gap-y-[12rem] tablet:gap-y-[16rem] desktop:gap-y-[20rem]'>
+                        {planFeatures.map((item, featureIndex) => (
+                          <div key={`${plan.id}-${featureIndex}`} className='flex items-center gap-x-[12rem]'>
+                            <img src='/images/icon_check--white.svg' alt={tImgAlts('check')} className='size-[16rem]' />
+                            <span className='text-[14rem] leading-[120%] tablet:text-[16rem] tablet:leading-[130%] desktop:leading-[120%]'>{item}</span>
+                          </div>
+                        ))}
+                      </div>
 
-                    <div className='mt-auto'>
-                      <h3 className='text-[32rem] font-medium'>
-                        {t.rich('premium.price', {
-                          price: service.name === 'premium' ? '6 600 ₸' : '2 750 ₸',
-                          monthCount: service.name === 'premium' ? '3' : '',
-                          span: chunks => <span className='text-[14rem] font-normal tablet:text-[16rem]'>{chunks}</span>,
-                        })}
-                      </h3>
-                      <button
-                        onClick={() => handleSubmit(service.id)}
-                        className='relative z-[200] w-full rounded-full bg-d-green py-[16rem] text-[18rem] font-medium text-black hover:bg-d-green/90'
-                      >
-                        {tActions('upgrade')}
-                      </button>
+                      <div className='mt-auto'>
+                        <h3 className='text-[32rem] font-medium'>
+                          {t.rich('premium.price', {
+                            price: priceLabel,
+                            monthCount: String(monthCount),
+                            span: chunks => <span className='text-[14rem] font-normal tablet:text-[16rem]'>{chunks}</span>,
+                          })}
+                        </h3>
+                        {plan.is_period_manual && periodLabel && (
+                          <p className='mt-[8rem] text-[14rem] font-normal tablet:text-[16rem]'>{periodLabel}</p>
+                        )}
+                        <button
+                          onClick={() => handleSubmit(String(plan.id))}
+                          className='relative z-[200] w-full rounded-full bg-d-green py-[16rem] text-[18rem] font-medium text-black hover:bg-d-green/90'
+                        >
+                          {tActions('upgrade')}
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
             </div>
           </div>
         </div>
