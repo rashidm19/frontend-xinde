@@ -72,7 +72,7 @@ export const TimeSpent = ({ data, loading }: Props) => {
           </button>*/}
         </div>
 
-        {data && !loading ? (
+        {!loading && data && data.total_period_time > 0 ? (
           <>
             <div className='flex items-start gap-x-[32rem]'>
               {/* Daily Average */}
