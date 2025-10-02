@@ -1,3 +1,4 @@
+import axios from 'axios';
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 
@@ -43,6 +44,17 @@ export const useProfileStore = create<ProfileStore>()(
           set({ profile, status: 'success', error: null });
           return profile;
         } catch (error) {
+          if (axios.isAxiosError(error)) {
+            const statusCode = error.response?.status;
+            if (statusCode === 401) {
+              if (typeof window !== 'undefined') {
+                localStorage.removeItem('token');
+              }
+              set({ profile: null, status: 'error', error: 'unauthorized' });
+              return null;
+            }
+          }
+
           set({ error: parseErrorMessage(error), status: 'error' });
           console.log(error);
           throw error;
