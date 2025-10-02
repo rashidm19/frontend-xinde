@@ -125,10 +125,7 @@ export const PricesModal = () => {
     });
   }
 
-  const formatCurrency = React.useCallback(
-    (value: number, currency: string) => `${currencyFormatter.format(value / 100)} ${currency}`,
-    [currencyFormatter]
-  );
+  const formatCurrency = React.useCallback((value: number, currency: string) => `${currencyFormatter.format(value)} ${currency}`, [currencyFormatter]);
 
   const handleSubmit = async (subscription_plan_id: string) => {
     setProcessingPlanId(subscription_plan_id);
@@ -197,9 +194,7 @@ export const PricesModal = () => {
             </h1>
 
             <div className='mb-[24rem] flex w-full flex-col items-center gap-y-[8rem] tablet:w-auto'>
-              <label className='w-full text-center text-[16rem] font-medium leading-tight text-d-black/80 tablet:w-[360rem] tablet:text-start'>
-                {t('promo.label')}
-              </label>
+              <label className='w-full text-center text-[16rem] font-medium leading-tight text-d-black/80 tablet:w-[360rem] tablet:text-start'>{t('promo.label')}</label>
               <input
                 value={promoCode}
                 onChange={event => {
@@ -295,7 +290,9 @@ export const PricesModal = () => {
                         {planDiscounts[planId] && (
                           <div className='mt-[12rem] text-[14rem] font-medium leading-tight'>
                             {planDiscounts[planId].discount > 0 && (
-                              <p className='text-d-green'>{t('promo.discount', { amount: formatCurrency(planDiscounts[planId].discount, planDiscounts[planId].currency) })}</p>
+                              <p className='text-d-green'>
+                                {t('promo.discount', { amount: formatCurrency(planDiscounts[planId].discount, planDiscounts[planId].currency) })}
+                              </p>
                             )}
                             <p>{t('promo.total', { amount: formatCurrency(planDiscounts[planId].amount, planDiscounts[planId].currency) })}</p>
                           </div>
