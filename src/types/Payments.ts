@@ -1,17 +1,22 @@
 export interface IPaymentOrder {
   orderId: number;
-  invoiceId: string;
+  invoiceId?: string | null;
   amount: number;
-  token: {
+  discount_amount?: number | null;
+  token?: {
     access_token: string;
-  };
-  backLink: string;
-  failureBackLink: string;
-  postLink: string;
-  postLinkParams: {
+  } | null;
+  backLink?: string | null;
+  failureBackLink?: string | null;
+  postLink?: string | null;
+  postLinkParams?: {
     auth: string;
-  };
-  terminal: string;
+  } | null;
+  terminal?: string | null;
   currency: string;
-  isSandbox: boolean;
+  isSandbox?: boolean;
+}
+
+export interface ICheckoutOrderResponse extends IPaymentOrder {
+  requiresPayment: boolean;
 }

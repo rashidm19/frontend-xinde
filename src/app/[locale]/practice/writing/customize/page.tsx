@@ -40,7 +40,7 @@ export default function Page() {
       if (!canStart) {
         return;
       }
-
+      console.log(data);
       const result = await axiosInstance.get('/practice/writing', {
         params: {
           part: selectedPart,
@@ -66,8 +66,8 @@ export default function Page() {
   };
 
   const randomTopic = () => {
-    const randomIndex = Math.floor(Math.random() * data.data.find((c: any) => c.name === `writing_part_${selectedPart}`).tags.length);
-    return data.data.find((c: any) => c.name === `writing_part_${selectedPart}`).tags[randomIndex].id;
+    const randomIndex = Math.floor(Math.random() * data.data.find((c: any) => c.name === `writing_part_${selectedPart}`)?.tags?.length);
+    return data.data.find((c: any) => c.name === `writing_part_${selectedPart}`)?.tags?.[randomIndex]?.id;
   };
 
   return (
