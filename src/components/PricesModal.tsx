@@ -240,9 +240,9 @@ export const PricesModal = () => {
                   const isPrimaryPlan = index === 0;
                   const planFeatures = plan.features && plan.features.length ? plan.features : premiumIncludes;
                   const priceLabel = `${currencyFormatter.format(plan.price)} ₸`;
-                  // const periodLabel = getPlanPeriodLabel(plan);
                   const monthCount = getPlanMonths(plan);
                   const imageIndex = (index % 2) + 1;
+                  const planId = String(plan.id);
 
                   return (
                     <div
@@ -275,11 +275,11 @@ export const PricesModal = () => {
                         {/*{plan.is_period_manual && periodLabel && (*/}
                         {/*  <p className='mt-[8rem] text-[14rem] font-normal tablet:text-[16rem]'>{periodLabel}</p>*/}
                         <button
-                          onClick={() => handleSubmit(String(plan.id))}
-                          disabled={processingPlanId === String(plan.id)}
+                          onClick={() => handleSubmit(planId)}
+                          disabled={processingPlanId === planId}
                           className='relative z-[200] w-full rounded-full bg-d-green py-[16rem] text-[18rem] font-medium text-black hover:bg-d-green/90 disabled:cursor-not-allowed disabled:bg-d-gray/60 disabled:text-d-black/60'
                         >
-                          {processingPlanId === String(plan.id) ? (
+                          {processingPlanId === planId ? (
                             <svg className='mx-auto size-[20rem] animate-spin text-black' xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24'>
                               <circle className='opacity-25' cx='12' cy='12' r='10' stroke='currentColor' strokeWidth='4' />
                               <path
@@ -291,16 +291,15 @@ export const PricesModal = () => {
                           ) : (
                             tActions('upgrade')
                           )}
-                          {tActions('upgrade')}
-                        {planDiscounts[String(plan.id)] && (
+                        </button>
+                        {planDiscounts[planId] && (
                           <div className='mt-[12rem] text-[14rem] font-medium leading-tight'>
-                            {planDiscounts[String(plan.id)].discount > 0 && (
-                              <p className='text-d-green'>{t('promo.discount', { amount: formatCurrency(planDiscounts[String(plan.id)].discount, planDiscounts[String(plan.id)].currency) })}</p>
+                            {planDiscounts[planId].discount > 0 && (
+                              <p className='text-d-green'>{t('promo.discount', { amount: formatCurrency(planDiscounts[planId].discount, planDiscounts[planId].currency) })}</p>
                             )}
-                            <p>{t('promo.total', { amount: formatCurrency(planDiscounts[String(plan.id)].amount, planDiscounts[String(plan.id)].currency) })}</p>
+                            <p>{t('promo.total', { amount: formatCurrency(planDiscounts[planId].amount, planDiscounts[planId].currency) })}</p>
                           </div>
                         )}
-                        </button>
                       </div>
                     </div>
                   );

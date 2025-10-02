@@ -6,6 +6,7 @@ import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { GlobalConfirmationModal } from '@/components/GlobalConfirmationModal';
 import { GlobalSubscriptionPaywall } from '@/components/GlobalSubscriptionPaywall';
 import { SubscriptionInitializer } from '@/components/SubscriptionInitializer';
+import { SubscriptionPaymentStatusModal } from '@/components/SubscriptionPaymentStatusModal';
 
 const queryClient = new QueryClient();
 
@@ -21,6 +22,7 @@ export default function Providers({
 
       <GlobalConfirmationModal />
       <GlobalSubscriptionPaywall />
+      <SubscriptionPaymentStatusModal />
 
       {process.env.NEXT_PUBLIC_ENVIROMENT === 'dev' && (
         <div className='text-[14rem]'>
