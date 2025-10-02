@@ -12,7 +12,6 @@ import { useQuery } from '@tanstack/react-query';
 
 export default function Page() {
   const { profile, status } = useProfile();
-
   const isLoading = !profile && (status === 'idle' || status === 'loading');
 
   const { data: practiceTimeStats, isLoading: practiceTimeStatsLoading } = useQuery({

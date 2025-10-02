@@ -20,7 +20,7 @@ export const userSchema = z.object({
   name: z.string().optional(),
   avatar: z.string().optional(),
   region: regionSchema.optional(),
-  target_grade: z.string().optional(),
+  target_grade: z.string().nullable().optional(),
 });
 
 export type User = z.infer<typeof userSchema>;

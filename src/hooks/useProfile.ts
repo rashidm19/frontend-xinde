@@ -14,22 +14,7 @@ export const useProfile = () => {
   const locale = useLocale();
 
   useEffect(() => {
-    if (typeof window === 'undefined') {
-      return;
-    }
-
-    const token = localStorage.getItem('token');
-    if (!token) {
-      router.replace(`/${locale}/login`);
-    }
-  }, [router, locale]);
-
-  useEffect(() => {
     if (status === 'idle') {
-      if (typeof window !== 'undefined' && !localStorage.getItem('token')) {
-        return;
-      }
-
       fetchProfile().catch(() => {
         // errors are stored in state; consumers can react to the status change
       });
