@@ -1,31 +1,51 @@
 'use client';
 
 import Link from 'next/link';
-import React from 'react';
+import React, { useState } from 'react';
 import { useCustomTranslations } from '@/hooks/useCustomTranslations';
 import nProgress from 'nprogress';
 import { useRouter } from 'next/navigation';
 import axiosInstance from '@/lib/axiosInstance';
+import { useSubscriptionGate } from '@/hooks/useSubscriptionGate';
+import { SubscriptionAccessLabel } from '@/components/SubscriptionAccessLabel';
 
 export default function Page() {
   const router = useRouter();
   const { t, tImgAlts, tCommon, tActions } = useCustomTranslations('practice.reading.rules');
+  const { requireSubscription, isCheckingAccess } = useSubscriptionGate();
+  const [isStarting, setIsStarting] = useState(false);
 
   const startPractice = async () => {
-    const result = await axiosInstance.get('/practice/reading', {
+    if (isStarting || isCheckingAccess) {
+      return;
+    }
+
+    setIsStarting(true);
+
+    try {
+      const canStart = await requireSubscription();
+
+      if (!canStart) {
+        return;
+      }
+
+      const result = await axiosInstance.get('/practice/reading', {
       validateStatus: () => true,
     });
-    if (result.status >= 200 && result.status < 300) {
-      nProgress.start();
-      const json = result.data;
-      if (Array.isArray(json.data) && json.data.length > 0) {
-        const randomIndex = Math.floor(Math.random() * json.data.length);
-        const randomReadingId = json.data[randomIndex].reading_id;
-        localStorage.setItem('practiceReadingId', randomReadingId);
-        router.push('/practice/reading/test');
-      } else {
-        console.error('Нет доступных reading_id');
+      if (result.status >= 200 && result.status < 300) {
+        nProgress.start();
+        const json = result.data;
+        if (Array.isArray(json.data) && json.data.length > 0) {
+          const randomIndex = Math.floor(Math.random() * json.data.length);
+          const randomReadingId = json.data[randomIndex].reading_id;
+          localStorage.setItem('practiceReadingId', randomReadingId);
+          router.push('/practice/reading/test');
+        } else {
+          console.error('Нет доступных reading_id');
+        }
       }
+    } finally {
+      setIsStarting(false);
     }
   };
 
@@ -76,10 +96,12 @@ export default function Page() {
             <p className='mb-[48rem] text-[20rem] font-medium leading-tight text-d-black/80'>{t('marking')}</p>
             <button
               onClick={startPractice}
-              className='mx-auto flex h-[63rem] w-[280rem] items-center justify-center rounded-[40rem] bg-d-green text-[20rem] font-semibold hover:bg-d-green/40'
+              disabled={isStarting || isCheckingAccess}
+              className='mx-auto flex h-[63rem] w-[280rem] items-center justify-center rounded-[40rem] bg-d-green text-[20rem] font-semibold hover:bg-d-green/40 disabled:cursor-not-allowed disabled:bg-d-gray/60 disabled:text-d-black/60'
             >
-              {tActions('continue')}
+              {isStarting || isCheckingAccess ? '...' : tActions('continue')}
             </button>
+            <SubscriptionAccessLabel className='mt-[12rem] text-center' />
           </section>
         </div>
       </div>

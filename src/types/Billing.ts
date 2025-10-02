@@ -21,3 +21,26 @@ export interface ISubscriptionPlan {
   period_end: string | null;
   features?: string[];
 }
+
+export type SubscriptionStatus =
+  | 'trialing'
+  | 'active'
+  | 'past_due'
+  | 'paused'
+  | 'cancelled'
+  | 'canceled'
+  | 'expired'
+  | (string & {});
+
+export interface IClientSubscription {
+  id: string | number;
+  status: SubscriptionStatus;
+  current_period_start: string | null;
+  current_period_end: string | null;
+  cancel_at_period_end: boolean;
+  plan: ISubscriptionPlan | null;
+  subscription_plan?: ISubscriptionPlan | null;
+  created_at?: string | null;
+  updated_at?: string | null;
+  [key: string]: unknown;
+}

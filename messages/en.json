@@ -64,6 +64,10 @@
     "next": "Next",
     "cancel": "Cancel"
   },
+  "subscription": {
+    "availableLabel": "Available with subscription",
+    "cancelWarning": "Your access will end on {date}."
+  },
   "form": {
     "validation": {
       "requiredField": "Required field",

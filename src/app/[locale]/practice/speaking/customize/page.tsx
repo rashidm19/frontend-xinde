@@ -9,9 +9,12 @@ import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import nProgress from 'nprogress';
 import axiosInstance from '@/lib/axiosInstance';
+import { useSubscriptionGate } from '@/hooks/useSubscriptionGate';
+import { SubscriptionAccessLabel } from '@/components/SubscriptionAccessLabel';
 
 export default function Page() {
   const router = useRouter();
+  const { requireSubscription, isCheckingAccess } = useSubscriptionGate();
 
   const { data } = useQuery({
     queryKey: ['speaking-categories'],
@@ -21,7 +24,22 @@ export default function Page() {
   const [selectedPart, setSelectedPart] = useState<1 | 2 | 3>(1);
   const [selectedTopic, setSelectedTopic] = useState<string>('random');
 
+  const [isStarting, setIsStarting] = useState(false);
+
   const startPractice = async () => {
+    if (isStarting || isCheckingAccess) {
+      return;
+    }
+
+    setIsStarting(true);
+
+    try {
+      const canStart = await requireSubscription();
+
+      if (!canStart) {
+        return;
+      }
+
     const params = new URLSearchParams();
     params.append('part', String(selectedPart));
     params.append('tag_id', selectedTopic === 'random' ? randomTopic() : selectedTopic);
@@ -37,6 +55,9 @@ export default function Page() {
       localStorage.setItem('practiceSpeakingId', json.data[0].speaking_id);
       localStorage.setItem('practiceSpeakingPart', String(selectedPart));
       router.push('/practice/speaking/rules/');
+    }
+    } finally {
+      setIsStarting(false);
     }
   };
 
@@ -149,10 +170,12 @@ export default function Page() {
               </div>
               <button
                 onClick={startPractice}
-                className='mx-auto flex h-[63rem] w-[280rem] items-center justify-center rounded-[40rem] bg-d-green text-[20rem] font-semibold hover:bg-d-green/40'
+                disabled={isStarting || isCheckingAccess}
+                className='mx-auto flex h-[63rem] w-[280rem] items-center justify-center rounded-[40rem] bg-d-green text-[20rem] font-semibold hover:bg-d-green/40 disabled:cursor-not-allowed disabled:bg-d-gray/60 disabled:text-d-black/60'
               >
-                Continue
+                {isStarting || isCheckingAccess ? '...' : 'Continue'}
               </button>
+              <SubscriptionAccessLabel className='mt-[12rem] text-center' />
             </div>
           </div>
         </div>

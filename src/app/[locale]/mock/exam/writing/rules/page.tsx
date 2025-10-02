@@ -1,7 +1,14 @@
+'use client';
+
 import Link from 'next/link';
-import React from 'react';
+import { useState } from 'react';
+import { useSubscriptionGate } from '@/hooks/useSubscriptionGate';
+import { SubscriptionAccessLabel } from '@/components/SubscriptionAccessLabel';
 
 export default function Page() {
+  const { requireSubscription, isCheckingAccess } = useSubscriptionGate();
+  const [isStarting, setIsStarting] = useState(false);
+
   return (
     <main className='realtive min-h-screen bg-d-blue-secondary'>
       <img src='/images/illustration_torusArray--02.png' className='absolute bottom-0 left-0 h-auto w-[320rem] opacity-80' alt='illustration_torusArray' />
@@ -42,10 +49,27 @@ export default function Page() {
             </p>
             <Link
               href='/mock/exam/writing/test/part-1'
-              className='mx-auto flex h-[63rem] w-[280rem] items-center justify-center rounded-[40rem] bg-d-green text-[20rem] font-semibold hover:bg-d-green/40'
+              onClick={async event => {
+                if (isStarting || isCheckingAccess) {
+                  event.preventDefault();
+                  return;
+                }
+
+                setIsStarting(true);
+                const canStart = await requireSubscription();
+                setIsStarting(false);
+
+                if (!canStart) {
+                  event.preventDefault();
+                }
+              }}
+              className={`mx-auto flex h-[63rem] w-[280rem] items-center justify-center rounded-[40rem] bg-d-green text-[20rem] font-semibold hover:bg-d-green/40 ${
+                isStarting || isCheckingAccess ? 'pointer-events-none cursor-wait opacity-70' : ''
+              }`}
             >
-              Continue
+              {isStarting || isCheckingAccess ? '...' : 'Continue'}
             </Link>
+            <SubscriptionAccessLabel className='mt-[12rem] text-center' />
           </div>
         </div>
       </div>

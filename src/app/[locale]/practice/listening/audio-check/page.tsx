@@ -4,9 +4,12 @@ import { Footer } from '@/components/Footer';
 import Link from 'next/link';
 import { useCustomTranslations } from '@/hooks/useCustomTranslations';
 import React from 'react';
+import { useSubscriptionGate } from '@/hooks/useSubscriptionGate';
+import { SubscriptionAccessLabel } from '@/components/SubscriptionAccessLabel';
 
 export default function Page() {
   const { t, tImgAlts, tActions } = useCustomTranslations('practice.listening.audioCheck');
+  const { requireSubscription, isCheckingAccess } = useSubscriptionGate();
 
   return (
     <>
@@ -28,11 +31,24 @@ export default function Page() {
 
             <Link
               href='/practice/listening/test/'
-              className='mx-auto flex h-[63rem] w-[280rem] items-center justify-center gap-x-[8rem] rounded-[40rem] bg-d-green text-[20rem] font-semibold hover:bg-d-green/40'
+              onClick={async event => {
+                if (isCheckingAccess) {
+                  event.preventDefault();
+                  return;
+                }
+                const canStart = await requireSubscription();
+                if (!canStart) {
+                  event.preventDefault();
+                }
+              }}
+              className={`mx-auto flex h-[63rem] w-[280rem] items-center justify-center gap-x-[8rem] rounded-[40rem] bg-d-green text-[20rem] font-semibold hover:bg-d-green/40 ${
+                isCheckingAccess ? 'pointer-events-none cursor-wait opacity-70' : ''
+              }`}
             >
               <img src='/images/icon_audioPlay.svg' alt={tImgAlts('play')} className='size-[16rem]' />
-              {tActions('play')}
+              {isCheckingAccess ? '...' : tActions('play')}
             </Link>
+            <SubscriptionAccessLabel className='text-center' />
           </section>
         </div>
       </main>

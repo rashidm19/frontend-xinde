@@ -6,11 +6,11 @@ import Image from 'next/image';
 import { ScrollArea } from './ui/scroll-area';
 import { useCustomTranslations } from '@/hooks/useCustomTranslations';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import axiosInstance from '@/lib/axiosInstance';
 import { EPAY_PROD_URL, EPAY_TEST_URL } from '@/lib/config';
 import { ISubscriptionPlan } from '@/types/Billing';
 import { IPaymentOrder } from '@/types/Payments';
 import { POST_payment_checkout_order } from '@/api/POST_payment_checkout_order';
+import { fetchSubscriptionPlans } from '@/api/subscriptions';
 
 declare global {
   interface Window {
@@ -26,36 +26,33 @@ export const PricesModal = () => {
 
   const { data: subscriptionPlans, status: subscriptionStatus } = useQuery<ISubscriptionPlan[]>({
     queryKey: ['/billing/subscriptions/plans'],
-    queryFn: async () => {
-      const { data } = await axiosInstance.get('/billing/subscriptions/plans');
-      return (data?.data ?? []) as ISubscriptionPlan[];
-    },
+    queryFn: fetchSubscriptionPlans,
   });
 
   const activePlans = React.useMemo(() => (subscriptionPlans ?? []).filter(plan => plan.is_active), [subscriptionPlans]);
 
   const currencyFormatter = React.useMemo(() => new Intl.NumberFormat('ru-RU'), []);
 
-  const getPlanPeriodLabel = React.useCallback((plan: ISubscriptionPlan) => {
-    if (plan.is_period_manual && plan.period_start && plan.period_end) {
-      const startDate = new Date(plan.period_start).toLocaleDateString();
-      const endDate = new Date(plan.period_end).toLocaleDateString();
-      return `${startDate} - ${endDate}`;
-    }
-
-    if (!plan.interval) {
-      return '';
-    }
-
-    const interval = plan.interval.toLowerCase();
-    if (plan.interval_count <= 1) {
-      return interval;
-    }
-
-    const pluralInterval = interval.endsWith('s') ? interval : `${interval}s`;
-
-    return `${plan.interval_count} ${pluralInterval}`;
-  }, []);
+  // const getPlanPeriodLabel = React.useCallback((plan: ISubscriptionPlan) => {
+  //   if (plan.is_period_manual && plan.period_start && plan.period_end) {
+  //     const startDate = new Date(plan.period_start).toLocaleDateString();
+  //     const endDate = new Date(plan.period_end).toLocaleDateString();
+  //     return `${startDate} - ${endDate}`;
+  //   }
+  //
+  //   if (!plan.interval) {
+  //     return '';
+  //   }
+  //
+  //   const interval = plan.interval.toLowerCase();
+  //   if (plan.interval_count <= 1) {
+  //     return interval;
+  //   }
+  //
+  //   const pluralInterval = interval.endsWith('s') ? interval : `${interval}s`;
+  //
+  //   return `${plan.interval_count} ${pluralInterval}`;
+  // }, []);
 
   const getPlanMonths = React.useCallback((plan: ISubscriptionPlan) => {
     if (plan.is_period_manual && plan.period_start && plan.period_end) {
@@ -160,7 +157,7 @@ export const PricesModal = () => {
                   const isPrimaryPlan = index === 0;
                   const planFeatures = plan.features && plan.features.length ? plan.features : premiumIncludes;
                   const priceLabel = `${currencyFormatter.format(plan.price)} ₸`;
-                  const periodLabel = getPlanPeriodLabel(plan);
+                  // const periodLabel = getPlanPeriodLabel(plan);
                   const monthCount = getPlanMonths(plan);
                   const imageIndex = (index % 2) + 1;
 
@@ -192,9 +189,9 @@ export const PricesModal = () => {
                             span: chunks => <span className='text-[14rem] font-normal tablet:text-[16rem]'>{chunks}</span>,
                           })}
                         </h3>
-                        {plan.is_period_manual && periodLabel && (
-                          <p className='mt-[8rem] text-[14rem] font-normal tablet:text-[16rem]'>{periodLabel}</p>
-                        )}
+                        {/*{plan.is_period_manual && periodLabel && (*/}
+                        {/*  <p className='mt-[8rem] text-[14rem] font-normal tablet:text-[16rem]'>{periodLabel}</p>*/}
+                        {/*)}*/}
                         <button
                           onClick={() => handleSubmit(String(plan.id))}
                           className='relative z-[200] w-full rounded-full bg-d-green py-[16rem] text-[18rem] font-medium text-black hover:bg-d-green/90'

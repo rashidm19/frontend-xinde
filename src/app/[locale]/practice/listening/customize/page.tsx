@@ -5,6 +5,7 @@ import React from 'react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Footer } from '@/components/Footer';
 import Link from 'next/link';
+import { SubscriptionAccessLabel } from '@/components/SubscriptionAccessLabel';
 
 export default function Page() {
   return (
@@ -82,6 +83,7 @@ export default function Page() {
               >
                 Continue
               </Link>
+              <SubscriptionAccessLabel className='mt-[12rem] text-center' />
             </section>
           </div>
         </div>

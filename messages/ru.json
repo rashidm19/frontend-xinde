@@ -40,7 +40,6 @@
     "backToHomepage": "На главную страницу",
     "upgradePlan": "Обновить план",
     "exit": "Выход",
-    "upgrade": "Обновить",
     "previousSlide": "Предыдущий слайд",
     "nextSlide": "Следующий слайд",
     "back": "Назад",
@@ -58,11 +57,14 @@
     "deleteAccount": "Удалить аккаунт",
     "save": "Сохранить",
     "takeTheTest": "Начать тест",
-    "continue": "Продолжить",
-    "play": "Воспроизвести",
+    "upgrade": "Обновить",
     "submit": "Отправить",
     "next": "Далее",
     "cancel": "Отменить"
+  },
+  "subscription": {
+    "availableLabel": "Доступно по подписке",
+    "cancelWarning": "Доступ завершится {date}."
   },
   "form": {
     "validation": {

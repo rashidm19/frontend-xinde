@@ -5,16 +5,30 @@ import Link from 'next/link';
 import { Checkbox } from '@/components/ui/checkbox';
 import React, { useState } from 'react';
 import { useCustomTranslations } from '@/hooks/useCustomTranslations';
+import { useSubscriptionGate } from '@/hooks/useSubscriptionGate';
+import { SubscriptionAccessLabel } from '@/components/SubscriptionAccessLabel';
 
 export default function Page() {
   const { t, tImgAlts, tCommon, tCommonRich, tActions, tMessages } = useCustomTranslations('practice.listening.rules');
+  const { requireSubscription, isCheckingAccess } = useSubscriptionGate();
 
   const [accepted, setAccepted] = useState(false);
 
-  const handleClick = (e: React.MouseEvent) => {
+  const handleClick = async (e: React.MouseEvent<HTMLAnchorElement>) => {
+    if (isCheckingAccess) {
+      e.preventDefault();
+      return;
+    }
+
     if (!accepted) {
       e.preventDefault();
       alert(tMessages('acceptUserAgreement'));
+      return;
+    }
+
+    const canStart = await requireSubscription();
+    if (!canStart) {
+      e.preventDefault();
     }
   };
 
@@ -80,10 +94,13 @@ export default function Page() {
               <Link
                 onClick={handleClick}
                 href={accepted ? '/practice/listening/audio-check' : '#'}
-                className={`mx-auto flex h-[63rem] w-[280rem] items-center justify-center rounded-[40rem] text-[20rem] font-semibold ${accepted ? 'cursor-pointer bg-d-green hover:bg-d-green/40' : 'pointer-events-none cursor-not-allowed bg-d-gray opacity-50'}`}
+                className={`mx-auto flex h-[63rem] w-[280rem] items-center justify-center rounded-[40rem] text-[20rem] font-semibold ${
+                  accepted ? 'cursor-pointer bg-d-green hover:bg-d-green/40' : 'pointer-events-none cursor-not-allowed bg-d-gray opacity-50'
+                } ${isCheckingAccess ? 'pointer-events-none cursor-wait opacity-70' : ''}`}
               >
-                {tActions('continue')}
+                {isCheckingAccess ? '...' : tActions('continue')}
               </Link>
+              <SubscriptionAccessLabel className='mt-[12rem] text-center' />
             </section>
           </div>
         </div>

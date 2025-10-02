@@ -9,39 +9,59 @@ import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { useCustomTranslations } from '@/hooks/useCustomTranslations';
 import axiosInstance from '@/lib/axiosInstance';
+import { useSubscriptionGate } from '@/hooks/useSubscriptionGate';
+import { SubscriptionAccessLabel } from '@/components/SubscriptionAccessLabel';
 
 export default function Page() {
   const router = useRouter();
   const { t, tImgAlts, tCommon, tCommonRich, tActions, tForm } = useCustomTranslations('practice.writing.customize');
+  const { requireSubscription, isCheckingAccess } = useSubscriptionGate();
 
   const { data } = useQuery({
     queryKey: ['categories'],
-    queryFn: () =>
-      axiosInstance.get('/practice/writing/categories').then(res => res.data),
+    queryFn: () => axiosInstance.get('/practice/writing/categories').then(res => res.data),
   });
 
   const [selectedPart, setSelectedPart] = useState<1 | 2>(1);
   const [selectedTopic, setSelectedTopic] = useState<string>('random');
 
+  const [isStarting, setIsStarting] = useState(false);
+
   const startPractice = async () => {
-    const result = await axiosInstance.get('/practice/writing', {
-      params: {
-        part: selectedPart,
-        tag_id: selectedTopic === 'random' ? randomTopic() : selectedTopic,
-      },
-      validateStatus: () => true,
-    });
-    if (result.status >= 200 && result.status < 300) {
-      nProgress.start();
-      const json = result.data;
-      if (Array.isArray(json.data) && json.data.length > 0) {
-        const randomIndex = Math.floor(Math.random() * json.data.length);
-        const randomWritingId = json.data[randomIndex].writing_id;
-        localStorage.setItem('practiceWritingId', randomWritingId);
-        router.push('/practice/writing/rules/');
-      } else {
-        console.error('Нет доступных writing_id');
+    if (isStarting || isCheckingAccess) {
+      return;
+    }
+
+    setIsStarting(true);
+
+    try {
+      const canStart = await requireSubscription();
+
+      if (!canStart) {
+        return;
       }
+
+      const result = await axiosInstance.get('/practice/writing', {
+        params: {
+          part: selectedPart,
+          tag_id: selectedTopic === 'random' ? randomTopic() : selectedTopic,
+        },
+        validateStatus: () => true,
+      });
+      if (result.status >= 200 && result.status < 300) {
+        nProgress.start();
+        const json = result.data;
+        if (Array.isArray(json.data) && json.data.length > 0) {
+          const randomIndex = Math.floor(Math.random() * json.data.length);
+          const randomWritingId = json.data[randomIndex].writing_id;
+          localStorage.setItem('practiceWritingId', randomWritingId);
+          router.push('/practice/writing/rules/');
+        } else {
+          console.error('Нет доступных writing_id');
+        }
+      }
+    } finally {
+      setIsStarting(false);
     }
   };
 
@@ -116,7 +136,7 @@ export default function Page() {
 
                     {data.data
                       .find((c: any) => c.name === `writing_part_${selectedPart}`)
-                      .tags.map((tag: any) => (
+                      ?.tags?.map((tag: any) => (
                         <SelectItem value={tag.id} className='h-[50rem] px-[40rem] text-[20rem] font-medium leading-none last:rounded-b-[8rem] hover:bg-d-light-gray'>
                           {tag.name}
                         </SelectItem>
@@ -198,10 +218,12 @@ export default function Page() {
               </div>
               <button
                 onClick={startPractice}
-                className='mx-auto flex h-[63rem] w-[280rem] items-center justify-center rounded-[40rem] bg-d-green text-[20rem] font-semibold hover:bg-d-green/40'
+                disabled={isStarting || isCheckingAccess}
+                className='mx-auto flex h-[63rem] w-[280rem] items-center justify-center rounded-[40rem] bg-d-green text-[20rem] font-semibold hover:bg-d-green/40 disabled:cursor-not-allowed disabled:bg-d-gray/60 disabled:text-d-black/60'
               >
-                {tActions('continue')}
+                {isStarting || isCheckingAccess ? '...' : tActions('continue')}
               </button>
+              <SubscriptionAccessLabel className='mt-[12rem] text-center' />
             </div>
           </div>
         </div>
