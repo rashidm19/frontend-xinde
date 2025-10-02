@@ -5,6 +5,7 @@ import { PricesModal } from './PricesModal';
 import React from 'react';
 import { usePathname } from 'next/navigation';
 import { useCustomTranslations } from '@/hooks/useCustomTranslations';
+import { useSubscription } from '@/hooks/useSubscription';
 
 interface Props {
   name?: string;
@@ -14,6 +15,7 @@ interface Props {
 export const Header = ({ name, avatar }: Props) => {
   const pathname = usePathname();
   const { t, tImgAlts, tActions, tCommon } = useCustomTranslations('header');
+  const { hasActiveSubscription } = useSubscription();
 
   const links = ['/practice', '/mock', '/notes'];
 
@@ -65,29 +67,18 @@ export const Header = ({ name, avatar }: Props) => {
           </Link>
 
           <div className='flex items-center gap-x-[16rem]'>
-            {/*<a*/}
-            {/*  href='mailto:info@studybox.kz'*/}
-            {/*  className='flex h-[46rem] items-center justify-center gap-x-[8rem] rounded-[40rem] bg-d-gray px-[24rem] hover:bg-d-green/40'*/}
-            {/*>*/}
-            {/*  <img src='/images/icon_support.svg' alt='stars' className='size-[14rem]' />*/}
-            {/*  <span className='text-[14rem] font-semibold'>{t('support')}</span>*/}
-            {/*</a>*/}
+            {!hasActiveSubscription && (
+              <Dialog>
+                <DialogTrigger className='flex h-[46rem] items-center justify-center gap-x-[8rem] rounded-[40rem] bg-d-green px-[24rem] hover:bg-d-green/40'>
+                  <img src='/images/icon_stars--black.svg' alt='stars' className='size-[14rem]' />
+                  <span className='text-[14rem] font-semibold'>{tActions('upgradePlan')}</span>
+                </DialogTrigger>
 
-            <Dialog>
-              <DialogTrigger className='flex h-[46rem] items-center justify-center gap-x-[8rem] rounded-[40rem] bg-d-green px-[24rem] hover:bg-d-green/40'>
-                <img src='/images/icon_stars--black.svg' alt='stars' className='size-[14rem]' />
-                <span className='text-[14rem] font-semibold'>{tActions('upgradePlan')}</span>
-              </DialogTrigger>
-
-              <DialogContent className='fixed left-[50%] top-[50%] flex h-auto w-[1280rem] -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center'>
-                <PricesModal />
-              </DialogContent>
-            </Dialog>
-
-            {/* <Link href='' className='flex h-[46rem] items-center justify-center gap-x-[8rem] rounded-[40rem] bg-d-green px-[24rem] hover:bg-d-green/40'>
-              <img src='/images/icon_stars--black.svg' alt='stars' className='size-[14rem]' />
-              <span className='text-[14rem] font-semibold'>Upgrade plan</span>
-            </Link> */}
+                <DialogContent className='fixed left-[50%] top-[50%] flex h-auto w-[1280rem] -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center'>
+                  <PricesModal />
+                </DialogContent>
+              </Dialog>
+            )}
           </div>
         </div>
       </nav>
