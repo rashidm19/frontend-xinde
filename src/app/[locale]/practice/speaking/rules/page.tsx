@@ -1,7 +1,14 @@
+'use client';
+
 import Link from 'next/link';
-import React from 'react';
+import React, { useState } from 'react';
+import { useSubscriptionGate } from '@/hooks/useSubscriptionGate';
+import { SubscriptionAccessLabel } from '@/components/SubscriptionAccessLabel';
 
 export default function Page() {
+  const { requireSubscription, isCheckingAccess } = useSubscriptionGate();
+  const [isStarting, setIsStarting] = useState(false);
+
   return (
     <main className='min-h-screen overflow-hidden bg-d-red-secondary'>
       <div className='container relative max-w-[1440rem] px-[270rem] pb-[150rem] pt-[80rem]'>
@@ -50,10 +57,27 @@ export default function Page() {
             </p>
             <Link
               href='/practice/speaking/audio-check/'
-              className='mx-auto flex h-[63rem] w-[280rem] items-center justify-center rounded-[40rem] bg-d-green text-[20rem] font-semibold hover:bg-d-green/40'
+              onClick={async event => {
+                if (isStarting || isCheckingAccess) {
+                  event.preventDefault();
+                  return;
+                }
+
+                setIsStarting(true);
+                const canStart = await requireSubscription();
+                setIsStarting(false);
+
+                if (!canStart) {
+                  event.preventDefault();
+                }
+              }}
+              className={`mx-auto flex h-[63rem] w-[280rem] items-center justify-center rounded-[40rem] bg-d-green text-[20rem] font-semibold hover:bg-d-green/40 ${
+                isCheckingAccess || isStarting ? 'pointer-events-none cursor-wait opacity-70' : ''
+              }`}
             >
-              Continue
+              {isCheckingAccess || isStarting ? '...' : 'Continue'}
             </Link>
+            <SubscriptionAccessLabel className='mt-[12rem] text-center' />
           </div>
         </div>
       </div>

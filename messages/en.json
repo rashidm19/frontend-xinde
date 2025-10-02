@@ -64,6 +64,10 @@
     "next": "Next",
     "cancel": "Cancel"
   },
+  "subscription": {
+    "availableLabel": "Available with subscription",
+    "cancelWarning": "Your access will end on {date}."
+  },
   "form": {
     "validation": {
       "requiredField": "Required field",
@@ -170,6 +174,19 @@
       ],
       "price": "{price}<span> /{monthCount, select, 3 { 3} other {}} month</span>",
       "about": "Activated for unlimited time"
+    },
+    "promo": {
+      "label": "Promo code",
+      "placeholder": "Enter promo code (optional)",
+      "accessGranted": "Your subscription has been activated. Enjoy!",
+      "discount": "Discount applied: {amount}",
+      "total": "Total to pay: {amount}",
+      "errorDefault": "Failed to apply promo code. Please try again.",
+      "missingPaymentData": "Payment data is missing. Please contact support.",
+      "paymentSuccessTitle": "Payment confirmed",
+      "paymentSuccess": "Your subscription is active. Enjoy your studies!",
+      "paymentFailureTitle": "Payment not completed",
+      "paymentFailure": "The payment was cancelled or failed. Please try again."
     }
   },
   "notFound": {

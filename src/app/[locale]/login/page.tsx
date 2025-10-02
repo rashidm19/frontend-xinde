@@ -11,9 +11,11 @@ import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useCustomTranslations } from '@/hooks/useCustomTranslations';
 import axiosInstance from '@/lib/axiosInstance';
+import { useLocale } from 'next-intl';
 
 export default function Login() {
   const router = useRouter();
+  const locale = useLocale();
   const { t, tImgAlts, tCommon, tActions, tForm, tMessages } = useCustomTranslations('login');
 
   const formErrorRequiredField = tForm('validation.requiredField');
@@ -43,7 +45,7 @@ export default function Login() {
       const result = response.data;
       localStorage.setItem('token', result.token);
       NProgress.start();
-      router.push('/profile/');
+      router.push(`/${locale}/profile`);
     }
 
     if (response.status === 404) {

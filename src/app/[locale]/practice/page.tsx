@@ -7,6 +7,8 @@ import Link from 'next/link';
 import { useCustomTranslations } from '@/hooks/useCustomTranslations';
 import React from 'react';
 import { useProfile } from '@/hooks/useProfile';
+import { SubscriptionAccessLabel } from '@/components/SubscriptionAccessLabel';
+import { SubscriptionStatusBanner } from '@/components/SubscriptionStatusBanner';
 
 export default function Page() {
   const { t, tImgAlts, tCommon, tActions } = useCustomTranslations('practice');
@@ -25,6 +27,7 @@ export default function Page() {
       <Header name={profile?.name} avatar={profile?.avatar} />
       <main>
         <div className='container max-w-[1440rem] p-[40rem]'>
+          <SubscriptionStatusBanner className='mb-[24rem]' />
           <Tabs defaultValue='writing'>
             <TabsList className='mb-[24rem] gap-x-[8rem] rounded-[40rem] bg-white p-[8rem]'>
               {tabs.map((tab, index) => (
@@ -71,6 +74,7 @@ export default function Page() {
                 >
                   {tActions('takeTheTest')}
                 </Link>
+                <SubscriptionAccessLabel className='mt-[12rem] text-center' />
               </div>
             </TabsContent>
             <TabsContent value='reading' className='practice-tabs-shadow relative h-[738rem] overflow-hidden rounded-[16rem] bg-d-yellow-secondary p-[16rem]'>
@@ -112,6 +116,7 @@ export default function Page() {
                 >
                   {tActions('takeTheTest')}
                 </Link>
+                <SubscriptionAccessLabel className='mt-[12rem] text-center' />
               </div>
             </TabsContent>
             <TabsContent value='listening' className='practice-tabs-shadow relative h-[738rem] overflow-hidden rounded-[16rem] bg-d-mint p-[16rem]'>
@@ -153,6 +158,7 @@ export default function Page() {
                 >
                   {tActions('takeTheTest')}
                 </Link>
+                <SubscriptionAccessLabel className='mt-[12rem] text-center' />
               </div>
             </TabsContent>
             <TabsContent value='speaking' className='practice-tabs-shadow relative h-[738rem] overflow-hidden rounded-[16rem] bg-d-red-secondary p-[16rem]'>
@@ -191,6 +197,7 @@ export default function Page() {
                 >
                   {tActions('takeTheTest')}
                 </Link>
+                <SubscriptionAccessLabel className='mt-[12rem] text-center' />
               </div>
             </TabsContent>
           </Tabs>

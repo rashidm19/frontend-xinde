@@ -3,6 +3,8 @@ import createNextIntlPlugin from 'next-intl/plugin';
 
 const withNextIntl = createNextIntlPlugin();
 
+const DEFAULT_LOCALE = 'en';
+
 const nextConfig = {
   env: {
     ENVIROMENT: process.env.ENVIROMENT,
@@ -10,19 +12,19 @@ const nextConfig = {
   async redirects() {
     return [
       {
-        source: '/ru',
-        destination: '/login',
-        permanent: true,
+        source: '/',
+        destination: `/${DEFAULT_LOCALE}/profile`,
+        permanent: false,
       },
       {
         source: '/en',
-        destination: '/login',
-        permanent: true,
+        destination: '/en/profile',
+        permanent: false,
       },
       {
-        source: '/',
-        destination: '/login',
-        permanent: true,
+        source: '/ru',
+        destination: '/ru/profile',
+        permanent: false,
       },
     ];
   },

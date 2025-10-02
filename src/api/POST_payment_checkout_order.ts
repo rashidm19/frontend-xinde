@@ -1,5 +1,5 @@
 import axiosInstance from '@/lib/axiosInstance';
-import { IPaymentOrder } from '@/types/Payments';
+import { ICheckoutOrderResponse } from '@/types/Payments';
 
 interface IValues {
   service_id?: string;
@@ -8,8 +8,13 @@ interface IValues {
   promo_code?: string;
 }
 
-export const POST_payment_checkout_order = async (values: IValues): Promise<IPaymentOrder> => {
-  const { data } = await axiosInstance.post('/checkout/orders', values, {
+export const POST_payment_checkout_order = async (values: IValues): Promise<ICheckoutOrderResponse> => {
+  const payload = {
+    ...values,
+    promo_code: values.promo_code?.trim() || undefined,
+  };
+
+  const { data } = await axiosInstance.post('/checkout/orders', payload, {
     headers: {
       'Content-Type': 'application/json;charset=utf-8',
     },

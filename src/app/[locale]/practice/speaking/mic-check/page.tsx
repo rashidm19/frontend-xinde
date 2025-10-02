@@ -2,10 +2,14 @@
 
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
+import { useSubscriptionGate } from '@/hooks/useSubscriptionGate';
+import { SubscriptionAccessLabel } from '@/components/SubscriptionAccessLabel';
 
 const Mic = dynamic(() => import('./_components/Mic').then(mod => mod.default), { ssr: false });
 
 export default function Page() {
+  const { requireSubscription, isCheckingAccess } = useSubscriptionGate();
+
   return (
     <main className='min-h-screen overflow-hidden bg-d-red-secondary'>
       <div className='container relative max-w-[1440rem] px-[248rem] pb-[48rem] pt-[64rem]'>
@@ -36,10 +40,24 @@ export default function Page() {
 
           <Link
             href='/practice/speaking/test'
-            className='mx-auto flex h-[63rem] w-[280rem] items-center justify-center rounded-[40rem] bg-d-green text-[20rem] font-semibold hover:bg-d-green/40'
+            onClick={async event => {
+              if (isCheckingAccess) {
+                event.preventDefault();
+                return;
+              }
+
+              const canStart = await requireSubscription();
+              if (!canStart) {
+                event.preventDefault();
+              }
+            }}
+            className={`mx-auto flex h-[63rem] w-[280rem] items-center justify-center rounded-[40rem] bg-d-green text-[20rem] font-semibold hover:bg-d-green/40 ${
+              isCheckingAccess ? 'pointer-events-none cursor-wait opacity-70' : ''
+            }`}
           >
-            Continue
+            {isCheckingAccess ? '...' : 'Continue'}
           </Link>
+          <SubscriptionAccessLabel className='text-center' />
         </div>
       </div>
     </main>

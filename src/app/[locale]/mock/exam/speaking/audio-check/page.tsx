@@ -5,6 +5,8 @@ import React, { useEffect, useRef, useState } from 'react';
 import { AudioVisualizer } from 'react-audio-visualize';
 import Link from 'next/link';
 import axiosInstance from '@/lib/axiosInstance';
+import { useSubscriptionGate } from '@/hooks/useSubscriptionGate';
+import { SubscriptionAccessLabel } from '@/components/SubscriptionAccessLabel';
 
 export default function Page() {
   const visualizerRef = useRef<HTMLCanvasElement>(null);
@@ -12,6 +14,7 @@ export default function Page() {
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   const [currentTimestamp, setCurrentTimestamp] = useState<number>();
   const [playStatus, setPlayStatus] = useState<'paused' | 'playing'>('paused');
+  const { requireSubscription, isCheckingAccess } = useSubscriptionGate();
 
   useEffect(() => {
     const fetchAudioFile = async () => {
@@ -96,10 +99,25 @@ export default function Page() {
 
           <Link
             href='/mock/exam/speaking/mic-check/'
-            className='mx-auto flex h-[63rem] w-[280rem] items-center justify-center rounded-[40rem] bg-d-green text-[20rem] font-semibold hover:bg-d-green/40'
+            onClick={async event => {
+              if (isCheckingAccess) {
+                event.preventDefault();
+                return;
+              }
+
+              const canStart = await requireSubscription();
+
+              if (!canStart) {
+                event.preventDefault();
+              }
+            }}
+            className={`mx-auto flex h-[63rem] w-[280rem] items-center justify-center rounded-[40rem] bg-d-green text-[20rem] font-semibold hover:bg-d-green/40 ${
+              isCheckingAccess ? 'pointer-events-none cursor-wait opacity-70' : ''
+            }`}
           >
-            Continue
+            {isCheckingAccess ? '...' : 'Continue'}
           </Link>
+          <SubscriptionAccessLabel className='text-center' />
         </div>
       </div>
     </main>

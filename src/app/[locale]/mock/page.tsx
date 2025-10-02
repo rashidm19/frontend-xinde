@@ -11,6 +11,10 @@ import nProgress from 'nprogress';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { useProfile } from '@/hooks/useProfile';
+import { useSubscriptionGate } from '@/hooks/useSubscriptionGate';
+import { SubscriptionAccessLabel } from '@/components/SubscriptionAccessLabel';
+import { SubscriptionStatusBanner } from '@/components/SubscriptionStatusBanner';
+import { useSubscriptionStore } from '@/stores/subscriptionStore';
 
 const data_rows = [
   {
@@ -138,18 +142,35 @@ const data_rows = [
 export default function Page() {
   const router = useRouter();
   const { profile } = useProfile();
+  const { requireSubscription, isCheckingAccess } = useSubscriptionGate();
 
   const [isLoading, setIsLoading] = useState(false);
+  const subscription = useSubscriptionStore(state => state.subscription);
+  const hasCancellationScheduled = Boolean(subscription?.cancel_at_period_end && subscription.current_period_end);
 
   const { setMockData } = mockStore();
 
   const startMock = async () => {
+    if (isLoading || isCheckingAccess) {
+      return;
+    }
+
     setIsLoading(true);
-    const data = await POST_mock_start();
-    setMockData(data);
-    nProgress.start();
-    router.push('/mock/exam/listening/rules');
-    setIsLoading(false);
+
+    try {
+      const canStart = await requireSubscription();
+
+      if (!canStart) {
+        return;
+      }
+
+      const data = await POST_mock_start();
+      setMockData(data);
+      nProgress.start();
+      router.push('/mock/exam/listening/rules');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -157,6 +178,11 @@ export default function Page() {
       <Header name={profile?.name} avatar={profile?.avatar} />
       <main>
         <div className='container grid max-w-[1440rem] grid-cols-[1016rem,328rem] gap-x-[16rem] gap-y-[16rem] px-[40rem] pb-[150rem] pt-[40rem]'>
+          {hasCancellationScheduled && (
+            <div className='col-span-2'>
+              <SubscriptionStatusBanner className='mb-[16rem]' />
+            </div>
+          )}
           <div className='relative flex h-[420rem] w-[1016rem] items-center justify-center overflow-hidden rounded-[16rem] bg-d-violet'>
             <img
               src='/images/illustration_worm--02.png'
@@ -178,9 +204,10 @@ export default function Page() {
               <button
                 type='button'
                 onClick={startMock}
-                className='flex h-[50rem] w-[285rem] items-center justify-center rounded-[40rem] bg-d-green text-[14rem] font-semibold hover:bg-d-green/40'
+                disabled={isLoading || isCheckingAccess}
+                className='flex h-[50rem] w-[285rem] items-center justify-center rounded-[40rem] bg-d-green text-[14rem] font-semibold hover:bg-d-green/40 disabled:cursor-not-allowed disabled:bg-d-gray/60 disabled:text-d-black/60'
               >
-                {isLoading ? (
+                {isLoading || isCheckingAccess ? (
                   <svg className='size-[20rem] animate-spin text-black' xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24'>
                     <circle className='opacity-25' cx='12' cy='12' r='10' stroke='currentColor' stroke-width='4' />
                     <path
@@ -193,6 +220,7 @@ export default function Page() {
                   'Take MOCK exam'
                 )}
               </button>
+              <SubscriptionAccessLabel className='mt-[12rem] text-center text-white/90' />
             </div>
           </div>
 
