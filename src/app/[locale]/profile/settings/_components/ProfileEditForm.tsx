@@ -90,25 +90,40 @@ export const ProfileEditForm = ({ form, isChangingPassword, setIsChangingPasswor
             </FormItem>
           )}
         />
-        {/* // * Email, not-editable */}
+
+        {/* // * Region */}
         <FormField
-          name='email'
+          name='region'
           control={form.control}
           render={({ field }) => (
             <FormItem className='flex flex-col gap-y-[12rem]'>
               <div className='flex flex-row justify-between'>
-                <FormLabel className='font-poppins text-[14rem] leading-none'>{tForm('labels.email')}</FormLabel>
+                <FormLabel className='font-poppins text-[14rem] leading-none'>{tForm('labels.region')}</FormLabel>
                 <FormMessage className='font-poppins text-[10rem] leading-none text-d-red' />
               </div>
-              <FormControl>
-                <input
-                  {...field}
-                  disabled
-                  type='text'
-                  placeholder={tForm('placeholders.email')}
-                  className='h-[50rem] rounded-[8rem] bg-d-light-gray px-[18rem] text-[14rem] font-medium leading-none placeholder:text-d-black/60 focus-within:bg-white'
-                />
-              </FormControl>
+              <Select
+                onValueChange={value => field.onChange(value.toLowerCase())}
+                value={typeof field.value === 'string' ? field.value.toLowerCase() : undefined}
+                disabled={isSubmitting}
+              >
+                <FormControl>
+                  <SelectTrigger className='h-[50rem] rounded-[8rem] bg-d-light-gray px-[18rem] text-[14rem] font-medium leading-normal data-[state=open]:rounded-b-none'>
+                    <SelectValue placeholder={tForm('placeholders.select')} className='placeholder:text-d-black/60' />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent className='mt-0 max-h-[250rem] rounded-b-[40rem]'>
+                  {regionOptions.map(regionCode => (
+                    <SelectItem
+                      key={regionCode}
+                      value={regionCode}
+                      className='h-[50rem] px-[18rem] text-[14rem] font-medium leading-none last:rounded-b-[8rem] hover:bg-d-light-gray'
+                    >
+                      <span className='mr-[8rem] text-d-black/60'>{regionCode.toUpperCase()} </span>
+                      {getRegionLabel(regionCode)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </FormItem>
           )}
         />
@@ -164,39 +179,25 @@ export const ProfileEditForm = ({ form, isChangingPassword, setIsChangingPasswor
           />
         )}
 
-        {/* // * Region */}
+        {/* // * Email, not-editable */}
         <FormField
-          name='region'
+          name='email'
           control={form.control}
           render={({ field }) => (
             <FormItem className='flex flex-col gap-y-[12rem]'>
               <div className='flex flex-row justify-between'>
-                <FormLabel className='font-poppins text-[14rem] leading-none'>{tForm('labels.region')}</FormLabel>
+                <FormLabel className='font-poppins text-[14rem] leading-none'>{tForm('labels.email')}</FormLabel>
                 <FormMessage className='font-poppins text-[10rem] leading-none text-d-red' />
               </div>
-              <Select
-                onValueChange={value => field.onChange(value.toLowerCase())}
-                value={typeof field.value === 'string' ? field.value.toLowerCase() : undefined}
-                disabled={isSubmitting}
-              >
-                <FormControl>
-                  <SelectTrigger className='h-[50rem] rounded-[8rem] bg-d-light-gray px-[18rem] text-[14rem] font-medium leading-normal data-[state=open]:rounded-b-none'>
-                    <SelectValue placeholder={tForm('placeholders.select')} className='placeholder:text-d-black/60' />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent className='mt-0 max-h-[250rem] rounded-b-[40rem]'>
-                  {regionOptions.map(regionCode => (
-                    <SelectItem
-                      key={regionCode}
-                      value={regionCode}
-                      className='h-[50rem] px-[18rem] text-[14rem] font-medium leading-none last:rounded-b-[8rem] hover:bg-d-light-gray'
-                    >
-                      <span className='mr-[8rem] text-d-black/60'>{regionCode.toUpperCase()} </span>
-                      {getRegionLabel(regionCode)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <FormControl>
+                <input
+                  {...field}
+                  disabled
+                  type='text'
+                  placeholder={tForm('placeholders.email')}
+                  className='h-[50rem] rounded-[8rem] bg-d-light-gray px-[18rem] text-[14rem] font-medium leading-none placeholder:text-d-black/60 focus-within:bg-white'
+                />
+              </FormControl>
             </FormItem>
           )}
         />
