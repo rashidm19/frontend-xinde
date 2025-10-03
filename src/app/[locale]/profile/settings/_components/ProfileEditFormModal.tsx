@@ -18,6 +18,7 @@ import { useProfile } from '@/hooks/useProfile';
 import { refreshProfile, resetProfile } from '@/stores/profileStore';
 import { openConfirmationModal } from '@/stores/confirmationModalStore';
 import { ProfileAvatarManager } from './ProfileAvatarManager';
+import { useSubscription } from '@/hooks/useSubscription';
 
 const DEFAULT_REGION = 'kz';
 
@@ -36,6 +37,7 @@ export const ProfileEditFormModal = () => {
   const { tImgAlts, tCommon, tActions } = useCustomTranslations();
   const { t: tProfileSettings } = useCustomTranslations('profileSettings.profileEditForm');
   const { profile, status, setProfile: setProfileInStore } = useProfile();
+  const { hasActiveSubscription } = useSubscription();
 
   const form = useForm<ProfileEditFormValues>({
     resolver: zodResolver(profileEditFormSchema),
@@ -151,7 +153,7 @@ export const ProfileEditFormModal = () => {
 
       {/* // * Avatar, status, name, email */}
       <div className='flex items-end gap-x-[16rem]'>
-        <ProfileAvatarManager badgeLabel={tCommon('freeTrial')} />
+        <ProfileAvatarManager badgeLabel={!hasActiveSubscription ? tCommon('freeTrial') : undefined} />
         <div className='mb-[16rem] flex flex-col gap-y-[8rem]'>
           <div className='text-[24rem] font-medium leading-none'>{profile?.name}</div>
           <div className='font-poppins text-[14rem] leading-none'>{profile?.email}</div>

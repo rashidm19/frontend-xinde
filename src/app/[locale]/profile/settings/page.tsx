@@ -6,12 +6,14 @@ import { useRouter } from 'next/navigation';
 import { useCustomTranslations } from '@/hooks/useCustomTranslations';
 import { useProfile } from '@/hooks/useProfile';
 import { ProfileAvatarManager } from './_components/ProfileAvatarManager';
+import { useSubscription } from '@/hooks/useSubscription';
 
 export default function ProfileSettings() {
   const router = useRouter();
   const { tCommon, tActions } = useCustomTranslations();
 
   const { profile, status } = useProfile();
+  const { hasActiveSubscription } = useSubscription();
 
   if (!profile && (status === 'idle' || status === 'loading')) {
     return <></>;
@@ -24,7 +26,7 @@ export default function ProfileSettings() {
           <div className='flex w-[672rem] flex-col gap-y-[40rem] rounded-[16rem] bg-white p-[24rem] shadow-card'>
             {/* // * Avatar, status, name, email */}
             <div className='flex items-end gap-x-[16rem]'>
-              <ProfileAvatarManager badgeLabel={tCommon('freeTrial')} />
+              <ProfileAvatarManager badgeLabel={!hasActiveSubscription ? tCommon('freeTrial') : undefined} />
               <div className='mb-[16rem] flex flex-col gap-y-[8rem]'>
                 <div className='text-[24rem] font-medium leading-none'>{profile?.name}</div>
                 <div className='font-poppins text-[14rem] leading-none'>{profile?.email}</div>

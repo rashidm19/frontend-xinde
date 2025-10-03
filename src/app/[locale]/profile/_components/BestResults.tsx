@@ -13,12 +13,14 @@ import { ChangeLangModal } from '@/app/[locale]/profile/settings/_components/Cha
 import { getPracticeScoresStats } from '@/api/GET_stats_practice_scores';
 import { calculateIeltsOverall } from '@/lib/utils';
 import { useProfile } from '@/hooks/useProfile';
+import { useSubscription } from '@/hooks/useSubscription';
 
 export const BestResults = () => {
   const { tImgAlts, tCommon } = useCustomTranslations();
 
   const router = useRouter();
   const { profile } = useProfile();
+  const { hasActiveSubscription } = useSubscription();
 
   const { data: practiceStats, isLoading: practiceStatsLoading } = useQuery({
     queryKey: ['bestPracticeScores'],
@@ -34,9 +36,11 @@ export const BestResults = () => {
             <Avatar className='relative size-[96rem] overflow-visible rounded-full bg-d-light-gray'>
               <AvatarImage src={profile?.avatar ?? undefined} />
               <AvatarFallback className='text-[18rem]'>{profile?.name?.slice(0, 2)?.toUpperCase()}</AvatarFallback>
-              <span className='absolute left-[72rem] top-[-4rem] flex h-[34rem] w-[98rem] items-center whitespace-nowrap rounded-full bg-gradient-to-r from-d-violet to-[#6fdbfa6b] px-[20rem] text-[14rem] font-medium text-white'>
-                {tCommon('freeTrial')}
-              </span>
+              {!hasActiveSubscription ? (
+                <span className='absolute left-[72rem] top-[-4rem] flex h-[34rem] w-[98rem] items-center whitespace-nowrap rounded-full bg-gradient-to-r from-d-violet to-[#6fdbfa6b] px-[20rem] text-[14rem] font-medium text-white'>
+                  {tCommon('freeTrial')}
+                </span>
+              ) : null}
             </Avatar>
             <div className='mb-[16rem] flex flex-col gap-y-[8rem]'>
               <div className='text-[24rem] font-medium leading-none'>{profile?.name}</div>

@@ -28,7 +28,8 @@ const SPINNER = (
 export const ProfileAvatarManager = ({ badgeLabel, className }: ProfileAvatarManagerProps) => {
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   const { profile, setProfile } = useProfile();
-  const { t, tImgAlts } = useCustomTranslations('profileSettings.avatar');
+  const { t } = useCustomTranslations('profileSettings.avatar');
+  const { tImgAlts } = useCustomTranslations();
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
 
   const syncProfileAvatar = React.useCallback(
