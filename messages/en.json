@@ -178,7 +178,7 @@
     },
     "promo": {
       "label": "Promo code",
-      "placeholder": "Enter promo code (optional)",
+      "placeholder": "Enter promo code",
       "accessGranted": "Your subscription has been activated. Enjoy!",
       "discount": "Discount applied: {amount}",
       "total": "Total to pay: {amount}",

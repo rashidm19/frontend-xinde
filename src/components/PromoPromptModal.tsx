@@ -9,6 +9,7 @@ import { refreshSubscription } from '@/stores/subscriptionStore';
 import { EPAY_PROD_URL, EPAY_TEST_URL } from '@/lib/config';
 import { IPaymentOrder } from '@/types/Payments';
 import axios from 'axios';
+import { useRouter } from 'next/navigation';
 
 declare global {
   interface Window {
@@ -34,6 +35,7 @@ interface PromoPromptModalProps {
 
 export const PromoPromptModal = ({ open, planId, onClose, onBackToPlans, onDiscountUpdate, onSuccessMessage, onErrorMessage }: PromoPromptModalProps) => {
   const { t, tActions } = useCustomTranslations('pricesModal');
+  const router = useRouter();
 
   const [step, setStep] = React.useState<'prompt' | 'input'>('prompt');
   const [promoCode, setPromoCode] = React.useState('');
@@ -155,6 +157,14 @@ export const PromoPromptModal = ({ open, planId, onClose, onBackToPlans, onDisco
       if (!requiresPayment) {
         await refreshSubscription();
         onSuccessMessage?.(t('promo.accessGranted'));
+
+        const discountCoveredTotal = order?.amount !== undefined ? order.amount <= 0 : true;
+        if (discountCoveredTotal && code?.trim() && typeof window !== 'undefined') {
+          const url = new URL(window.location.href);
+          url.searchParams.set('subscribePaymentStatus', 'true');
+          router.replace(`${url.pathname}${url.search}${url.hash}`, { scroll: false });
+        }
+
         return true;
       }
 
@@ -302,7 +312,7 @@ export const PromoPromptModal = ({ open, planId, onClose, onBackToPlans, onDisco
                 type='button'
                 onClick={handleConfirmPromo}
                 disabled={processingPlanId === planId}
-                className='w-full rounded-full bg-d-green px-[24rem] py-[12rem] text-[16rem] font-semibold text-black hover:bg-d-green/80 disabled:cursor-not-allowed disabled:bg-d-gray/60 disabled:text-d-black/60 tablet:w-[160rem]'
+                className='w-full rounded-full bg-d-green px-[24rem] py-[12rem] text-[16rem] font-semibold text-black hover:bg-d-green/80 disabled:cursor-not-allowed disabled:bg-d-gray/60 disabled:text-d-black/60 tablet:w-[200rem]'
               >
                 {processingPlanId === planId ? (
                   <svg className='mx-auto size-[20rem] animate-spin text-black' xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24'>
