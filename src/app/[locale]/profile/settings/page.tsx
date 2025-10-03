@@ -7,6 +7,7 @@ import { useCustomTranslations } from '@/hooks/useCustomTranslations';
 import { useProfile } from '@/hooks/useProfile';
 import { ProfileAvatarManager } from './_components/ProfileAvatarManager';
 import { useSubscription } from '@/hooks/useSubscription';
+import { logout } from '@/lib/logout';
 
 export default function ProfileSettings() {
   const router = useRouter();
@@ -42,7 +43,7 @@ export default function ProfileSettings() {
                 type='button'
                 className='flex h-[50rem] items-center justify-center rounded-full bg-d-light-gray px-[32rem] hover:bg-d-green/40'
                 onClick={() => {
-                  localStorage.removeItem('token');
+                  logout();
                   nProgress.start();
                   router.push('/');
                 }}

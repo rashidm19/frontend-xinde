@@ -155,3 +155,5 @@ export const openSubscriptionPaywall = () => useSubscriptionStore.getState().ope
 export const closeSubscriptionPaywall = () => useSubscriptionStore.getState().closePaywall();
 
 export const setSubscriptionPaywallOpen = (open: boolean) => useSubscriptionStore.getState().setPaywallOpen(open);
+
+export const resetSubscriptionStore = () => useSubscriptionStore.getState().reset();

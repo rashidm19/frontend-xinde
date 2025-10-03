@@ -178,7 +178,7 @@
     },
     "promo": {
       "label": "Promo code",
-      "placeholder": "Enter promo code (optional)",
+      "placeholder": "Enter promo code",
       "accessGranted": "Your subscription has been activated. Enjoy!",
       "discount": "Discount applied: {amount}",
       "total": "Total to pay: {amount}",
@@ -226,6 +226,17 @@
   "registration": {
     "confirmationTitle": "Confirmation",
     "confirmationMessage": "We have sent a confirmation email to your email address",
+    "resend": {
+      "title": "Didn’t receive the email?",
+      "description": "Press the button below to resend the confirmation message. Please also check your spam folder.",
+      "emailLabel": "Email address",
+      "emailPlaceholder": "Enter your email",
+      "button": "Resend email",
+      "success": "The confirmation email has been sent. Please check your inbox and spam folder.",
+      "userNotFound": "Account not found or already activated. Please verify the email address.",
+      "defaultError": "Unable to resend the email. Please try again later.",
+      "cooldown": "You can send another email in {seconds} seconds."
+    },
     "createAccountTitle": "Create your account",
     "userAgreement": "user agreement",
     "alreadyHaveAccount": "Already have an account? <span>Log in</span>"
@@ -233,7 +244,22 @@
   "login": {
     "title": "Log into your account",
     "forgotPassword": "Forgot your password?",
-    "dontHaveAccount": "Don’t have an account? <span>Sign up</span>"
+    "dontHaveAccount": "Don’t have an account? <span>Sign up</span>",
+    "google": {
+      "button": "Continue with Google",
+      "errors": {
+        "default": "Unable to sign in with Google. Please try again later.",
+        "script_error": "Google sign-in is temporarily unavailable. Please try again later.",
+        "missing_client": "Google sign-in is not configured.",
+        "invalid_audience": "Google authentication is misconfigured. Please contact support.",
+        "google_payload_incomplete": "Google did not return the required data. Please try again.",
+        "invalid_token": "The Google session has expired. Please try again.",
+        "email_not_verified": "Your Google email address is not verified.",
+        "USER_ALREADY_LINKED": "Another StudyBox account is already linked to this Google account.",
+        "google_service_unavailable": "Google services are temporarily unavailable. Please try again later.",
+        "google_auth_failed": "Google authentication failed. Please try again."
+      }
+    }
   },
   "passwordRecovery": {
     "title": "Password recovery",

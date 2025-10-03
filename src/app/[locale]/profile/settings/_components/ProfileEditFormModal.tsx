@@ -15,10 +15,11 @@ import { profileEditFormSchema, ProfileEditFormValues } from './profileEditSchem
 import { deleteProfile, ProfileUpdateRequest, ProfileUpdateResponse } from '@/api/profile';
 import { regionSchema } from '@/types/types';
 import { useProfile } from '@/hooks/useProfile';
-import { refreshProfile, resetProfile } from '@/stores/profileStore';
+import { refreshProfile } from '@/stores/profileStore';
 import { openConfirmationModal } from '@/stores/confirmationModalStore';
 import { ProfileAvatarManager } from './ProfileAvatarManager';
 import { useSubscription } from '@/hooks/useSubscription';
+import { logout } from '@/lib/logout';
 
 const DEFAULT_REGION = 'kz';
 
@@ -81,8 +82,7 @@ export const ProfileEditFormModal = () => {
   const deleteAccountMutation = useMutation<void, Error>({
     mutationFn: deleteProfile,
     onSuccess: () => {
-      localStorage.removeItem('token');
-      resetProfile();
+      logout();
       closeRef.current?.click();
       nProgress.start();
       router.push('/');
@@ -195,7 +195,7 @@ export const ProfileEditFormModal = () => {
           <button
             type='button'
             onClick={() => {
-              localStorage.removeItem('token');
+              logout();
               nProgress.start();
               router.push('/');
             }}
