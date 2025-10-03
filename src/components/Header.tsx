@@ -2,6 +2,7 @@ import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Dialog, DialogContent, DialogTrigger } from './ui/dialog';
 import Link from 'next/link';
 import { PricesModal } from './PricesModal';
+import { PromoPromptModal } from './PromoPromptModal';
 import React from 'react';
 import { usePathname } from 'next/navigation';
 import { useCustomTranslations } from '@/hooks/useCustomTranslations';
@@ -17,7 +18,44 @@ export const Header = ({ name, avatar }: Props) => {
   const { t, tImgAlts, tActions, tCommon } = useCustomTranslations('header');
   const { hasActiveSubscription } = useSubscription();
 
+  const [isPricesModalOpen, setPricesModalOpen] = React.useState(false);
+  const [isPromoModalOpen, setPromoModalOpen] = React.useState(false);
+  const [selectedPlanId, setSelectedPlanId] = React.useState<string | null>(null);
+  const [planDiscounts, setPlanDiscounts] = React.useState<Record<string, { amount: number; discount: number; currency: string }>>({});
+  const [promoMessage, setPromoMessage] = React.useState<string | null>(null);
+  const [promoError, setPromoError] = React.useState<string | null>(null);
+
   const links = ['/practice', '/mock', '/notes'];
+
+  const handlePlanSelect = (planId: string) => {
+    setSelectedPlanId(planId);
+    setPromoModalOpen(true);
+    setPricesModalOpen(false);
+    setPromoMessage(null);
+    setPromoError(null);
+  };
+
+  const handlePricesModalOpenChange = (open: boolean) => {
+    setPricesModalOpen(open);
+
+    if (open) {
+      setPromoModalOpen(false);
+      setPromoError(null);
+    }
+  };
+
+  const handlePromoModalClose = () => {
+    setPromoModalOpen(false);
+    setSelectedPlanId(null);
+  };
+
+  const handleSuccessMessage = (message: string | null) => {
+    setPromoMessage(message);
+
+    if (message) {
+      setPricesModalOpen(true);
+    }
+  };
 
   return (
     <header className='h-[93rem] rounded-b-[32rem] bg-white'>
@@ -68,20 +106,39 @@ export const Header = ({ name, avatar }: Props) => {
 
           <div className='flex items-center gap-x-[16rem]'>
             {!hasActiveSubscription && (
-              <Dialog>
-                <DialogTrigger className='flex h-[46rem] items-center justify-center gap-x-[8rem] rounded-[40rem] bg-d-green px-[24rem] hover:bg-d-green/40'>
+              <Dialog open={isPricesModalOpen} onOpenChange={handlePricesModalOpenChange}>
+                <DialogTrigger
+                  className='flex h-[46rem] items-center justify-center gap-x-[8rem] rounded-[40rem] bg-d-green px-[24rem] hover:bg-d-green/40'
+                  onClick={() => {
+                    setPromoMessage(null);
+                    setPromoError(null);
+                  }}
+                >
                   <img src='/images/icon_stars--black.svg' alt='stars' className='size-[14rem]' />
                   <span className='text-[14rem] font-semibold'>{tActions('upgradePlan')}</span>
                 </DialogTrigger>
 
                 <DialogContent className='fixed left-[50%] top-[50%] flex h-auto w-[1280rem] -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center'>
-                  <PricesModal />
+                  <PricesModal onSelectPlan={handlePlanSelect} promoMessage={promoMessage} promoError={promoError} planDiscounts={planDiscounts} />
                 </DialogContent>
               </Dialog>
             )}
           </div>
         </div>
       </nav>
+
+      <PromoPromptModal
+        open={isPromoModalOpen}
+        planId={selectedPlanId}
+        onClose={handlePromoModalClose}
+        onBackToPlans={() => {
+          handlePromoModalClose();
+          setPricesModalOpen(true);
+        }}
+        onDiscountUpdate={(planId, info) => setPlanDiscounts(prev => ({ ...prev, [planId]: info }))}
+        onSuccessMessage={handleSuccessMessage}
+        onErrorMessage={setPromoError}
+      />
     </header>
   );
 };
