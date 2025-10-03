@@ -14,6 +14,7 @@ import { getPracticeScoresStats } from '@/api/GET_stats_practice_scores';
 import { calculateIeltsOverall } from '@/lib/utils';
 import { useProfile } from '@/hooks/useProfile';
 import { useSubscription } from '@/hooks/useSubscription';
+import { logout } from '@/lib/logout';
 
 export const BestResults = () => {
   const { tImgAlts, tCommon } = useCustomTranslations();
@@ -72,7 +73,7 @@ export const BestResults = () => {
               type='button'
               className='flex size-[46rem] items-center justify-center rounded-full bg-d-light-gray hover:bg-d-green/40'
               onClick={() => {
-                localStorage.removeItem('token');
+                logout();
                 nProgress.start();
                 router.push('/');
               }}

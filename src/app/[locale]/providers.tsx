@@ -1,14 +1,13 @@
 'use client';
 
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 
 import { GlobalConfirmationModal } from '@/components/GlobalConfirmationModal';
 import { GlobalSubscriptionPaywall } from '@/components/GlobalSubscriptionPaywall';
 import { SubscriptionInitializer } from '@/components/SubscriptionInitializer';
 import { SubscriptionPaymentStatusModal } from '@/components/SubscriptionPaymentStatusModal';
-
-const queryClient = new QueryClient();
+import { queryClient } from '@/lib/queryClient';
 
 export default function Providers({
   children,
