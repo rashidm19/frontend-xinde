@@ -226,6 +226,17 @@
   "registration": {
     "confirmationTitle": "Confirmation",
     "confirmationMessage": "We have sent a confirmation email to your email address",
+    "resend": {
+      "title": "Didn’t receive the email?",
+      "description": "Press the button below to resend the confirmation message. Please also check your spam folder.",
+      "emailLabel": "Email address",
+      "emailPlaceholder": "Enter your email",
+      "button": "Resend email",
+      "success": "The confirmation email has been sent. Please check your inbox and spam folder.",
+      "userNotFound": "Account not found or already activated. Please verify the email address.",
+      "defaultError": "Unable to resend the email. Please try again later.",
+      "cooldown": "You can send another email in {seconds} seconds."
+    },
     "createAccountTitle": "Create your account",
     "userAgreement": "user agreement",
     "alreadyHaveAccount": "Already have an account? <span>Log in</span>"

@@ -45,6 +45,78 @@ export default function Registration() {
     },
   });
 
+  const watchedEmail = form.watch('email');
+  const [resendEmail, setResendEmail] = React.useState('');
+  const [isResending, setIsResending] = React.useState(false);
+  const [resendErrorMessage, setResendErrorMessage] = React.useState<string | null>(null);
+  const [cooldown, setCooldown] = React.useState(0);
+
+  React.useEffect(() => {
+    if (form.formState.isSubmitSuccessful) {
+      setResendEmail(watchedEmail);
+    }
+  }, [form.formState.isSubmitSuccessful, watchedEmail]);
+
+  React.useEffect(() => {
+    if (cooldown <= 0) {
+      return;
+    }
+
+    const timer = window.setInterval(() => {
+      setCooldown(prev => {
+        if (prev <= 1) {
+          window.clearInterval(timer);
+          return 0;
+        }
+
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => window.clearInterval(timer);
+  }, [cooldown]);
+
+  const handleResendVerification = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    if (cooldown > 0) {
+      return;
+    }
+
+    if (!resendEmail.trim()) {
+      setResendErrorMessage(tForm('validation.requiredField'));
+      // setResendSuccessMessage(null);
+      return;
+    }
+
+    setResendErrorMessage(null);
+    // setResendSuccessMessage(null);
+    setIsResending(true);
+
+    try {
+      const response = await axiosInstance.post(
+        '/auth/resend-verification',
+        { email: resendEmail.trim() },
+        {
+          validateStatus: () => true,
+        }
+      );
+
+      if (response.status === 200) {
+        // setResendSuccessMessage(t('resend.success'));
+        setCooldown(60);
+      } else if (response.status === 400) {
+        setResendErrorMessage(t('resend.userNotFound'));
+      } else {
+        setResendErrorMessage(t('resend.defaultError'));
+      }
+    } catch (error) {
+      setResendErrorMessage(t('resend.defaultError'));
+    } finally {
+      setIsResending(false);
+    }
+  };
+
   async function onSubmit(values: z.infer<typeof formSchema>) {
     const req = new FormData();
     req.append('name', values.name);
@@ -92,10 +164,39 @@ export default function Registration() {
               <div className='flex flex-col gap-y-[32rem]'>
                 <h1 className='text-center font-poppins text-[40rem] font-semibold leading-none tracking-[-2rem]'>{t('confirmationTitle')}</h1>
                 <p className='text-center text-[18rem] font-medium leading-none'>{t('confirmationMessage')}</p>
+
+                <Link href='/login' className='mx-auto flex h-[54rem] w-full items-center justify-center gap-x-[24rem] rounded-full bg-d-green hover:bg-d-green/40'>
+                  <span className='text-[18rem] font-medium leading-none'>{tActions('login')}</span>
+                </Link>
+
+                <div className='flex flex-col gap-y-[20rem]'>
+                  <div className='flex flex-col gap-y-[12rem]'>
+                    <h2 className='text-center font-poppins text-[24rem] font-semibold leading-none'>{t('resend.title')}</h2>
+                    <p className='text-center text-[16rem] leading-tight text-d-black/60'>{t('resend.description')}</p>
+                  </div>
+                  <form onSubmit={handleResendVerification} className='flex flex-col gap-y-[12rem]'>
+                    {resendErrorMessage ? <p className='text-center text-[14rem] font-medium leading-none text-d-red'>{resendErrorMessage}</p> : null}
+                    <button
+                      type='submit'
+                      className='flex h-[54rem] w-full items-center justify-center gap-x-[16rem] rounded-full border-d-light-gray bg-d-light-gray text-[18rem] font-medium leading-none text-d-black hover:bg-d-green/40 disabled:border-d-light-gray disabled:text-d-black/60'
+                      disabled={isResending || cooldown > 0}
+                    >
+                      <span>{t('resend.button')}</span>
+                      {isResending ? (
+                        <svg className='size-[20rem] animate-spin text-black' xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24'>
+                          <circle className='opacity-25' cx='12' cy='12' r='10' stroke='currentColor' stroke-width='4' />
+                          <path
+                            className='opacity-75'
+                            fill='currentColor'
+                            d='M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z'
+                          />
+                        </svg>
+                      ) : null}
+                    </button>
+                    {cooldown > 0 ? <p className='text-center text-[14rem] leading-none text-d-black/60'>{t('resend.cooldown', { seconds: cooldown })}</p> : null}
+                  </form>
+                </div>
               </div>
-              <Link href='/login' className='mx-auto flex h-[54rem] w-[428rem] items-center justify-center gap-x-[24rem] rounded-full bg-d-green hover:bg-d-green/40'>
-                <span className='text-[18rem] font-medium leading-none'>{tActions('ok')}</span>
-              </Link>
             </div>
           </div>
         </section>
