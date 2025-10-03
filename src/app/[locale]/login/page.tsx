@@ -1,5 +1,6 @@
 'use client';
 
+import React from 'react';
 import * as NProgress from 'nprogress';
 
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
@@ -12,11 +13,26 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useCustomTranslations } from '@/hooks/useCustomTranslations';
 import axiosInstance from '@/lib/axiosInstance';
 import { useLocale } from 'next-intl';
+import { GoogleLoginButton } from '@/components/auth/GoogleLoginButton';
+import { GoogleLoginError, postAuthLoginGoogle } from '@/api/POST_auth_login_google';
 
 export default function Login() {
   const router = useRouter();
   const locale = useLocale();
   const { t, tImgAlts, tCommon, tActions, tForm, tMessages } = useCustomTranslations('login');
+  const translateGoogleError = React.useCallback(
+    (key: string) => {
+      try {
+        return t(`google.errors.${key}` as any);
+      } catch (error) {
+        return t('google.errors.default' as any);
+      }
+    },
+    [t]
+  );
+
+  const [googleError, setGoogleError] = React.useState<string | null>(null);
+  const [googleProcessing, setGoogleProcessing] = React.useState(false);
 
   const formErrorRequiredField = tForm('validation.requiredField');
 
@@ -52,6 +68,83 @@ export default function Login() {
       form.setError('email', { message: tMessages('accountNoExist') });
     }
   }
+
+  const GOOGLE_ERROR_CODE_TO_KEY: Record<string, string> = React.useMemo(
+    () => ({
+      invalid_audience: 'invalid_audience',
+      google_payload_incomplete: 'google_payload_incomplete',
+      invalid_token: 'invalid_token',
+      email_not_verified: 'email_not_verified',
+      USER_ALREADY_LINKED: 'USER_ALREADY_LINKED',
+      google_service_unavailable: 'google_service_unavailable',
+      google_auth_failed: 'google_auth_failed',
+    }),
+    []
+  );
+
+  const resolveGoogleErrorKey = React.useCallback(
+    (error: GoogleLoginError): string => {
+      if (error.code && GOOGLE_ERROR_CODE_TO_KEY[error.code]) {
+        return GOOGLE_ERROR_CODE_TO_KEY[error.code];
+      }
+
+      if (error.status === 503) {
+        return 'google_service_unavailable';
+      }
+
+      if (error.status === 409) {
+        return 'USER_ALREADY_LINKED';
+      }
+
+      if (error.status === 401) {
+        if (error.code && GOOGLE_ERROR_CODE_TO_KEY[error.code]) {
+          return GOOGLE_ERROR_CODE_TO_KEY[error.code];
+        }
+        return 'invalid_token';
+      }
+
+      if (error.status === 400) {
+        if (error.code && GOOGLE_ERROR_CODE_TO_KEY[error.code]) {
+          return GOOGLE_ERROR_CODE_TO_KEY[error.code];
+        }
+        return 'invalid_audience';
+      }
+
+      return 'default';
+    },
+    [GOOGLE_ERROR_CODE_TO_KEY]
+  );
+
+  const handleGoogleCredential = React.useCallback(
+    async (credential: string) => {
+      setGoogleProcessing(true);
+      setGoogleError(null);
+
+      try {
+        const result = await postAuthLoginGoogle({ token: credential });
+        localStorage.setItem('token', result.token);
+        NProgress.start();
+        router.push(`/${locale}/profile`);
+      } catch (error) {
+        if (error instanceof GoogleLoginError) {
+          const key = resolveGoogleErrorKey(error);
+          setGoogleError(translateGoogleError(key));
+        } else {
+          setGoogleError(translateGoogleError('default'));
+        }
+      } finally {
+        setGoogleProcessing(false);
+      }
+    },
+    [locale, resolveGoogleErrorKey, router, translateGoogleError]
+  );
+
+  const handleGoogleInitError = React.useCallback(
+    (errorKey: string) => {
+      setGoogleError(translateGoogleError(errorKey));
+    },
+    [translateGoogleError]
+  );
 
   return (
     <main>
@@ -145,16 +238,27 @@ export default function Login() {
                 </Link>
               </div>
 
-              {/* // * Submit & Google Auth */}
-              {/* <div className='mx-auto flex flex-col gap-y-[20rem]'>
-                <button className='flex h-[54rem] w-[428rem] items-center justify-center gap-x-[24rem] rounded-full bg-d-light-gray hover:bg-d-green/40'>
-                  <img src='/images/icon_google.svg' className='size-[20rem]' alt='google auth' />
-                  <span className='text-[18rem] font-medium leading-none'>Continue with Google</span>
-                </button>
-                <Link href='/registration' className='text-center text-[18rem] leading-none text-d-black/60'>
-                  Don’t have an account? <span className='text-d-black'>Sign up</span>
-                </Link>
-              </div> */}
+              <div className='mx-auto flex w-[428rem] flex-col gap-y-[12rem]'>
+                <GoogleLoginButton
+                  label={t('google.button')}
+                  onCredential={handleGoogleCredential}
+                  onError={handleGoogleInitError}
+                  disabled={googleProcessing || form.formState.isSubmitting}
+                />
+                {googleProcessing ? (
+                  <div className='flex justify-center'>
+                    <svg className='size-[20rem] animate-spin text-d-black/80' xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24'>
+                      <circle className='opacity-25' cx='12' cy='12' r='10' stroke='currentColor' strokeWidth='4' />
+                      <path
+                        className='opacity-75'
+                        fill='currentColor'
+                        d='M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z'
+                      />
+                    </svg>
+                  </div>
+                ) : null}
+                {googleError ? <p className='text-center text-[14rem] font-medium leading-none text-d-red'>{googleError}</p> : null}
+              </div>
             </form>
           </Form>
         </div>

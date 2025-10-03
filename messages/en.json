@@ -233,7 +233,22 @@
   "login": {
     "title": "Log into your account",
     "forgotPassword": "Forgot your password?",
-    "dontHaveAccount": "Don’t have an account? <span>Sign up</span>"
+    "dontHaveAccount": "Don’t have an account? <span>Sign up</span>",
+    "google": {
+      "button": "Continue with Google",
+      "errors": {
+        "default": "Unable to sign in with Google. Please try again later.",
+        "script_error": "Google sign-in is temporarily unavailable. Please try again later.",
+        "missing_client": "Google sign-in is not configured.",
+        "invalid_audience": "Google authentication is misconfigured. Please contact support.",
+        "google_payload_incomplete": "Google did not return the required data. Please try again.",
+        "invalid_token": "The Google session has expired. Please try again.",
+        "email_not_verified": "Your Google email address is not verified.",
+        "USER_ALREADY_LINKED": "Another StudyBox account is already linked to this Google account.",
+        "google_service_unavailable": "Google services are temporarily unavailable. Please try again later.",
+        "google_auth_failed": "Google authentication failed. Please try again."
+      }
+    }
   },
   "passwordRecovery": {
     "title": "Password recovery",

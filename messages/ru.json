@@ -231,7 +231,22 @@
   "login": {
     "title": "Войти",
     "forgotPassword": "Забыли пароль?",
-    "dontHaveAccount": "Нет аккаунта? <span>Зарегистрироваться</span>"
+    "dontHaveAccount": "Нет аккаунта? <span>Зарегистрироваться</span>",
+    "google": {
+      "button": "Продолжить с Google",
+      "errors": {
+        "default": "Не удалось войти через Google. Попробуйте позже.",
+        "script_error": "Сервис входа Google временно недоступен. Попробуйте позже.",
+        "missing_client": "Вход через Google не сконфигурирован.",
+        "invalid_audience": "Настройки Google-авторизации некорректны. Обратитесь в поддержку.",
+        "google_payload_incomplete": "Google не вернул необходимые данные. Попробуйте еще раз.",
+        "invalid_token": "Сессия Google истекла. Попробуйте еще раз.",
+        "email_not_verified": "Ваш Google-адрес электронной почты не подтвержден.",
+        "USER_ALREADY_LINKED": "Другая учетная запись StudyBox уже связана с этим Google-аккаунтом.",
+        "google_service_unavailable": "Сервисы Google временно недоступны. Попробуйте позже.",
+        "google_auth_failed": "Произошла ошибка при аутентификации Google. Попробуйте еще раз."
+      }
+    }
   },
   "passwordRecovery": {
     "title": "Восстановление пароля",
