@@ -239,7 +239,7 @@ export const PromoPromptModal = ({ open, planId, onClose, onBackToPlans, onDisco
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className='fixed left-1/2 top-1/2 flex w-[90vw] max-w-[420rem] -translate-x-1/2 -translate-y-1/2 flex-col gap-y-[20rem] rounded-[24rem] bg-white p-[32rem] text-center shadow-lg'>
+      <DialogContent className='fixed left-1/2 top-1/2 flex w-[90vw] max-w-[520rem] -translate-x-1/2 -translate-y-1/2 flex-col gap-y-[20rem] rounded-[24rem] bg-white p-[32rem] text-center shadow-lg'>
         {step === 'prompt' ? (
           <>
             <DialogHeader>
@@ -250,16 +250,9 @@ export const PromoPromptModal = ({ open, planId, onClose, onBackToPlans, onDisco
             <div className='mt-[12rem] flex flex-col gap-[12rem] tablet:flex-row tablet:justify-center tablet:gap-[16rem]'>
               <button
                 type='button'
-                onClick={handlePromoYes}
-                className='w-full rounded-full bg-d-green px-[24rem] py-[12rem] text-[16rem] font-semibold text-black hover:bg-d-green/80 tablet:w-[160rem]'
-              >
-                {t('promo.answerYes')}
-              </button>
-              <button
-                type='button'
                 onClick={handleNoPromo}
                 disabled={isAnswerNoPending || processingPlanId === planId}
-                className='w-full rounded-full border border-d-light-gray px-[24rem] py-[12rem] text-[16rem] font-semibold text-d-black hover:border-d-green disabled:cursor-not-allowed disabled:border-d-light-gray disabled:text-d-black/60 tablet:w-[160rem]'
+                className='w-full rounded-full bg-d-green px-[24rem] py-[12rem] text-[16rem] font-semibold text-black hover:bg-d-green/80 disabled:cursor-not-allowed tablet:w-[200rem]'
               >
                 {isAnswerNoPending ? (
                   <svg className='mx-auto size-[20rem] animate-spin text-d-black' xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24'>
@@ -273,6 +266,14 @@ export const PromoPromptModal = ({ open, planId, onClose, onBackToPlans, onDisco
                 ) : (
                   t('promo.answerNo')
                 )}
+              </button>
+
+              <button
+                type='button'
+                onClick={handlePromoYes}
+                className='w-full rounded-full border border-d-light-gray px-[24rem] py-[12rem] text-[16rem] font-semibold text-d-black hover:border-d-green disabled:border-d-light-gray disabled:text-d-black/60 tablet:w-[160rem]'
+              >
+                {t('promo.answerYes')}
               </button>
             </div>
           </>

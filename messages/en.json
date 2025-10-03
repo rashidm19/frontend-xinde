@@ -188,7 +188,7 @@
       "inputTitle": "Enter your promo code",
       "inputHint": "Apply the promo code below to activate your discount.",
       "answerYes": "Yes",
-      "answerNo": "No",
+      "answerNo": "Continue without",
       "confirm": "Confirm purchase",
       "paymentSuccessTitle": "Payment confirmed",
       "paymentSuccess": "Your subscription is active. Enjoy your studies!",
