@@ -137,7 +137,8 @@
     "bookmark": "Закладка",
     "cross": "Крестик",
     "start": "Начать",
-    "globe": "Глобус"
+    "globe": "Глобус",
+    "remove": "Удалить"
   },
   "header": {
     "menu": {
@@ -309,6 +310,16 @@
     }
   },
   "profileSettings": {
+    "avatar": {
+      "upload": "Загрузить аватар",
+      "uploading": "Загрузка...",
+      "removing": "Удаление...",
+      "errors": {
+        "invalidType": "Поддерживаются только файлы изображений.",
+        "uploadFailed": "Не удалось обновить аватар. Попробуйте ещё раз.",
+        "removeFailed": "Не удалось удалить аватар. Попробуйте ещё раз."
+      }
+    },
     "profileEditForm": {
       "title": "Profile editing",
       "deleteAccount": {

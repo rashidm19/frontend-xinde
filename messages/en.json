@@ -139,7 +139,8 @@
     "bookmark": "Bookmark",
     "cross": "Cross",
     "start": "Start",
-    "globe": "Globe"
+    "globe": "Globe",
+    "remove": "Remove"
   },
   "header": {
     "menu": {
@@ -311,6 +312,16 @@
     }
   },
   "profileSettings": {
+    "avatar": {
+      "upload": "Upload avatar",
+      "uploading": "Uploading...",
+      "removing": "Removing...",
+      "errors": {
+        "invalidType": "Only image files are supported.",
+        "uploadFailed": "Failed to update avatar. Please try again.",
+        "removeFailed": "Failed to remove avatar. Please try again."
+      }
+    },
     "profileEditForm": {
       "title": "Profile editing",
       "deleteAccount": {

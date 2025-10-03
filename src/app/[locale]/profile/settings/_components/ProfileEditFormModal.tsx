@@ -1,7 +1,5 @@
 'use client';
 
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-
 import { DialogClose } from '@/components/ui/dialog';
 import { ProfileEditForm } from './ProfileEditForm';
 import React, { useEffect, useRef, useState } from 'react';
@@ -19,6 +17,7 @@ import { regionSchema } from '@/types/types';
 import { useProfile } from '@/hooks/useProfile';
 import { refreshProfile, resetProfile } from '@/stores/profileStore';
 import { openConfirmationModal } from '@/stores/confirmationModalStore';
+import { ProfileAvatarManager } from './ProfileAvatarManager';
 
 const DEFAULT_REGION = 'kz';
 
@@ -152,13 +151,7 @@ export const ProfileEditFormModal = () => {
 
       {/* // * Avatar, status, name, email */}
       <div className='flex items-end gap-x-[16rem]'>
-        <Avatar className='relative size-[96rem] overflow-visible rounded-full bg-d-light-gray'>
-          <AvatarImage src={profile?.avatar ?? undefined} />
-          <AvatarFallback className='text-[18rem]'>{profile?.name?.slice(0, 2)?.toUpperCase()}</AvatarFallback>
-          <span className='absolute left-[72rem] top-[-4rem] flex h-[34rem] w-[98rem] items-center whitespace-nowrap rounded-full bg-gradient-to-r from-d-violet to-[#6fdbfa6b] px-[20rem] text-[14rem] font-medium text-white'>
-            {tCommon('freeTrial')}
-          </span>
-        </Avatar>
+        <ProfileAvatarManager badgeLabel={tCommon('freeTrial')} />
         <div className='mb-[16rem] flex flex-col gap-y-[8rem]'>
           <div className='text-[24rem] font-medium leading-none'>{profile?.name}</div>
           <div className='font-poppins text-[14rem] leading-none'>{profile?.email}</div>
