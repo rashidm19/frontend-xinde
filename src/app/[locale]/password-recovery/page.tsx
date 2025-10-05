@@ -80,7 +80,7 @@ export default function PasswordRecovery() {
               <div className='flex justify-between'>
                 <Link href='/login' className='flex items-center gap-x-[8rem]'>
                   <img src='/images/icon_back.svg' alt={tImgAlts('back')} className='h-auto w-[16rem]' />
-                  <span className='text-[18rem] font-medium leading-tight text-d-black/60'>{tActions('ok')}</span>
+                  <span className='text-[18rem] font-medium leading-tight text-d-black/60'>{tActions('back')}</span>
                 </Link>
                 <figure className='flex items-center gap-x-[6rem]'>
                   <img src='/images/logo.svg' className='size-[35rem]' alt={tImgAlts('logo')} />
