@@ -15,11 +15,15 @@ import axiosInstance from '@/lib/axiosInstance';
 import { useLocale } from 'next-intl';
 import { GoogleLoginButton } from '@/components/auth/GoogleLoginButton';
 import { GoogleLoginError, postAuthLoginGoogle } from '@/api/POST_auth_login_google';
+import { resetProfile } from '@/stores/profileStore';
 
 export default function Login() {
   const router = useRouter();
   const locale = useLocale();
   const { t, tImgAlts, tCommon, tActions, tForm, tMessages } = useCustomTranslations('login');
+  const handleBackClick = React.useCallback(() => {
+    window.location.assign('https://studybox.kz');
+  }, []);
   const translateGoogleError = React.useCallback(
     (key: string) => {
       try {
@@ -60,6 +64,7 @@ export default function Login() {
     if (response.status >= 200 && response.status < 300) {
       const result = response.data;
       localStorage.setItem('token', result.token);
+      resetProfile();
       NProgress.start();
       router.push(`/${locale}/profile`);
     }
@@ -123,6 +128,7 @@ export default function Login() {
       try {
         const result = await postAuthLoginGoogle({ token: credential });
         localStorage.setItem('token', result.token);
+        resetProfile();
         NProgress.start();
         router.push(`/${locale}/profile`);
       } catch (error) {
@@ -155,7 +161,7 @@ export default function Login() {
             <form onSubmit={form.handleSubmit(onSubmit)} className='flex w-[520rem] flex-col gap-y-[30rem] rounded-[24rem] bg-white p-[40rem] shadow-card'>
               {/* // * Go back & Logo */}
               <div className='flex justify-between'>
-                <button type='button' onClick={() => router.back()} className='flex items-center gap-x-[8rem]'>
+                <button type='button' onClick={handleBackClick} className='flex items-center gap-x-[8rem]'>
                   <img src='/images/icon_back.svg' alt={tImgAlts('back')} className='h-auto w-[16rem]' />
                   <span className='text-[18rem] font-medium leading-tight text-d-black/60'>{tActions('back')}</span>
                 </button>
