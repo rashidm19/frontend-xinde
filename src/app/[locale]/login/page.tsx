@@ -15,6 +15,7 @@ import axiosInstance from '@/lib/axiosInstance';
 import { useLocale } from 'next-intl';
 import { GoogleLoginButton } from '@/components/auth/GoogleLoginButton';
 import { GoogleLoginError, postAuthLoginGoogle } from '@/api/POST_auth_login_google';
+import { resetProfile } from '@/stores/profileStore';
 
 export default function Login() {
   const router = useRouter();
@@ -60,6 +61,7 @@ export default function Login() {
     if (response.status >= 200 && response.status < 300) {
       const result = response.data;
       localStorage.setItem('token', result.token);
+      resetProfile();
       NProgress.start();
       router.push(`/${locale}/profile`);
     }
@@ -123,6 +125,7 @@ export default function Login() {
       try {
         const result = await postAuthLoginGoogle({ token: credential });
         localStorage.setItem('token', result.token);
+        resetProfile();
         NProgress.start();
         router.push(`/${locale}/profile`);
       } catch (error) {
