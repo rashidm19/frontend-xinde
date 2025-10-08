@@ -5,7 +5,6 @@ import { useEffect, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 
 import { GET_practice_writing_feedback_id } from '@/api/GET_practice_writing_feedback_id';
-import { HeaderDuringTest } from '@/components/HeaderDuringTest';
 import { useCustomTranslations } from '@/hooks/useCustomTranslations';
 import type {
   WritingBreakdownItem,
@@ -90,8 +89,6 @@ export default function Page({ params }: { params: { id: string } }) {
 
   return (
     <>
-      <HeaderDuringTest title={t('title')} tag={tCommon('writing')} />
-
       {feedbackStatus === 'pending' && (
         <StateContainer tone='info' title={t('evaluating')} description='We will notify you as soon as your band score is ready.' />
       )}

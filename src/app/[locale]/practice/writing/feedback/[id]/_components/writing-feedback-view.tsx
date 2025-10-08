@@ -1,14 +1,27 @@
 'use client';
 
-import { type KeyboardEvent, type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { type KeyboardEvent, type ReactNode, type UIEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { animate, AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import type { LucideIcon } from 'lucide-react';
-import { ArrowRight, BookOpenCheck, CheckCircle2, ChevronRight, FileText, Lightbulb, Sparkles, X } from 'lucide-react';
+import {
+  ArrowLeft,
+  ArrowRight,
+  BookOpenCheck,
+  CheckCircle2,
+  ChevronRight,
+  FileText,
+  Info,
+  Lightbulb,
+  LogOut,
+  Sparkles,
+  X,
+} from 'lucide-react';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
 
 import { cn } from '@/lib/utils';
 import type { WritingFeedbackPartKey } from '@/types/WritingFeedback';
+import { useRouter } from 'next/navigation';
 
 type ModalKey = 'criteria' | 'summary' | 'task' | 'ideal';
 
@@ -107,6 +120,7 @@ const badgeByScore = (score: number | null) => {
 };
 
 export function WritingFeedbackView({ data, activePart, partOptions, onPartChange }: WritingFeedbackViewProps) {
+  const router = useRouter();
   const shouldReduceMotion = useReducedMotion();
   const [openModal, setOpenModal] = useState<ModalKey | null>(null);
   const [activeCriterionIndex, setActiveCriterionIndex] = useState(0);
@@ -114,6 +128,9 @@ export function WritingFeedbackView({ data, activePart, partOptions, onPartChang
   const essayScrollRef = useRef<HTMLDivElement | null>(null);
   const [showScrollHint, setShowScrollHint] = useState(false);
   const tabRefs = useRef<Array<HTMLButtonElement | null>>([]);
+  const [topBarElevated, setTopBarElevated] = useState(false);
+  const criteriaContentRef = useRef<HTMLDivElement | null>(null);
+  const [criteriaScrollProgress, setCriteriaScrollProgress] = useState(0);
 
   const availability = useMemo(
     () => ({
@@ -166,17 +183,20 @@ export function WritingFeedbackView({ data, activePart, partOptions, onPartChang
     const node = essayScrollRef.current;
     if (!node) {
       setShowScrollHint(false);
+      setTopBarElevated(false);
       return;
     }
 
     const hasOverflow = node.scrollHeight - node.clientHeight > 12;
     if (!hasOverflow) {
       setShowScrollHint(false);
+      setTopBarElevated(false);
       return;
     }
 
     const reachedBottom = node.scrollTop + node.clientHeight >= node.scrollHeight - 16;
     setShowScrollHint(!reachedBottom);
+    setTopBarElevated(node.scrollTop > 8);
   }, []);
 
   useEffect(() => {
@@ -219,8 +239,8 @@ export function WritingFeedbackView({ data, activePart, partOptions, onPartChang
   useEffect(() => {
     updateScrollHint();
   }, [paragraphs, updateScrollHint]);
-  console.log(paragraphs);
-  const goalLine = useMemo(() => {
+
+  const goalInfo = useMemo(() => {
     if (!data.targetBand || data.targetBand <= 0 || data.bandScore === null || Number.isNaN(data.bandScore)) {
       return null;
     }
@@ -231,7 +251,10 @@ export function WritingFeedbackView({ data, activePart, partOptions, onPartChang
     }
 
     const bounded = Math.min(100, Math.max(0, Math.round(percent)));
-    return `You're ${bounded}% towards goal ${formatBandScore(data.targetBand)}`;
+    return {
+      bounded,
+      label: `You're ${bounded}% towards goal ${formatBandScore(data.targetBand)}`,
+    };
   }, [data.bandScore, data.goalCompletionPercent, data.targetBand]);
 
   const cefrLine = useMemo(() => {
@@ -239,16 +262,30 @@ export function WritingFeedbackView({ data, activePart, partOptions, onPartChang
     return `CEFR level ${data.cefrLevel}`;
   }, [data.cefrLevel]);
 
+  const cefrTooltip = useMemo(() => {
+    if (!data.cefrLevel) return null;
+    return `≈ CEFR ${data.cefrLevel}`;
+  }, [data.cefrLevel]);
+
   const activeCriterion = data.criteria[activeCriterionIndex] ?? null;
 
   const nextSteps = useMemo(
     () => [
       {
+        key: 'summary' as const,
+        label: 'View feedback summary',
+        description: 'Review strengths, key issues, and recommendations.',
+        icon: BookOpenCheck,
+        variant: 'primary' as const,
+        disabled: !availability.summary,
+        action: () => setOpenModal('summary'),
+      },
+      {
         key: 'criteria' as const,
         label: 'View detailed feedback',
         description: 'Band-by-band breakdown with targeted advice.',
-        icon: BookOpenCheck,
-        variant: 'primary' as const,
+        icon: Lightbulb,
+        variant: 'secondary' as const,
         disabled: !availability.criteria,
         action: () => setOpenModal('criteria'),
       },
@@ -257,18 +294,9 @@ export function WritingFeedbackView({ data, activePart, partOptions, onPartChang
         label: 'Check ideal response',
         description: 'Compare your answer with a high-scoring sample.',
         icon: Sparkles,
-        variant: 'secondary' as const,
+        variant: 'tertiary' as const,
         disabled: !availability.ideal,
         action: () => setOpenModal('ideal'),
-      },
-      {
-        key: 'summary' as const,
-        label: 'View feedback summary',
-        description: 'Review strengths, key issues, and recommendations.',
-        icon: Lightbulb,
-        variant: 'tertiary' as const,
-        disabled: !availability.summary,
-        action: () => setOpenModal('summary'),
       },
     ],
     [availability.criteria, availability.ideal, availability.summary]
@@ -289,127 +317,255 @@ export function WritingFeedbackView({ data, activePart, partOptions, onPartChang
     [activeCriterionIndex, data.criteria.length]
   );
 
+  const handleCriteriaContentScroll = useCallback((event: UIEvent<HTMLDivElement>) => {
+    const target = event.currentTarget;
+    const maxScroll = target.scrollHeight - target.clientHeight;
+    if (maxScroll <= 0) {
+      setCriteriaScrollProgress(1);
+      return;
+    }
+
+    const progress = Math.min(1, Math.max(0, target.scrollTop / maxScroll));
+    setCriteriaScrollProgress(progress);
+  }, []);
+
+  useEffect(() => {
+    const node = criteriaContentRef.current;
+    if (!node) return;
+    const maxScroll = node.scrollHeight - node.clientHeight;
+    if (maxScroll <= 0) {
+      setCriteriaScrollProgress(1);
+    } else {
+      setCriteriaScrollProgress(Math.min(1, Math.max(0, node.scrollTop / maxScroll)));
+    }
+  }, [activeCriterion]);
+
   return (
-    <div className='relative bg-[#EEF5FE]'>
-      <div className='mx-auto flex w-full max-w-[1440rem] gap-[24rem] px-[40rem] pb-[32rem] pt-[24rem] tablet:px-[32rem]' style={{ height: 'calc(100dvh - 93rem)' }}>
-        <section className='flex h-full flex-1 flex-col overflow-hidden rounded-[28rem] bg-white shadow-[0_40rem_120rem_-48rem_rgba(64,75,172,0.35)]'>
-          <header className='flex flex-wrap items-center justify-between gap-[16rem] border-b border-slate-100 px-[36rem] py-[28rem]'>
-            <div className='flex flex-col gap-[6rem]'>
-              <span className='text-[14rem] font-semibold uppercase tracking-[0.18em] text-slate-400'>Response</span>
-              <h2 className='text-[26rem] font-semibold text-slate-900'>{data.sectionTitle}</h2>
-              <div className='flex items-center gap-[12rem] text-[13rem] font-medium text-slate-500'>
-                <span>{data.essayWordCount} words</span>
-                <span className='size-[6rem] rounded-full bg-slate-200' />
-                <span>{data.bandStatus}</span>
-              </div>
-            </div>
-            <div className='flex items-center gap-[12rem]'>
-              {partOptions.length > 1 && (
-                <nav className='flex items-center gap-[8rem] rounded-[999rem] border border-slate-200 bg-slate-50 p-[6rem]'>
-                  {partOptions.map(option => (
-                    <button
-                      key={option.key}
-                      type='button'
-                      onClick={() => onPartChange(option.key)}
-                      className={cn(
-                        'rounded-[999rem] px-[18rem] py-[10rem] text-[13rem] font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 focus-visible:ring-offset-2',
-                        option.key === activePart ? 'bg-slate-900 text-white shadow-[0_8rem_20rem_-12rem_rgba(15,23,42,0.45)]' : 'text-slate-600 hover:bg-white'
-                      )}
-                    >
-                      {option.label}
-                    </button>
-                  ))}
-                </nav>
-              )}
-              <button
-                type='button'
-                onClick={() => setOpenModal('task')}
-                className='inline-flex items-center gap-[10rem] rounded-[16rem] bg-slate-900 px-[22rem] py-[12rem] text-[14rem] font-semibold text-white shadow-[0_18rem_32rem_-20rem_rgba(15,23,42,0.5)] transition hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 focus-visible:ring-offset-2'
-              >
-                View task
-                <ArrowRight className='size-[16rem]' />
-              </button>
-            </div>
-          </header>
-          <div className='relative flex flex-1 flex-col overflow-hidden px-[36rem] pb-[36rem] pt-[28rem]'>
-            <div
-              ref={essayScrollRef}
-              className='relative h-full overflow-y-auto px-[12rem] pr-[24rem] scrollbar-thin scrollbar-track-transparent scrollbar-thumb-slate-200 hover:scrollbar-thumb-slate-300'
-              onScroll={updateScrollHint}
-            >
-              {paragraphs.length === 0 ? (
-                <div className='flex h-full items-center justify-center rounded-[20rem] border border-slate-100 bg-[#F8FAFF] text-[15rem] font-medium text-slate-500'>
-                  Your essay will appear here as soon as it is available.
-                </div>
-              ) : (
-                <article className='mx-auto flex max-w-[680rem] flex-col gap-[20rem] px-[8rem] py-[4rem] text-[15rem] leading-[1.68] tracking-[-0.12rem] text-slate-700'>
-                  {paragraphs.map((paragraph, index) => (
-                    <p key={index} className='whitespace-pre-wrap'>
-                      {paragraph}
-                    </p>
-                  ))}
-                </article>
-              )}
-            </div>
-            <div
-              aria-hidden='true'
-              className={cn(
-                'pointer-events-none absolute bottom-[36rem] left-[36rem] right-[36rem] h-[96rem] rounded-b-[24rem] bg-gradient-to-t from-white via-white/75 to-transparent transition-opacity duration-300',
-                showScrollHint ? 'opacity-100' : 'opacity-0'
-              )}
-            />
+    <div className='relative flex min-h-[100dvh] flex-col bg-[#EEF5FE]'>
+      <header
+        className={cn(
+          'sticky top-0 z-[30] flex h-[64rem] w-full items-center justify-between border-b border-white/60 bg-white/90 px-[40rem] backdrop-blur transition-shadow tablet:px-[32rem]',
+          topBarElevated ? 'shadow-[0_16rem_40rem_-32rem_rgba(15,23,42,0.15)]' : 'shadow-none'
+        )}
+        role='navigation'
+        aria-label='Writing feedback actions'
+      >
+        <button
+          type='button'
+          onClick={() => router.back()}
+          className='inline-flex items-center gap-[10rem] rounded-[16rem] border border-slate-200 bg-white px-[18rem] py-[10rem] text-[13rem] font-semibold text-slate-700 transition hover:border-slate-300 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 focus-visible:ring-offset-2'
+        >
+          <ArrowLeft className='size-[16rem]' aria-hidden='true' />
+          Back to tasks
+        </button>
+        <h1 className='text-[18rem] font-semibold text-slate-900'>Writing Feedback</h1>
+        <div className='flex items-center gap-[16rem]'>
+          <div className='inline-flex items-center gap-[8rem] rounded-[18rem] border border-slate-200 bg-white px-[16rem] py-[10rem] text-[13rem] font-semibold text-slate-700 shadow-[0_10rem_24rem_-20rem_rgba(15,23,42,0.35)]'>
+            <span className='rounded-[12rem] bg-slate-900 px-[10rem] py-[4rem] text-[12rem] font-semibold uppercase tracking-[0.14em] text-white'>Band</span>
+            <span title={cefrTooltip ?? undefined} aria-label={cefrTooltip ?? undefined} className='flex items-center gap-[6rem]'>
+              {displayScore}
+              {cefrTooltip && <Info className='size-[14rem] text-slate-400' aria-hidden='true' />}
+            </span>
           </div>
-        </section>
-
-        <aside className='flex h-full w-[360rem] shrink-0 flex-col gap-[24rem]'>
-          <motion.section
-            initial={{ opacity: shouldReduceMotion ? 1 : 0, y: shouldReduceMotion ? 0 : 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: shouldReduceMotion ? 0 : 0.5, ease: 'easeOut' }}
-            className={cn(
-              'relative overflow-hidden rounded-[28rem] px-[32rem] py-[28rem] shadow-[0_30rem_80rem_-48rem_rgba(62,104,221,0.35)]',
-              'bg-gradient-to-br',
-              bandVisual.gradient,
-              bandVisual.text
-            )}
+          <button
+            type='button'
+            onClick={() => router.push('/profile')}
+            className='inline-flex items-center gap-[8rem] rounded-[16rem] border border-slate-200 bg-white px-[18rem] py-[10rem] text-[13rem] font-semibold text-slate-600 transition hover:border-slate-300 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 focus-visible:ring-offset-2'
           >
-            <div className='flex flex-col gap-[12rem]'>
-              <span className='text-[13rem] font-semibold uppercase tracking-[0.2em] opacity-80'>Overall band</span>
-              <div className='flex items-end gap-[12rem]'>
-                <span className='text-[62rem] font-semibold leading-none'>{displayScore}</span>
-                <span className='pb-[8rem] text-[14rem] font-medium opacity-80'>IELTS (AI assessed)</span>
-              </div>
-              {goalLine && <p className='text-[14rem] font-medium opacity-85'>{goalLine}</p>}
-              {cefrLine && <p className='text-[13rem] font-medium opacity-75'>{cefrLine}</p>}
-              <p className='text-[13rem] font-medium opacity-75'>Band score generated against official IELTS criteria.</p>
-            </div>
-          </motion.section>
+            Exit
+            <LogOut className='size-[16rem]' aria-hidden='true' />
+          </button>
+        </div>
+      </header>
 
-          <section className='flex flex-1 flex-col rounded-[28rem] border border-slate-100 bg-white px-[32rem] py-[28rem] shadow-[0_24rem_64rem_-48rem_rgba(46,67,139,0.25)]'>
-            <header className='flex flex-col gap-[6rem]'>
-              <span className='text-[13rem] font-semibold uppercase tracking-[0.2em] text-slate-400'>Next steps</span>
-              <p className='text-[14rem] font-medium text-slate-500'>Choose what to explore next.</p>
+      <div className='flex-1'>
+        <div
+          className='mx-auto flex h-full w-full max-w-[1440rem] gap-[28rem] px-[40rem] pb-[28rem] pt-[24rem] tablet:px-[32rem]'
+          style={{ height: 'calc(100dvh - 64rem)' }}
+        >
+          <section className='flex h-full flex-[0.68] flex-col overflow-hidden rounded-[28rem] bg-white shadow-[0_40rem_120rem_-60rem_rgba(64,75,172,0.35)]'>
+            <header className='flex flex-wrap items-center justify-between gap-[16rem] border-b border-slate-100 px-[32rem] py-[24rem]'>
+              <div className='flex flex-col gap-[6rem]'>
+                <span className='text-[13rem] font-semibold uppercase tracking-[0.18em] text-slate-400'>Response</span>
+                <h2 className='text-[24rem] font-semibold text-slate-900'>{data.sectionTitle}</h2>
+                <div className='flex items-center gap-[12rem] text-[13rem] font-medium text-slate-500'>
+                  <span>{data.essayWordCount} words</span>
+                  <span className='size-[6rem] rounded-full bg-slate-200' />
+                  <span>{data.bandStatus}</span>
+                </div>
+              </div>
+              <div className='flex items-center gap-[12rem]'>
+                {partOptions.length > 1 && (
+                  <nav className='flex items-center gap-[8rem] rounded-[999rem] border border-slate-200 bg-slate-50 p-[6rem]' aria-label='Task selection'>
+                    {partOptions.map(option => (
+                      <button
+                        key={option.key}
+                        type='button'
+                        onClick={() => onPartChange(option.key)}
+                        className={cn(
+                          'rounded-[999rem] px-[18rem] py-[10rem] text-[13rem] font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 focus-visible:ring-offset-2',
+                          option.key === activePart ? 'bg-slate-900 text-white shadow-[0_8rem_20rem_-12rem_rgba(15,23,42,0.45)]' : 'text-slate-600 hover:bg-white'
+                        )}
+                      >
+                        {option.label}
+                      </button>
+                    ))}
+                  </nav>
+                )}
+                <button
+                  type='button'
+                  onClick={() => setOpenModal('task')}
+                  className='inline-flex items-center gap-[10rem] rounded-[16rem] bg-slate-900 px-[20rem] py-[12rem] text-[13rem] font-semibold text-white shadow-[0_18rem_32rem_-20rem_rgba(15,23,42,0.5)] transition hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 focus-visible:ring-offset-2'
+                >
+                  View task
+                  <ArrowRight className='size-[16rem]' aria-hidden='true' />
+                </button>
+              </div>
             </header>
-            <nav className='mt-[24rem] flex flex-1 flex-col gap-[12rem]'>
-              {nextSteps.map(step => (
-                <StepButton
-                  key={step.key}
-                  icon={step.icon}
-                  label={step.label}
-                  description={step.description}
-                  variant={step.variant}
-                  disabled={step.disabled}
-                  onClick={step.action}
-                />
-              ))}
-            </nav>
+            <div className='relative flex flex-1 flex-col overflow-hidden px-[28rem] pb-[28rem] pt-[24rem]'>
+              <div
+                ref={essayScrollRef}
+                className='relative h-full overflow-y-auto px-[12rem] pr-[24rem] scrollbar-thin scrollbar-track-transparent scrollbar-thumb-slate-200 hover:scrollbar-thumb-slate-300'
+                onScroll={updateScrollHint}
+              >
+                {paragraphs.length === 0 ? (
+                  <div className='flex h-full items-center justify-center rounded-[20rem] border border-slate-100 bg-[#F8FAFF] text-[15rem] font-medium text-slate-500'>
+                    Your essay will appear here as soon as it is available.
+                  </div>
+                ) : (
+                  <article className='mx-auto flex w-full max-w-[90%] flex-col gap-[22rem] px-[12rem] py-[4rem] text-[16rem] leading-[1.45] tracking-[-0.08rem] text-slate-700 tablet:max-w-[92%]'>
+                    {paragraphs.map((paragraph, index) => (
+                      <p key={index} className='whitespace-pre-wrap'>
+                        {paragraph}
+                      </p>
+                    ))}
+                  </article>
+                )}
+              </div>
+              <div
+                aria-hidden='true'
+                className={cn(
+                  'pointer-events-none absolute bottom-[24rem] left-[28rem] right-[28rem] h-[88rem] rounded-b-[24rem] bg-gradient-to-t from-white via-white/75 to-transparent transition-opacity duration-300',
+                  showScrollHint ? 'opacity-100' : 'opacity-0'
+                )}
+              />
+            </div>
           </section>
-        </aside>
+
+          <aside className='flex h-full min-w-[340rem] flex-[0.32] flex-col gap-[24rem]'>
+            <motion.section
+              initial={{ opacity: shouldReduceMotion ? 1 : 0, y: shouldReduceMotion ? 0 : 16, backgroundPosition: '0% 50%' }}
+              animate={{
+                opacity: 1,
+                y: 0,
+                backgroundPosition: shouldReduceMotion ? '50% 50%' : ['0% 50%', '100% 50%', '0% 50%'],
+              }}
+              transition={{
+                duration: shouldReduceMotion ? 0 : 0.5,
+                ease: 'easeOut',
+                backgroundPosition: {
+                  duration: shouldReduceMotion ? 0 : 12,
+                  ease: 'linear',
+                  repeat: shouldReduceMotion ? 0 : Infinity,
+                },
+              }}
+              className={cn(
+                'relative overflow-hidden rounded-[28rem] px-[32rem] py-[28rem] text-white shadow-[0_30rem_80rem_-48rem_rgba(62,104,221,0.35)]',
+                'bg-gradient-to-br',
+                bandVisual.gradient,
+                bandVisual.text
+              )}
+              style={{ backgroundSize: shouldReduceMotion ? undefined : '200% 200%' }}
+            >
+              <div className='flex flex-col gap-[12rem]'>
+                <span className='text-[13rem] font-semibold uppercase tracking-[0.2em] opacity-80'>Overall band</span>
+                <div className='flex items-end gap-[12rem]'>
+                  <span
+                    className='text-[62rem] font-semibold leading-none'
+                    title={cefrTooltip ?? undefined}
+                    aria-label={cefrTooltip ?? undefined}
+                  >
+                    {displayScore}
+                  </span>
+                  <span className='pb-[8rem] text-[14rem] font-medium opacity-80'>Based on IELTS band descriptors</span>
+                </div>
+                {cefrLine && <p className='text-[13rem] font-medium opacity-80'>{cefrLine}</p>}
+                {goalInfo && (
+                  <div className='mt-[12rem] space-y-[10rem]'>
+                    <div className='flex items-center justify-between text-[12rem] font-semibold opacity-80'>
+                      <span>Progress to goal</span>
+                      <span>{goalInfo.bounded}%</span>
+                    </div>
+                    <div className='h-[6rem] w-full rounded-[999rem] bg-white/25'>
+                      <motion.div
+                        className='h-full rounded-[999rem] bg-white'
+                        initial={{ width: 0 }}
+                        animate={{ width: `${goalInfo.bounded}%` }}
+                        transition={{ duration: shouldReduceMotion ? 0 : 0.6, ease: 'easeOut' }}
+                      />
+                    </div>
+                    <p className='text-[13rem] font-medium opacity-85'>{goalInfo.label}</p>
+                  </div>
+                )}
+                <p className='text-[13rem] font-medium opacity-75'>Band score generated against official IELTS criteria.</p>
+              </div>
+            </motion.section>
+
+            <section className='flex flex-1 flex-col rounded-[28rem] border border-slate-100 bg-white px-[32rem] py-[28rem] shadow-[0_24rem_64rem_-48rem_rgba(46,67,139,0.25)]'>
+              <header className='flex flex-col gap-[6rem]'>
+                <span className='text-[13rem] font-semibold uppercase tracking-[0.2em] text-slate-400'>Next steps</span>
+                {/*<p className='text-[14rem] font-medium text-slate-500'>Choose what to explore next.</p>*/}
+              </header>
+              <nav className='mt-[24rem] flex flex-1 flex-col gap-[14rem]' aria-label='Next steps options'>
+                {nextSteps.map(step => (
+                  <StepButton
+                    key={step.key}
+                    icon={step.icon}
+                    label={step.label}
+                    description={step.description}
+                    variant={step.variant}
+                    disabled={step.disabled}
+                    onClick={step.action}
+                  />
+                ))}
+              </nav>
+            </section>
+          </aside>
+        </div>
       </div>
 
-      <UnifiedModal title='Detailed feedback by band' open={openModal === 'criteria'} onOpenChange={open => setOpenModal(open ? 'criteria' : null)} size='lg'>
+      <UnifiedModal
+        title='Detailed feedback by band'
+        open={openModal === 'criteria'}
+        onOpenChange={open => setOpenModal(open ? 'criteria' : null)}
+        size='lg'
+        contentRef={node => {
+          criteriaContentRef.current = node;
+          if (!node) {
+            setCriteriaScrollProgress(0);
+            return;
+          }
+          const maxScroll = node.scrollHeight - node.clientHeight;
+          if (maxScroll <= 0) {
+            setCriteriaScrollProgress(1);
+          } else {
+            setCriteriaScrollProgress(Math.min(1, Math.max(0, node.scrollTop / maxScroll)));
+          }
+        }}
+        onContentScroll={handleCriteriaContentScroll}
+      >
         {availability.criteria && activeCriterion ? (
           <div className='flex flex-col gap-[28rem]'>
+            <div className='flex flex-col gap-[10rem]'>
+              <div className='h-[4rem] w-full rounded-[999rem] bg-slate-200/50' role='progressbar' aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(criteriaScrollProgress * 100)}>
+                <motion.div
+                  className='h-full rounded-[999rem] bg-slate-900'
+                  animate={{ width: `${Math.max(criteriaScrollProgress * 100, 2)}%` }}
+                  transition={{ duration: shouldReduceMotion ? 0 : 0.25, ease: 'easeOut' }}
+                />
+              </div>
+              <span className='text-[12rem] font-medium text-slate-500'>Scroll to explore the full feedback.</span>
+            </div>
             <div
               role='tablist'
               aria-label='Detailed feedback criteria'
@@ -643,7 +799,7 @@ interface StepButtonProps {
 
 function StepButton({ icon: Icon, label, description, variant, disabled, onClick }: StepButtonProps) {
   const baseClasses =
-    'flex min-h-[78rem] items-center justify-between gap-[16rem] rounded-[24rem] border px-[24rem] py-[18rem] text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 focus-visible:ring-offset-2';
+    'group flex min-h-[82rem] items-center justify-between gap-[16rem] rounded-[24rem] border px-[24rem] py-[20rem] text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 focus-visible:ring-offset-2';
   const variantClasses: Record<StepButtonProps['variant'], string> = {
     primary: 'border-transparent bg-gradient-to-r from-[#4F86F7] to-[#7C5CFF] text-white shadow-[0_20rem_40rem_-28rem_rgba(72,85,190,0.65)] hover:brightness-[1.05]',
     secondary: 'border-slate-200 bg-white text-slate-800 hover:bg-slate-50',
@@ -651,7 +807,7 @@ function StepButton({ icon: Icon, label, description, variant, disabled, onClick
   };
 
   return (
-    <button
+    <motion.button
       type='button'
       onClick={onClick}
       disabled={disabled}
@@ -660,18 +816,30 @@ function StepButton({ icon: Icon, label, description, variant, disabled, onClick
         variantClasses[variant],
         disabled && 'cursor-not-allowed border-slate-100 bg-slate-50 text-slate-300 hover:bg-slate-50 focus-visible:ring-0'
       )}
+      whileHover={disabled ? undefined : { y: -3, scale: 1.01 }}
+      whileTap={disabled ? undefined : { scale: 0.99 }}
     >
-      <span className='flex items-center gap-[16rem]'>
-        <span className={cn('mt-[2rem] rounded-[16rem] bg-white/70 p-[10rem]', variant === 'primary' ? 'text-white' : 'text-slate-600', disabled && 'text-slate-300')}>
+      <span className='flex items-center gap-[16rem] text-left'>
+        <span
+          className={cn(
+            'mt-[2rem] rounded-[16rem] bg-white/70 p-[10rem]',
+            variant === 'primary' ? 'text-white' : 'text-slate-600',
+            disabled && 'text-slate-300'
+          )}
+        >
           <Icon className='size-[18rem]' aria-hidden='true' />
         </span>
-        <span className='text-[15rem] font-semibold leading-tight'>{label}</span>
+          <span className='text-[15rem] font-semibold leading-tight'>{label}</span>
       </span>
       <ChevronRight
-        className={cn('size-[18rem] transition', disabled ? 'text-slate-300' : variant === 'primary' ? 'text-white/80' : 'text-slate-500')}
+        className={cn(
+          'size-[18rem] transition-transform',
+          disabled ? 'text-slate-300' : 'group-hover:translate-x-[4rem]',
+          !disabled && variant === 'primary' ? 'text-white/80' : !disabled ? 'text-slate-500' : ''
+        )}
         aria-hidden='true'
       />
-    </button>
+    </motion.button>
   );
 }
 
@@ -682,9 +850,11 @@ interface UnifiedModalProps {
   size?: 'md' | 'lg';
   children: ReactNode;
   renderFooter?: (helpers: { close: () => void }) => ReactNode;
+  contentRef?: (node: HTMLDivElement | null) => void;
+  onContentScroll?: (event: UIEvent<HTMLDivElement>) => void;
 }
 
-function UnifiedModal({ title, open, onOpenChange, size = 'md', children, renderFooter }: UnifiedModalProps) {
+function UnifiedModal({ title, open, onOpenChange, size = 'md', children, renderFooter, contentRef, onContentScroll }: UnifiedModalProps) {
   const shouldReduceMotion = useReducedMotion();
 
   useEffect(() => {
@@ -695,6 +865,15 @@ function UnifiedModal({ title, open, onOpenChange, size = 'md', children, render
       document.body.style.overflow = original;
     };
   }, [open]);
+
+  const handleContentRef = useCallback(
+    (node: HTMLDivElement | null) => {
+      if (contentRef) {
+        contentRef(node);
+      }
+    },
+    [contentRef]
+  );
 
   return (
     <DialogPrimitive.Root open={open} onOpenChange={onOpenChange}>
@@ -719,8 +898,8 @@ function UnifiedModal({ title, open, onOpenChange, size = 'md', children, render
                   transition={{ duration: shouldReduceMotion ? 0 : 0.28, ease: 'easeOut' }}
                   className={cn('relative w-[min(92vw,820rem)] max-w-full', size === 'lg' && 'w-[min(92vw,960rem)]')}
                 >
-                  <div className='flex max-h-[85vh] flex-col overflow-hidden rounded-[28rem] border border-slate-100 bg-white shadow-[0_60rem_140rem_-80rem_rgba(32,64,171,0.35)]'>
-                    <header className='sticky top-0 z-[1] flex items-start justify-between gap-[16rem] border-b border-slate-100 bg-white/95 px-[32rem] py-[24rem] backdrop-blur'>
+                  <div className='flex max-h-[85vh] flex-col overflow-hidden rounded-[24rem] border border-slate-100 bg-white shadow-[0_60rem_140rem_-80rem_rgba(32,64,171,0.35)]'>
+                    <header className='sticky top-0 z-[1] flex items-start justify-between gap-[16rem] border-b border-slate-100 bg-white/95 px-[32rem] py-[22rem] backdrop-blur'>
                       <DialogPrimitive.Title className='text-[22rem] font-semibold text-slate-900'>{title}</DialogPrimitive.Title>
                       <DialogPrimitive.Close asChild>
                         <button
@@ -732,7 +911,11 @@ function UnifiedModal({ title, open, onOpenChange, size = 'md', children, render
                         </button>
                       </DialogPrimitive.Close>
                     </header>
-                    <div className='flex-1 overflow-y-auto px-[32rem] py-[28rem] scrollbar-thin scrollbar-thumb-slate-200 hover:scrollbar-thumb-slate-300'>
+                    <div
+                      ref={handleContentRef}
+                      onScroll={onContentScroll}
+                      className='flex-1 overflow-y-auto px-[32rem] py-[28rem] scrollbar-thin scrollbar-thumb-slate-200 hover:scrollbar-thumb-slate-300'
+                    >
                       {children}
                     </div>
                     {renderFooter && (
