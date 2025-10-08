@@ -6,23 +6,26 @@ import { GET_practice_writing_feedback_id } from '@/api/GET_practice_writing_fee
 import { HeaderDuringTest } from '@/components/HeaderDuringTest';
 import { useQuery } from '@tanstack/react-query';
 import { useCustomTranslations } from '@/hooks/useCustomTranslations';
+import type { WritingFeedbackPartKey, WritingFeedbackResponse } from '@/types/WritingFeedback';
+
+type FeedbackQueryError = Error & { status?: number };
 
 export default function Page({ params }: { params: { id: string } }) {
   const { t, tImgAlts, tCommon } = useCustomTranslations('practice.writing.feedback');
 
-  const { data: feedbackData, status: feedbackStatus } = useQuery({
+  const { data: feedbackData, status: feedbackStatus } = useQuery<WritingFeedbackResponse, FeedbackQueryError>({
     queryKey: ['practice-writing-feedback', params.id],
     queryFn: () => GET_practice_writing_feedback_id(params.id),
     retry: false,
     refetchInterval: query => {
-      const err = query.state.error as { status?: number } | null;
+      const err = query.state.error as FeedbackQueryError | null;
 
       // Если статус 404 — вернуть 3000 (мс), иначе — false (не рефетчить)
       return err?.status === 404 ? 10000 : false;
     },
   });
 
-  const [part, setPart] = useState<'part_1' | 'part_2' | undefined>(undefined);
+  const [part, setPart] = useState<WritingFeedbackPartKey | undefined>(undefined);
 
   useEffect(() => {
     if (feedbackData?.part_1?.question) {
@@ -33,6 +36,8 @@ export default function Page({ params }: { params: { id: string } }) {
       setPart(undefined);
     }
   }, [feedbackData]);
+
+  const activePart = part && feedbackData ? feedbackData[part] ?? null : null;
 
   return (
     <>
@@ -52,7 +57,7 @@ export default function Page({ params }: { params: { id: string } }) {
         </main>
       )}
 
-      {feedbackStatus === 'success' && part !== undefined && (
+      {feedbackStatus === 'success' && feedbackData && activePart && (
         <main className='min-h-[100dvh] bg-d-blue-secondary'>
           <div className='container flex min-h-[100dvh] max-w-[1440rem] items-start justify-between p-[40rem]'>
             {/* // * Left col */}
@@ -61,7 +66,7 @@ export default function Page({ params }: { params: { id: string } }) {
               <section className='flex flex-col gap-y-[24rem] bg-white p-[40rem]'>
                 {/* // * Question */}
                 <div className='whitespace-pre-line text-[20rem] font-medium leading-tight text-d-black/80'>{feedbackData.task}</div>
-                <div className='rounded-[12rem] bg-d-gray px-[24rem] py-[20rem] text-[20rem] font-medium leading-tight'>{feedbackData[part].question}</div>
+                <div className='rounded-[12rem] bg-d-gray px-[24rem] py-[20rem] text-[20rem] font-medium leading-tight'>{activePart.question}</div>
                 {feedbackData.picture && <img src={feedbackData.picture} alt={tImgAlts('writing')} className='mx-auto w-[600rem] rounded-[12rem]' />}
                 <div className='text-[20rem] font-medium leading-tight text-d-black/80'>{feedbackData.text}</div>
                 <hr className='my-[16rem] border-b-2 border-d-gray' />
@@ -86,10 +91,10 @@ export default function Page({ params }: { params: { id: string } }) {
                   </header>
                   {/* // * Recommendation */}
                   <div className='text-[14rem] font-medium leading-tight'>
-                    {feedbackData[part].ml_output['General Feedback'].feedback}
+                    {activePart.ml_output['General Feedback'].feedback}
                     <br />
                     <br />
-                    {feedbackData[part].ml_output['General Feedback'].recommendation}
+                    {activePart.ml_output['General Feedback'].recommendation}
                   </div>
                 </section>
                 {/* // * Recommendations by bands */}
@@ -108,10 +113,10 @@ export default function Page({ params }: { params: { id: string } }) {
                     <div className='flex w-[388rem] shrink-0 flex-col gap-y-[16rem]'>
                       <div className='text-[14rem] font-semibold leading-normal'>Coherence & cohesion</div>
                       <div className='text-[14rem] font-medium leading-tight text-d-black/80'>
-                        {feedbackData[part].ml_output['Coherence & Cohesion'].feedback}
+                        {activePart.ml_output['Coherence & Cohesion'].feedback}
                         <br />
                         <br />
-                        {feedbackData[part].ml_output['Coherence & Cohesion'].recommendation}
+                        {activePart.ml_output['Coherence & Cohesion'].recommendation}
                       </div>
                     </div>
                     <button type='button' className='flex size-[40rem] items-center justify-center rounded-full border border-d-gray'>
@@ -123,10 +128,10 @@ export default function Page({ params }: { params: { id: string } }) {
                     <div className='flex w-[388rem] shrink-0 flex-col gap-y-[16rem]'>
                       <div className='text-[14rem] font-semibold leading-normal'>Lexical resource</div>
                       <div className='text-[14rem] font-medium leading-tight text-d-black/80'>
-                        {feedbackData[part].ml_output['Lexical Resource'].feedback}
+                        {activePart.ml_output['Lexical Resource'].feedback}
                         <br />
                         <br />
-                        {feedbackData[part].ml_output['Lexical Resource'].recommendation}
+                        {activePart.ml_output['Lexical Resource'].recommendation}
                       </div>
                     </div>
                     <button type='button' className='flex size-[40rem] items-center justify-center rounded-full border border-d-gray'>
@@ -138,10 +143,10 @@ export default function Page({ params }: { params: { id: string } }) {
                     <div className='flex w-[388rem] shrink-0 flex-col gap-y-[16rem]'>
                       <div className='text-[14rem] font-semibold leading-normal'>Grammatical range & accuracy</div>
                       <div className='text-[14rem] font-medium leading-tight text-d-black/80'>
-                        {feedbackData[part].ml_output['Grammatical Range & Accuracy'].feedback}
+                        {activePart.ml_output['Grammatical Range & Accuracy'].feedback}
                         <br />
                         <br />
-                        {feedbackData[part].ml_output['Grammatical Range & Accuracy'].recommendation}
+                        {activePart.ml_output['Grammatical Range & Accuracy'].recommendation}
                       </div>
                     </div>
                     <button type='button' className='flex size-[40rem] items-center justify-center rounded-full border border-d-gray'>
@@ -153,10 +158,10 @@ export default function Page({ params }: { params: { id: string } }) {
                     <div className='flex w-[388rem] shrink-0 flex-col gap-y-[16rem]'>
                       <div className='text-[14rem] font-semibold leading-normal'>Task achievement</div>
                       <div className='text-[14rem] font-medium leading-tight text-d-black/80'>
-                        {feedbackData[part].ml_output['Task Achievement'].feedback}
+                        {activePart.ml_output['Task Achievement'].feedback}
                         <br />
                         <br />
-                        {feedbackData[part].ml_output['Task Achievement'].recommendation}
+                        {activePart.ml_output['Task Achievement'].recommendation}
                       </div>
                     </div>
                     <button type='button' className='flex size-[40rem] items-center justify-center rounded-full border border-d-gray'>
@@ -206,8 +211,8 @@ export default function Page({ params }: { params: { id: string } }) {
               </section> */}
               {/* // * Bands score -- Coherence & cohesion */}
               <section className='flex flex-col gap-[16rem] bg-white p-[24rem]'>
-                <div className='mb-[8rem] text-[20rem] font-semibold'>Coherence & cohesion: {feedbackData[part].ml_output['Coherence & Cohesion'].score.toFixed(1)}</div>
-                {feedbackData[part].ml_output['Coherence & Cohesion'].breakdown.map((item: any) => (
+                <div className='mb-[8rem] text-[20rem] font-semibold'>Coherence & cohesion: {activePart.ml_output['Coherence & Cohesion'].score.toFixed(1)}</div>
+                {activePart.ml_output['Coherence & Cohesion'].breakdown.map(item => (
                   <div key={`coherence-cohesion-${item.name}`} className='flex items-center gap-x-[12rem]'>
                     <div
                       data-grade={+item.score >= 6 ? 'good' : 'bad'}
@@ -221,8 +226,8 @@ export default function Page({ params }: { params: { id: string } }) {
               </section>
               {/* // * Bands score -- Lexical resource */}
               <section className='flex flex-col gap-[16rem] bg-white p-[24rem]'>
-                <div className='mb-[8rem] text-[20rem] font-semibold'>Lexical resource: {feedbackData[part].ml_output['Lexical Resource'].score.toFixed(1)}</div>
-                {feedbackData[part].ml_output['Lexical Resource'].breakdown.map((item: any) => (
+                <div className='mb-[8rem] text-[20rem] font-semibold'>Lexical resource: {activePart.ml_output['Lexical Resource'].score.toFixed(1)}</div>
+                {activePart.ml_output['Lexical Resource'].breakdown.map(item => (
                   <div key={`lexical-resource-${item.name}`} className='flex items-center gap-x-[12rem]'>
                     <div
                       data-grade={+item.score >= 6 ? 'good' : 'bad'}
@@ -237,9 +242,9 @@ export default function Page({ params }: { params: { id: string } }) {
               {/* // * Bands score -- Grammatical range */}
               <section className='flex flex-col gap-[16rem] bg-white p-[24rem]'>
                 <div className='mb-[8rem] text-[20rem] font-semibold'>
-                  Grammatical range & accuracy: {feedbackData[part].ml_output['Grammatical Range & Accuracy'].score.toFixed(1)}
+                  Grammatical range & accuracy: {activePart.ml_output['Grammatical Range & Accuracy'].score.toFixed(1)}
                 </div>
-                {feedbackData[part].ml_output['Grammatical Range & Accuracy'].breakdown.map((item: any) => (
+                {activePart.ml_output['Grammatical Range & Accuracy'].breakdown.map(item => (
                   <div key={`grammatical-range-${item.name}`} className='flex items-center gap-x-[12rem]'>
                     <div
                       data-grade={+item.score >= 6 ? 'good' : 'bad'}
@@ -253,8 +258,8 @@ export default function Page({ params }: { params: { id: string } }) {
               </section>
               {/* // * Bands score -- Task achievement */}
               <section className='flex flex-col gap-[16rem] bg-white p-[24rem]'>
-                <div className='mb-[8rem] text-[20rem] font-semibold'>Task achievement: {feedbackData[part].ml_output['Task Achievement'].score.toFixed(1)}</div>
-                {feedbackData[part].ml_output['Task Achievement'].breakdown.map((item: any) => (
+                <div className='mb-[8rem] text-[20rem] font-semibold'>Task achievement: {activePart.ml_output['Task Achievement'].score.toFixed(1)}</div>
+                {activePart.ml_output['Task Achievement'].breakdown.map(item => (
                   <div key={`task-achievement-${item.name}`} className='flex items-center gap-x-[12rem]'>
                     <div className='flex size-[34rem] items-center justify-center rounded-[4rem] bg-d-green-secondary text-[14rem] font-medium'>{item.score}</div>
                     <div className='text-[14rem] font-medium leading-tight text-d-black/80'>{item.name}</div>

@@ -1,6 +1,7 @@
 import axiosInstance from '@/lib/axiosInstance';
+import type { WritingFeedbackResponse } from '@/types/WritingFeedback';
 
-export const GET_practice_writing_feedback_id = async (id: string) => {
+export const GET_practice_writing_feedback_id = async (id: string): Promise<WritingFeedbackResponse> => {
   const response = await axiosInstance.get(`/practice/writing/passed/${id}`, {
     validateStatus: () => true,
   });
@@ -16,5 +17,5 @@ export const GET_practice_writing_feedback_id = async (id: string) => {
     throw new Error(`Backend responded with status ${response.status}`);
   }
 
-  return response.data;
+  return response.data as WritingFeedbackResponse;
 };
