@@ -11,11 +11,11 @@ import { useRouter } from 'next/navigation';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useCustomTranslations } from '@/hooks/useCustomTranslations';
-import axiosInstance from '@/lib/axiosInstance';
 import { useLocale } from 'next-intl';
 import { GoogleLoginButton } from '@/components/auth/GoogleLoginButton';
 import { GoogleLoginError, postAuthLoginGoogle } from '@/api/POST_auth_login_google';
 import { resetProfile } from '@/stores/profileStore';
+import { AuthLoginError, postAuthLogin } from '@/api/POST_auth_login';
 
 export default function Login() {
   const router = useRouter();
@@ -54,23 +54,25 @@ export default function Login() {
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    const response = await axiosInstance.post('/auth/login', values, {
-      headers: {
-        'Content-Type': 'application/json;charset=utf-8',
-      },
-      validateStatus: () => true,
-    });
-
-    if (response.status >= 200 && response.status < 300) {
-      const result = response.data;
+    try {
+      const result = await postAuthLogin(values);
       localStorage.setItem('token', result.token);
       resetProfile();
       NProgress.start();
       router.push(`/${locale}/profile`);
-    }
+    } catch (error) {
+      if (error instanceof AuthLoginError) {
+        if (error.status === 404) {
+          form.setError('email', { message: tMessages('accountNoExist') });
+          return;
+        }
 
-    if (response.status === 404) {
-      form.setError('email', { message: tMessages('accountNoExist') });
+        if (error.status === 401) {
+          form.setError('password', { message: tMessages('unexpectedError') });
+          return;
+        }
+      }
+      form.setError('email', { message: tMessages('unexpectedError') });
     }
   }
 

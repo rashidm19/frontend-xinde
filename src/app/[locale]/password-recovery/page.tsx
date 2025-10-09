@@ -7,7 +7,7 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useCustomTranslations } from '@/hooks/useCustomTranslations';
-import axiosInstance from '@/lib/axiosInstance';
+import { AuthResetPasswordError, postAuthResetPassword } from '@/api/POST_auth_reset_password';
 
 export default function PasswordRecovery() {
   const { t, tImgAlts, tCommon, tActions, tForm, tMessages } = useCustomTranslations('passwordRecovery');
@@ -24,20 +24,18 @@ export default function PasswordRecovery() {
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    const response = await axiosInstance.post('/auth/reset-password', values, {
-      headers: {
-        'Content-Type': 'application/json;charset=utf-8',
-      },
-      validateStatus: () => true,
-    });
+    try {
+      await postAuthResetPassword(values);
+    } catch (error) {
+      if (error instanceof AuthResetPasswordError) {
+        if (error.status === 404) {
+          form.setError('email', { message: tMessages('accountNoExist') });
+          return Promise.reject(error);
+        }
+      }
 
-    if (response.status >= 200 && response.status < 300) {
-      const result = response.data;
-      localStorage.setItem('token', result.token);
-    }
-
-    if (response.status === 404) {
-      form.setError('email', { message: tMessages('accountNoExist') });
+      form.setError('email', { message: tMessages('unexpectedError') });
+      return Promise.reject(error);
     }
   }
 

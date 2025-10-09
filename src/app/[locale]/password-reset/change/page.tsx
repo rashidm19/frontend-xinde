@@ -11,7 +11,7 @@ import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useEffect, useState } from 'react';
 import { useCustomTranslations } from '@/hooks/useCustomTranslations';
-import axiosInstance from '@/lib/axiosInstance';
+import { AuthResetPasswordConfirmError, postAuthResetPasswordConfirm } from '@/api/POST_auth_reset_password_confirm';
 
 export default function PasswordReset() {
   const router = useRouter();
@@ -46,28 +46,23 @@ export default function PasswordReset() {
   async function onSubmit(values: z.infer<typeof formSchema>) {
     NProgress.start();
     try {
-      const response = await axiosInstance.post(
-        '/auth/reset-password/confirm',
-        {
-          token,
-          password: values.password,
-        },
-        {
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          validateStatus: () => true,
-        }
-      );
-
-      if (response.status === 400) {
-        form.setError('password', { message: tMessages('invalidOrExpiredToken') });
-      }
+      await postAuthResetPasswordConfirm({
+        token,
+        password: values.password,
+      });
     } catch (error) {
-      console.error('Password reset failed:', error);
-    } finally {
+      if (error instanceof AuthResetPasswordConfirmError && error.status === 400) {
+        form.setError('password', { message: tMessages('invalidOrExpiredToken') });
+        NProgress.done();
+        return Promise.reject(error);
+      }
+
+      form.setError('password', { message: tMessages('unexpectedError') });
       NProgress.done();
+      return Promise.reject(error);
     }
+
+    NProgress.done();
   }
 
   if (form.formState.isSubmitSuccessful) {

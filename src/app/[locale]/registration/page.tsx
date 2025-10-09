@@ -12,7 +12,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useCustomTranslations } from '@/hooks/useCustomTranslations';
 import React from 'react';
 import { useRouter } from 'next/navigation';
-import axiosInstance from '@/lib/axiosInstance';
+import { AuthRegisterError, postAuthRegister } from '@/api/POST_auth_register';
+import { AuthResendVerificationError, postAuthResendVerification } from '@/api/POST_auth_resend_verification';
 
 export default function Registration() {
   const router = useRouter();
@@ -94,56 +95,50 @@ export default function Registration() {
     setIsResending(true);
 
     try {
-      const response = await axiosInstance.post(
-        '/auth/resend-verification',
-        { email: resendEmail.trim() },
-        {
-          validateStatus: () => true,
-        }
-      );
-
-      if (response.status === 200) {
-        // setResendSuccessMessage(t('resend.success'));
-        setCooldown(60);
-      } else if (response.status === 400) {
+      await postAuthResendVerification({ email: resendEmail.trim() });
+      setCooldown(60);
+    } catch (error) {
+      if (error instanceof AuthResendVerificationError && error.status === 400) {
         setResendErrorMessage(t('resend.userNotFound'));
       } else {
         setResendErrorMessage(t('resend.defaultError'));
       }
-    } catch (error) {
-      setResendErrorMessage(t('resend.defaultError'));
     } finally {
       setIsResending(false);
     }
   };
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    const req = new FormData();
-    req.append('name', values.name);
-    req.append('email', values.email);
-    req.append('password', values.password);
-    req.append('region', values.region);
+    let avatarBlob: Blob | undefined;
 
-    const imageSrc = typeof img === 'string' ? img : img.src;
-    const absoluteImageUrl = imageSrc.startsWith('http') ? imageSrc : `${window.location.origin}${imageSrc}`;
+    try {
+      const imageSrc = typeof img === 'string' ? img : img.src;
+      const absoluteImageUrl = imageSrc.startsWith('http') ? imageSrc : `${window.location.origin}${imageSrc}`;
+      const response = await fetch(absoluteImageUrl);
 
-    const { data: blob } = await axiosInstance.get(absoluteImageUrl, {
-      responseType: 'blob',
-    });
-    console.log(blob);
-    req.append('avatar', blob);
-
-    const response = await axiosInstance.post('/auth/register', req, {
-      validateStatus: () => true,
-    });
-
-    if (response.status === 200) {
-      // const result = await response.json();
-      // router.push(`/email-verification?email=${values.email}`);
+      if (response.ok) {
+        avatarBlob = await response.blob();
+      }
+    } catch (error) {
+      avatarBlob = undefined;
     }
 
-    if (response.status === 404) {
-      form.setError('email', { message: tMessages('accountNoExist') });
+    try {
+      await postAuthRegister({
+        name: values.name,
+        email: values.email,
+        password: values.password,
+        region: values.region,
+        ...(avatarBlob ? { avatar: avatarBlob } : {}),
+      });
+    } catch (error) {
+      if (error instanceof AuthRegisterError && error.status === 404) {
+        form.setError('email', { message: tMessages('accountNoExist') });
+        return Promise.reject(error);
+      }
+
+      form.setError('email', { message: tMessages('unexpectedError') });
+      return Promise.reject(error);
     }
   }
 
