@@ -1,16 +1,17 @@
 "use client";
 
 import {
-  type KeyboardEvent,
+  type KeyboardEvent as ReactKeyboardEvent,
   type ReactNode,
   useCallback,
   useEffect,
+  useId,
   useMemo,
   useRef,
   useState,
 } from "react";
 
-import { AnimatePresence, LayoutGroup, motion, useReducedMotion } from "framer-motion";
+import { AnimatePresence, LayoutGroup, animate, motion, useMotionValue, useReducedMotion, useTransform } from "framer-motion";
 import {
   ArrowLeft,
   BookOpenCheck,
@@ -21,6 +22,7 @@ import {
   CircleHelp,
   CircleX,
   Clock3,
+  Info,
   LogOut,
   Sparkles,
   Table,
@@ -120,10 +122,20 @@ export function ReadingAnswerSheet({ data, locale, meta, bandMapping, onRetry }:
   const [reviewModalOpen, setReviewModalOpen] = useState(false);
   const [bandModalOpen, setBandModalOpen] = useState(false);
   const [columns, setColumns] = useState(2);
+  const [activePopover, setActivePopover] = useState<number | null>(null);
+  const [legendOpen, setLegendOpen] = useState(false);
+  const [bandHighlightKey, setBandHighlightKey] = useState<string | null>(null);
 
   const highlightTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const gridRefs = useRef<Array<HTMLButtonElement | null>>([]);
   const questionRefs = useRef<Record<number, HTMLElement | null>>({});
+  const gridContainerRef = useRef<HTMLDivElement | null>(null);
+  const legendButtonRef = useRef<HTMLButtonElement | null>(null);
+  const bandRowRefs = useRef<Record<string, HTMLTableRowElement | null>>({});
+  const legendTooltipId = useId();
+  const hasAnimatedKpiRef = useRef(false);
+  const gridColumnCount = useMemo(() => Math.min(Math.max(columns, 2), 8), [columns]);
+  const gridTemplateColumns = useMemo(() => `repeat(${gridColumnCount}, minmax(0, 1fr))`, [gridColumnCount]);
 
   const total = data.questions.length;
   const normalizedQuestions = useMemo<ReadingQuestion[]>(() => {
@@ -146,6 +158,10 @@ export function ReadingAnswerSheet({ data, locale, meta, bandMapping, onRetry }:
   }, [data.correct_answers_count, normalizedQuestions]);
 
   const percentage = total > 0 ? Math.round((correctCount / total) * 100) : 0;
+
+  const kpiValue = useMotionValue(correctCount);
+  const roundedKpi = useTransform(kpiValue, latest => Math.round(latest));
+  const [displayedKpi, setDisplayedKpi] = useState(() => correctCount);
 
   useEffect(() => {
     const queries = GRID_LAYOUT_BREAKPOINTS.map(({ query, columns: value }) => ({ mq: window.matchMedia(query), value }));
@@ -170,6 +186,37 @@ export function ReadingAnswerSheet({ data, locale, meta, bandMapping, onRetry }:
       }
     };
   }, []);
+
+  useEffect(() => {
+    const unsubscribe = roundedKpi.on("change", value => {
+      setDisplayedKpi(value);
+    });
+
+    return () => unsubscribe();
+  }, [roundedKpi]);
+
+  useEffect(() => {
+    if (shouldReduceMotion) {
+      kpiValue.set(correctCount);
+      setDisplayedKpi(correctCount);
+      return;
+    }
+
+    if (!hasAnimatedKpiRef.current) {
+      kpiValue.set(0);
+    }
+
+    const controls = animate(kpiValue, correctCount, {
+      duration: 0.8,
+      ease: "easeOut",
+    });
+
+    hasAnimatedKpiRef.current = true;
+
+    return () => {
+      controls.stop();
+    };
+  }, [correctCount, kpiValue, shouldReduceMotion]);
 
   const handleBack = useCallback(() => {
     router.back();
@@ -213,6 +260,58 @@ export function ReadingAnswerSheet({ data, locale, meta, bandMapping, onRetry }:
     });
   }, [filteredQuestions]);
 
+  useEffect(() => {
+    if (activePopover === null) return;
+
+    const handlePointerDown = (event: PointerEvent) => {
+      if (!gridContainerRef.current) return;
+      if (gridContainerRef.current.contains(event.target as Node)) {
+        return;
+      }
+      setActivePopover(null);
+    };
+
+    const handleKey = (event: globalThis.KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setActivePopover(null);
+      }
+    };
+
+    document.addEventListener("pointerdown", handlePointerDown);
+    document.addEventListener("keydown", handleKey);
+
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown);
+      document.removeEventListener("keydown", handleKey);
+    };
+  }, [activePopover]);
+
+  useEffect(() => {
+    if (!legendOpen) return;
+
+    const handlePointerDown = (event: PointerEvent) => {
+      if (legendButtonRef.current && legendButtonRef.current.contains(event.target as Node)) {
+        return;
+      }
+      setLegendOpen(false);
+    };
+
+    const handleKey = (event: globalThis.KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setLegendOpen(false);
+        legendButtonRef.current?.focus();
+      }
+    };
+
+    document.addEventListener("pointerdown", handlePointerDown);
+    document.addEventListener("keydown", handleKey);
+
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown);
+      document.removeEventListener("keydown", handleKey);
+    };
+  }, [legendOpen]);
+
   const toggleQuestion = useCallback((number: number) => {
     setExpandedQuestions(prev => {
       const next = new Set(prev);
@@ -250,7 +349,7 @@ export function ReadingAnswerSheet({ data, locale, meta, bandMapping, onRetry }:
   }, []);
 
   const handleGridKeyDown = useCallback(
-    (event: KeyboardEvent<HTMLButtonElement>, index: number) => {
+    (event: ReactKeyboardEvent<HTMLButtonElement>, index: number) => {
       const totalCells = normalizedQuestions.length;
       let nextIndex: number | null = null;
 
@@ -309,6 +408,26 @@ export function ReadingAnswerSheet({ data, locale, meta, bandMapping, onRetry }:
     return normalizedQuestions.filter(question => question.status !== "correct");
   }, [normalizedQuestions]);
 
+  useEffect(() => {
+    if (!bandModalOpen) {
+      setBandHighlightKey(null);
+      return;
+    }
+
+    const match = effectiveBandMapping.find(entry => correctCount >= entry.minCorrect && correctCount <= entry.maxCorrect);
+    const key = match ? `${match.minCorrect}-${match.maxCorrect}` : null;
+    setBandHighlightKey(key);
+
+    if (key) {
+      requestAnimationFrame(() => {
+        const row = bandRowRefs.current[key ?? ""];
+        if (row) {
+          row.scrollIntoView({ block: "center", behavior: "smooth" });
+        }
+      });
+    }
+  }, [bandModalOpen, correctCount, effectiveBandMapping]);
+
   return (
     <div className="relative min-h-screen bg-gradient-to-b from-[#EEF3FF] via-white to-white">
       <div className="mx-auto flex w-full max-w-[1240rem] flex-col gap-[28rem] px-[28rem] pb-[64rem] pt-[36rem] tablet:px-[40rem] desktop:px-[56rem]">
@@ -347,15 +466,15 @@ export function ReadingAnswerSheet({ data, locale, meta, bandMapping, onRetry }:
           {...heroMotionProps}
           className="relative flex flex-col gap-[22rem] rounded-[32rem] border border-white/50 bg-gradient-to-br from-[#3568FF]/10 via-white to-white px-[32rem] py-[28rem] shadow-[0_46rem_120rem_-70rem_rgba(40,78,176,0.65)] tablet:flex-row tablet:items-center tablet:justify-between"
         >
-          <div className="flex flex-1 flex-col gap-[16rem]">
+          <div className="flex flex-1 flex-col gap-[16rem]" aria-live="polite">
             <div className="flex items-center gap-[12rem]">
-+              <div className="flex size-[56rem] items-center justify-center rounded-[18rem] bg-gradient-to-br from-[#4F86F7] to-[#7B61FF] text-white shadow-[0_24rem_48rem_-32rem_rgba(58,88,208,0.55)]">
+              <div className="flex size-[56rem] items-center justify-center rounded-[18rem] bg-gradient-to-br from-[#4F86F7] to-[#7B61FF] text-white shadow-[0_24rem_48rem_-32rem_rgba(58,88,208,0.55)]">
                 <BookOpenCheck className="size-[26rem]" aria-hidden="true" />
               </div>
               <div className="flex flex-col gap-[4rem]">
                 <span className="text-[13rem] font-semibold uppercase tracking-[0.18em] text-slate-500">Correct answers</span>
                 <div className="flex items-end gap-[10rem] text-slate-900">
-                  <span className="text-[46rem] font-semibold leading-none">{correctCount}</span>
+                  <span className="text-[46rem] font-semibold leading-none">{displayedKpi}</span>
                   <span className="pb-[4rem] text-[18rem] font-semibold text-slate-500">/ {total}</span>
                 </div>
               </div>
@@ -398,19 +517,59 @@ export function ReadingAnswerSheet({ data, locale, meta, bandMapping, onRetry }:
               <span className="text-[15rem] font-semibold text-slate-900">Answers overview</span>
               <span className="rounded-[18rem] bg-white px-[14rem] py-[6rem] text-[12rem] font-semibold uppercase tracking-[0.2em] text-slate-500 shadow-[0_12rem_24rem_-20rem_rgba(34,51,120,0.35)]">Quick scan</span>
             </div>
-            <div className="flex items-center gap-[10rem] text-[12rem] text-slate-500">
+            <div className="relative flex items-center gap-[12rem] text-[12rem] text-slate-500">
               <span className="inline-flex items-center gap-[6rem]"><CircleCheck className="size-[14rem] text-emerald-500" aria-hidden="true" /> Correct</span>
               <span className="inline-flex items-center gap-[6rem]"><CircleX className="size-[14rem] text-rose-500" aria-hidden="true" /> Incorrect</span>
               <span className="inline-flex items-center gap-[6rem]"><Circle className="size-[14rem] text-slate-400" aria-hidden="true" /> No answer</span>
+              <button
+                ref={legendButtonRef}
+                type="button"
+                aria-expanded={legendOpen}
+                aria-controls={legendTooltipId}
+                onClick={() => setLegendOpen(prev => !prev)}
+                onMouseEnter={() => setLegendOpen(true)}
+                onMouseLeave={() => setLegendOpen(false)}
+                onFocus={() => setLegendOpen(true)}
+                onBlur={() => setLegendOpen(false)}
+                className="inline-flex items-center justify-center rounded-full border border-slate-200 bg-white p-[8rem] text-slate-500 transition hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 focus-visible:ring-offset-2"
+              >
+                <Info className="size-[14rem]" aria-hidden="true" />
+                <span className="sr-only">Explain status colors</span>
+              </button>
+              <AnimatePresence>
+                {legendOpen ? (
+                  <motion.div
+                    key="legend-tooltip"
+                    id={legendTooltipId}
+                    role="tooltip"
+                    initial={{ opacity: 0, y: 4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 4 }}
+                    transition={{ duration: shouldReduceMotion ? 0 : 0.18, ease: "easeOut" }}
+                    className="absolute right-0 top-full z-[20] mt-[10rem] w-[240rem] rounded-[18rem] border border-slate-200 bg-white px-[16rem] py-[14rem] text-left text-[12rem] text-slate-600 shadow-[0_20rem_40rem_-28rem_rgba(42,58,128,0.35)]"
+                  >
+                    <p className="font-semibold text-slate-900">Color legend</p>
+                    <ul className="mt-[8rem] space-y-[6rem]">
+                      <li>Emerald shows questions you answered correctly.</li>
+                      <li>Rose highlights answers that need review.</li>
+                      <li>Slate marks questions without an answer.</li>
+                    </ul>
+                  </motion.div>
+                ) : null}
+              </AnimatePresence>
             </div>
           </header>
           <div
-            className="grid grid-cols-2 gap-[12rem] tablet:grid-cols-4 desktop:grid-cols-6 wide:grid-cols-8"
+            className="grid gap-[12rem]"
             role="grid"
             aria-label="Question overview"
+            ref={gridContainerRef}
+            style={{ gridTemplateColumns }}
           >
             {normalizedQuestions.map((question, index) => {
               const statusVisual = STATUS_STYLES[question.status];
+              const isPopoverOpen = activePopover === question.number;
+              const popoverId = `reading-question-${question.number}-tooltip`;
               return (
                 <button
                   key={question.number}
@@ -420,7 +579,15 @@ export function ReadingAnswerSheet({ data, locale, meta, bandMapping, onRetry }:
                   type="button"
                   role="gridcell"
                   aria-label={`Question ${question.number}: ${statusVisual.label}`}
-                  onClick={() => handleQuestionFocus(question.number)}
+                  aria-describedby={isPopoverOpen ? popoverId : undefined}
+                  onClick={() => {
+                    handleQuestionFocus(question.number);
+                    setActivePopover(question.number);
+                  }}
+                  onMouseEnter={() => setActivePopover(question.number)}
+                  onMouseLeave={() => setActivePopover(prev => (prev === question.number ? null : prev))}
+                  onFocus={() => setActivePopover(question.number)}
+                  onBlur={() => setActivePopover(prev => (prev === question.number ? null : prev))}
                   onKeyDown={event => handleGridKeyDown(event, index)}
                   className={cn(
                     "group relative flex h-[74rem] flex-col items-center justify-center rounded-[20rem] border border-white/60 bg-white text-[14rem] font-semibold shadow-[0_16rem_34rem_-24rem_rgba(42,56,140,0.35)] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500",
@@ -451,22 +618,33 @@ export function ReadingAnswerSheet({ data, locale, meta, bandMapping, onRetry }:
                       {statusVisual.label}
                     </motion.div>
                   </AnimatePresence>
-                  <div
-                    role="tooltip"
-                    className={cn(
-                      "pointer-events-none absolute top-full z-10 mt-[10rem] w-[190rem] -translate-x-1/2 rounded-[16rem] border border-white/75 bg-white px-[14rem] py-[12rem] text-left text-[12rem] font-medium text-slate-600 opacity-0 shadow-[0_20rem_50rem_-34rem_rgba(40,60,120,0.4)] transition group-hover:opacity-100 group-focus-visible:opacity-100",
-                      question.status === "correct" && "group-hover:border-emerald-200",
-                      question.status === "incorrect" && "group-hover:border-rose-200"
-                    )}
-                    style={{ left: "50%" }}
-                  >
-                    <p className="font-semibold text-slate-900">Question {question.number}</p>
-                    <div className="mt-[6rem] space-y-[4rem]">
-                      <p className="text-slate-500">Your answer: {question.answer ?? "—"}</p>
-                      <p className="text-slate-500">Correct answer: {question.correct_answer}</p>
-                      <p className={cn("font-semibold", statusVisual.text)}>Status: {statusVisual.label}</p>
-                    </div>
-                  </div>
+                  <AnimatePresence>
+                    {isPopoverOpen ? (
+                      <motion.div
+                        key="question-popover"
+                        id={popoverId}
+                        role="tooltip"
+                        initial={{ opacity: 0, y: 6 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 6 }}
+                        transition={{ duration: shouldReduceMotion ? 0 : 0.18, ease: "easeOut" }}
+                        className={cn(
+                          "pointer-events-none absolute top-full z-10 mt-[10rem] w-[190rem] -translate-x-1/2 rounded-[16rem] border border-slate-100 bg-white px-[14rem] py-[12rem] text-left text-[12rem] font-medium text-slate-600 shadow-[0_20rem_50rem_-34rem_rgba(40,60,120,0.4)]",
+                          question.status === "correct" && "border-emerald-200",
+                          question.status === "incorrect" && "border-rose-200"
+                        )}
+                        style={{ left: "50%" }}
+                        aria-hidden={!isPopoverOpen}
+                      >
+                        <p className="font-semibold text-slate-900">Question {question.number}</p>
+                        <div className="mt-[6rem] space-y-[4rem]">
+                          <p className="text-slate-500">Your answer: {question.answer ?? "—"}</p>
+                          <p className="text-slate-500">Correct answer: {question.correct_answer}</p>
+                          <p className={cn("font-semibold", statusVisual.text)}>Status: {statusVisual.label}</p>
+                        </div>
+                      </motion.div>
+                    ) : null}
+                  </AnimatePresence>
                 </button>
               );
             })}
@@ -479,132 +657,142 @@ export function ReadingAnswerSheet({ data, locale, meta, bandMapping, onRetry }:
               <h2 className="text-[18rem] font-semibold text-slate-900">Detailed review</h2>
               <p className="text-[13rem] text-slate-500">Tap a question to reveal your answer, the correct one, and improvement cues.</p>
             </div>
-            <div className="flex items-center gap-[10rem]">
-              <button
-                type="button"
-                onClick={expandAll}
-                className="rounded-[18rem] border border-slate-200 bg-white px-[16rem] py-[10rem] text-[12rem] font-semibold text-slate-600 transition hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 focus-visible:ring-offset-2"
-              >
-                Expand all
-              </button>
-              <button
-                type="button"
-                onClick={collapseAll}
-                className="rounded-[18rem] border border-slate-200 bg-white px-[16rem] py-[10rem] text-[12rem] font-semibold text-slate-600 transition hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 focus-visible:ring-offset-2"
-              >
-                Collapse all
-              </button>
-            </div>
           </header>
 
-          <div className="flex flex-wrap items-center gap-[12rem]" role="tablist" aria-label="Question filter">
-            {(
-              ["all", "incorrect", "unanswered", "correct"] satisfies ReviewFilterKey[]
-            ).map(key => (
-              <button
-                key={key}
-                type="button"
-                role="tab"
-                aria-selected={activeFilter === key}
-                onClick={() => setActiveFilter(key)}
-                className={cn(
-                  "rounded-[18rem] border px-[16rem] py-[8rem] text-[12rem] font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 focus-visible:ring-offset-2",
-                  activeFilter === key
-                    ? "border-slate-900 bg-slate-900 text-white shadow-[0_16rem_36rem_-28rem_rgba(32,56,140,0.6)]"
-                    : "border-slate-200 bg-white text-slate-600 hover:text-slate-900"
-                )}
-              >
-                {FILTER_LABELS[key]} <span className="ml-[6rem] inline-flex min-w-[20rem] justify-center rounded-[12rem] bg-slate-100 px-[6rem] py-[2rem] text-[11rem] font-semibold text-slate-500">{reviewCounts[key]}</span>
-              </button>
-            ))}
-            <span aria-live="polite" className="sr-only">
-              Showing {filteredQuestions.length} questions filtered by {FILTER_LABELS[activeFilter]}.
-            </span>
-          </div>
-
-          {filteredQuestions.length === 0 ? (
-            <div className="rounded-[26rem] border border-slate-100 bg-white px-[28rem] py-[40rem] text-center text-[14rem] text-slate-500">
-              Nothing to review here. Switch filters or explore another test.
+          <div className="relative">
+            <div
+              className="z-[2] flex flex-wrap items-center justify-between gap-[12rem] rounded-[24rem] border border-white/60 bg-white/85 px-[18rem] py-[12rem] shadow-[0_18rem_40rem_-32rem_rgba(40,56,140,0.25)] backdrop-blur"
+              style={{ top: "calc(88rem + 16rem)" }}
+            >
+              <div className="flex flex-wrap items-center gap-[12rem]" role="tablist" aria-label="Question filter">
+                {(
+                  ["all", "incorrect", "unanswered", "correct"] satisfies ReviewFilterKey[]
+                ).map(key => (
+                  <button
+                    key={key}
+                    type="button"
+                    role="tab"
+                    aria-selected={activeFilter === key}
+                    onClick={() => setActiveFilter(key)}
+                    className={cn(
+                      "rounded-[18rem] border px-[16rem] py-[8rem] text-[12rem] font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 focus-visible:ring-offset-2",
+                      activeFilter === key
+                        ? "border-slate-900 bg-slate-900 text-white shadow-[0_16rem_36rem_-28rem_rgba(32,56,140,0.6)]"
+                        : "border-slate-200 bg-white text-slate-600 hover:text-slate-900"
+                    )}
+                  >
+                    {FILTER_LABELS[key]} <span className="ml-[6rem] inline-flex min-w-[20rem] justify-center rounded-[12rem] bg-slate-100 px-[6rem] py-[2rem] text-[11rem] font-semibold text-slate-500">{reviewCounts[key]}</span>
+                  </button>
+                ))}
+                <span aria-live="polite" className="sr-only">
+                  Showing {filteredQuestions.length} questions filtered by {FILTER_LABELS[activeFilter]}.
+                </span>
+              </div>
+              <div className="flex items-center gap-[10rem]">
+                <button
+                  type="button"
+                  onClick={expandAll}
+                  className="rounded-[18rem] border border-slate-200 bg-white px-[16rem] py-[10rem] text-[12rem] font-semibold text-slate-600 transition hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 focus-visible:ring-offset-2"
+                >
+                  Expand all
+                </button>
+                <button
+                  type="button"
+                  onClick={collapseAll}
+                  className="rounded-[18rem] border border-slate-200 bg-white px-[16rem] py-[10rem] text-[12rem] font-semibold text-slate-600 transition hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 focus-visible:ring-offset-2"
+                >
+                  Collapse all
+                </button>
+              </div>
             </div>
-          ) : (
-            <LayoutGroup>
-              <div className="flex flex-col gap-[16rem]">
-                {filteredQuestions.map(question => {
-                  const statusVisual = STATUS_STYLES[question.status];
-                  const isExpanded = expandedQuestions.has(question.number) || question.status !== "correct";
-                  return (
-                    <motion.article
-                      key={question.number}
-                      layout
-                      ref={node => {
-                        questionRefs.current[question.number] = node;
-                      }}
-                      className={cn(
-                        "relative overflow-hidden rounded-[26rem] border bg-white px-[24rem] py-[18rem] shadow-[0_24rem_48rem_-36rem_rgba(40,56,132,0.28)]",
-                        question.status === "correct" && "border-emerald-100",
-                        question.status === "incorrect" && "border-rose-100",
-                        question.status === "unanswered" && "border-slate-100",
-                        highlightedQuestion === question.number && "ring-4 ring-offset-2",
-                        highlightedQuestion === question.number && statusVisual.ring
-                      )}
-                    >
-                      <button
-                        type="button"
-                        aria-expanded={isExpanded}
-                        aria-controls={`question-panel-${question.number}`}
-                        onClick={() => toggleQuestion(question.number)}
-                        className="flex w-full items-center justify-between gap-[12rem] text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 focus-visible:ring-offset-2"
-                      >
-                        <div className="flex flex-1 items-center gap-[16rem]">
-                          <span className={cn("flex size-[34rem] items-center justify-center rounded-full", statusVisual.surface, statusVisual.text)}>
-                            {statusVisual.icon}
-                          </span>
-                          <div className="flex flex-col gap-[4rem]">
-                            <span className="text-[13rem] font-semibold text-slate-500">Question {question.number}</span>
-                            <p className="text-[15rem] font-semibold text-slate-900">
-                              {question.answer && question.answer.trim().length > 0 ? `Your answer: ${question.answer}` : "No answer provided"}
-                            </p>
-                          </div>
-                        </div>
-                        <span className={cn("inline-flex items-center gap-[8rem] rounded-[16rem] px-[14rem] py-[6rem] text-[12rem] font-semibold", statusVisual.surface, statusVisual.text)}>
-                          {statusVisual.label}
-                          <motion.span
-                            animate={{ rotate: isExpanded ? 180 : 0 }}
-                            transition={{ duration: shouldReduceMotion ? 0 : 0.26, ease: "easeOut" }}
-                            className="inline-flex"
-                            aria-hidden="true"
+
+            <div className="mt-[20rem]">
+              {filteredQuestions.length === 0 ? (
+                <div className="rounded-[26rem] border border-slate-100 bg-white px-[28rem] py-[40rem] text-center text-[14rem] text-slate-500">
+                  Nothing to review here. Switch filters or explore another test.
+                </div>
+              ) : (
+                <LayoutGroup>
+                  <div className="flex flex-col gap-[16rem]">
+                    {filteredQuestions.map(question => {
+                      const statusVisual = STATUS_STYLES[question.status];
+                      const isExpanded = expandedQuestions.has(question.number) || question.status !== "correct";
+                      return (
+                        <motion.article
+                          key={question.number}
+                          layout
+                          ref={node => {
+                            questionRefs.current[question.number] = node;
+                          }}
+                          className={cn(
+                            "relative overflow-hidden rounded-[26rem] border bg-white px-[24rem] py-[18rem] shadow-[0_24rem_48rem_-36rem_rgba(40,56,132,0.28)]",
+                            question.status === "correct" && "border-emerald-100",
+                            question.status === "incorrect" && "border-rose-100",
+                            question.status === "unanswered" && "border-slate-100",
+                            highlightedQuestion === question.number && "ring-4 ring-offset-2",
+                            highlightedQuestion === question.number && statusVisual.ring,
+                            activeFilter === "incorrect" && question.status === "incorrect" && "ring-1 ring-rose-200/80 shadow-[0_0_0_3px_rgba(244,63,94,0.08)]"
+                          )}
+                        >
+                          <button
+                            type="button"
+                            aria-expanded={isExpanded}
+                            aria-controls={`question-panel-${question.number}`}
+                            onClick={() => toggleQuestion(question.number)}
+                            className="flex w-full items-center justify-between gap-[12rem] text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 focus-visible:ring-offset-2"
                           >
-                            <ChevronDown className="size-[16rem]" />
-                          </motion.span>
-                        </span>
-                      </button>
-                      <AnimatePresence initial={false}>
-                        {isExpanded ? (
-                          <motion.div
-                            id={`question-panel-${question.number}`}
-                            initial={shouldReduceMotion ? false : { height: 0, opacity: 0 }}
-                            animate={{ height: "auto", opacity: 1 }}
-                            exit={shouldReduceMotion ? {} : { height: 0, opacity: 0 }}
-                            transition={{ duration: shouldReduceMotion ? 0 : 0.28, ease: "easeInOut" }}
-                            className="overflow-hidden"
-                          >
-                            <div className="mt-[18rem] space-y-[14rem] rounded-[22rem] border border-slate-100 bg-[#F8FAFF] px-[20rem] py-[16rem] text-[14rem] text-slate-600">
-                              <p className="font-semibold text-slate-900">Correct answer: {question.correct_answer}</p>
-                              <p className="text-slate-600">Your answer: {question.answer ? question.answer : "—"}</p>
-                              <div className="rounded-[18rem] border border-dashed border-slate-200 bg-white px-[18rem] py-[14rem] text-[13rem] text-slate-500">
-                                Tip placeholder · Add targeted explanation once available.
+                            <div className="flex flex-1 items-center gap-[16rem]">
+                              <span className={cn("flex size-[34rem] items-center justify-center rounded-full", statusVisual.surface, statusVisual.text)}>
+                                {statusVisual.icon}
+                              </span>
+                              <div className="flex flex-col gap-[4rem]">
+                                <span className="text-[13rem] font-semibold text-slate-500">Question {question.number}</span>
+                                <p className="text-[15rem] font-semibold text-slate-900">
+                                  {question.answer && question.answer.trim().length > 0 ? `Your answer: ${question.answer}` : "No answer provided"}
+                                </p>
                               </div>
                             </div>
-                          </motion.div>
-                        ) : null}
-                      </AnimatePresence>
-                    </motion.article>
-                  );
-                })}
-              </div>
-            </LayoutGroup>
-          )}
-        </section>
+                            <span className={cn("inline-flex items-center gap-[8rem] rounded-[16rem] px-[14rem] py-[6rem] text-[12rem] font-semibold", statusVisual.surface, statusVisual.text)}>
+                              {statusVisual.label}
+                              <motion.span
+                                animate={{ rotate: isExpanded ? 180 : 0 }}
+                                transition={{ duration: shouldReduceMotion ? 0 : 0.26, ease: "easeOut" }}
+                                className="inline-flex"
+                                aria-hidden="true"
+                              >
+                                <ChevronDown className="size-[16rem]" />
+                              </motion.span>
+                            </span>
+                          </button>
+                          <AnimatePresence initial={false}>
+                            {isExpanded ? (
+                              <motion.div
+                                id={`question-panel-${question.number}`}
+                                initial={shouldReduceMotion ? false : { height: 0, opacity: 0 }}
+                                animate={{ height: "auto", opacity: 1 }}
+                                exit={shouldReduceMotion ? {} : { height: 0, opacity: 0 }}
+                                transition={{ duration: shouldReduceMotion ? 0 : 0.28, ease: "easeInOut" }}
+                                className="overflow-hidden"
+                              >
+                                <div className="mt-[18rem] space-y-[14rem] rounded-[22rem] border border-slate-100 bg-[#F8FAFF] px-[20rem] py-[16rem] text-[14rem] text-slate-600">
+                                  <p className="font-semibold text-slate-900">Correct answer: {question.correct_answer}</p>
+                                  <p className="text-slate-600">Your answer: {question.answer ? question.answer : "—"}</p>
+                                  <div className="rounded-[18rem] border border-dashed border-slate-200 bg-white px-[18rem] py-[14rem] text-[13rem] text-slate-500">
+                                    Tip placeholder · Add targeted explanation once available.
+                                  </div>
+                                </div>
+                              </motion.div>
+                            ) : null}
+                          </AnimatePresence>
+                        </motion.article>
+                      );
+                    })}
+                  </div>
+                </LayoutGroup>
+              )}
+            </div>
+          </div>
+          </section>
 
         <section className="grid gap-[18rem] tablet:grid-cols-2">
           <motion.article
@@ -723,25 +911,40 @@ export function ReadingAnswerSheet({ data, locale, meta, bandMapping, onRetry }:
         {effectiveBandMapping.length === 0 ? (
           <EmptyModalState description="Band mapping is not available right now. Check back soon." />
         ) : (
-          <table className="w-full table-fixed border-separate border-spacing-y-[10rem] text-left">
-            <thead>
-              <tr className="text-[12rem] uppercase tracking-[0.16em] text-slate-500">
-                <th className="rounded-l-[18rem] bg-slate-100 px-[16rem] py-[10rem]">Correct answers</th>
-                <th className="rounded-r-[18rem] bg-slate-100 px-[16rem] py-[10rem]">Estimated band</th>
-              </tr>
-            </thead>
-            <tbody>
-              {effectiveBandMapping.map(entry => {
-                const isCurrent = correctCount >= entry.minCorrect && correctCount <= entry.maxCorrect;
-                return (
-                  <tr key={`${entry.minCorrect}-${entry.maxCorrect}`} className="text-[13rem] text-slate-600">
-                    <td className={cn("rounded-l-[18rem] bg-white px-[16rem] py-[12rem]", isCurrent && "bg-emerald-50 font-semibold text-emerald-700")}>{entry.minCorrect} – {entry.maxCorrect}</td>
-                    <td className={cn("rounded-r-[18rem] bg-white px-[16rem] py-[12rem]", isCurrent && "bg-emerald-50 font-semibold text-emerald-700")}>{entry.estimatedBand}</td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+          <div className="max-h-[60vh] overflow-y-auto pr-[6rem]">
+            <table className="w-full table-fixed border-separate border-spacing-y-[10rem] text-left">
+              <thead>
+                <tr className="text-[12rem] uppercase tracking-[0.16em] text-slate-500">
+                  <th className="rounded-l-[18rem] bg-slate-100 px-[16rem] py-[10rem]">Correct answers</th>
+                  <th className="rounded-r-[18rem] bg-slate-100 px-[16rem] py-[10rem]">Estimated band</th>
+                </tr>
+              </thead>
+              <tbody>
+                {effectiveBandMapping.map(entry => {
+                  const key = `${entry.minCorrect}-${entry.maxCorrect}`;
+                  const isCurrent = correctCount >= entry.minCorrect && correctCount <= entry.maxCorrect;
+                  const isHighlighted = bandHighlightKey === key;
+                  return (
+                    <motion.tr
+                      key={key}
+                      ref={node => {
+                        bandRowRefs.current[key] = node;
+                      }}
+                      initial={false}
+                      animate={{
+                        backgroundColor: isHighlighted ? "rgba(209, 250, 229, 0.6)" : "rgba(255,255,255,1)",
+                      }}
+                      transition={{ duration: shouldReduceMotion ? 0 : 0.35, ease: "easeOut" }}
+                      className="text-[13rem] text-slate-600"
+                    >
+                      <td className={cn("rounded-l-[18rem] px-[16rem] py-[12rem] transition-colors", isCurrent ? "font-semibold text-emerald-700" : "text-slate-600")}>{entry.minCorrect} – {entry.maxCorrect}</td>
+                      <td className={cn("rounded-r-[18rem] px-[16rem] py-[12rem] transition-colors", isCurrent ? "font-semibold text-emerald-700" : "text-slate-600")}>{entry.estimatedBand}</td>
+                    </motion.tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         )}
       </ModalShell>
     </div>
