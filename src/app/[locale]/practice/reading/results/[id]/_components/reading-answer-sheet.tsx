@@ -123,7 +123,7 @@ export function ReadingAnswerSheet({ data, locale, meta, bandMapping, onRetry }:
 
   const highlightTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const gridRefs = useRef<Array<HTMLButtonElement | null>>([]);
-  const questionRefs = useRef<Record<number, HTMLDivElement | null>>({});
+  const questionRefs = useRef<Record<number, HTMLElement | null>>({});
 
   const total = data.questions.length;
   const normalizedQuestions = useMemo<ReadingQuestion[]>(() => {
