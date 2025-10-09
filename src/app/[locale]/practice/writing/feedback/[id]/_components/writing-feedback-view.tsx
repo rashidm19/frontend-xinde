@@ -4,19 +4,7 @@ import { type KeyboardEvent, type ReactNode, type UIEvent, useCallback, useEffec
 
 import { animate, AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import type { LucideIcon } from 'lucide-react';
-import {
-  ArrowLeft,
-  ArrowRight,
-  BookOpenCheck,
-  CheckCircle2,
-  ChevronRight,
-  FileText,
-  Info,
-  Lightbulb,
-  LogOut,
-  Sparkles,
-  X,
-} from 'lucide-react';
+import { ArrowLeft, ArrowRight, BookOpenCheck, CheckCircle2, ChevronRight, FileText, Info, Lightbulb, LogOut, Sparkles, X } from 'lucide-react';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
 
 import { cn } from '@/lib/utils';
@@ -344,8 +332,8 @@ export function WritingFeedbackView({ data, activePart, partOptions, onPartChang
     <div className='relative flex min-h-[100dvh] flex-col bg-[#EEF5FE]'>
       <header
         className={cn(
-          'sticky top-0 z-[30] flex h-[64rem] w-full items-center justify-between border-b border-white/60 bg-white/90 px-[40rem] backdrop-blur transition-shadow tablet:px-[32rem]',
-          topBarElevated ? 'shadow-[0_16rem_40rem_-32rem_rgba(15,23,42,0.15)]' : 'shadow-none'
+          'sticky top-0 z-[30] flex h-[64rem] w-full items-center justify-between border-b border-white/60 bg-white/85 px-[40rem] backdrop-blur-sm transition-[box-shadow,backdrop-filter,background-color] tablet:px-[32rem]',
+          topBarElevated ? 'bg-white/95 shadow-[0_18rem_44rem_-30rem_rgba(15,23,42,0.2)] backdrop-blur-md' : 'shadow-none'
         )}
         role='navigation'
         aria-label='Writing feedback actions'
@@ -480,11 +468,7 @@ export function WritingFeedbackView({ data, activePart, partOptions, onPartChang
               <div className='flex flex-col gap-[12rem]'>
                 <span className='text-[13rem] font-semibold uppercase tracking-[0.2em] opacity-80'>Overall band</span>
                 <div className='flex items-end gap-[12rem]'>
-                  <span
-                    className='text-[62rem] font-semibold leading-none'
-                    title={cefrTooltip ?? undefined}
-                    aria-label={cefrTooltip ?? undefined}
-                  >
+                  <span className='text-[62rem] font-semibold leading-none' title={cefrTooltip ?? undefined} aria-label={cefrTooltip ?? undefined}>
                     {displayScore}
                   </span>
                   <span className='pb-[8rem] text-[14rem] font-medium opacity-80'>Based on IELTS band descriptors</span>
@@ -514,7 +498,6 @@ export function WritingFeedbackView({ data, activePart, partOptions, onPartChang
             <section className='flex flex-1 flex-col rounded-[28rem] border border-slate-100 bg-white px-[32rem] py-[28rem] shadow-[0_24rem_64rem_-48rem_rgba(46,67,139,0.25)]'>
               <header className='flex flex-col gap-[6rem]'>
                 <span className='text-[13rem] font-semibold uppercase tracking-[0.2em] text-slate-400'>Next steps</span>
-                {/*<p className='text-[14rem] font-medium text-slate-500'>Choose what to explore next.</p>*/}
               </header>
               <nav className='mt-[24rem] flex flex-1 flex-col gap-[14rem]' aria-label='Next steps options'>
                 {nextSteps.map(step => (
@@ -534,7 +517,7 @@ export function WritingFeedbackView({ data, activePart, partOptions, onPartChang
         </div>
       </div>
 
-      <UnifiedModal
+      <ModalShell
         title='Detailed feedback by band'
         open={openModal === 'criteria'}
         onOpenChange={open => setOpenModal(open ? 'criteria' : null)}
@@ -553,19 +536,10 @@ export function WritingFeedbackView({ data, activePart, partOptions, onPartChang
           }
         }}
         onContentScroll={handleCriteriaContentScroll}
+        progressSlot={<ModalScrollProgress value={criteriaScrollProgress} label='Scroll progress' />}
       >
         {availability.criteria && activeCriterion ? (
           <div className='flex flex-col gap-[28rem]'>
-            <div className='flex flex-col gap-[10rem]'>
-              <div className='h-[4rem] w-full rounded-[999rem] bg-slate-200/50' role='progressbar' aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(criteriaScrollProgress * 100)}>
-                <motion.div
-                  className='h-full rounded-[999rem] bg-slate-900'
-                  animate={{ width: `${Math.max(criteriaScrollProgress * 100, 2)}%` }}
-                  transition={{ duration: shouldReduceMotion ? 0 : 0.25, ease: 'easeOut' }}
-                />
-              </div>
-              <span className='text-[12rem] font-medium text-slate-500'>Scroll to explore the full feedback.</span>
-            </div>
             <div
               role='tablist'
               aria-label='Detailed feedback criteria'
@@ -667,9 +641,9 @@ export function WritingFeedbackView({ data, activePart, partOptions, onPartChang
         ) : (
           <EmptyModalState description='Detailed feedback is not available yet. Check back once evaluation is complete.' />
         )}
-      </UnifiedModal>
+      </ModalShell>
 
-      <UnifiedModal title='Feedback summary' open={openModal === 'summary'} onOpenChange={open => setOpenModal(open ? 'summary' : null)}>
+      <ModalShell title='Feedback summary' open={openModal === 'summary'} onOpenChange={open => setOpenModal(open ? 'summary' : null)}>
         <div className='flex flex-col gap-[24rem] text-[15rem] leading-[1.68] text-slate-700'>
           <SummarySection title='Overall impression'>
             {data.generalFeedback?.overall ? (
@@ -693,8 +667,8 @@ export function WritingFeedbackView({ data, activePart, partOptions, onPartChang
             )}
           </SummarySection>
 
-          {data.generalFeedback?.strengths && data.generalFeedback.strengths.length > 0 && (
-            <SummarySection title='Notable strengths'>
+          <SummarySection title='Notable strengths'>
+            {data.generalFeedback?.strengths && data.generalFeedback.strengths.length > 0 ? (
               <ul className='flex list-disc flex-col gap-[8rem] pl-[20rem]'>
                 {data.generalFeedback.strengths.map((item, index) => (
                   <li key={`strength-${index}`} className='text-[14rem]'>
@@ -702,18 +676,22 @@ export function WritingFeedbackView({ data, activePart, partOptions, onPartChang
                   </li>
                 ))}
               </ul>
-            </SummarySection>
-          )}
+            ) : (
+              <p className='text-[14rem] text-slate-500'>We will surface strengths once they are detected.</p>
+            )}
+          </SummarySection>
 
-          {data.generalFeedback?.recommendation && (
-            <SummarySection title='Recommendations'>
+          <SummarySection title='Recommendations'>
+            {data.generalFeedback?.recommendation ? (
               <p className='whitespace-pre-wrap'>{data.generalFeedback.recommendation}</p>
-            </SummarySection>
-          )}
+            ) : (
+              <p className='text-[14rem] text-slate-500'>Recommendations will appear once this section is generated.</p>
+            )}
+          </SummarySection>
         </div>
-      </UnifiedModal>
+      </ModalShell>
 
-      <UnifiedModal
+      <ModalShell
         title='Original IELTS Task'
         open={openModal === 'task'}
         onOpenChange={open => setOpenModal(open ? 'task' : null)}
@@ -766,9 +744,9 @@ export function WritingFeedbackView({ data, activePart, partOptions, onPartChang
             </div>
           )}
         </div>
-      </UnifiedModal>
+      </ModalShell>
 
-      <UnifiedModal title='Ideal response example' open={openModal === 'ideal'} onOpenChange={open => setOpenModal(open ? 'ideal' : null)}>
+      <ModalShell title='Ideal response example' open={openModal === 'ideal'} onOpenChange={open => setOpenModal(open ? 'ideal' : null)}>
         {availability.ideal && data.idealResponse?.text ? (
           <div className='flex flex-col gap-[20rem]'>
             <p className='text-[14rem] font-medium text-slate-500'>Use this sample for inspiration—tailor your own response rather than copying it.</p>
@@ -783,7 +761,7 @@ export function WritingFeedbackView({ data, activePart, partOptions, onPartChang
         ) : (
           <EmptyModalState description='The exemplar response is on its way. Please check again soon.' />
         )}
-      </UnifiedModal>
+      </ModalShell>
     </div>
   );
 }
@@ -801,10 +779,16 @@ function StepButton({ icon: Icon, label, description, variant, disabled, onClick
   const baseClasses =
     'group flex min-h-[82rem] items-center justify-between gap-[16rem] rounded-[24rem] border px-[24rem] py-[20rem] text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 focus-visible:ring-offset-2';
   const variantClasses: Record<StepButtonProps['variant'], string> = {
-    primary: 'border-transparent bg-gradient-to-r from-[#4F86F7] to-[#7C5CFF] text-white shadow-[0_20rem_40rem_-28rem_rgba(72,85,190,0.65)] hover:brightness-[1.05]',
+    primary: 'border-transparent bg-gradient-to-r from-[#4F86F7] to-[#7C5CFF] text-white shadow-[0_24rem_48rem_-32rem_rgba(72,85,190,0.65)] hover:brightness-[1.04]',
     secondary: 'border-slate-200 bg-white text-slate-800 hover:bg-slate-50',
     tertiary: 'border-slate-100 bg-[#F6F8FF] text-slate-700 hover:bg-white',
   };
+  const iconWrapperClasses: Record<StepButtonProps['variant'], string> = {
+    primary: 'bg-white/20 text-white',
+    secondary: 'bg-slate-100 text-slate-600',
+    tertiary: 'bg-white text-slate-600',
+  };
+  const descriptionClasses = disabled ? 'text-slate-400' : variant === 'primary' ? 'text-white/80' : 'text-slate-500';
 
   return (
     <motion.button
@@ -813,23 +797,24 @@ function StepButton({ icon: Icon, label, description, variant, disabled, onClick
       disabled={disabled}
       className={cn(
         baseClasses,
-        variantClasses[variant],
-        disabled && 'cursor-not-allowed border-slate-100 bg-slate-50 text-slate-300 hover:bg-slate-50 focus-visible:ring-0'
+        disabled ? 'cursor-not-allowed border-slate-100 bg-slate-50 text-slate-300 hover:bg-slate-50 focus-visible:ring-0' : variantClasses[variant]
       )}
-      whileHover={disabled ? undefined : { y: -3, scale: 1.01 }}
+      whileHover={
+        disabled
+          ? undefined
+          : {
+              y: -4,
+              scale: 1.01,
+              boxShadow: variant === 'primary' ? '0 24px 56px -30px rgba(72,85,190,0.75)' : '0 18px 40px -32px rgba(15,23,42,0.35)',
+            }
+      }
       whileTap={disabled ? undefined : { scale: 0.99 }}
     >
       <span className='flex items-center gap-[16rem] text-left'>
-        <span
-          className={cn(
-            'mt-[2rem] rounded-[16rem] bg-white/70 p-[10rem]',
-            variant === 'primary' ? 'text-white' : 'text-slate-600',
-            disabled && 'text-slate-300'
-          )}
-        >
+        <span className={cn('mt-[2rem] rounded-[16rem] p-[10rem]', disabled ? 'bg-slate-100 text-slate-300' : iconWrapperClasses[variant])}>
           <Icon className='size-[18rem]' aria-hidden='true' />
         </span>
-          <span className='text-[15rem] font-semibold leading-tight'>{label}</span>
+        <span className='text-[15rem] font-semibold leading-tight'>{label}</span>
       </span>
       <ChevronRight
         className={cn(
@@ -843,37 +828,189 @@ function StepButton({ icon: Icon, label, description, variant, disabled, onClick
   );
 }
 
-interface UnifiedModalProps {
+interface ModalHeaderProps {
+  title: string;
+  onClose: () => void;
+  description?: string;
+  trailingSlot?: ReactNode;
+}
+
+function ModalHeader({ title, onClose, description, trailingSlot }: ModalHeaderProps) {
+  return (
+    <div className='flex items-start justify-between gap-[16rem] px-[32rem] py-[22rem]'>
+      <div className='flex flex-col gap-[6rem]'>
+        <DialogPrimitive.Title className='text-[22rem] font-semibold text-slate-900'>{title}</DialogPrimitive.Title>
+        {description ? <p className='text-[13rem] text-slate-500'>{description}</p> : null}
+      </div>
+      <div className='flex items-center gap-[12rem]'>
+        {trailingSlot}
+        <DialogPrimitive.Close asChild>
+          <button
+            type='button'
+            aria-label='Close modal'
+            className='rounded-full border border-slate-200 bg-white p-[10rem] text-slate-500 transition hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 focus-visible:ring-offset-2'
+          >
+            <X className='size-[18rem]' />
+          </button>
+        </DialogPrimitive.Close>
+      </div>
+    </div>
+  );
+}
+
+interface ModalScrollProgressProps {
+  value: number;
+  label?: string;
+}
+
+function ModalScrollProgress({ value, label }: ModalScrollProgressProps) {
+  const clamped = Number.isFinite(value) ? Math.max(0, Math.min(1, value)) : 0;
+  const percent = Math.round(clamped * 100);
+
+  return (
+    <div className='bg-white/92 flex flex-col gap-[8rem] border-b border-slate-100 px-[32rem] py-[16rem] backdrop-blur-sm'>
+      <div className='flex items-center justify-between text-[12rem] font-semibold text-slate-500'>
+        <span>{label ?? 'Scroll progress'}</span>
+        <span>{percent}%</span>
+      </div>
+      <div className='h-[6rem] w-full overflow-hidden rounded-[999rem] bg-slate-200/70' role='progressbar' aria-valuemin={0} aria-valuemax={100} aria-valuenow={percent}>
+        <motion.div className='h-full rounded-[999rem] bg-slate-900' animate={{ width: `${Math.max(percent, 2)}%` }} transition={{ duration: 0.25, ease: 'easeOut' }} />
+      </div>
+    </div>
+  );
+}
+
+interface FadeEdgesProps {
+  showTop: boolean;
+  showBottom: boolean;
+}
+
+function FadeEdges({ showTop, showBottom }: FadeEdgesProps) {
+  return (
+    <>
+      <div
+        aria-hidden='true'
+        className={cn(
+          'pointer-events-none absolute left-0 right-0 top-0 h-[48rem] bg-gradient-to-b from-white via-white/80 to-transparent transition-opacity duration-200',
+          showTop ? 'opacity-100' : 'opacity-0'
+        )}
+      />
+      <div
+        aria-hidden='true'
+        className={cn(
+          'pointer-events-none absolute bottom-0 left-0 right-0 h-[60rem] bg-gradient-to-t from-white via-white/80 to-transparent transition-opacity duration-200',
+          showBottom ? 'opacity-100' : 'opacity-0'
+        )}
+      />
+    </>
+  );
+}
+
+interface ModalShellProps {
   title: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   size?: 'md' | 'lg';
   children: ReactNode;
+  renderHeader?: (helpers: { close: () => void }) => ReactNode;
+  progressSlot?: ReactNode;
   renderFooter?: (helpers: { close: () => void }) => ReactNode;
   contentRef?: (node: HTMLDivElement | null) => void;
   onContentScroll?: (event: UIEvent<HTMLDivElement>) => void;
 }
 
-function UnifiedModal({ title, open, onOpenChange, size = 'md', children, renderFooter, contentRef, onContentScroll }: UnifiedModalProps) {
+function ModalShell({ title, open, onOpenChange, size = 'md', children, renderHeader, progressSlot, renderFooter, contentRef, onContentScroll }: ModalShellProps) {
   const shouldReduceMotion = useReducedMotion();
+  const lastActiveRef = useRef<HTMLElement | null>(null);
+  const wasOpenRef = useRef(false);
+  const contentNodeRef = useRef<HTMLDivElement | null>(null);
+  const [showTopFade, setShowTopFade] = useState(false);
+  const [showBottomFade, setShowBottomFade] = useState(false);
+
+  const close = useCallback(() => onOpenChange(false), [onOpenChange]);
 
   useEffect(() => {
-    if (!open) return;
-    const original = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    return () => {
-      document.body.style.overflow = original;
-    };
+    if (open) {
+      wasOpenRef.current = true;
+      const active = document.activeElement;
+      if (active instanceof HTMLElement) {
+        lastActiveRef.current = active;
+      }
+      const original = document.body.style.overflow;
+      document.body.dataset.modalLock = (Number(document.body.dataset.modalLock ?? '0') + 1).toString();
+      document.body.style.overflow = 'hidden';
+      return () => {
+        const lockCount = Number(document.body.dataset.modalLock ?? '1') - 1;
+        if (lockCount <= 0) {
+          document.body.style.overflow = original;
+          delete document.body.dataset.modalLock;
+        } else {
+          document.body.dataset.modalLock = String(lockCount);
+        }
+      };
+    }
+    return undefined;
   }, [open]);
 
-  const handleContentRef = useCallback(
+  useEffect(() => {
+    if (!open && wasOpenRef.current) {
+      wasOpenRef.current = false;
+      const last = lastActiveRef.current;
+      if (last && typeof last.focus === 'function') {
+        requestAnimationFrame(() => {
+          last.focus({ preventScroll: true });
+        });
+      }
+    }
+  }, [open]);
+
+  const evaluateScroll = useCallback((node: HTMLDivElement) => {
+    const maxScroll = node.scrollHeight - node.clientHeight;
+    if (maxScroll <= 0) {
+      setShowTopFade(false);
+      setShowBottomFade(false);
+      return;
+    }
+    const topThreshold = 12;
+    const bottomThreshold = maxScroll - 12;
+    const top = node.scrollTop <= topThreshold;
+    const bottom = node.scrollTop >= bottomThreshold;
+    setShowTopFade(!top);
+    setShowBottomFade(!bottom);
+  }, []);
+
+  const handleScroll = useCallback(
+    (event: UIEvent<HTMLDivElement>) => {
+      const node = event.currentTarget;
+      evaluateScroll(node);
+      onContentScroll?.(event);
+    },
+    [evaluateScroll, onContentScroll]
+  );
+
+  const setContentNode = useCallback(
     (node: HTMLDivElement | null) => {
-      if (contentRef) {
-        contentRef(node);
+      contentNodeRef.current = node;
+      contentRef?.(node);
+      if (node) {
+        requestAnimationFrame(() => evaluateScroll(node));
+      } else {
+        setShowTopFade(false);
+        setShowBottomFade(false);
       }
     },
-    [contentRef]
+    [contentRef, evaluateScroll]
   );
+
+  useEffect(() => {
+    const node = contentNodeRef.current;
+    if (!node || typeof ResizeObserver === 'undefined') return;
+
+    const observer = new ResizeObserver(() => evaluateScroll(node));
+    observer.observe(node);
+
+    return () => observer.disconnect();
+  }, [children, evaluateScroll]);
 
   return (
     <DialogPrimitive.Root open={open} onOpenChange={onOpenChange}>
@@ -885,42 +1022,43 @@ function UnifiedModal({ title, open, onOpenChange, size = 'md', children, render
                 initial={{ opacity: shouldReduceMotion ? 1 : 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: shouldReduceMotion ? 1 : 0 }}
-                transition={{ duration: shouldReduceMotion ? 0 : 0.2, ease: 'easeOut' }}
-                className='fixed inset-0 z-[2000] bg-slate-900/40 backdrop-blur-sm'
+                transition={{ duration: shouldReduceMotion ? 0 : 0.25, ease: 'easeOut' }}
+                className='fixed inset-0 z-[2000] cursor-pointer bg-slate-900/40 backdrop-blur-sm'
+                onClick={close}
               />
             </DialogPrimitive.Overlay>
-            <DialogPrimitive.Content asChild>
+            <DialogPrimitive.Content
+              asChild
+              onEscapeKeyDown={() => close()}
+              onPointerDownOutside={event => {
+                event.preventDefault();
+                close();
+              }}
+            >
               <div className='fixed inset-0 z-[2001] flex items-center justify-center px-[24rem] py-[40rem] focus:outline-none'>
                 <motion.div
-                  initial={{ opacity: shouldReduceMotion ? 1 : 0, y: shouldReduceMotion ? 0 : 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: shouldReduceMotion ? 1 : 0, y: shouldReduceMotion ? 0 : 12 }}
+                  initial={{ opacity: shouldReduceMotion ? 1 : 0, scale: shouldReduceMotion ? 1 : 0.96 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: shouldReduceMotion ? 1 : 0, scale: shouldReduceMotion ? 1 : 0.96 }}
                   transition={{ duration: shouldReduceMotion ? 0 : 0.28, ease: 'easeOut' }}
                   className={cn('relative w-[min(92vw,820rem)] max-w-full', size === 'lg' && 'w-[min(92vw,960rem)]')}
                 >
-                  <div className='flex max-h-[85vh] flex-col overflow-hidden rounded-[24rem] border border-slate-100 bg-white shadow-[0_60rem_140rem_-80rem_rgba(32,64,171,0.35)]'>
-                    <header className='sticky top-0 z-[1] flex items-start justify-between gap-[16rem] border-b border-slate-100 bg-white/95 px-[32rem] py-[22rem] backdrop-blur'>
-                      <DialogPrimitive.Title className='text-[22rem] font-semibold text-slate-900'>{title}</DialogPrimitive.Title>
-                      <DialogPrimitive.Close asChild>
-                        <button
-                          type='button'
-                          aria-label='Close modal'
-                          className='rounded-full border border-slate-200 bg-white p-[10rem] text-slate-500 transition hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 focus-visible:ring-offset-2'
-                        >
-                          <X className='size-[18rem]' />
-                        </button>
-                      </DialogPrimitive.Close>
-                    </header>
+                  <div className='flex max-h-[85vh] flex-col overflow-hidden rounded-[24rem] rounded-b-[32rem] border border-slate-100 bg-white shadow-[0_60rem_140rem_-80rem_rgba(32,64,171,0.35)]'>
+                    <div className='sticky top-0 z-[3] border-b border-slate-100 bg-white/95 backdrop-blur'>
+                      {renderHeader ? renderHeader({ close }) : <ModalHeader title={title} onClose={close} />}
+                      {progressSlot}
+                    </div>
                     <div
-                      ref={handleContentRef}
-                      onScroll={onContentScroll}
-                      className='flex-1 overflow-y-auto px-[32rem] py-[28rem] scrollbar-thin scrollbar-thumb-slate-200 hover:scrollbar-thumb-slate-300'
+                      className='relative flex-1 overflow-y-auto px-[32rem] py-[28rem] scrollbar-thin scrollbar-thumb-slate-200 hover:scrollbar-thumb-slate-300'
+                      ref={setContentNode}
+                      onScroll={handleScroll}
                     >
-                      {children}
+                      <FadeEdges showTop={showTopFade} showBottom={showBottomFade} />
+                      <div className='relative z-[1]'>{children}</div>
                     </div>
                     {renderFooter && (
-                      <footer className='sticky bottom-0 border-t border-slate-100 bg-white/95 px-[32rem] py-[20rem] backdrop-blur'>
-                        {renderFooter({ close: () => onOpenChange(false) })}
+                      <footer className='sticky bottom-0 z-[2] border-t border-slate-100 bg-white/95 px-[32rem] py-[20rem] backdrop-blur'>
+                        {renderFooter({ close })}
                       </footer>
                     )}
                   </div>
@@ -941,9 +1079,12 @@ interface SummarySectionProps {
 
 function SummarySection({ title, children }: SummarySectionProps) {
   return (
-    <section className='flex flex-col gap-[10rem] rounded-[20rem] border border-slate-100 bg-[#F8FAFF] px-[22rem] py-[18rem]'>
-      <h4 className='text-[16rem] font-semibold text-slate-900'>{title}</h4>
-      <div className='text-[14rem] leading-[1.7] text-slate-700'>{children}</div>
+    <section className='flex flex-col gap-[14rem] rounded-[24rem] border border-slate-100 bg-white px-[26rem] py-[22rem] shadow-[0_18rem_40rem_-34rem_rgba(15,23,42,0.18)]'>
+      <div className='flex flex-col gap-[8rem]'>
+        <h4 className='text-[13rem] font-semibold uppercase tracking-[0.18em] text-slate-500'>{title}</h4>
+        <div className='h-[1px] w-full bg-slate-100' />
+      </div>
+      <div className='text-[14rem] leading-[1.68] text-slate-700'>{children}</div>
     </section>
   );
 }
