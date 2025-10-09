@@ -5,6 +5,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { Footer } from '@/components/Footer';
 import { GET_practice_reading_results_id } from '@/api/GET_practice_reading_results_id';
 import { HeaderDuringTest } from '@/components/HeaderDuringTest';
+import type { PracticeReadingResult, PracticeReadingResultQuestion } from '@/types/PracticeReading';
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useCustomTranslations } from '@/hooks/useCustomTranslations';
@@ -12,7 +13,7 @@ import { useCustomTranslations } from '@/hooks/useCustomTranslations';
 export default function Page({ params }: { params: { id: string } }) {
   const { t, tImgAlts, tCommon } = useCustomTranslations('practice.reading.results');
 
-  const { data, status } = useQuery({
+  const { data, status } = useQuery<PracticeReadingResult>({
     queryKey: ['practice-reading-results', params.id],
     queryFn: () => GET_practice_reading_results_id(params.id),
   });
@@ -23,6 +24,10 @@ export default function Page({ params }: { params: { id: string } }) {
 
   if (status === 'error') {
     return <div>Error</div>;
+  }
+
+  if (!data) {
+    return null;
   }
 
   return (
@@ -41,7 +46,7 @@ export default function Page({ params }: { params: { id: string } }) {
           </header>
 
           <Accordion type='multiple' className='flex w-full flex-col gap-y-[8rem]'>
-            {data.questions.map((q: any, index: number) => (
+            {data.questions.map((q: PracticeReadingResultQuestion, index) => (
               <AccordionItem value={(index + 1).toString()} className='group relative rounded-[16rem] bg-d-light-gray py-[28rem] pl-[40rem] pr-[96rem]'>
                 <AccordionTrigger className='flex items-center justify-between'>
                   <h2 className='text-[20rem] font-medium leading-none'>
