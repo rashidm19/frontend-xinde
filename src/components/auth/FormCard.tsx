@@ -1,12 +1,10 @@
-"use client";
+'use client';
 
-import type { ReactNode } from "react";
+import type { ReactNode } from 'react';
 
-import { motion, useReducedMotion } from "framer-motion";
+import { motion, useReducedMotion } from 'framer-motion';
 
-import { cn } from "@/lib/utils";
-
-import { Logo } from "./Logo";
+import { cn } from '@/lib/utils';
 
 interface FormCardProps {
   title: string;
@@ -22,32 +20,31 @@ export function FormCard({ title, subtitle, eyebrow, children, footer, className
 
   return (
     <motion.section
-      initial={prefersReducedMotion ? undefined : { opacity: 0, y: 32, scale: 0.98 }}
-      animate={prefersReducedMotion ? undefined : { opacity: 1, y: 0, scale: 1 }}
-      transition={prefersReducedMotion ? undefined : { duration: 0.45, ease: "easeOut" }}
+      initial={prefersReducedMotion ? undefined : { opacity: 0, y: 12 }}
+      animate={prefersReducedMotion ? undefined : { opacity: 1, y: 0 }}
+      transition={prefersReducedMotion ? undefined : { duration: 0.4, ease: 'easeOut' }}
       className={cn(
-        "flex flex-col gap-[24rem] rounded-[32rem] bg-white p-[36rem] shadow-xl shadow-black/5 ring-1 ring-black/5",
+        'flex flex-col gap-[20rem] rounded-[20rem] border border-white/70 bg-white/96 px-[28rem] pt-[26rem] pb-[14rem] shadow-[0_18rem_50rem_-28rem_rgba(15,23,42,0.32)] backdrop-blur-sm',
         className
       )}
     >
-      <header className="flex flex-col gap-[16rem]">
-        <Logo aria-label="StudyBox" className="h-[32rem] w-auto text-gray-900" />
+      <header className='flex flex-col gap-[10rem]'>
         {eyebrow ? (
-          <span className="inline-flex w-fit items-center rounded-full bg-slate-100 px-[12rem] py-[6rem] text-[12rem] font-semibold uppercase tracking-[0.18em] text-slate-600">
+          <span className='inline-flex w-fit items-center rounded-full bg-gray-100 px-[12rem] py-[6rem] text-[11rem] font-semibold uppercase tracking-[0.18em] text-gray-600'>
             {eyebrow}
           </span>
         ) : null}
-        <div className="flex flex-col gap-[8rem]">
-          <h1 className="text-[32rem] font-semibold leading-tight tracking-tight text-gray-900 desktop:text-[36rem]">{title}</h1>
-          {subtitle ? <p className="text-[16rem] text-gray-500">{subtitle}</p> : null}
+        <div className='flex flex-col gap-[6rem] text-left'>
+          <h1 className='text-center text-[25rem] font-semibold leading-[1.22] tracking-tight text-gray-900 desktop:text-[27rem]'>{title}</h1>
+          {subtitle ? <p className='text-center text-[14.5rem] leading-relaxed text-gray-500'>{subtitle}</p> : null}
         </div>
       </header>
 
-      <div className="flex flex-col gap-[20rem]">{children}</div>
+      <div className='flex flex-col gap-[14rem]'>{children}</div>
 
-      {footer ? <footer className="border-t border-gray-100 pt-[16rem] text-[14rem] text-gray-500">{footer}</footer> : null}
+      {footer ? <footer className='border-t border-gray-100 pt-[12rem] text-[12.5rem] text-gray-500'>{footer}</footer> : null}
 
-      <p className="mt-[8rem] text-center text-[12rem] text-gray-400">© 2025 StudyBox. All rights reserved.</p>
+      <p className='text-[11.5rem] font-medium text-gray-300 text-center'>© 2025 StudyBox. All rights reserved.</p>
     </motion.section>
   );
 }

@@ -29,9 +29,8 @@ export default function PasswordSentPage({ params }: PageProps) {
   return (
     <AuthLayout>
       <FormCard
-        title="Reset link sent"
-        subtitle="We have sent an email with a password reset link."
-        eyebrow="Password recovery"
+        title="Email on its way"
+        subtitle="We’ve sent over a reset link. It should arrive in the next minute or two."
       >
         <div className="flex flex-col items-center gap-[24rem]">
           <motion.span
@@ -46,17 +45,17 @@ export default function PasswordSentPage({ params }: PageProps) {
             </svg>
           </motion.span>
 
-          <p className="text-center text-[16rem] text-slate-600">
-            Didn’t receive the email? Check your spam folder or try again after a few minutes.
+          <p className="text-center text-[15rem] leading-relaxed text-gray-500">
+            If it doesn’t show up, peek at your promotions or spam folder, then request a fresh link.
           </p>
 
           <div className="flex w-full flex-col gap-[12rem]">
             <AuthButton type="button" onClick={() => router.push(`/${locale}/login`)}>
-              Ok
+              Return to login
             </AuthButton>
             <Link
               href={`/${locale}/login`}
-              className="text-center text-[14rem] font-medium text-blue-600 transition hover:text-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-200"
+              className="text-center text-[13rem] font-medium text-blue-600 transition hover:text-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-200"
             >
               Back to login
             </Link>

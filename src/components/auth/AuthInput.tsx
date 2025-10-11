@@ -19,8 +19,8 @@ export const AuthInput = forwardRef<HTMLInputElement, AuthInputProps>(
     const descriptionId = `${inputId}-description`;
 
     return (
-      <div className={cn("flex flex-col gap-[8rem]", containerClassName)}>
-        <label htmlFor={inputId} className="text-[14rem] font-medium text-gray-700">
+      <div className={cn("flex flex-col gap-[6rem]", containerClassName)}>
+        <label htmlFor={inputId} className="text-[13rem] font-medium text-gray-700">
           {label}
         </label>
         <input
@@ -30,7 +30,7 @@ export const AuthInput = forwardRef<HTMLInputElement, AuthInputProps>(
           aria-invalid={Boolean(error)}
           aria-describedby={cn(description ? descriptionId : undefined, error ? errorId : undefined)?.trim() || undefined}
           className={cn(
-            "h-[52rem] rounded-[18rem] bg-gray-50 px-[18rem] text-[16rem] text-gray-800 outline-none ring-1 ring-inset ring-gray-200 transition placeholder:text-gray-400 focus-visible:ring-2 focus-visible:ring-blue-400 disabled:cursor-not-allowed disabled:bg-gray-100",
+            "h-[46rem] rounded-[14rem] bg-gray-50 px-[16rem] text-[15rem] text-gray-800 outline-none ring-1 ring-inset ring-gray-200 transition placeholder:text-gray-400 focus-visible:ring-2 focus-visible:ring-blue-400 disabled:cursor-not-allowed disabled:bg-gray-100",
             error && "ring-rose-400 focus-visible:ring-rose-400",
             className
           )}

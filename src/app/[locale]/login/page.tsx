@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import * as NProgress from "nprogress";
@@ -49,7 +49,7 @@ export default function LoginPage({ params }: PageProps) {
   const [serverMessage, setServerMessage] = useState<{ type: "error" | "success"; text: string } | null>(null);
   const [googleError, setGoogleError] = useState<string | null>(null);
   const [googleProcessing, setGoogleProcessing] = useState(false);
-
+  const prefersReducedMotion = useReducedMotion();
   const {
     register,
     handleSubmit,
@@ -131,61 +131,91 @@ export default function LoginPage({ params }: PageProps) {
     }
   };
 
+  const formVariants = {
+    hidden: {},
+    visible: {
+      transition: {
+        staggerChildren: 0.08,
+      },
+    },
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 12 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.3, ease: "easeOut" } },
+  };
+
   return (
     <AuthLayout>
-      <FormCard title="Log into your account" subtitle="Log in to continue your IELTS journey.">
-        <form className="flex flex-col gap-[20rem]" onSubmit={handleSubmit(onSubmit)} noValidate>
-          <div className="flex flex-col gap-[16rem]">
+      <FormCard title="Welcome back" subtitle="Sign in to continue with lessons that remember how you like to learn.">
+        <motion.form
+          className="flex flex-col gap-[16rem]"
+          onSubmit={handleSubmit(onSubmit)}
+          noValidate
+          initial={prefersReducedMotion ? undefined : "hidden"}
+          animate={prefersReducedMotion ? undefined : "visible"}
+          variants={prefersReducedMotion ? undefined : formVariants}
+        >
+          <motion.div variants={prefersReducedMotion ? undefined : itemVariants}>
+            <OAuthButtons
+              onGoogleCredential={handleGoogleCredential}
+              onGoogleError={handleGoogleInitError}
+              disabled={isSubmitting || googleProcessing}
+              processing={googleProcessing}
+            />
+          </motion.div>
+
+          <motion.div className="relative flex items-center" variants={prefersReducedMotion ? undefined : itemVariants}>
+            <span className="h-[1rem] flex-1 bg-gray-200" />
+            <span className="px-[12rem] text-[12rem] text-gray-400">or use email</span>
+            <span className="h-[1rem] flex-1 bg-gray-200" />
+          </motion.div>
+
+          <motion.div className="flex flex-col gap-[12rem]" variants={prefersReducedMotion ? undefined : itemVariants}>
             <AuthInput label="Email" type="email" autoComplete="email" error={errors.email?.message} {...register("email")} />
             <PasswordInput label="Password" autoComplete="current-password" error={errors.password?.message} {...register("password")} />
-            <div className="flex items-center justify-between text-[14rem] font-medium text-blue-600">
+          </motion.div>
+
+          <motion.div variants={prefersReducedMotion ? undefined : itemVariants}>
+            <div className="flex items-center justify-between text-[13rem] text-gray-500">
               <Link
                 href={`/${locale}/password-recovery`}
-                className="transition hover:text-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-200"
+                className="font-medium text-blue-600 transition hover:text-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-200"
               >
                 Forgot password?
               </Link>
-              <Link
-                href={`/${locale}/registration`}
-                className="text-slate-500 transition hover:text-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-200"
-              >
-                Create account
-              </Link>
             </div>
-          </div>
+          </motion.div>
 
-          <AuthButton type="submit" loading={isSubmitting}>
-            Log in
-          </AuthButton>
+          <motion.div variants={prefersReducedMotion ? undefined : itemVariants}>
+            <AuthButton type="submit" loading={isSubmitting}>
+              Sign in
+            </AuthButton>
+          </motion.div>
 
-          <div className="relative flex items-center">
-            <span className="h-[1rem] flex-1 bg-slate-200" />
-            <span className="px-[12rem] text-[13rem] text-slate-400">or continue with</span>
-            <span className="h-[1rem] flex-1 bg-slate-200" />
-          </div>
+          {(serverMessage?.type === "error" || !!googleError) && (
+            <motion.div variants={prefersReducedMotion ? undefined : itemVariants} aria-live="polite" className="flex flex-col gap-[10rem]">
+              <AnimatePresence>
+                {serverMessage?.type === "error" ? (
+                  <AuthAlert key={serverMessage.text} variant="error" description={serverMessage.text} />
+                ) : null}
+              </AnimatePresence>
+              <AnimatePresence>
+                {googleError ? <AuthAlert key={googleError} variant="error" description={googleError} /> : null}
+              </AnimatePresence>
+            </motion.div>
+          )}
 
-          <OAuthButtons
-            onGoogleCredential={handleGoogleCredential}
-            onGoogleError={handleGoogleInitError}
-            disabled={isSubmitting || googleProcessing}
-            processing={googleProcessing}
-          />
-
-          <div aria-live="polite" className="flex flex-col gap-[12rem]">
-            <AnimatePresence>
-              {serverMessage ? (
-                <AuthAlert
-                  key={serverMessage.text}
-                  variant={serverMessage.type === "error" ? "error" : "success"}
-                  description={serverMessage.text}
-                />
-              ) : null}
-            </AnimatePresence>
-            <AnimatePresence>
-              {googleError ? <AuthAlert key={googleError} variant="error" description={googleError} /> : null}
-            </AnimatePresence>
-          </div>
-        </form>
+          <motion.div variants={prefersReducedMotion ? undefined : itemVariants} className="text-[13rem] text-gray-500">
+            <span>New to StudyBox?</span>{" "}
+            <Link
+              href={`/${locale}/registration`}
+              className="font-medium text-blue-600 transition hover:text-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-200"
+            >
+              Create an account
+            </Link>
+          </motion.div>
+        </motion.form>
       </FormCard>
     </AuthLayout>
   );

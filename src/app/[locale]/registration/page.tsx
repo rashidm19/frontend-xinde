@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { Globe2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -38,9 +38,9 @@ const registerSchema = z
     region: z.enum(REGIONS.map(region => region.value) as [RegionValue, ...RegionValue[]], {
       errorMap: () => ({ message: "Select your region" }),
     }),
-    agreement: z.literal(true, {
-      errorMap: () => ({ message: "You must accept the terms" }),
-    }),
+    agreement: z
+      .boolean()
+      .refine(value => value, { message: "You must accept the terms" }),
   })
   .refine(data => Boolean(data.region), {
     path: ["region"],
@@ -72,6 +72,7 @@ export default function RegistrationPage({ params }: PageProps) {
   const [serverMessage, setServerMessage] = useState<{ type: "error" | "success"; text: string } | null>(null);
   const [googleError, setGoogleError] = useState<string | null>(null);
   const [googleProcessing, setGoogleProcessing] = useState(false);
+  const prefersReducedMotion = useReducedMotion();
 
   const {
     register,
@@ -163,11 +164,47 @@ export default function RegistrationPage({ params }: PageProps) {
     }
   };
 
+  const formVariants = {
+    hidden: {},
+    visible: {
+      transition: {
+        staggerChildren: 0.08,
+      },
+    },
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 12 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.3, ease: "easeOut" } },
+  };
+
   return (
     <AuthLayout>
-      <FormCard title="Create your account" subtitle="Start your preparation with AI guidance.">
-        <form className="flex flex-col gap-[20rem]" onSubmit={handleSubmit(onSubmit)} noValidate>
-          <div className="flex flex-col gap-[16rem]">
+      <FormCard title="Let’s get you set up" subtitle="Create a StudyBox account tailored to your rhythm and the way you like to prepare.">
+        <motion.form
+          className="flex flex-col gap-[16rem]"
+          onSubmit={handleSubmit(onSubmit)}
+          noValidate
+          initial={prefersReducedMotion ? undefined : "hidden"}
+          animate={prefersReducedMotion ? undefined : "visible"}
+          variants={prefersReducedMotion ? undefined : formVariants}
+        >
+          <motion.div variants={prefersReducedMotion ? undefined : itemVariants}>
+            <OAuthButtons
+              onGoogleCredential={handleGoogleCredential}
+              onGoogleError={handleGoogleInitError}
+              disabled={isSubmitting || googleProcessing}
+              processing={googleProcessing}
+            />
+          </motion.div>
+
+          <motion.div className="relative flex items-center" variants={prefersReducedMotion ? undefined : itemVariants}>
+            <span className="h-[1rem] flex-1 bg-gray-200" />
+            <span className="px-[12rem] text-[12rem] text-gray-400">or use email</span>
+            <span className="h-[1rem] flex-1 bg-gray-200" />
+          </motion.div>
+
+          <motion.div className="flex flex-col gap-[12rem]" variants={prefersReducedMotion ? undefined : itemVariants}>
             <AuthInput label="Full name" autoComplete="name" error={errors.name?.message} {...register("name")} />
             <AuthInput label="Email" type="email" autoComplete="email" error={errors.email?.message} {...register("email")} />
             <PasswordInput label="Password" autoComplete="new-password" error={errors.password?.message} {...register("password")} />
@@ -202,60 +239,52 @@ export default function RegistrationPage({ params }: PageProps) {
               {errors.region ? <p className="text-[13rem] font-medium text-rose-500">{errors.region.message}</p> : null}
             </div>
 
-            <label className="flex items-start gap-[12rem] text-[14rem] text-gray-600">
+            <label className="flex items-center gap-[12rem] text-[13rem] text-gray-600">
               <input
                 type="checkbox"
                 {...register("agreement")}
                 checked={isAgreementChecked}
                 onChange={event => setValue("agreement", event.target.checked, { shouldValidate: true })}
-                className="mt-[4rem] size-[18rem] rounded-[4rem] border border-slate-300 accent-blue-600"
+                className="mt-[4rem] size-[18rem] rounded-[4rem] border border-gray-300 accent-blue-600"
               />
               <span>I agree to the StudyBox Terms and Privacy Policy.</span>
             </label>
             {errors.agreement ? <p className="text-[13rem] font-medium text-rose-500">{errors.agreement.message}</p> : null}
-          </div>
+          </motion.div>
 
-          <AuthButton type="submit" loading={isSubmitting}>
-            Create account
-          </AuthButton>
+          <motion.div variants={prefersReducedMotion ? undefined : itemVariants}>
+            <AuthButton type="submit" loading={isSubmitting}>
+              Create account
+            </AuthButton>
+          </motion.div>
 
-          <div className="relative flex items-center">
-            <span className="h-[1rem] flex-1 bg-slate-200" />
-            <span className="px-[12rem] text-[13rem] text-slate-400">or continue with</span>
-            <span className="h-[1rem] flex-1 bg-slate-200" />
-          </div>
+          {(serverMessage?.type === "error" || serverMessage?.type === "success" || !!googleError) && (
+            <motion.div variants={prefersReducedMotion ? undefined : itemVariants} aria-live="polite" className="flex flex-col gap-[10rem]">
+              <AnimatePresence>
+                {serverMessage ? (
+                  <AuthAlert
+                    key={serverMessage.text}
+                    variant={serverMessage.type === "error" ? "error" : "success"}
+                    description={serverMessage.text}
+                  />
+                ) : null}
+              </AnimatePresence>
+              <AnimatePresence>
+                {googleError ? <AuthAlert key={googleError} variant="error" description={googleError} /> : null}
+              </AnimatePresence>
+            </motion.div>
+          )}
 
-          <OAuthButtons
-            onGoogleCredential={handleGoogleCredential}
-            onGoogleError={handleGoogleInitError}
-            disabled={isSubmitting || googleProcessing}
-            processing={googleProcessing}
-          />
-
-          <div className="flex flex-col gap-[12rem] text-[14rem] text-slate-600">
+          <motion.div variants={prefersReducedMotion ? undefined : itemVariants} className="text-[13rem] text-gray-500">
+            <span>Already with StudyBox?</span>{" "}
             <Link
               href={`/${locale}/login`}
-              className="text-blue-600 transition hover:text-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-200"
+              className="font-medium text-blue-600 transition hover:text-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-200"
             >
-              Already have an account? Log in
+              Sign in here
             </Link>
-          </div>
-
-          <div aria-live="polite" className="flex flex-col gap-[12rem]">
-            <AnimatePresence>
-              {serverMessage ? (
-                <AuthAlert
-                  key={serverMessage.text}
-                  variant={serverMessage.type === "error" ? "error" : "success"}
-                  description={serverMessage.text}
-                />
-              ) : null}
-            </AnimatePresence>
-            <AnimatePresence>
-              {googleError ? <AuthAlert key={googleError} variant="error" description={googleError} /> : null}
-            </AnimatePresence>
-          </div>
-        </form>
+          </motion.div>
+        </motion.form>
       </FormCard>
     </AuthLayout>
   );

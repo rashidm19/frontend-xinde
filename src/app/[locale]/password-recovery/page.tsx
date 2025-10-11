@@ -3,7 +3,7 @@
 import { useState } from "react";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
@@ -32,6 +32,7 @@ export default function PasswordRecoveryPage({ params }: PageProps) {
   const { locale } = params;
   const router = useRouter();
   const [serverMessage, setServerMessage] = useState<{ type: "error" | "success"; text: string } | null>(null);
+  const prefersReducedMotion = useReducedMotion();
 
   const {
     register,
@@ -62,35 +63,64 @@ export default function PasswordRecoveryPage({ params }: PageProps) {
     }
   };
 
+  const formVariants = {
+    hidden: {},
+    visible: {
+      transition: {
+        staggerChildren: 0.08,
+      },
+    },
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 12 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.3, ease: "easeOut" } },
+  };
+
   return (
     <AuthLayout>
-      <FormCard title="Password recovery" subtitle="We’ll email you a link to reset your password.">
-        <form className="flex flex-col gap-[20rem]" onSubmit={handleSubmit(onSubmit)} noValidate>
-          <AuthInput label="Email" type="email" autoComplete="email" error={errors.email?.message} {...register("email")} />
+      <FormCard title="Let’s help you back in" subtitle="Pop in your email and we’ll send a gentle nudge to reset your password.">
+        <motion.form
+          className="flex flex-col gap-[18rem]"
+          onSubmit={handleSubmit(onSubmit)}
+          noValidate
+          initial={prefersReducedMotion ? undefined : "hidden"}
+          animate={prefersReducedMotion ? undefined : "visible"}
+          variants={prefersReducedMotion ? undefined : formVariants}
+        >
+          <motion.div variants={prefersReducedMotion ? undefined : itemVariants}>
+            <AuthInput label="Email" type="email" autoComplete="email" error={errors.email?.message} {...register("email")} />
+          </motion.div>
 
-          <AuthButton type="submit" loading={isSubmitting}>
-            Reset password
-          </AuthButton>
+          <motion.div variants={prefersReducedMotion ? undefined : itemVariants}>
+            <AuthButton type="submit" loading={isSubmitting}>
+              Send reset link
+            </AuthButton>
+          </motion.div>
 
-          <Link
-            href={`/${locale}/login`}
-            className="text-[14rem] font-medium text-blue-600 transition hover:text-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-200"
-          >
-            Back to login
-          </Link>
+          <motion.div variants={prefersReducedMotion ? undefined : itemVariants}>
+            <Link
+              href={`/${locale}/login`}
+              className="text-[13rem] font-medium text-blue-600 transition hover:text-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-200"
+            >
+              Back to login
+            </Link>
+          </motion.div>
 
-          <div aria-live="polite" className="min-h-[32rem]">
-            <AnimatePresence>
-              {serverMessage ? (
-                <AuthAlert
-                  key={serverMessage.text}
-                  variant={serverMessage.type === "error" ? "error" : "success"}
-                  description={serverMessage.text}
-                />
-              ) : null}
-            </AnimatePresence>
-          </div>
-        </form>
+          {(serverMessage?.type === "error" || serverMessage?.type === "success") && (
+            <motion.div variants={prefersReducedMotion ? undefined : itemVariants} aria-live="polite" className="min-h-[32rem]">
+              <AnimatePresence>
+                {serverMessage ? (
+                  <AuthAlert
+                    key={serverMessage.text}
+                    variant={serverMessage.type === "error" ? "error" : "success"}
+                    description={serverMessage.text}
+                  />
+                ) : null}
+              </AnimatePresence>
+            </motion.div>
+          )}
+        </motion.form>
       </FormCard>
     </AuthLayout>
   );

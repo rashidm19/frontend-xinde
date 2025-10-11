@@ -1,13 +1,18 @@
-"use client";
+'use client';
 
-import type { HTMLAttributes } from "react";
+import React, { ImgHTMLAttributes } from 'react';
 
-import { cn } from "@/lib/utils";
+import { cn } from '@/lib/utils';
 
-export function Logo({ className, ...props }: HTMLAttributes<HTMLSpanElement>) {
+interface ILogoProps extends ImgHTMLAttributes<HTMLImageElement> {
+  showStudyboxText?: boolean;
+}
+
+export function Logo({ className, showStudyboxText, ...props }: ILogoProps) {
   return (
-    <span {...props} className={cn("font-semibold tracking-wide text-gray-900", className)}>
-      studybox
-    </span>
+    <div className='flex items-center justify-center gap-x-[6rem]'>
+      <img src='/images/logo.svg' alt='StudyBox' className={cn('h-[36rem]', className)} {...props} />
+      {showStudyboxText && <span className='font-poppins text-[21rem] font-semibold'>studybox</span>}
+    </div>
   );
 }

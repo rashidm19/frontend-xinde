@@ -16,11 +16,11 @@ export function AuthButton({ loading, children, className, disabled, ...props }:
 
   return (
     <motion.button
-      whileHover={prefersReducedMotion || isDisabled ? undefined : { scale: 1.03, boxShadow: "0 28px 80px -60px rgba(30,64,175,0.65)" }}
+      whileHover={prefersReducedMotion || isDisabled ? undefined : { scale: 1.02, boxShadow: "0 18px 48px -26px rgba(30,64,175,0.45)" }}
       whileTap={prefersReducedMotion || isDisabled ? undefined : { scale: 0.97 }}
       transition={{ type: "spring", stiffness: 260, damping: 20 }}
       className={cn(
-        "relative flex h-[54rem] w-full items-center justify-center gap-[12rem] rounded-[24rem] bg-blue-600 text-[16rem] font-semibold text-white shadow-[0_24rem_70rem_-50rem_rgba(36,74,180,0.75)] transition hover:bg-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-200 disabled:cursor-not-allowed disabled:bg-blue-400",
+        "relative flex h-[48rem] w-full items-center justify-center gap-[10rem] rounded-[18rem] bg-blue-600 text-[15rem] font-semibold text-white shadow-[0_18rem_50rem_-32rem_rgba(36,74,180,0.55)] transition hover:bg-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-200 disabled:cursor-not-allowed disabled:bg-blue-400",
         className
       )}
       disabled={isDisabled}
