@@ -14,27 +14,31 @@ interface PageProps {
   };
 }
 
-export default function EmailVerifiedPage({ params }: PageProps) {
+export default function PasswordSentPage({ params }: PageProps) {
   const { locale } = params;
   const router = useRouter();
   const prefersReducedMotion = useReducedMotion();
 
   useEffect(() => {
     const timeout = setTimeout(() => {
-      router.prefetch(`/${locale}`);
+      router.prefetch(`/${locale}/login`);
     }, 0);
     return () => clearTimeout(timeout);
   }, [locale, router]);
 
   return (
     <AuthLayout>
-      <FormCard title="Email verified" subtitle="Your email is confirmed. You’re ready to continue." eyebrow="Success">
+      <FormCard
+        title="Reset link sent"
+        subtitle="We have sent an email with a password reset link."
+        eyebrow="Password recovery"
+      >
         <div className="flex flex-col items-center gap-[24rem]">
           <motion.span
             initial={prefersReducedMotion ? undefined : { scale: 0.8, opacity: 0 }}
-            animate={prefersReducedMotion ? undefined : { scale: [1, 1.06, 1], opacity: 1 }}
-            transition={prefersReducedMotion ? undefined : { duration: 0.9, repeat: Infinity, repeatDelay: 2.2 }}
-            className="flex size-[72rem] items-center justify-center rounded-full bg-emerald-500 text-white shadow-[0_28rem_90rem_-60rem_rgba(16,185,129,0.75)]"
+            animate={prefersReducedMotion ? undefined : { scale: [1, 1.05, 1], opacity: 1 }}
+            transition={prefersReducedMotion ? undefined : { duration: 0.9, repeat: Infinity, repeatDelay: 2 }}
+            className="flex size-[72rem] items-center justify-center rounded-full bg-emerald-50 text-emerald-500 shadow-[0_24rem_80rem_-60rem_rgba(16,185,129,0.65)]"
             aria-hidden="true"
           >
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="size-[36rem]">
@@ -43,18 +47,18 @@ export default function EmailVerifiedPage({ params }: PageProps) {
           </motion.span>
 
           <p className="text-center text-[16rem] text-slate-600">
-            Enjoy full access to StudyBox. Let’s continue building your IELTS confidence.
+            Didn’t receive the email? Check your spam folder or try again after a few minutes.
           </p>
 
           <div className="flex w-full flex-col gap-[12rem]">
-            <AuthButton type="button" onClick={() => router.push(`/${locale}`)}>
-              Continue
+            <AuthButton type="button" onClick={() => router.push(`/${locale}/login`)}>
+              Ok
             </AuthButton>
             <Link
-              href={`/${locale}`}
+              href={`/${locale}/login`}
               className="text-center text-[14rem] font-medium text-blue-600 transition hover:text-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-200"
             >
-              Back to the homepage
+              Back to login
             </Link>
           </div>
         </div>
