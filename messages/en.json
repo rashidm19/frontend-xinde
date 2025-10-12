@@ -523,5 +523,117 @@
       "Authorized partner of IDP IELTS in Kazakhstan",
       "Interactive Study Materials"
     ]
+  },
+  "onboarding": {
+    "progress": {
+      "label": "Step {current} of {total}"
+    },
+    "navigator": {
+      "back": "Back",
+      "next": "Next step",
+      "finish": "Go to dashboard"
+    },
+    "supporting": {
+      "intro": "Share what brings you here so we can meet you where you are.",
+      "goal": "Understanding your goal helps us shape the milestones you'll see.",
+      "score": "Your target score sets the pace of exercises and mock exams.",
+      "timeline": "We'll match reminders and study rhythm to your exam timeframe.",
+      "priority": "We’ll surface drills and tips for the sections you highlight.",
+      "finish": "Take a breath—your tailored dashboard is ready with next steps."
+    },
+    "transition": {
+      "preparing": "Preparing your onboarding journey…",
+      "srMessage": "Loading onboarding"
+    },
+    "accessibility": {
+      "stepAnnouncement": "Step {current} of {total}: {title}"
+    },
+    "errors": {
+      "introRequired": "Pick at least one reason to continue.",
+      "goalRequired": "Choose a goal (or describe your own) to continue.",
+      "scoreRequired": "Select the score you're aiming for.",
+      "timelineRequired": "Let us know your exam timeline.",
+      "priorityRequired": "Choose at least one section that feels challenging.",
+      "submitFailed": "We couldn’t save your onboarding preferences. Try again in a moment."
+    },
+    "steps": {
+      "intro": {
+        "title": "Let’s get acquainted",
+        "subtitle": "Tell us what brings you to StudyBox and we’ll tailor the experience.",
+        "helper": "Select every option that applies.",
+        "ariaLabel": "Select the reasons you joined StudyBox",
+        "options": {
+          "academic": "I’m preparing for IELTS Academic",
+          "general": "I’m preparing for IELTS General",
+          "improveEnglish": "I just want to improve my English",
+          "explore": "I’m exploring the platform"
+        }
+      },
+      "goal": {
+        "title": "Clarify your goal",
+        "subtitle": "We’ll prioritise content and reminders around what motivates you.",
+        "helper": "Choose the main reason you’re preparing right now.",
+        "ariaLabel": "Select your IELTS goal",
+        "options": {
+          "university": "University admission",
+          "work": "Work / migration",
+          "self": "Personal challenge / self-development",
+          "other": "Other"
+        },
+        "otherLabel": "Describe your goal",
+        "otherPlaceholder": "Tell us what you’re aiming for",
+        "otherHint": "A short note helps us fine-tune your study plan."
+      },
+      "score": {
+        "title": "Choose your target score",
+        "subtitle": "We’ll set milestones that make reaching it feel achievable.",
+        "helper": "Select the band you’re aiming for next.",
+        "ariaLabel": "Select your target IELTS band",
+        "options": {
+          "fiveFive": "5.5",
+          "six": "6.0",
+          "sixFive": "6.5",
+          "seven": "7.0",
+          "sevenFive": "7.5",
+          "eightPlus": "8.0+"
+        }
+      },
+      "timeline": {
+        "title": "When is your exam?",
+        "subtitle": "We’ll match your practice rhythm to your schedule.",
+        "helper": "Pick the timeframe that best fits your plans.",
+        "ariaLabel": "Select when you plan to take the exam",
+        "options": {
+          "soon": "Within the next month",
+          "mid": "In 2–3 months",
+          "later": "In 4–6 months",
+          "unknown": "I’m not sure yet"
+        }
+      },
+      "priority": {
+        "title": "Prioritize your practice",
+        "subtitle": "Tell us which sections feel toughest right now.",
+        "helper": "Select all sections that need extra support.",
+        "ariaLabel": "Select the IELTS sections that are hardest for you",
+        "options": {
+          "writing": "Writing",
+          "speaking": "Speaking",
+          "reading": "Reading",
+          "listening": "Listening",
+          "unknown": "I’m not sure yet"
+        }
+      },
+      "finish": {
+        "title": "You’re all set",
+        "subtitle": "We’ve prepared a gentle start tailored to your answers.",
+        "summary": {
+          "intro": "Why you’re here",
+          "goal": "Your goal",
+          "score": "Target score",
+          "timeline": "Timeline",
+          "priority": "Priority sections"
+        }
+      }
+    }
   }
 }

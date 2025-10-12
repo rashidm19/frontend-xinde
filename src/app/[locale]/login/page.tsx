@@ -1,11 +1,12 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
+import Link from "next/link";
 import * as NProgress from "nprogress";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -13,6 +14,7 @@ import { z } from "zod";
 import { AuthLoginError, postAuthLogin } from "@/api/POST_auth_login";
 import { GoogleLoginError, postAuthLoginGoogle } from "@/api/POST_auth_login_google";
 import { AuthAlert, AuthButton, AuthInput, AuthLayout, FormCard, OAuthButtons, PasswordInput } from "@/components/auth";
+import { ONBOARDING_STORAGE_KEY } from "@/components/onboarding";
 import { resetProfile } from "@/stores/profileStore";
 
 const loginSchema = z.object({
@@ -46,9 +48,11 @@ const GOOGLE_ERROR_MESSAGES: Record<string, string> = {
 export default function LoginPage({ params }: PageProps) {
   const { locale } = params;
   const router = useRouter();
+  const tOnboarding = useTranslations("onboarding.transition");
   const [serverMessage, setServerMessage] = useState<{ type: "error" | "success"; text: string } | null>(null);
   const [googleError, setGoogleError] = useState<string | null>(null);
   const [googleProcessing, setGoogleProcessing] = useState(false);
+  const [transitioning, setTransitioning] = useState(false);
   const prefersReducedMotion = useReducedMotion();
   const {
     register,
@@ -70,9 +74,28 @@ export default function LoginPage({ params }: PageProps) {
     };
   }, []);
 
+  useEffect(() => {
+    router.prefetch(`/${locale}/onboarding`);
+  }, [locale, router]);
+
   const navigateAfterAuth = () => {
+    setTransitioning(true);
     NProgress.start();
-    router.push(`/${locale}/profile`);
+
+    if (typeof window !== "undefined") {
+      try {
+        window.sessionStorage.removeItem(ONBOARDING_STORAGE_KEY);
+      } catch (error) {
+        console.error("Failed to reset onboarding state", error);
+      }
+    }
+
+    window.setTimeout(() => {
+      router.push(`/${locale}/onboarding`);
+      window.setTimeout(() => {
+        NProgress.done();
+      }, 400);
+    }, prefersReducedMotion ? 100 : 220);
   };
 
   const handleGoogleCredential = async (credential: string) => {
@@ -146,7 +169,29 @@ export default function LoginPage({ params }: PageProps) {
   };
 
   return (
-    <AuthLayout>
+    <>
+      <AnimatePresence>
+        {transitioning ? (
+          <motion.div
+            key="onboarding-transition"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-white"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1, transition: { duration: 0.25, ease: "easeOut" } }}
+            exit={{ opacity: 0, transition: { duration: 0.2, ease: "easeIn" } }}
+            aria-live="polite"
+          >
+            <motion.div
+              className="flex flex-col items-center gap-[12rem] text-center"
+              initial={prefersReducedMotion ? undefined : { opacity: 0, y: 16 }}
+              animate={prefersReducedMotion ? undefined : { opacity: 1, y: 0, transition: { duration: 0.3, ease: "easeOut", delay: 0.05 } }}
+            >
+              <span className="text-[15rem] font-medium text-slate-600">{tOnboarding("preparing")}</span>
+              <span className="sr-only">{tOnboarding("srMessage")}</span>
+            </motion.div>
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
+      <AuthLayout>
       <FormCard title="Welcome back" subtitle="Sign in to continue with lessons that remember how you like to learn.">
         <motion.form
           className="flex flex-col gap-[16rem]"
@@ -217,6 +262,7 @@ export default function LoginPage({ params }: PageProps) {
           </motion.div>
         </motion.form>
       </FormCard>
-    </AuthLayout>
+      </AuthLayout>
+    </>
   );
 }
