@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 import { Checkbox } from '@/components/ui/checkbox';
@@ -11,12 +11,13 @@ import nProgress from 'nprogress';
 import axiosInstance from '@/lib/axiosInstance';
 import { useSubscriptionGate } from '@/hooks/useSubscriptionGate';
 import { SubscriptionAccessLabel } from '@/components/SubscriptionAccessLabel';
+import type { PracticeSpeakingCategoriesResponse, PracticeSpeakingListResponse } from '@/types/PracticeSpeaking';
 
 export default function Page() {
   const router = useRouter();
   const { requireSubscription, isCheckingAccess } = useSubscriptionGate();
 
-  const { data } = useQuery({
+  const { data } = useQuery<PracticeSpeakingCategoriesResponse>({
     queryKey: ['speaking-categories'],
     queryFn: GET_practice_speaking_categories,
   });
@@ -40,19 +41,25 @@ export default function Page() {
         return;
       }
 
-    const params = new URLSearchParams();
-    params.append('part', String(selectedPart));
-    params.append('tag_id', selectedTopic === 'random' ? randomTopic() : selectedTopic);
+    const topicParam = selectedTopic === 'random' ? randomTopic() : selectedTopic;
 
-    const result = await axiosInstance.get('/practice/speaking', {
-      params: Object.fromEntries(params.entries()),
+    const params: Record<string, string | number> = {
+      part: selectedPart,
+    };
+
+    if (topicParam) {
+      params.tag_id = topicParam;
+    }
+
+    const result = await axiosInstance.get<PracticeSpeakingListResponse>('/practice/speaking', {
+      params,
       validateStatus: () => true,
     });
 
     if (result.status >= 200 && result.status < 300) {
       nProgress.start();
       const json = result.data;
-      localStorage.setItem('practiceSpeakingId', json.data[0].speaking_id);
+      localStorage.setItem('practiceSpeakingId', json.data[0].speaking_id.toString());
       localStorage.setItem('practiceSpeakingPart', String(selectedPart));
       router.push('/practice/speaking/rules/');
     }
@@ -61,9 +68,22 @@ export default function Page() {
     }
   };
 
+  const categoriesByPart = useMemo(() => {
+    if (!data) {
+      return [] as PracticeSpeakingCategoriesResponse['data'][number]['tags'];
+    }
+
+    return data.data.find(category => category.name === `speaking_part_${selectedPart}`)?.tags ?? [];
+  }, [data, selectedPart]);
+
   const randomTopic = () => {
-    const randomIndex = Math.floor(Math.random() * data.data.find((c: any) => c.name === `speaking_part_${selectedPart}`).tags.length);
-    return data.data.find((c: any) => c.name === `speaking_part_${selectedPart}`).tags[randomIndex].id;
+    if (categoriesByPart.length === 0) {
+      return null;
+    }
+
+    const randomIndex = Math.floor(Math.random() * categoriesByPart.length);
+    const randomId = categoriesByPart[randomIndex]?.id;
+    return randomId != null ? String(randomId) : null;
   };
 
   return (
@@ -148,13 +168,11 @@ export default function Page() {
                       Random
                     </SelectItem>
 
-                    {data.data
-                      .find((c: any) => c.name === `speaking_part_${selectedPart}`)
-                      .tags.map((tag: any) => (
-                        <SelectItem value={tag.id} className='h-[50rem] px-[40rem] text-[20rem] font-medium leading-none last:rounded-b-[8rem] hover:bg-d-light-gray'>
-                          {tag.name}
-                        </SelectItem>
-                      ))}
+                    {categoriesByPart.map(tag => (
+                      <SelectItem key={tag.id} value={String(tag.id)} className='h-[50rem] px-[40rem] text-[20rem] font-medium leading-none last:rounded-b-[8rem] hover:bg-d-light-gray'>
+                        {tag.name}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>

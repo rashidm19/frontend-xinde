@@ -9,6 +9,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'next/navigation';
 import axiosInstance from '@/lib/axiosInstance';
 import { Fragment, useMemo } from 'react';
+import type { PracticeSpeakingAnswer, PracticeSpeakingAttempt } from '@/types/PracticeSpeaking';
 
 interface FormProps {
   data: any;
@@ -40,12 +41,12 @@ export default function SpeakingTestForm({ data }: FormProps) {
       formData.append('question', questionNumber);
       formData.append('audio', value?.audioBlob as Blob, `record_${questionNumber}.webm`);
 
-      return await axiosInstance.post('/practice/send/speaking', formData);
+      return await axiosInstance.post<PracticeSpeakingAnswer>('/practice/send/speaking', formData);
     });
     try {
       await Promise.all(promises);
 
-      const finishRes = await axiosInstance.post(`/practice/speaking/${practice_id}/finish`, undefined);
+      const finishRes = await axiosInstance.post<PracticeSpeakingAttempt>(`/practice/speaking/${practice_id}/finish`, undefined);
       const finishData = finishRes.data;
 
       if (finishData?.id) {

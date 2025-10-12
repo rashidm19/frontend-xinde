@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 import { Checkbox } from '@/components/ui/checkbox';
@@ -11,15 +11,30 @@ import { useCustomTranslations } from '@/hooks/useCustomTranslations';
 import axiosInstance from '@/lib/axiosInstance';
 import { useSubscriptionGate } from '@/hooks/useSubscriptionGate';
 import { SubscriptionAccessLabel } from '@/components/SubscriptionAccessLabel';
+import type { PracticeWritingListResponse } from '@/types/PracticeWriting';
+
+interface WritingCategoryTag {
+  id: string;
+  name: string;
+}
+
+interface WritingCategory {
+  name: string;
+  tags: WritingCategoryTag[];
+}
+
+interface WritingCategoriesResponse {
+  data: WritingCategory[];
+}
 
 export default function Page() {
   const router = useRouter();
   const { t, tImgAlts, tCommon, tCommonRich, tActions, tForm } = useCustomTranslations('practice.writing.customize');
   const { requireSubscription, isCheckingAccess } = useSubscriptionGate();
 
-  const { data } = useQuery({
+  const { data } = useQuery<WritingCategoriesResponse>({
     queryKey: ['categories'],
-    queryFn: () => axiosInstance.get('/practice/writing/categories').then(res => res.data),
+    queryFn: () => axiosInstance.get<WritingCategoriesResponse>('/practice/writing/categories').then(res => res.data),
   });
 
   const [selectedPart, setSelectedPart] = useState<1 | 2>(1);
@@ -41,20 +56,26 @@ export default function Page() {
         return;
       }
       console.log(data);
-      const result = await axiosInstance.get('/practice/writing', {
-        params: {
-          part: selectedPart,
-          tag_id: selectedTopic === 'random' ? randomTopic() : selectedTopic,
-        },
+      const topicParam = selectedTopic === 'random' ? randomTopic() : selectedTopic;
+      const params: Record<string, string | number> = {
+        part: selectedPart,
+      };
+
+      if (topicParam) {
+        params.tag_id = topicParam;
+      }
+
+      const result = await axiosInstance.get<PracticeWritingListResponse>('/practice/writing', {
+        params,
         validateStatus: () => true,
       });
       if (result.status >= 200 && result.status < 300) {
         nProgress.start();
-        const json = result.data;
-        if (Array.isArray(json.data) && json.data.length > 0) {
-          const randomIndex = Math.floor(Math.random() * json.data.length);
-          const randomWritingId = json.data[randomIndex].writing_id;
-          localStorage.setItem('practiceWritingId', randomWritingId);
+        const payload = result.data;
+        if (Array.isArray(payload.data) && payload.data.length > 0) {
+          const randomIndex = Math.floor(Math.random() * payload.data.length);
+          const randomWritingId = payload.data[randomIndex].writing_id;
+          localStorage.setItem('practiceWritingId', String(randomWritingId));
           router.push('/practice/writing/rules/');
         } else {
           console.error('Нет доступных writing_id');
@@ -65,9 +86,21 @@ export default function Page() {
     }
   };
 
+  const categoriesByPart = useMemo(() => {
+    if (!data) {
+      return [] as WritingCategoryTag[];
+    }
+
+    return data.data.find(category => category.name === `writing_part_${selectedPart}`)?.tags ?? [];
+  }, [data, selectedPart]);
+
   const randomTopic = () => {
-    const randomIndex = Math.floor(Math.random() * data.data.find((c: any) => c.name === `writing_part_${selectedPart}`)?.tags?.length);
-    return data.data.find((c: any) => c.name === `writing_part_${selectedPart}`)?.tags?.[randomIndex]?.id;
+    if (categoriesByPart.length === 0) {
+      return null;
+    }
+
+    const randomIndex = Math.floor(Math.random() * categoriesByPart.length);
+    return categoriesByPart[randomIndex]?.id ?? null;
   };
 
   return (
@@ -134,13 +167,11 @@ export default function Page() {
                       {tCommon('random')}
                     </SelectItem>
 
-                    {data.data
-                      .find((c: any) => c.name === `writing_part_${selectedPart}`)
-                      ?.tags?.map((tag: any) => (
-                        <SelectItem value={tag.id} className='h-[50rem] px-[40rem] text-[20rem] font-medium leading-none last:rounded-b-[8rem] hover:bg-d-light-gray'>
-                          {tag.name}
-                        </SelectItem>
-                      ))}
+                    {categoriesByPart.map(tag => (
+                      <SelectItem key={tag.id} value={String(tag.id)} className='h-[50rem] px-[40rem] text-[20rem] font-medium leading-none last:rounded-b-[8rem] hover:bg-d-light-gray'>
+                        {tag.name}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>

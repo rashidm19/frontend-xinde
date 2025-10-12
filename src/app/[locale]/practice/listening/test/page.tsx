@@ -18,10 +18,13 @@ import { Label } from '@/components/ui/label';
 import { transformStringToArrayV4 } from '@/lib/utils';
 import { useCustomTranslations } from '@/hooks/useCustomTranslations';
 import axiosInstance from '@/lib/axiosInstance';
+import type { PracticeListeningResult } from '@/types/PracticeListening';
 
 type FormValues = {
   [key: string]: string | undefined;
 };
+
+type PartNumber = 1 | 2 | 3 | 4;
 
 export default function Page() {
   const router = useRouter();
@@ -43,6 +46,10 @@ export default function Page() {
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
+    if (!data) {
+      return;
+    }
+
     const formattedValues = {
       answers: Object.entries(values).map(([question, answer]) => ({
         question: parseInt(question),
@@ -52,8 +59,8 @@ export default function Page() {
 
     // Выписываем все номера вопросов типа чекбокс
     let checkboxQuestionBlocks: number[][] = [];
-    [1, 2, 3, 4].map(p =>
-      data[`part_${p}`].blocks
+    ([1, 2, 3, 4] as PartNumber[]).forEach(partNumber =>
+      getPart(partNumber).blocks
         .filter((block: any) => block.kind === 'checkboxes')
         .forEach((block: any) => {
           checkboxQuestionBlocks.push(block.answers.map((q: any) => q.number));
@@ -71,14 +78,13 @@ export default function Page() {
 
     formattedValues.answers = formattedValues.answers.filter(item => item.answer);
 
-    const response = await axiosInstance.post('/practice/listening/1', formattedValues, {
+    const response = await axiosInstance.post<PracticeListeningResult>('/practice/listening/1', formattedValues, {
       validateStatus: () => true,
     });
 
     if (response.status >= 200 && response.status < 300) {
       const result = response.data;
       router.push(`/practice/listening/results/${result.id}`);
-      console.log(result);
     } else {
       router.push('/error500');
     }
@@ -87,15 +93,27 @@ export default function Page() {
   const values = form.watch();
 
   const questionsCountString = () => {
-    if (activeTab === 'p1') {
-      return `1 – ${data['part_1'].questions_count}`;
-    } else if (activeTab === 'p2') {
-      return `${1 + data['part_1'].questions_count} – ${data['part_1'].questions_count + data['part_2'].questions_count}`;
-    } else if (activeTab === 'p3') {
-      return `${1 + data['part_1'].questions_count + data['part_2'].questions_count} – ${data['part_1'].questions_count + data['part_2'].questions_count + data['part_3'].questions_count}`;
-    } else if (activeTab === 'p4') {
-      return `${1 + data['part_1'].questions_count + data['part_2'].questions_count + data['part_3'].questions_count} – ${data['part_1'].questions_count + data['part_2'].questions_count + data['part_3'].questions_count + data['part_4'].questions_count}`;
+    if (!data) {
+      return '';
     }
+
+    if (activeTab === 'p1') {
+      return `1 – ${data.part_1.questions_count}`;
+    } else if (activeTab === 'p2') {
+      return `${1 + data.part_1.questions_count} – ${data.part_1.questions_count + data.part_2.questions_count}`;
+    } else if (activeTab === 'p3') {
+      return `${1 + data.part_1.questions_count + data.part_2.questions_count} – ${
+        data.part_1.questions_count + data.part_2.questions_count + data.part_3.questions_count
+      }`;
+    } else if (activeTab === 'p4') {
+      return `${
+        1 + data.part_1.questions_count + data.part_2.questions_count + data.part_3.questions_count
+      } – ${
+        data.part_1.questions_count + data.part_2.questions_count + data.part_3.questions_count + data.part_4.questions_count
+      }`;
+    }
+
+    return '';
   };
 
   if (status === 'pending') {
@@ -105,6 +123,26 @@ export default function Page() {
   if (status === 'error') {
     return <></>;
   }
+
+  if (!data) {
+    return <></>;
+  }
+
+  const getPart = (partNumber: PartNumber) => {
+    if (partNumber === 1) {
+      return data.part_1;
+    }
+
+    if (partNumber === 2) {
+      return data.part_2;
+    }
+
+    if (partNumber === 3) {
+      return data.part_3;
+    }
+
+    return data.part_4;
+  };
 
   return (
     <>
@@ -151,11 +189,13 @@ export default function Page() {
 
                 {/* // * Навигация по вопросам */}
                 {[
-                  Array.from({ length: data[`part_1`].questions_count }).map((_, index) => index + 1),
-                  Array.from({ length: data[`part_2`].questions_count }).map((_, index) => data[`part_1`].questions_count + index + 1),
-                  Array.from({ length: data[`part_3`].questions_count }).map((_, index) => data[`part_1`].questions_count + data[`part_2`].questions_count + index + 1),
-                  Array.from({ length: data[`part_4`].questions_count }).map(
-                    (_, index) => data[`part_1`].questions_count + data[`part_2`].questions_count + data[`part_3`].questions_count + index + 1
+                  Array.from({ length: data.part_1.questions_count }).map((_, index) => index + 1),
+                  Array.from({ length: data.part_2.questions_count }).map((_, index) => data.part_1.questions_count + index + 1),
+                  Array.from({ length: data.part_3.questions_count }).map(
+                    (_, index) => data.part_1.questions_count + data.part_2.questions_count + index + 1
+                  ),
+                  Array.from({ length: data.part_4.questions_count }).map(
+                    (_, index) => data.part_1.questions_count + data.part_2.questions_count + data.part_3.questions_count + index + 1
                   ),
                 ].map((tab: number[], tabIndex: number) => (
                   <TabsContent
@@ -185,14 +225,17 @@ export default function Page() {
                 Listen and answer questions {questionsCountString()}
               </div>
 
-              {[1, 2, 3, 4].map(tab => (
-                <TabsContent
+              {[1, 2, 3, 4].map(tab => {
+                const part = getPart(tab as PartNumber);
+
+                return (
+                  <TabsContent
                   key={`questions-content-tab-${tab}`}
                   value={`p${tab}`}
                   className='flex w-full flex-col gap-y-[40rem] rounded-[16rem] bg-white p-[40rem] data-[state=inactive]:hidden'
                 >
                   {/* // * Текст */}
-                  {data[`part_${tab}`].blocks.map((block: any, index: number) => (
+                  {part.blocks.map((block: any, index: number) => (
                     <div key={`questions-block-${index}`}>
                       <div className='mb-[40rem] flex flex-col items-center justify-center rounded-[13rem] bg-d-gray p-[20rem]'>
                         <p className='mb-[8rem] text-[20rem] font-bold leading-[24rem] tracking-[-0.2rem] text-d-black'>{block.task_questions} </p>
@@ -509,8 +552,9 @@ export default function Page() {
                       )}
                     </div>
                   ))}
-                </TabsContent>
-              ))}
+                  </TabsContent>
+                );
+              })}
 
               {activeTab === 'p1' && (
                 <button
