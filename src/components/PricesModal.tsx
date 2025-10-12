@@ -12,7 +12,7 @@ interface PricesModalProps {
   onSelectPlan: (planId: string) => void;
   promoMessage?: string | null;
   promoError?: string | null;
-  planDiscounts?: Record<string, { amount: number; discount: number; currency: string }>;
+  planDiscounts?: Record<string, { amount: number; currency: string }>;
 }
 
 export const PricesModal = ({ onSelectPlan, promoMessage = null, promoError = null, planDiscounts = {} }: PricesModalProps) => {
@@ -28,7 +28,14 @@ export const PricesModal = ({ onSelectPlan, promoMessage = null, promoError = nu
 
   const activePlans = React.useMemo(() => (subscriptionPlans ?? []).filter(plan => plan.is_active), [subscriptionPlans]);
 
-  const currencyFormatter = React.useMemo(() => new Intl.NumberFormat('ru-RU'), []);
+  const currencyFormatter = React.useMemo(
+    () =>
+      new Intl.NumberFormat('ru-RU', {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 2,
+      }),
+    []
+  );
 
   const getPlanMonths = React.useCallback((plan: ISubscriptionPlan) => {
     if (plan.is_period_manual && plan.period_start && plan.period_end) {
@@ -56,7 +63,7 @@ export const PricesModal = ({ onSelectPlan, promoMessage = null, promoError = nu
     return Math.max(plan.interval_count, 1);
   }, []);
 
-  const formatCurrency = React.useCallback((value: number, currency: string) => `${currencyFormatter.format(value / 100)} ${currency}`, [currencyFormatter]);
+  const formatCurrency = React.useCallback((value: number, currency: string) => `${currencyFormatter.format(value)} ${currency}`, [currencyFormatter]);
 
   return (
     // <ScrollArea className='tablet:h-[684rem] tablet:w-[96dvw] desktop:h-[726rem] desktop:w-[1280rem]'>
@@ -107,7 +114,7 @@ export const PricesModal = ({ onSelectPlan, promoMessage = null, promoError = nu
               activePlans.map((plan, index) => {
                 const isPrimaryPlan = index === 0;
                 const planFeatures = plan.features && plan.features.length ? plan.features : premiumIncludes;
-                const priceLabel = `${currencyFormatter.format(plan.price)} ₸`;
+                const priceLabel = `${currencyFormatter.format(plan.price)} ${plan.currency}`;
                 const monthCount = getPlanMonths(plan);
                 const imageIndex = (index % 2) + 1;
                 const planId = String(plan.id);
@@ -148,11 +155,6 @@ export const PricesModal = ({ onSelectPlan, promoMessage = null, promoError = nu
                       </button>
                       {planDiscounts[planId] && (
                         <div className='mt-[12rem] text-[14rem] font-medium leading-tight'>
-                          {planDiscounts[planId].discount > 0 && (
-                            <p className='text-d-green'>
-                              {t('promo.discount', { amount: formatCurrency(planDiscounts[planId].discount, planDiscounts[planId].currency) })}
-                            </p>
-                          )}
                           <p>{t('promo.total', { amount: formatCurrency(planDiscounts[planId].amount, planDiscounts[planId].currency) })}</p>
                         </div>
                       )}

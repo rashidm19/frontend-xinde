@@ -142,7 +142,7 @@ const data_rows = [
 export default function Page() {
   const router = useRouter();
   const { profile } = useProfile();
-  const { requireSubscription, isCheckingAccess } = useSubscriptionGate();
+  const { requireSubscription, isCheckingAccess } = useSubscriptionGate('mock');
 
   const [isLoading, setIsLoading] = useState(false);
   const subscription = useSubscriptionStore(state => state.subscription);

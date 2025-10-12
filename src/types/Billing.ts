@@ -10,6 +10,7 @@ export interface ISubscriptionPlan {
   id: number;
   name: string;
   price: number;
+  currency: string;
   interval: string;
   interval_count: number;
   mocks_per_period: number;
@@ -20,6 +21,12 @@ export interface ISubscriptionPlan {
   period_start: string | null;
   period_end: string | null;
   features?: string[];
+}
+
+export interface IBillingBalance {
+  tenge_balance: number;
+  mock_balance: number;
+  practice_balance: number;
 }
 
 export type SubscriptionStatus =

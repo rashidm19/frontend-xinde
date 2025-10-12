@@ -21,7 +21,7 @@ export const Header = ({ name, avatar }: Props) => {
   const [isPricesModalOpen, setPricesModalOpen] = React.useState(false);
   const [isPromoModalOpen, setPromoModalOpen] = React.useState(false);
   const [selectedPlanId, setSelectedPlanId] = React.useState<string | null>(null);
-  const [planDiscounts, setPlanDiscounts] = React.useState<Record<string, { amount: number; discount: number; currency: string }>>({});
+  const [planDiscounts, setPlanDiscounts] = React.useState<Record<string, { amount: number; currency: string }>>({});
   const [promoMessage, setPromoMessage] = React.useState<string | null>(null);
   const [promoError, setPromoError] = React.useState<string | null>(null);
 
