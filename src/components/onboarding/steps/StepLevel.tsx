@@ -1,26 +1,32 @@
 'use client';
 
-import { GOAL_OPTIONS } from '../constants';
 import type { BaseStepProps } from '../types';
 
 import { ChoiceCard } from './ChoiceCard';
 
-export function StepLevel({ answers, onUpdate, t, error, clearError }: BaseStepProps) {
+export function StepLevel({ answers, onUpdate, t, error, clearError, question }: BaseStepProps) {
   const selected = answers.goal;
-  const otherActive = selected === 'other';
+  const options = [...(question?.options ?? [])].sort((a, b) => a.order - b.order);
+  const selectedOption = options.find(option => option.id === selected);
+  const otherActive = Boolean(selectedOption?.allows_custom_answer);
+  const helperText = question?.description ?? t('onboarding.steps.goal.helper');
+  const groupLabel = question?.title ?? t('onboarding.steps.goal.ariaLabel');
 
-  const handleSelect = (id: (typeof GOAL_OPTIONS)[number]['id']) => {
-    onUpdate({ goal: id, goalOther: id === 'other' ? answers.goalOther ?? '' : '' });
+  const handleSelect = (id: string) => {
+    const option = options.find(item => item.id === id);
+    const allowsCustom = option?.allows_custom_answer ?? false;
+    onUpdate({ goal: id, goalOther: allowsCustom ? answers.goalOther ?? '' : '' });
     clearError();
   };
 
   return (
     <div className='flex flex-col gap-[16rem]'>
-      <p className='text-[14rem] leading-[1.55] text-slate-500'>{t('onboarding.steps.goal.helper')}</p>
+      {helperText ? <p className='text-[14rem] leading-[1.55] text-slate-500'>{helperText}</p> : null}
 
-      <div role='radiogroup' aria-label={t('onboarding.steps.goal.ariaLabel')} className='grid gap-[12rem]'>
-        {GOAL_OPTIONS.map(option => {
+      <div role='radiogroup' aria-label={groupLabel} className='grid gap-[12rem]'>
+        {options.map(option => {
           const isActive = selected === option.id;
+          const requiresInput = option.allows_custom_answer ?? false;
 
           return (
             <div key={option.id} className='flex flex-col gap-[10rem]'>
@@ -28,10 +34,10 @@ export function StepLevel({ answers, onUpdate, t, error, clearError }: BaseStepP
                 role='radio'
                 aria-checked={isActive}
                 active={isActive}
-                label={t(option.labelKey)}
+                label={option.label}
                 onClick={() => handleSelect(option.id)}
               />
-              {option.requiresInput && isActive ? (
+              {requiresInput && isActive ? (
                 <div className='pl-[14rem]'>
                   <label htmlFor='goal-other-input' className='sr-only'>
                     {t('onboarding.steps.goal.otherLabel')}

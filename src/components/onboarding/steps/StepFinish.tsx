@@ -2,48 +2,107 @@
 
 import { motion, useReducedMotion } from 'framer-motion';
 
-import { GOAL_OPTIONS, INTRO_OPTIONS, PRIORITY_OPTIONS, TARGET_SCORE_OPTIONS, TIMELINE_OPTIONS } from '../constants';
-import type { BaseStepProps } from '../types';
+import type { BaseStepProps, OnboardingStepId } from '../types';
 
-export function StepFinish({ answers, t }: BaseStepProps) {
+export function StepFinish({ answers, t, questions, stepQuestions }: BaseStepProps) {
   const prefersReducedMotion = useReducedMotion();
 
-  const introReasons = INTRO_OPTIONS.filter(option => answers.introReasons.includes(option.id));
-  const goal = GOAL_OPTIONS.find(option => option.id === answers.goal);
-  const targetScore = TARGET_SCORE_OPTIONS.find(option => option.id === answers.targetScore);
-  const timeline = TIMELINE_OPTIONS.find(option => option.id === answers.timeline);
-  const priorities = PRIORITY_OPTIONS.filter(option => answers.prioritySections.includes(option.id));
+  const getQuestionByStepId = (stepId: OnboardingStepId) => {
+    if (stepQuestions?.has(stepId)) {
+      return stepQuestions.get(stepId);
+    }
+
+    return questions?.find(question => question.id === stepId);
+  };
+
+  const findOptionLabel = (stepId: OnboardingStepId, optionId: string | undefined): string | undefined => {
+    if (!optionId) return undefined;
+    const question = getQuestionByStepId(stepId);
+    const option = question?.options.find(current => current.id === optionId);
+    return option?.label ?? optionId;
+  };
+
+  const resolveCustomText = (stepId: OnboardingStepId, optionId: string): string | undefined => {
+    if (stepId === 'goal') {
+      const custom = answers.goalOther?.trim();
+      if (custom && custom.length > 0) {
+        return custom;
+      }
+    }
+    return undefined;
+  };
+
+  const getSelectedLabels = (stepId: OnboardingStepId, optionIds: string[]) => {
+    const question = getQuestionByStepId(stepId);
+    const labels = optionIds
+      .map(id => {
+        const option = question?.options.find(current => current.id === id);
+        if (!option) return undefined;
+        if (option.allows_custom_answer) {
+          const custom = resolveCustomText(stepId, option.id);
+          if (custom) return custom;
+        }
+        return option.label;
+      })
+      .filter((value): value is string => Boolean(value));
+
+    return labels.length ? labels.join(', ') : undefined;
+  };
+
+  const introSummary = getSelectedLabels('intro', answers.introReasons);
+  const targetScoreLabel = findOptionLabel('score', answers.targetScore);
+  const timelineLabel = findOptionLabel('timeline', answers.timeline);
+
+  const goalLabel = (() => {
+    if (!answers.goal) return undefined;
+    const question = getQuestionByStepId('goal');
+    const option = question?.options.find(item => item.id === answers.goal);
+    if (!option) return undefined;
+    if (option.allows_custom_answer) {
+      const custom = resolveCustomText('goal', option.id);
+      if (custom) {
+        return custom;
+      }
+    }
+    return option.label;
+  })();
+
+  const prioritySummary = getSelectedLabels('priority', answers.prioritySections);
 
   const goalValue = (() => {
-    if (!answers.goal) return '—';
-    if (answers.goal === 'other') {
-      return answers.goalOther?.trim().length ? answers.goalOther.trim() : '—';
-    }
-    return goal ? t(goal.labelKey) : '—';
+    if (goalLabel) return goalLabel;
+    return '—';
   })();
 
   const summaryRows: Array<{ label: string; value: string }> = [
     {
       label: t('onboarding.steps.finish.summary.intro'),
-      value: introReasons.length ? introReasons.map(reason => t(reason.labelKey)).join(', ') : '—',
+      value: introSummary ?? '—',
+      visible: Boolean(getQuestionByStepId('intro')),
     },
     {
       label: t('onboarding.steps.finish.summary.goal'),
       value: goalValue,
+      visible: Boolean(getQuestionByStepId('goal')),
     },
     {
       label: t('onboarding.steps.finish.summary.score'),
-      value: targetScore ? t(targetScore.labelKey) : '—',
+      value: targetScoreLabel ?? '—',
+      visible: Boolean(getQuestionByStepId('score')),
     },
     {
       label: t('onboarding.steps.finish.summary.timeline'),
-      value: timeline ? t(timeline.labelKey) : '—',
+      value: timelineLabel ?? '—',
+      visible: Boolean(getQuestionByStepId('timeline')),
     },
     {
       label: t('onboarding.steps.finish.summary.priority'),
-      value: priorities.length ? priorities.map(priority => t(priority.labelKey)).join(', ') : '—',
+      value: prioritySummary ?? '—',
+      visible: Boolean(getQuestionByStepId('priority')),
     },
-  ];
+  ]
+    .filter(row => row.visible)
+    .map(({ label, value }) => ({ label, value }));
 
   return (
     <div className='flex flex-col gap-[14rem]'>

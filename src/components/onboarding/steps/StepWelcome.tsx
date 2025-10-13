@@ -1,10 +1,12 @@
 'use client';
 
-import { INTRO_OPTIONS } from '../constants';
 import type { BaseStepProps } from '../types';
 
-export function StepWelcome({ answers, onUpdate, t, error, clearError }: BaseStepProps) {
+export function StepWelcome({ answers, onUpdate, t, error, clearError, question }: BaseStepProps) {
   const selected = answers.introReasons;
+  const options = [...(question?.options ?? [])].sort((a, b) => a.order - b.order);
+  const helperText = question?.description ?? t('onboarding.steps.intro.helper');
+  const groupLabel = question?.title ?? t('onboarding.steps.intro.ariaLabel');
 
   const toggleReason = (id: typeof selected[number]) => {
     const isSelected = selected.includes(id);
@@ -15,10 +17,10 @@ export function StepWelcome({ answers, onUpdate, t, error, clearError }: BaseSte
 
   return (
     <div className='flex flex-col gap-[16rem]'>
-      <p className='text-[14rem] leading-[1.55] text-slate-500'>{t('onboarding.steps.intro.helper')}</p>
+      {helperText ? <p className='text-[14rem] leading-[1.55] text-slate-500'>{helperText}</p> : null}
 
-      <div role='group' aria-label={t('onboarding.steps.intro.ariaLabel')} className='flex flex-col gap-[10rem]'>
-        {INTRO_OPTIONS.map(option => {
+      <div role='group' aria-label={groupLabel} className='flex flex-col gap-[10rem]'>
+        {options.map(option => {
           const isChecked = selected.includes(option.id);
 
           return (
@@ -32,7 +34,7 @@ export function StepWelcome({ answers, onUpdate, t, error, clearError }: BaseSte
                 onChange={() => toggleReason(option.id)}
                 className='h-[16rem] w-[16rem] shrink-0 rounded-[4rem] border border-slate-300 text-blue-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-200'
               />
-              <span className='text-[14rem] font-medium text-slate-800'>{t(option.labelKey)}</span>
+              <span className='text-[14rem] font-medium text-slate-800'>{option.label}</span>
             </label>
           );
         })}

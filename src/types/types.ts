@@ -18,9 +18,10 @@ export const userSchema = z.object({
   id: z.number(),
   email: z.string().email(),
   name: z.string().optional(),
-  avatar: z.string().optional(),
+  avatar: z.string().nullable().optional(),
   region: regionSchema.optional(),
   target_grade: z.string().nullable().optional(),
+  onboarding_completed: z.boolean().optional().transform(value => value ?? false),
 });
 
 export type User = z.infer<typeof userSchema>;

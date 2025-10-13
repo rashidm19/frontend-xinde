@@ -1,11 +1,18 @@
-import type { OnboardingAnswers } from '@/components/onboarding';
+import { postOnboardingSubmit } from '@/api/POST_onboarding_submit';
+import type { OnboardingSubmitAnswer, OnboardingSubmitResponse } from '@/types/OnboardingSchema';
 
-export interface CompleteOnboardingResult {
-  success: boolean;
+export interface CompleteOnboardingParams {
+  schemaVersion: number;
+  answers: OnboardingSubmitAnswer[];
+  idempotencyKey: string;
 }
 
-export async function completeOnboarding(_: OnboardingAnswers): Promise<CompleteOnboardingResult> {
-  await new Promise(resolve => setTimeout(resolve, 400));
-
-  return { success: true };
-}
+export const completeOnboarding = async ({ schemaVersion, answers, idempotencyKey }: CompleteOnboardingParams): Promise<OnboardingSubmitResponse> => {
+  return postOnboardingSubmit(
+    {
+      schema_version: schemaVersion,
+      answers,
+    },
+    idempotencyKey
+  );
+};

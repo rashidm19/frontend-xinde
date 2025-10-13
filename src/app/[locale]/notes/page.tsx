@@ -10,7 +10,7 @@ export default function Notes() {
 
   return (
     <>
-      <Header name={profile?.name} avatar={profile?.avatar} />
+      <Header name={profile?.name} avatar={profile?.avatar ?? undefined} />
 
       <main className='min-h-screen overflow-hidden bg-d-gray'>
         <div className='container mt-[40rem] flex w-[1360rem] max-w-[1440rem] flex-col rounded-[16rem] bg-white p-[40rem]'>

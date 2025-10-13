@@ -1,3 +1,5 @@
+import type { OnboardingSchemaQuestion } from '@/types/OnboardingSchema';
+
 export type OnboardingStepId = 'intro' | 'goal' | 'score' | 'timeline' | 'priority' | 'finish';
 
 export interface OnboardingAnswers {
@@ -9,19 +11,11 @@ export interface OnboardingAnswers {
   prioritySections: PrioritySectionId[];
 }
 
-export type IntroReasonId =
-  | 'ielts-academic'
-  | 'ielts-general'
-  | 'improve-english'
-  | 'explore-platform';
-
-export type OnboardingGoalId = 'university' | 'work-migration' | 'self-development' | 'other';
-
-export type OnboardingTargetScoreId = '5.5' | '6.0' | '6.5' | '7.0' | '7.5' | '8.0+';
-
-export type OnboardingTimelineId = '1-month' | '2-3-months' | '4-6-months' | 'not-sure';
-
-export type PrioritySectionId = 'writing' | 'speaking' | 'reading' | 'listening' | 'not-sure';
+export type IntroReasonId = string;
+export type OnboardingGoalId = string;
+export type OnboardingTargetScoreId = string;
+export type OnboardingTimelineId = string;
+export type PrioritySectionId = string;
 
 export interface OnboardingStepDefinition {
   id: OnboardingStepId;
@@ -36,4 +30,7 @@ export interface BaseStepProps {
   t: (key: string, values?: Record<string, string | number>) => string;
   error?: string | null;
   clearError: () => void;
+  question?: OnboardingSchemaQuestion;
+  questions?: OnboardingSchemaQuestion[];
+  stepQuestions?: Map<OnboardingStepId, OnboardingSchemaQuestion>;
 }

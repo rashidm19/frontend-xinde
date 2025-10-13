@@ -21,7 +21,7 @@ export default function Page() {
 
   return (
     <>
-      <Header name={profile?.name} avatar={profile?.avatar} />
+      <Header name={profile?.name} avatar={profile?.avatar ?? undefined} />
       <main className='container flex max-w-[1440rem] flex-wrap justify-between gap-x-[16rem] px-[40rem] pb-[80rem] pt-[40rem]'>
         <div className='flex w-[1016rem] flex-col gap-y-[16rem]'>
           {isLoading ? (

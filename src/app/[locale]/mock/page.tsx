@@ -175,7 +175,7 @@ export default function Page() {
 
   return (
     <>
-      <Header name={profile?.name} avatar={profile?.avatar} />
+      <Header name={profile?.name} avatar={profile?.avatar ?? undefined} />
       <main>
         <div className='container grid max-w-[1440rem] grid-cols-[1016rem,328rem] gap-x-[16rem] gap-y-[16rem] px-[40rem] pb-[150rem] pt-[40rem]'>
           {hasCancellationScheduled && (

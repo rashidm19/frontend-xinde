@@ -24,7 +24,7 @@ export default function Page() {
 
   return (
     <>
-      <Header name={profile?.name} avatar={profile?.avatar} />
+      <Header name={profile?.name} avatar={profile?.avatar ?? undefined} />
       <main>
         <div className='container max-w-[1440rem] p-[40rem]'>
           <SubscriptionStatusBanner className='mb-[24rem]' />

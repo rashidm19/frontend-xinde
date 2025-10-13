@@ -1,12 +1,22 @@
 'use client';
 
-import { PRIORITY_OPTIONS } from '../constants';
 import type { BaseStepProps } from '../types';
 
-export function StepPriority({ answers, onUpdate, t, error, clearError }: BaseStepProps) {
-  const selected = answers.prioritySections;
+const PRIORITY_ICONS: Record<string, string> = {
+  writing: '✍️',
+  speaking: '🎤',
+  reading: '📖',
+  listening: '🎧',
+  'not-sure': '❓',
+};
 
-  const togglePriority = (id: (typeof PRIORITY_OPTIONS)[number]['id']) => {
+export function StepPriority({ answers, onUpdate, t, error, clearError, question }: BaseStepProps) {
+  const selected = answers.prioritySections;
+  const options = [...(question?.options ?? [])].sort((a, b) => a.order - b.order);
+  const helperText = question?.description ?? t('onboarding.steps.priority.helper');
+  const groupLabel = question?.title ?? t('onboarding.steps.priority.ariaLabel');
+
+  const togglePriority = (id: string) => {
     let next: typeof selected;
 
     if (id === 'not-sure') {
@@ -22,11 +32,12 @@ export function StepPriority({ answers, onUpdate, t, error, clearError }: BaseSt
 
   return (
     <div className='flex flex-col gap-[16rem]'>
-      <p className='text-[14rem] leading-[1.55] text-slate-500'>{t('onboarding.steps.priority.helper')}</p>
+      {helperText ? <p className='text-[14rem] leading-[1.55] text-slate-500'>{helperText}</p> : null}
 
-      <div role='group' aria-label={t('onboarding.steps.priority.ariaLabel')} className='flex flex-col gap-[10rem]'>
-        {PRIORITY_OPTIONS.map(option => {
+      <div role='group' aria-label={groupLabel} className='flex flex-col gap-[10rem]'>
+        {options.map(option => {
           const isChecked = selected.includes(option.id);
+          const icon = PRIORITY_ICONS[option.id];
 
           return (
             <label
@@ -40,8 +51,8 @@ export function StepPriority({ answers, onUpdate, t, error, clearError }: BaseSt
                 className='h-[16rem] w-[16rem] shrink-0 rounded-[4rem] border border-slate-300 text-blue-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-200'
               />
               <span className='flex items-center gap-[8rem] text-[14rem] font-medium text-slate-800'>
-                {option.icon ? <span aria-hidden='true'>{option.icon}</span> : null}
-                {t(option.labelKey)}
+                {icon ? <span aria-hidden='true'>{icon}</span> : null}
+                {option.label}
               </span>
             </label>
           );
