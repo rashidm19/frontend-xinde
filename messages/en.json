@@ -62,7 +62,11 @@
     "play": "Play",
     "submit": "Submit",
     "next": "Next",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "practiceNow": "Practice now",
+    "review": "Review",
+    "showMore": "Show more",
+    "refresh": "Refresh"
   },
   "subscription": {
     "availableLabel": "Available with subscription",
@@ -140,7 +144,8 @@
     "cross": "Cross",
     "start": "Start",
     "globe": "Globe",
-    "remove": "Remove"
+    "remove": "Remove",
+    "practiceHistoryIllustration": "Practice illustration"
   },
   "header": {
     "menu": {
@@ -148,7 +153,62 @@
       "link_2": "MOCK",
       "link_3": "Notes"
     },
+    "accountMenu": {
+      "open": "Open account menu",
+      "subscription": "Subscription & billing",
+      "viewPlans": "View plans",
+      "buyPractices": "Buy practices",
+      "settings": "Profile settings",
+      "language": "Change language",
+      "logout": "Log out",
+      "user": "Guest"
+    },
+    "chips": {
+      "subscription": "Subscription active",
+      "practiceBalance": "Practice: {count, plural, one {# credit} other {# credits}}",
+      "balanceSublabel": "Practice balance: {count}",
+      "buyPractices": "Buy practices"
+    },
     "support": "Support"
+  },
+  "subscriptionModal": {
+    "title": "Subscription & billing",
+    "description": "Manage your plan, renewal and practice credits in one place.",
+    "status": {
+      "active": "Active subscription",
+      "inactive": "No active subscription"
+    },
+    "labels": {
+      "status": "Status",
+      "plan": "Plan",
+      "renewal": "Next renewal"
+    },
+    "plan": {
+      "none": "No plan selected"
+    },
+    "renewal": {
+      "renewsOn": "Renews on {date}",
+      "cancelsOn": "Cancels on {date}",
+      "unknown": "Renewal date unavailable"
+    },
+    "balance": {
+      "label": "Practice balance",
+      "count": "{count, plural, one {# credit available} other {# credits available}}",
+      "none": "No practice credits"
+    },
+    "actions": {
+      "manage": "Manage subscription",
+      "history": "Billing history",
+      "refresh": "Refresh",
+      "retry": "Retry"
+    },
+    "error": {
+      "subscription": "We couldn’t load your subscription details.",
+      "balance": "We couldn’t load your practice balance."
+    },
+    "empty": {
+      "description": "You don’t have an active subscription yet."
+    }
   },
   "headerDuringTest": {
     "audioIsPlaying": "Audio is playing"
@@ -325,12 +385,57 @@
       "title": "IELTS Target Assessment",
       "selectGoal": "Select the score you would like to achieve"
     },
-    "timeSpent": {
-      "title": "Time spent on studying",
-      "dailyAverage": "Daily average",
-      "weekTotal": "Week total",
-      "weeklyGoal": "Weekly goal",
-      "start": "Start practicing by section or take MOCK test to view results"
+    "practiceHistory": {
+      "title": "Practice history",
+      "subtitle": "Latest attempts and progress by section.",
+      "filters": {
+        "all": "All"
+      },
+      "stats": {
+        "sessions": "Sessions",
+        "medianBand": "Median band",
+        "streak": "Streak",
+        "streakValue": "{count}d"
+      },
+      "emptyFilter": {
+        "title": "No sessions for the selected filter",
+        "description": "Clear the filter or continue practicing in the needed section.",
+        "reset": "Reset filters",
+        "start": "Start practice"
+      },
+      "metrics": {
+        "band": "Band",
+        "part": "Part",
+        "tag": "Tag"
+      },
+      "groups": {
+        "today": "Today",
+        "thisWeek": "This week",
+        "earlier": "Earlier"
+      },
+      "status": {
+        "completed": "Completed",
+        "cancelled": "Cancelled",
+        "review": "Reviewed"
+      },
+      "streakBanner": "🔥 {count}-day streak — keep going!",
+      "empty": {
+        "title": "No practice sessions yet",
+        "description": "Start any section to see your progress here.",
+        "cardTitle": "Start {section}",
+        "cardSubtitle": "Practice now",
+        "footer": "Each completed task will show up here."
+      },
+      "sections": {
+        "iconAlt": "{section} icon"
+      }
+    },
+    "subscriptionIndicator": {
+      "headline": "Your IELTS progress",
+      "active": "Subscription active",
+      "practices": "{count} practices left",
+      "noAccess": "Upgrade to unlock practice",
+      "loading": "Checking access..."
     },
     "practiceList": {
       "title": "Practice by section",
