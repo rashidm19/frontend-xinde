@@ -4,7 +4,6 @@ import React, { useEffect, useRef, useState } from 'react';
 
 import { AudioVisualizer } from 'react-audio-visualize';
 import { useReactMediaRecorder } from 'react-media-recorder';
-import axiosInstance from '@/lib/axiosInstance';
 
 interface RecordProps {
   setFieldValue: any;
@@ -23,9 +22,8 @@ export default function Record({ setFieldValue, currentQuestionNumber }: RecordP
 
   useEffect(() => {
     const fetchAudioFile = async () => {
-      const { data: blob } = await axiosInstance.get(mediaBlobUrl as string, {
-        responseType: 'blob',
-      });
+      const response = await fetch(mediaBlobUrl as string);
+      const blob = await response.blob();
       setAudioBlob(blob);
       setFetchStatus(false);
     };
