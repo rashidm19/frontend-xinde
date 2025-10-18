@@ -1,85 +1,78 @@
 'use client';
 
-import Link from 'next/link';
 import React, { useState } from 'react';
+import Link from 'next/link';
+import { useCustomTranslations } from '@/hooks/useCustomTranslations';
 import { useSubscriptionGate } from '@/hooks/useSubscriptionGate';
 import { SubscriptionAccessLabel } from '@/components/SubscriptionAccessLabel';
+import { PracticeWritingCard } from '@/components/practice/PracticeWritingCard';
 
 export default function Page() {
+  const { tImgAlts, tCommon, tActions } = useCustomTranslations('practice.speaking.rules');
   const { requireSubscription, isCheckingAccess } = useSubscriptionGate();
   const [isStarting, setIsStarting] = useState(false);
 
   return (
-    <main className='min-h-screen overflow-hidden bg-d-red-secondary'>
-      <div className='container relative max-w-[1440rem] px-[270rem] pb-[150rem] pt-[80rem]'>
-        <img
-          src='/images/illustration_halfspheres.png'
-          alt='illustration'
-          className='pointer-events-none absolute right-[120rem] top-[140rem] h-auto w-[264rem] rotate-[14deg] opacity-20 mix-blend-multiply'
-        />
-        <img
-          src='/images/illustration_flowerOrange.png'
-          alt='illustration'
-          className='pointer-events-none absolute left-[-60rem] top-[716rem] h-auto w-[392rem] rotate-[-16deg] opacity-20 mix-blend-multiply'
-        />
-        <div className='relative z-10 flex flex-col gap-[48rem] rounded-[16rem] bg-white p-[64rem] shadow-card'>
-          {/* // * Cancel practice  */}
-          <Link href='/practice' className='absolute right-[30rem] top-[30rem] flex size-[40rem] items-center justify-center'>
-            <img src='/images/icon_cross.svg' alt='close' className='size-[20rem]' />
+    <main className='relative min-h-screen bg-d-red-secondary'>
+      <div className='relative z-[1] flex min-h-[100dvh] w-full items-center justify-center px-[16rem] py-[48rem]'>
+        <PracticeWritingCard
+          closeHref='/practice'
+          closeAlt={tImgAlts('close')}
+          iconAlt={tImgAlts('speaking')}
+          headingLabel={tCommon('speaking')}
+          durationLabel={tCommon('minCount', { count: 14 })}
+          partsLabel={tCommon('parts')}
+          partsValue='3'
+          headingSlot={
+            <div className='flex items-center gap-x-[12rem]'>
+              <div className='flex size-[48rem] items-center justify-center rounded-full bg-d-red-secondary'>
+                <img src='/images/icon_speakingSection.svg' className='size-[22rem]' alt={tImgAlts('speaking')} />
+              </div>
+              <div className='flex flex-col gap-y-[6rem]'>
+                <div className='text-[14rem] font-medium leading-none text-d-black/80'>{tCommon('speaking')}</div>
+                <div className='text-[18rem] font-semibold leading-none text-d-black'>{tCommon('minCount', { count: 14 })}</div>
+              </div>
+              <div className='ml-[12rem] flex flex-col gap-y-[6rem]'>
+                <div className='text-[14rem] font-medium leading-none text-d-black/80'>{tCommon('parts')}</div>
+                <div className='text-[18rem] font-semibold leading-none text-d-black'>3</div>
+              </div>
+            </div>
+          }
+        >
+          <h1 className='mb-[8rem] text-[20rem] font-semibold leading-tight text-d-black'>What’s in the IELTS Academic Speaking paper?</h1>
+          <p className='mb-[16rem] text-[14rem] leading-[1.65] text-d-black/80'>
+            The Speaking test is a face-to-face interview between the test taker and an examiner. The Speaking test is recorded. There are three parts to the test, and
+            each part follows a specific pattern of tasks in order to test your speaking ability in different ways.
+          </p>
+          <h1 className='mb-[8rem] text-[20rem] font-semibold leading-tight text-d-black'>Marking</h1>
+          <p className='mb-[24rem] text-[14rem] leading-[1.65] text-d-black/80'>
+            Certificated IELTS examiners assess your speaking performance throughout the test. There are four assessment criteria (things which the examiner thinks about
+            when deciding what score to give you).
+          </p>
+          <Link
+            href='/practice/speaking/audio-check'
+            onClick={async event => {
+              if (isStarting || isCheckingAccess) {
+                event.preventDefault();
+                return;
+              }
+
+              setIsStarting(true);
+              const canStart = await requireSubscription();
+              setIsStarting(false);
+
+              if (!canStart) {
+                event.preventDefault();
+              }
+            }}
+            className={`mx-auto flex h-[56rem] w-[240rem] items-center justify-center rounded-[32rem] bg-d-green text-[18rem] font-semibold hover:bg-d-green/40 ${
+              isCheckingAccess || isStarting ? 'pointer-events-none cursor-wait opacity-70' : ''
+            }`}
+          >
+            {isCheckingAccess || isStarting ? '...' : tActions('continue')}
           </Link>
-
-          {/* // * Header */}
-          <div className='flex items-center gap-x-[12rem]'>
-            <div className='flex size-[52rem] items-center justify-center bg-d-red-secondary'>
-              <img src='/images/icon_speakingSection.svg' className='size-[24rem]' alt='speaking' />
-            </div>
-            <div className='flex flex-col gap-y-[6rem]'>
-              <div className='text-[16rem] font-medium leading-none text-d-black/80'>Speaking</div>
-              <div className='text-[20rem] font-medium leading-none'>~ 14 min</div>
-            </div>
-            <div className='ml-[12rem] flex flex-col gap-y-[6rem]'>
-              <div className='text-[16rem] font-medium leading-none text-d-black/80'>Parts</div>
-              <div className='text-[20rem] font-medium leading-none'>3</div>
-            </div>
-          </div>
-          {/* // * Seclection */}
-          <div>
-            <h1 className='mb-[32rem] text-[32rem] font-medium leading-none'>What’s in the IELTS Academic Speaking paper?</h1>
-            <p className='mb-[48rem] text-[20rem] font-medium leading-tight text-d-black/80'>
-              The Speaking test is a face-to-face interview between the test taker and an examiner. The Speaking test is recorded.
-              <br />
-              <br /> There are three parts to the test, and each part follows a specific pattern of tasks in order to test your speaking ability in different ways.
-            </p>
-            <h1 className='mb-[32rem] text-[32rem] font-medium leading-none'>Marking</h1>
-            <p className='mb-[48rem] text-[20rem] font-medium leading-tight text-d-black/80'>
-              Certificated IELTS examiners assess your speaking performance throughout the test. There are four assessment criteria (things which the examiner thinks
-              about when deciding what score to give you):
-            </p>
-            <Link
-              href='/practice/speaking/audio-check/'
-              onClick={async event => {
-                if (isStarting || isCheckingAccess) {
-                  event.preventDefault();
-                  return;
-                }
-
-                setIsStarting(true);
-                const canStart = await requireSubscription();
-                setIsStarting(false);
-
-                if (!canStart) {
-                  event.preventDefault();
-                }
-              }}
-              className={`mx-auto flex h-[63rem] w-[280rem] items-center justify-center rounded-[40rem] bg-d-green text-[20rem] font-semibold hover:bg-d-green/40 ${
-                isCheckingAccess || isStarting ? 'pointer-events-none cursor-wait opacity-70' : ''
-              }`}
-            >
-              {isCheckingAccess || isStarting ? '...' : 'Continue'}
-            </Link>
-            <SubscriptionAccessLabel className='mt-[12rem] text-center' />
-          </div>
-        </div>
+          <SubscriptionAccessLabel className='mt-[10rem] text-center text-[12rem]' />
+        </PracticeWritingCard>
       </div>
     </main>
   );
