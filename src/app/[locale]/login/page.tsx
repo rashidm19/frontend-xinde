@@ -5,7 +5,6 @@ import { useEffect, useMemo, useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
-import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 import * as NProgress from 'nprogress';
 import { useForm } from 'react-hook-form';
@@ -44,11 +43,9 @@ const GOOGLE_ERROR_MESSAGES: Record<string, string> = {
 export default function LoginPage({ params }: PageProps) {
   const { locale } = params;
   const router = useRouter();
-  const tOnboarding = useTranslations('onboarding.transition');
   const [serverMessage, setServerMessage] = useState<{ type: 'error' | 'success'; text: string } | null>(null);
   const [googleError, setGoogleError] = useState<string | null>(null);
   const [googleProcessing, setGoogleProcessing] = useState(false);
-  const [transitioning, setTransitioning] = useState(false);
   const prefersReducedMotion = useReducedMotion();
   const {
     register,
@@ -76,7 +73,6 @@ export default function LoginPage({ params }: PageProps) {
   }, [locale, router]);
 
   const navigateAfterAuth = async () => {
-    setTransitioning(true);
     NProgress.start();
 
     if (typeof window !== 'undefined') {
@@ -180,96 +176,73 @@ export default function LoginPage({ params }: PageProps) {
   };
 
   return (
-    <>
-      <AnimatePresence>
-        {transitioning ? (
-          <motion.div
-            key='onboarding-transition'
-            className='fixed inset-0 z-50 flex items-center justify-center bg-white'
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1, transition: { duration: 0.25, ease: 'easeOut' } }}
-            exit={{ opacity: 0, transition: { duration: 0.2, ease: 'easeIn' } }}
-            aria-live='polite'
-          >
-            <motion.div
-              className='flex flex-col items-center gap-[12rem] text-center'
-              initial={prefersReducedMotion ? undefined : { opacity: 0, y: 16 }}
-              animate={prefersReducedMotion ? undefined : { opacity: 1, y: 0, transition: { duration: 0.3, ease: 'easeOut', delay: 0.05 } }}
-            >
-              <span className='text-[15rem] font-medium text-slate-600'>{tOnboarding('preparing')}</span>
-              <span className='sr-only'>{tOnboarding('srMessage')}</span>
-            </motion.div>
+    <AuthLayout>
+      <FormCard title='Welcome back' subtitle='Sign in to continue with lessons that remember how you like to learn.'>
+        <motion.form
+          className='flex flex-col gap-[16rem]'
+          onSubmit={handleSubmit(onSubmit)}
+          noValidate
+          initial={prefersReducedMotion ? undefined : 'hidden'}
+          animate={prefersReducedMotion ? undefined : 'visible'}
+          variants={prefersReducedMotion ? undefined : formVariants}
+        >
+          <motion.div variants={prefersReducedMotion ? undefined : itemVariants}>
+            <OAuthButtons
+              onGoogleCredential={handleGoogleCredential}
+              onGoogleError={handleGoogleInitError}
+              disabled={isSubmitting || googleProcessing}
+              processing={googleProcessing}
+            />
           </motion.div>
-        ) : null}
-      </AnimatePresence>
-      <AuthLayout>
-        <FormCard title='Welcome back' subtitle='Sign in to continue with lessons that remember how you like to learn.'>
-          <motion.form
-            className='flex flex-col gap-[16rem]'
-            onSubmit={handleSubmit(onSubmit)}
-            noValidate
-            initial={prefersReducedMotion ? undefined : 'hidden'}
-            animate={prefersReducedMotion ? undefined : 'visible'}
-            variants={prefersReducedMotion ? undefined : formVariants}
-          >
-            <motion.div variants={prefersReducedMotion ? undefined : itemVariants}>
-              <OAuthButtons
-                onGoogleCredential={handleGoogleCredential}
-                onGoogleError={handleGoogleInitError}
-                disabled={isSubmitting || googleProcessing}
-                processing={googleProcessing}
-              />
-            </motion.div>
 
-            <motion.div className='relative flex items-center' variants={prefersReducedMotion ? undefined : itemVariants}>
-              <span className='h-[1rem] flex-1 bg-gray-200' />
-              <span className='px-[12rem] text-[12rem] text-gray-400'>or use email</span>
-              <span className='h-[1rem] flex-1 bg-gray-200' />
-            </motion.div>
+          <motion.div className='relative flex items-center' variants={prefersReducedMotion ? undefined : itemVariants}>
+            <span className='h-[1rem] flex-1 bg-gray-200' />
+            <span className='px-[12rem] text-[12rem] text-gray-400'>or use email</span>
+            <span className='h-[1rem] flex-1 bg-gray-200' />
+          </motion.div>
 
-            <motion.div className='flex flex-col gap-[12rem]' variants={prefersReducedMotion ? undefined : itemVariants}>
-              <AuthInput label='Email' type='email' autoComplete='email' error={errors.email?.message} {...register('email')} />
-              <PasswordInput label='Password' autoComplete='current-password' error={errors.password?.message} {...register('password')} />
-            </motion.div>
+          <motion.div className='flex flex-col gap-[12rem]' variants={prefersReducedMotion ? undefined : itemVariants}>
+            <AuthInput label='Email' type='email' autoComplete='email' error={errors.email?.message} {...register('email')} />
+            <PasswordInput label='Password' autoComplete='current-password' error={errors.password?.message} {...register('password')} />
+          </motion.div>
 
-            <motion.div variants={prefersReducedMotion ? undefined : itemVariants}>
-              <div className='flex items-center justify-between text-[13rem] text-gray-500'>
-                <Link
-                  href={`/${locale}/password-recovery`}
-                  className='font-medium text-blue-600 transition hover:text-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-200'
-                >
-                  Forgot password?
-                </Link>
-              </div>
-            </motion.div>
-
-            <motion.div variants={prefersReducedMotion ? undefined : itemVariants}>
-              <AuthButton type='submit' loading={isSubmitting}>
-                Sign in
-              </AuthButton>
-            </motion.div>
-
-            {(serverMessage?.type === 'error' || !!googleError) && (
-              <motion.div variants={prefersReducedMotion ? undefined : itemVariants} aria-live='polite' className='flex flex-col gap-[10rem]'>
-                <AnimatePresence>
-                  {serverMessage?.type === 'error' ? <AuthAlert key={serverMessage.text} variant='error' description={serverMessage.text} /> : null}
-                </AnimatePresence>
-                <AnimatePresence>{googleError ? <AuthAlert key={googleError} variant='error' description={googleError} /> : null}</AnimatePresence>
-              </motion.div>
-            )}
-
-            <motion.div variants={prefersReducedMotion ? undefined : itemVariants} className='text-[13rem] text-gray-500'>
-              <span>New to StudyBox?</span>{' '}
+          <motion.div variants={prefersReducedMotion ? undefined : itemVariants}>
+            <div className='flex items-center justify-between text-[13rem] text-gray-500'>
               <Link
-                href={`/${locale}/registration`}
+                href={`/${locale}/password-recovery`}
                 className='font-medium text-blue-600 transition hover:text-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-200'
               >
-                Create an account
+                Forgot password?
               </Link>
+            </div>
+          </motion.div>
+
+          <motion.div variants={prefersReducedMotion ? undefined : itemVariants}>
+            <AuthButton type='submit' loading={isSubmitting}>
+              Sign in
+            </AuthButton>
+          </motion.div>
+
+          {(serverMessage?.type === 'error' || !!googleError) && (
+            <motion.div variants={prefersReducedMotion ? undefined : itemVariants} aria-live='polite' className='flex flex-col gap-[10rem]'>
+              <AnimatePresence>
+                {serverMessage?.type === 'error' ? <AuthAlert key={serverMessage.text} variant='error' description={serverMessage.text} /> : null}
+              </AnimatePresence>
+              <AnimatePresence>{googleError ? <AuthAlert key={googleError} variant='error' description={googleError} /> : null}</AnimatePresence>
             </motion.div>
-          </motion.form>
-        </FormCard>
-      </AuthLayout>
-    </>
+          )}
+
+          <motion.div variants={prefersReducedMotion ? undefined : itemVariants} className='text-[13rem] text-gray-500'>
+            <span>New to StudyBox?</span>{' '}
+            <Link
+              href={`/${locale}/registration`}
+              className='font-medium text-blue-600 transition hover:text-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-200'
+            >
+              Create an account
+            </Link>
+          </motion.div>
+        </motion.form>
+      </FormCard>
+    </AuthLayout>
   );
 }

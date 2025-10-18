@@ -25,7 +25,7 @@
     "correctAnswer": "Правильный ответ",
     "overallScore": "Итоговый балл",
     "tasksSelection": "Выбор заданий",
-    "pleaseSelectTopic": "Пожалуйста, выберите тему.",
+    "pleaseSelectType": "Пожалуйста, выберите тип.",
     "random": "Случайный",
     "practicePartNumber": "Практика – часть {number}",
     "wordsCount": "Слов: {count}",

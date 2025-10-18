@@ -1,8 +1,6 @@
 'use client';
 
 import React from 'react';
-
-import { Checkbox } from '@/components/ui/checkbox';
 import { Footer } from '@/components/Footer';
 import Link from 'next/link';
 import { SubscriptionAccessLabel } from '@/components/SubscriptionAccessLabel';
@@ -67,15 +65,6 @@ export default function Page() {
               {/*  </Select>*/}
               {/*</div>*/}
               {/* // * User agreement */}
-              <div className='mb-[56rem] flex items-center gap-x-[12rem]'>
-                <Checkbox className='size-[20rem]' checked />
-                <div className='text-[16rem] font-medium leading-none'>
-                  I accept the{' '}
-                  <a target='_blank' href='https://www.studybox.kz/en/privacy' className='border-b border-d-black'>
-                    user agreement
-                  </a>
-                </div>
-              </div>
               {/* // * Next */}
               <Link
                 href='/practice/listening/rules'

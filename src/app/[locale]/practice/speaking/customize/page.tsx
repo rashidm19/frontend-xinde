@@ -1,9 +1,6 @@
 'use client';
 
 import React, { useMemo, useState } from 'react';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-
-import { Checkbox } from '@/components/ui/checkbox';
 import { GET_practice_speaking_categories } from '@/api/GET_practice_speaking_categories';
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
@@ -12,10 +9,13 @@ import axiosInstance from '@/lib/axiosInstance';
 import { useSubscriptionGate } from '@/hooks/useSubscriptionGate';
 import { SubscriptionAccessLabel } from '@/components/SubscriptionAccessLabel';
 import type { PracticeSpeakingCategoriesResponse, PracticeSpeakingListResponse } from '@/types/PracticeSpeaking';
+import Link from 'next/link';
+import { useCustomTranslations } from '@/hooks/useCustomTranslations';
 
 export default function Page() {
   const router = useRouter();
   const { requireSubscription, isCheckingAccess } = useSubscriptionGate();
+  const { tImgAlts } = useCustomTranslations('practice.reading.customize');
 
   const { data } = useQuery<PracticeSpeakingCategoriesResponse>({
     queryKey: ['speaking-categories'],
@@ -23,7 +23,7 @@ export default function Page() {
   });
 
   const [selectedPart, setSelectedPart] = useState<1 | 2 | 3>(1);
-  const [selectedTopic, setSelectedTopic] = useState<string>('random');
+  // const [selectedTopic, setSelectedTopic] = useState<string>('random');
 
   const [isStarting, setIsStarting] = useState(false);
 
@@ -41,28 +41,28 @@ export default function Page() {
         return;
       }
 
-    const topicParam = selectedTopic === 'random' ? randomTopic() : selectedTopic;
+      const topicParam = randomTopic();
 
-    const params: Record<string, string | number> = {
-      part: selectedPart,
-    };
+      const params: Record<string, string | number> = {
+        part: selectedPart,
+      };
 
-    if (topicParam) {
-      params.tag_id = topicParam;
-    }
+      if (topicParam) {
+        params.tag_id = topicParam;
+      }
 
-    const result = await axiosInstance.get<PracticeSpeakingListResponse>('/practice/speaking', {
-      params,
-      validateStatus: () => true,
-    });
+      const result = await axiosInstance.get<PracticeSpeakingListResponse>('/practice/speaking', {
+        params,
+        validateStatus: () => true,
+      });
 
-    if (result.status >= 200 && result.status < 300) {
-      nProgress.start();
-      const json = result.data;
-      localStorage.setItem('practiceSpeakingId', json.data[0].speaking_id.toString());
-      localStorage.setItem('practiceSpeakingPart', String(selectedPart));
-      router.push('/practice/speaking/rules/');
-    }
+      if (result.status >= 200 && result.status < 300) {
+        nProgress.start();
+        const json = result.data;
+        localStorage.setItem('practiceSpeakingId', json.data[0].speaking_id.toString());
+        localStorage.setItem('practiceSpeakingPart', String(selectedPart));
+        router.push('/practice/speaking/rules/');
+      }
     } finally {
       setIsStarting(false);
     }
@@ -101,6 +101,10 @@ export default function Page() {
             className='pointer-events-none absolute left-[-60rem] top-[716rem] h-auto w-[392rem] rotate-[-16deg] opacity-20 mix-blend-multiply'
           />
           <div className='relative z-10 flex flex-col gap-[48rem] rounded-[16rem] bg-white p-[64rem] shadow-card'>
+            <Link href='/practice' className='absolute right-[30rem] top-[30rem] flex size-[40rem] items-center justify-center'>
+              <img src='/images/icon_cross.svg' alt={tImgAlts('close')} className='size-[20rem]' />
+            </Link>
+
             {/* // * Header */}
             <div className='flex items-center gap-x-[12rem]'>
               <div className='flex size-[52rem] items-center justify-center bg-d-red-secondary'>
@@ -115,7 +119,7 @@ export default function Page() {
                 <div className='text-[20rem] font-medium leading-none'>3</div>
               </div>
             </div>
-            {/* // * Seclection */}
+            {/* // * Selection */}
             <div>
               <h1 className='mb-[40rem] text-[32rem] font-medium leading-none'>Tasks selection</h1>
               {/* // * Part Selection */}
@@ -124,30 +128,21 @@ export default function Page() {
                 <div className='grid grid-cols-3 gap-x-[16rem]'>
                   <button
                     type='button'
-                    onClick={() => {
-                      selectedPart !== 1 ? setSelectedTopic('random') : null;
-                      setSelectedPart(1);
-                    }}
+                    onClick={() => setSelectedPart(1)}
                     className={`flex h-[70rem] items-center justify-center rounded-[16rem] border-[3rem] border-d-light-gray text-[20rem] font-medium ${selectedPart === 1 ? 'bg-d-light-gray' : 'bg-transparent'}`}
                   >
                     Part 1
                   </button>
                   <button
                     type='button'
-                    onClick={() => {
-                      selectedPart !== 2 ? setSelectedTopic('random') : null;
-                      setSelectedPart(2);
-                    }}
+                    onClick={() => setSelectedPart(2)}
                     className={`flex h-[70rem] items-center justify-center rounded-[16rem] border-[3rem] border-d-light-gray text-[20rem] font-medium ${selectedPart === 2 ? 'bg-d-light-gray' : 'bg-transparent'}`}
                   >
                     Part 2
                   </button>
                   <button
                     type='button'
-                    onClick={() => {
-                      selectedPart !== 3 ? setSelectedTopic('random') : null;
-                      setSelectedPart(3);
-                    }}
+                    onClick={() => setSelectedPart(3)}
                     className={`flex h-[70rem] items-center justify-center rounded-[16rem] border-[3rem] border-d-light-gray text-[20rem] font-medium ${selectedPart === 3 ? 'bg-d-light-gray' : 'bg-transparent'}`}
                   >
                     Part 3
@@ -155,38 +150,7 @@ export default function Page() {
                 </div>
               </div>
 
-              {/* // * Topic Selection */}
-              <div className='mb-[32rem]'>
-                <label className='mb-[16rem] block text-[20rem] leading-none'>Please select a topic.</label>
-                <Select defaultValue='random' value={selectedTopic} onValueChange={setSelectedTopic}>
-                  <SelectTrigger className='h-[70rem] rounded-[16rem] bg-d-light-gray px-[40rem] text-[20rem] font-medium leading-normal data-[state=open]:rounded-b-none'>
-                    <SelectValue placeholder='Random' className='placeholder:text-d-black/60' />
-                  </SelectTrigger>
-
-                  <SelectContent className='mt-0 max-h-[250rem] rounded-b-[40rem]'>
-                    <SelectItem value='random' className='h-[50rem] px-[40rem] text-[20rem] font-medium leading-none last:rounded-b-[8rem] hover:bg-d-light-gray'>
-                      Random
-                    </SelectItem>
-
-                    {categoriesByPart.map(tag => (
-                      <SelectItem key={tag.id} value={String(tag.id)} className='h-[50rem] px-[40rem] text-[20rem] font-medium leading-none last:rounded-b-[8rem] hover:bg-d-light-gray'>
-                        {tag.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className='mb-[56rem] flex items-center gap-x-[12rem]'>
-                <Checkbox className='size-[20rem]' checked />
-                <div className='text-[16rem] font-medium leading-none'>
-                  I accept the{' '}
-                  <a target='_blank' href='https://www.studybox.kz/en/privacy' className='border-b border-d-black'>
-                    user agreement
-                  </a>
-                </div>
-              </div>
-              <button
+z              <button
                 onClick={startPractice}
                 disabled={isStarting || isCheckingAccess}
                 className='mx-auto flex h-[63rem] w-[280rem] items-center justify-center rounded-[40rem] bg-d-green text-[20rem] font-semibold hover:bg-d-green/40 disabled:cursor-not-allowed disabled:bg-d-gray/60 disabled:text-d-black/60'

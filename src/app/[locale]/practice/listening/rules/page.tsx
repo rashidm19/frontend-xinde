@@ -2,27 +2,18 @@
 
 import { Footer } from '@/components/Footer';
 import Link from 'next/link';
-import { Checkbox } from '@/components/ui/checkbox';
-import React, { useState } from 'react';
+import React from 'react';
 import { useCustomTranslations } from '@/hooks/useCustomTranslations';
 import { useSubscriptionGate } from '@/hooks/useSubscriptionGate';
 import { SubscriptionAccessLabel } from '@/components/SubscriptionAccessLabel';
 
 export default function Page() {
-  const { t, tImgAlts, tCommon, tCommonRich, tActions, tMessages } = useCustomTranslations('practice.listening.rules');
+  const { t, tImgAlts, tCommon, tActions } = useCustomTranslations('practice.listening.rules');
   const { requireSubscription, isCheckingAccess } = useSubscriptionGate();
-
-  const [accepted, setAccepted] = useState(false);
 
   const handleClick = async (e: React.MouseEvent<HTMLAnchorElement>) => {
     if (isCheckingAccess) {
       e.preventDefault();
-      return;
-    }
-
-    if (!accepted) {
-      e.preventDefault();
-      alert(tMessages('acceptUserAgreement'));
       return;
     }
 
@@ -78,25 +69,10 @@ export default function Page() {
               <h2 className='mb-[32rem] text-[32rem] font-medium leading-none'>{tCommon('marking')}</h2>
               <p className='mb-[48rem] text-[20rem] font-medium leading-tight text-d-black/80'>{t('marking')}</p>
 
-              <label className='mb-[56rem] flex select-none items-center gap-x-[12rem]'>
-                <Checkbox className='size-[20rem]' checked={accepted} onCheckedChange={newCheckedState => setAccepted(!!newCheckedState)} />
-                <div className='text-[16rem] font-medium leading-none'>
-                  {tCommonRich('acceptUserAgreement', {
-                    link: (chunks: any) => (
-                      <a target='_blank' href='https://www.studybox.kz/en/privacy' className='border-b border-d-black'>
-                        {chunks}
-                      </a>
-                    ),
-                  })}
-                </div>
-              </label>
-
               <Link
                 onClick={handleClick}
-                href={accepted ? '/practice/listening/audio-check' : '#'}
-                className={`mx-auto flex h-[63rem] w-[280rem] items-center justify-center rounded-[40rem] text-[20rem] font-semibold ${
-                  accepted ? 'cursor-pointer bg-d-green hover:bg-d-green/40' : 'pointer-events-none cursor-not-allowed bg-d-gray opacity-50'
-                } ${isCheckingAccess ? 'pointer-events-none cursor-wait opacity-70' : ''}`}
+                href={'/practice/listening/audio-check'}
+                className={`'cursor-pointer hover:bg-d-green/40' mx-auto flex h-[63rem] w-[280rem] items-center justify-center rounded-[40rem] bg-d-green text-[20rem] font-semibold ${isCheckingAccess ? 'pointer-events-none cursor-wait opacity-70' : ''}`}
               >
                 {isCheckingAccess ? '...' : tActions('continue')}
               </Link>

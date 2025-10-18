@@ -25,7 +25,7 @@
     "correctAnswer": "Correct answer",
     "overallScore": "Overall score",
     "tasksSelection": "Tasks selection",
-    "pleaseSelectTopic": "Please select a topic.",
+    "pleaseSelectType": "Please select a type.",
     "random": "Random",
     "practicePartNumber": "Practice - part {number}",
     "wordsCount": "Words: {count}",

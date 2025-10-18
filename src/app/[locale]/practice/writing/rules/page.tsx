@@ -16,7 +16,11 @@ export default function Page() {
       <img src='/images/illustration_torusArray--02.png' className='absolute bottom-0 left-0 h-auto w-[320rem] opacity-80' alt={tImgAlts('flower')} />
       <img src='/images/illustration_molecule.png' className='absolute right-0 top-0 h-auto w-[250rem] opacity-50' alt={tImgAlts('molecule')} />
       <div className='d container max-w-[1440rem] px-[270rem] pb-[150rem] pt-[80rem]'>
-        <div className='shadow-car flex flex-col gap-[48rem] rounded-[16rem] bg-white p-[64rem]'>
+        <div className='relative shadow-car flex flex-col gap-[48rem] rounded-[16rem] bg-white p-[64rem]'>
+          <Link href='/practice' className='absolute right-[30rem] top-[30rem] flex size-[40rem] items-center justify-center'>
+            <img src='/images/icon_cross.svg' alt={tImgAlts('close')} className='size-[20rem]' />
+          </Link>
+
           {/* // * Header */}
           <div className='flex items-center gap-x-[12rem]'>
             <div className='flex size-[52rem] items-center justify-center bg-d-blue-secondary'>

@@ -2,8 +2,6 @@
 
 import React, { useMemo, useState } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-
-import { Checkbox } from '@/components/ui/checkbox';
 import nProgress from 'nprogress';
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
@@ -12,6 +10,7 @@ import axiosInstance from '@/lib/axiosInstance';
 import { useSubscriptionGate } from '@/hooks/useSubscriptionGate';
 import { SubscriptionAccessLabel } from '@/components/SubscriptionAccessLabel';
 import type { PracticeWritingListResponse } from '@/types/PracticeWriting';
+import Link from 'next/link';
 
 interface WritingCategoryTag {
   id: string;
@@ -29,7 +28,7 @@ interface WritingCategoriesResponse {
 
 export default function Page() {
   const router = useRouter();
-  const { t, tImgAlts, tCommon, tCommonRich, tActions, tForm } = useCustomTranslations('practice.writing.customize');
+  const { t, tImgAlts, tCommon, tActions, tForm } = useCustomTranslations('practice.writing.customize');
   const { requireSubscription, isCheckingAccess } = useSubscriptionGate();
 
   const { data } = useQuery<WritingCategoriesResponse>({
@@ -106,10 +105,14 @@ export default function Page() {
   return (
     <main className='realtive min-h-screen bg-d-blue-secondary'>
       <img src='/images/illustration_torusArray--02.png' alt={tImgAlts('flower')} className='absolute bottom-0 left-0 h-auto w-[320rem] opacity-80' />
-      <img src='/images/illustration_molecule.png' alt={tImgAlts('molecule')} className='absolute right-0 top-0 h-auto w-[250rem] opacity-50' />s
+      <img src='/images/illustration_molecule.png' alt={tImgAlts('molecule')} className='absolute right-0 top-0 h-auto w-[250rem] opacity-50' />
       {data && (
         <div className='container min-h-[100dvh] max-w-[1440rem] px-[270rem] pt-[80rem]'>
-          <div className='shadow-car flex flex-col gap-[48rem] rounded-[16rem] bg-white p-[64rem]'>
+          <div className='shadow-car relative flex flex-col gap-[48rem] rounded-[16rem] bg-white p-[64rem]'>
+            <Link href='/practice' className='absolute right-[30rem] top-[30rem] flex size-[40rem] items-center justify-center'>
+              <img src='/images/icon_cross.svg' alt={tImgAlts('close')} className='size-[20rem]' />
+            </Link>
+
             {/* // * Header */}
             <div className='flex items-center gap-x-[12rem]'>
               <div className='flex size-[52rem] items-center justify-center bg-d-blue-secondary'>
@@ -156,7 +159,7 @@ export default function Page() {
 
               {/* // * Topic Selection */}
               <div className='mb-[32rem]'>
-                <label className='mb-[16rem] block text-[20rem] leading-none'>{tCommon('pleaseSelectTopic')}</label>
+                <label className='mb-[16rem] block text-[20rem] leading-none'>{tCommon('pleaseSelectType')}</label>
                 <Select defaultValue='random' value={selectedTopic} onValueChange={setSelectedTopic}>
                   <SelectTrigger className='h-[70rem] rounded-[16rem] bg-d-light-gray px-[40rem] text-[20rem] font-medium leading-normal data-[state=open]:rounded-b-none'>
                     <SelectValue placeholder={tForm('placeholders.random')} className='placeholder:text-d-black/60' />
@@ -168,7 +171,11 @@ export default function Page() {
                     </SelectItem>
 
                     {categoriesByPart.map(tag => (
-                      <SelectItem key={tag.id} value={String(tag.id)} className='h-[50rem] px-[40rem] text-[20rem] font-medium leading-none last:rounded-b-[8rem] hover:bg-d-light-gray'>
+                      <SelectItem
+                        key={tag.id}
+                        value={String(tag.id)}
+                        className='h-[50rem] px-[40rem] text-[20rem] font-medium leading-none last:rounded-b-[8rem] hover:bg-d-light-gray'
+                      >
                         {tag.name}
                       </SelectItem>
                     ))}
@@ -234,19 +241,6 @@ export default function Page() {
                   </Select>
                 </div>
               */}
-
-              <div className='mb-[56rem] flex items-center gap-x-[12rem]'>
-                <Checkbox className='size-[20rem]' checked />
-                <div className='text-[16rem] font-medium leading-none'>
-                  {tCommonRich('acceptUserAgreement', {
-                    link: (chunks: any) => (
-                      <a target='_blank' href='https://www.studybox.kz/en/privacy' className='border-b border-d-black'>
-                        {chunks}
-                      </a>
-                    ),
-                  })}
-                </div>
-              </div>
               <button
                 onClick={startPractice}
                 disabled={isStarting || isCheckingAccess}
