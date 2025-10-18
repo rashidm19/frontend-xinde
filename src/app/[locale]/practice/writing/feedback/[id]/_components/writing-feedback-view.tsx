@@ -328,7 +328,7 @@ export function WritingFeedbackView({ data, activePart, partOptions, onPartChang
   }, [activeCriterion]);
 
   return (
-    <div className='relative flex min-h-[100dvh] flex-col bg-[#d8f3fb]'>
+    <div className='relative flex min-h-[100dvh] flex-col bg-d-blue-secondary'>
       <WritingFeedbackHeader topBarElevated={topBarElevated} title='Writing Feedback' />
 
       <div className='flex-1'>
@@ -746,7 +746,7 @@ function StepButton({ icon: Icon, label, variant, disabled, onClick }: StepButto
   const variantClasses: Record<StepButtonProps['variant'], string> = {
     primary: 'border-transparent bg-gradient-to-r from-[#4F86F7] to-[#7C5CFF] text-white shadow-[0_24rem_48rem_-32rem_rgba(72,85,190,0.65)] hover:brightness-[1.04]',
     secondary: 'border-slate-200 bg-white text-slate-800 hover:bg-slate-50',
-    tertiary: 'border-slate-100 bg-[#d8f3fb] text-slate-700 hover:bg-white',
+    tertiary: 'border-slate-100 bg-d-blue-secondary text-slate-700 hover:bg-white',
   };
   const iconWrapperClasses: Record<StepButtonProps['variant'], string> = {
     primary: 'bg-white/20 text-white',
@@ -808,4 +808,3 @@ function SummarySection({ title, children }: SummarySectionProps) {
     </section>
   );
 }
-

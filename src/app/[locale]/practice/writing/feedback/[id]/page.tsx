@@ -15,11 +15,7 @@ import type {
   WritingMlOutput,
 } from '@/types/WritingFeedback';
 
-import {
-  type CriteriaKey,
-  type NormalizedWritingFeedback,
-  WritingFeedbackView,
-} from './_components/writing-feedback-view';
+import { type CriteriaKey, type NormalizedWritingFeedback, WritingFeedbackView } from './_components/writing-feedback-view';
 
 type FeedbackQueryError = Error & { status?: number };
 
@@ -38,7 +34,7 @@ const CRITERIA_DEFINITIONS: Array<{
 ];
 
 export default function Page({ params }: { params: { id: string } }) {
-  const { t, tImgAlts, tCommon } = useCustomTranslations('practice.writing.feedback');
+  const { t, tImgAlts } = useCustomTranslations('practice.writing.feedback');
 
   const {
     data: feedbackData,
@@ -67,7 +63,7 @@ export default function Page({ params }: { params: { id: string } }) {
     }
   }, [feedbackData]);
 
-  const activePart = part && feedbackData ? feedbackData[part] ?? null : null;
+  const activePart = part && feedbackData ? (feedbackData[part] ?? null) : null;
 
   const partOptions = useMemo(() => {
     if (!feedbackData) return [];
@@ -89,9 +85,7 @@ export default function Page({ params }: { params: { id: string } }) {
 
   return (
     <>
-      {feedbackStatus === 'pending' && (
-        <StateContainer tone='info' title={t('evaluating')} description='We will notify you as soon as your band score is ready.' />
-      )}
+      {feedbackStatus === 'pending' && <StateContainer tone='info' title={t('evaluating')} description='We will notify you as soon as your band score is ready.' />}
 
       {feedbackStatus === 'error' && (
         <StateContainer
@@ -261,7 +255,7 @@ function StateContainer({ tone, title, description, actionLabel, onAction }: Sta
   const iconSymbol = tone === 'info' ? 'i' : '!';
 
   return (
-    <div className='flex min-h-[calc(100dvh-93rem)] items-center justify-center bg-[#d8f3fb] px-[24rem]'>
+    <div className='flex min-h-[calc(100dvh-93rem)] items-center justify-center bg-d-blue-secondary px-[24rem]'>
       <div className='flex max-w-[480rem] flex-col items-center gap-[16rem] rounded-[28rem] border border-dashed border-slate-200 bg-white px-[40rem] py-[48rem] text-center shadow-[0_24rem_80rem_-64rem_rgba(46,67,139,0.35)]'>
         <div className={'flex size-[56rem] items-center justify-center rounded-full text-[20rem] font-semibold ' + iconStyles}>{iconSymbol}</div>
         <h2 className='text-[22rem] font-semibold text-slate-900'>{title}</h2>

@@ -14,8 +14,6 @@ export default function Page() {
 
   return (
     <main className='relative min-h-screen bg-d-blue-secondary'>
-      {/*<img src='/images/illustration_torusArray--02.png' className='pointer-events-none absolute bottom-[40rem] left-[40rem] h-auto w-[220rem] opacity-70' alt={tImgAlts('flower')} />*/}
-      {/*<img src='/images/illustration_molecule.png' className='pointer-events-none absolute right-[60rem] top-[48rem] h-auto w-[200rem] opacity-45' alt={tImgAlts('molecule')} />*/}
       <div className='relative z-[1] flex min-h-[100dvh] w-full items-center justify-center px-[16rem] py-[48rem]'>
         <PracticeWritingCard
           closeHref='/practice'
