@@ -486,8 +486,8 @@
       "subtitle": "The points received will not be displayed <br></br> in the overall statistics",
       "rules": {
         "title": "What’s in the IELTS Academic Reading paper?",
-        "text": "What’s in the IELTS Academic Reading paper? Texts come from books, journals, magazines, newspapers and online resources, written for a non-specialist audience. All the topics are of general interest to students at undergraduate or postgraduate level. The texts may be written in different styles, for example, narrative, descriptive or discursive/argumentative. At least one text contains detailed logical argument. Texts may also contain diagrams, graphs or illustrations. If texts use technical vocabulary, then a simple dictionary definition is provided. You will need to transfer your answers to an answer sheet. You must transfer your answers during the hour you are given for the Reading test. Unlike the Listening test, no extra transfer time is given. You should be careful when writing your answers on the answer sheet because you will lose marks for incorrect spelling and grammar.",
-        "marking": "Each correct answer receives 1 mark. Your final score is given as a band score from 1–9 in whole or half bands, e.g. 4 or 6.5"
+        "text": "The IELTS Academic Reading paper includes texts from books, journals, magazines, newspapers, and online sources for a non-specialist audience. Topics are of general interest to undergraduate or postgraduate students and may be narrative, descriptive, or argumentative. At least one text contains detailed logical argument and may include diagrams or graphs. Technical vocabulary is explained with simple definitions. Answers must be transferred to the answer sheet within the one-hour test, as no extra time is given. Be careful with spelling and grammar, as mistakes lose marks.",
+        "marking": "Each correct answer receives 1 mark. Your final score is given as a band score from 1–9 in whole or half bands, e.g. 4 or 6.5."
       },
       "test": {
         "readTextAndAnswerQuestions": "Read the text and answer questions "
