@@ -4,7 +4,6 @@ import { Form, FormControl, FormField, FormItem } from '@/components/ui/form';
 
 import { AutosizeTextarea } from '@/components/ui/autosize-textarea';
 import { GET_practice_writing_id } from '@/api/GET_practice_writing_id';
-import { HeaderDuringTest } from '@/components/HeaderDuringTest';
 import { POST_practice_writing_id } from '@/api/POST_practice_writing_id';
 import React from 'react';
 import { useForm } from 'react-hook-form';
@@ -13,6 +12,7 @@ import { useRouter } from 'next/navigation';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useCustomTranslations } from '@/hooks/useCustomTranslations';
+import { WritingFeedbackHeader } from '@/components/practice/WritingFeedbackHeader';
 
 export const dynamic = 'force-dynamic';
 
@@ -56,7 +56,12 @@ export default function Page() {
 
   return (
     <>
-      <HeaderDuringTest title={tCommon('practicePartNumber', { number: data?.picture ? 1 : 2 })} tag={tCommon('writing')} />
+      <WritingFeedbackHeader
+        topBarElevated
+        title={tCommon('practicePartNumber', { number: data?.picture ? 1 : 2 })}
+        exitLabel={tActions('exit')}
+        onExit={() => router.push('/profile')}
+      />
 
       <main className='min-h-[100dvh] bg-d-blue-secondary'>
         <div className='container flex min-h-[100dvh] max-w-[1440rem] items-start justify-between px-[40rem] pb-[24rem] pt-[40rem]'>

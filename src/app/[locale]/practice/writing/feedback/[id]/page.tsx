@@ -261,7 +261,7 @@ function StateContainer({ tone, title, description, actionLabel, onAction }: Sta
   const iconSymbol = tone === 'info' ? 'i' : '!';
 
   return (
-    <div className='flex min-h-[calc(100dvh-93rem)] items-center justify-center bg-[#EEF5FE] px-[24rem]'>
+    <div className='flex min-h-[calc(100dvh-93rem)] items-center justify-center bg-[#d8f3fb] px-[24rem]'>
       <div className='flex max-w-[480rem] flex-col items-center gap-[16rem] rounded-[28rem] border border-dashed border-slate-200 bg-white px-[40rem] py-[48rem] text-center shadow-[0_24rem_80rem_-64rem_rgba(46,67,139,0.35)]'>
         <div className={'flex size-[56rem] items-center justify-center rounded-full text-[20rem] font-semibold ' + iconStyles}>{iconSymbol}</div>
         <h2 className='text-[22rem] font-semibold text-slate-900'>{title}</h2>

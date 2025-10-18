@@ -4,12 +4,12 @@ import { type KeyboardEvent, type ReactNode, type UIEvent, useCallback, useEffec
 
 import { animate, AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import type { LucideIcon } from 'lucide-react';
-import { ArrowLeft, ArrowRight, BookOpenCheck, CheckCircle2, ChevronRight, FileText, Info, Lightbulb, LogOut, Sparkles } from 'lucide-react';
+import { ArrowRight, BookOpenCheck, CheckCircle2, ChevronRight, FileText, Lightbulb, Sparkles } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
 import type { WritingFeedbackPartKey } from '@/types/WritingFeedback';
-import { useRouter } from 'next/navigation';
 import { EmptyModalState, ModalScrollProgress, ModalShell } from '@/components/modals/UnifiedModalShell';
+import { WritingFeedbackHeader } from '@/components/practice/WritingFeedbackHeader';
 
 type ModalKey = 'criteria' | 'summary' | 'task' | 'ideal';
 
@@ -108,7 +108,6 @@ const badgeByScore = (score: number | null) => {
 };
 
 export function WritingFeedbackView({ data, activePart, partOptions, onPartChange }: WritingFeedbackViewProps) {
-  const router = useRouter();
   const shouldReduceMotion = useReducedMotion();
   const [openModal, setOpenModal] = useState<ModalKey | null>(null);
   const [activeCriterionIndex, setActiveCriterionIndex] = useState(0);
@@ -329,42 +328,8 @@ export function WritingFeedbackView({ data, activePart, partOptions, onPartChang
   }, [activeCriterion]);
 
   return (
-    <div className='relative flex min-h-[100dvh] flex-col bg-[#EEF5FE]'>
-      <header
-        className={cn(
-          'sticky top-0 z-[30] flex h-[64rem] w-full items-center justify-between border-b border-white/60 bg-white/85 px-[40rem] backdrop-blur-sm transition-[box-shadow,backdrop-filter,background-color] tablet:px-[32rem]',
-          topBarElevated ? 'bg-white/95 shadow-[0_18rem_44rem_-30rem_rgba(15,23,42,0.2)] backdrop-blur-md' : 'shadow-none'
-        )}
-        role='navigation'
-        aria-label='Writing feedback actions'
-      >
-        <button
-          type='button'
-          onClick={() => router.back()}
-          className='inline-flex items-center gap-[10rem] rounded-[16rem] border border-slate-200 bg-white px-[18rem] py-[10rem] text-[13rem] font-semibold text-slate-700 transition hover:border-slate-300 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 focus-visible:ring-offset-2'
-        >
-          <ArrowLeft className='size-[16rem]' aria-hidden='true' />
-          Back to tasks
-        </button>
-        <h1 className='text-[18rem] font-semibold text-slate-900'>Writing Feedback</h1>
-        <div className='flex items-center gap-[16rem]'>
-          <div className='inline-flex items-center gap-[8rem] rounded-[18rem] border border-slate-200 bg-white px-[16rem] py-[10rem] text-[13rem] font-semibold text-slate-700 shadow-[0_10rem_24rem_-20rem_rgba(15,23,42,0.35)]'>
-            <span className='rounded-[12rem] bg-slate-900 px-[10rem] py-[4rem] text-[12rem] font-semibold uppercase tracking-[0.14em] text-white'>Band</span>
-            <span title={cefrTooltip ?? undefined} aria-label={cefrTooltip ?? undefined} className='flex items-center gap-[6rem]'>
-              {displayScore}
-              {cefrTooltip && <Info className='size-[14rem] text-slate-400' aria-hidden='true' />}
-            </span>
-          </div>
-          <button
-            type='button'
-            onClick={() => router.push('/profile')}
-            className='inline-flex items-center gap-[8rem] rounded-[16rem] border border-slate-200 bg-white px-[18rem] py-[10rem] text-[13rem] font-semibold text-slate-600 transition hover:border-slate-300 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 focus-visible:ring-offset-2'
-          >
-            Exit
-            <LogOut className='size-[16rem]' aria-hidden='true' />
-          </button>
-        </div>
-      </header>
+    <div className='relative flex min-h-[100dvh] flex-col bg-[#d8f3fb]'>
+      <WritingFeedbackHeader topBarElevated={topBarElevated} title='Writing Feedback' />
 
       <div className='flex-1'>
         <div
@@ -775,20 +740,19 @@ interface StepButtonProps {
   onClick: () => void;
 }
 
-function StepButton({ icon: Icon, label, description, variant, disabled, onClick }: StepButtonProps) {
+function StepButton({ icon: Icon, label, variant, disabled, onClick }: StepButtonProps) {
   const baseClasses =
     'group flex min-h-[82rem] items-center justify-between gap-[16rem] rounded-[24rem] border px-[24rem] py-[20rem] text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 focus-visible:ring-offset-2';
   const variantClasses: Record<StepButtonProps['variant'], string> = {
     primary: 'border-transparent bg-gradient-to-r from-[#4F86F7] to-[#7C5CFF] text-white shadow-[0_24rem_48rem_-32rem_rgba(72,85,190,0.65)] hover:brightness-[1.04]',
     secondary: 'border-slate-200 bg-white text-slate-800 hover:bg-slate-50',
-    tertiary: 'border-slate-100 bg-[#F6F8FF] text-slate-700 hover:bg-white',
+    tertiary: 'border-slate-100 bg-[#d8f3fb] text-slate-700 hover:bg-white',
   };
   const iconWrapperClasses: Record<StepButtonProps['variant'], string> = {
     primary: 'bg-white/20 text-white',
     secondary: 'bg-slate-100 text-slate-600',
     tertiary: 'bg-white text-slate-600',
   };
-  const descriptionClasses = disabled ? 'text-slate-400' : variant === 'primary' ? 'text-white/80' : 'text-slate-500';
 
   return (
     <motion.button
@@ -844,4 +808,4 @@ function SummarySection({ title, children }: SummarySectionProps) {
     </section>
   );
 }
-
+
