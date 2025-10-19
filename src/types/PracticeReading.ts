@@ -10,6 +10,8 @@ export interface PracticeReadingResult {
   score: number;
   questions: PracticeReadingResultQuestion[];
   correct_answers_count: number;
+  title: string | null;
+  completed_at: string | null;
 }
 
 export type PracticeReadingFullFeedback = PracticeReadingResult;
