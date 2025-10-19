@@ -51,7 +51,7 @@ export default function Page() {
   };
 
   return (
-    <main className='relative min-h-screen bg-d-yellow-secondary/55'>
+    <main className='relative min-h-screen bg-d-yellow-secondary'>
       <div className='relative z-[1] flex min-h-screen items-center justify-center px-[16rem] py-[48rem]'>
         <PracticeWritingCard
           closeHref='/practice'
