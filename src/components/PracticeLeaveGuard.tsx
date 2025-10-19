@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import { useLeaveConfirmation } from '@/hooks/useLeaveConfirmation';
+// import { useLeaveConfirmation } from '@/hooks/useLeaveConfirmation';
 import { useCustomTranslations } from '@/hooks/useCustomTranslations';
 import React from 'react';
 
@@ -12,7 +12,7 @@ type Props = {
 export function PracticeLeaveGuard({ enabled = true, children }: Props) {
   const { t } = useCustomTranslations('practice.common');
 
-  useLeaveConfirmation({ message: t('leaveConfirmation'), enabled });
+  // useLeaveConfirmation({ message: t('leaveConfirmation'), enabled });
 
   return <>{children}</>;
 }
