@@ -14,12 +14,14 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useCustomTranslations } from '@/hooks/useCustomTranslations';
 import { WritingFeedbackHeader } from '@/components/practice/WritingFeedbackHeader';
 import { PracticeLeaveGuard } from '@/components/PracticeLeaveGuard';
+import { cn } from '@/lib/utils';
 
 export const dynamic = 'force-dynamic';
 
 export default function Page() {
   const router = useRouter();
   const { t, tCommon, tActions, tForm } = useCustomTranslations('practice.writing.test');
+  const [isPictureExpanded, setIsPictureExpanded] = React.useState(false);
 
   const { data, status } = useQuery({
     queryKey: ['practice-writing'],
@@ -48,6 +50,10 @@ export default function Page() {
 
   const formValues = form.watch();
 
+  React.useEffect(() => {
+    setIsPictureExpanded(false);
+  }, [data?.picture]);
+
   if (status === 'pending') {
     return <></>;
   }
@@ -64,33 +70,53 @@ export default function Page() {
         onExit={() => router.push('/profile')}
       />
 
-      <main className='min-h-[100dvh] bg-d-blue-secondary'>
-        <div className='container flex min-h-[100dvh] max-w-[1440rem] items-start justify-between px-[40rem] pb-[24rem] pt-[40rem]'>
+      <main className='bg-d-blue-secondary'>
+        <div className='container flex min-h-[calc(100dvh-64rem)] max-w-[1600rem] items-start justify-center gap-[24rem] px-[24rem] pb-[16rem] pt-[24rem]'>
           {/* // * Вопрос */}
           {data.picture ? (
-            <div className='w-[672rem] rounded-[16rem] bg-white p-[40rem] pb-[60rem]'>
-              {/* // * Текст вопроса */}
-              <div className='whitespace-pre-line text-[20rem] font-medium'>{data.question}</div>
-              {/* // * Разделитель */}
-              <hr className='mb-[56rem] mt-[16rem] border-b border-d-light-gray' />
-              {/* // * Иллюстрация к вопросу */}
-              <img src={data.picture} alt='illustration' className='h-auto w-full' />
+            <div
+              className={cn(
+                'flex h-[calc(100dvh-96rem)] w-[720rem] flex-col overflow-hidden rounded-[16rem] border border-black bg-white shadow-lg transition-all duration-300 ease-out',
+                isPictureExpanded ? 'p-0' : 'p-[24rem]'
+              )}
+            >
+              {!isPictureExpanded && (
+                <div className='whitespace-pre-line rounded-[16rem] border border-[#c2c2c2] p-[16rem] text-[18rem] font-medium leading-[24rem] text-d-black/90'>
+                  {data.question}
+                </div>
+              )}
+              <button
+                type='button'
+                onClick={() => setIsPictureExpanded(prev => !prev)}
+                className={cn(
+                  'relative flex w-full flex-1 items-center justify-center overflow-hidden rounded-[12rem] border border-d-light-gray bg-d-light-gray transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-d-green/40',
+                  isPictureExpanded ? 'mt-0 h-full rounded-none border-0 bg-[#c2c2c2]' : 'mt-[16rem] min-h-[200rem]'
+                )}
+                aria-pressed={isPictureExpanded}
+              >
+                <img
+                  src={data.picture}
+                  alt='illustration'
+                  className={cn('h-full w-full object-contain transition-all duration-300 ease-out', isPictureExpanded ? 'object-cover' : 'max-h-[280rem]')}
+                />
+              </button>
             </div>
           ) : (
-            <div className='flex w-[672rem] flex-col gap-y-[24rem] rounded-[16rem] bg-white p-[40rem] pb-[60rem]'>
-              <div className='text-[20rem] font-medium leading-tight text-d-black/80'>{t('writeAboutTopic')}</div>
-              {/* // * Текст вопроса */}
-              <div className='whitespace-pre-line rounded-[12rem] bg-d-light-gray px-[24rem] py-[20rem] text-[20rem] font-medium leading-[24rem]'>{data?.question}</div>
-              <div className='text-[20rem] font-medium leading-tight text-d-black/80'>{data.text}</div>
+            <div className='flex h-[calc(100dvh-96rem)] w-[720rem] flex-col overflow-hidden rounded-[16rem] border border-black bg-white p-[24rem] shadow-lg'>
+              <div className='text-[18rem] font-semibold leading-tight text-d-black/90'>{t('writeAboutTopic')}</div>
+              <div className='my-[12rem] max-h-[200rem] overflow-auto whitespace-pre-line rounded-[12rem] bg-d-light-gray px-[18rem] py-[14rem] text-[18rem] font-medium leading-[22rem] text-d-black/80'>
+                {data?.question}
+              </div>
+              <div className='flex-1 overflow-auto whitespace-pre-line rounded-[12rem] border border-d-light-gray px-[18rem] py-[14rem] text-[16rem] leading-[22rem] text-d-black/80'>
+                {data.text}
+              </div>
             </div>
           )}
 
-          {/* // * Форма для ответа */}
-          <div className='w-[672rem] rounded-[16rem] bg-white p-[40rem]'>
-            {/* // * Рекомендации */}
-            <div className='flex justify-between'>
-              <div className='whitespace-pre-line text-[14rem] leading-normal text-d-black/80'>{data.task}</div>
-              <div className='text-[14rem] leading-normal text-d-black/80'>
+          <div className='flex h-[calc(100dvh-96rem)] w-[720rem] flex-col overflow-hidden rounded-[16rem] border border-black bg-white p-[24rem] shadow-lg'>
+            <div className='flex items-start justify-between gap-[12rem] rounded-[12rem] border border-[#c2c2c2] bg-d-light-gray px-[18rem] py-[14rem] text-[14rem] leading-[20rem] text-d-black/80'>
+              <div className='whitespace-pre-line'>{data.task}</div>
+              <div>
                 {tCommon('wordsCount', {
                   count: formValues.answer
                     .trim()
@@ -99,22 +125,19 @@ export default function Page() {
                 })}
               </div>
             </div>
-            {/* // * Разделитель */}
-            <hr className='my-[40rem] border-b border-d-light-gray' />
-            {/* // * Форма ответа */}
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className='flex h-full flex-col'>
                 <FormField
                   name='answer'
                   control={form.control}
                   render={({ field }) => (
-                    <FormItem className=''>
+                    <FormItem className='mt-[16rem] flex h-full flex-col'>
                       <FormControl>
                         <AutosizeTextarea
                           {...field}
-                          minHeight={350}
+                          minHeight={220}
                           placeholder={tForm('placeholders.startTypingHere')}
-                          className='mb-[54rem] w-full text-[20rem] font-medium leading-[24rem] outline-none placeholder:text-d-black/40'
+                          className='flex-1 resize-none rounded-[12rem] border border-d-light-gray bg-d-light-gray px-[20rem] py-[16rem] text-[16rem] font-medium leading-[22rem] text-d-black/80 outline-none placeholder:text-d-black/40 focus:border-d-green'
                         />
                       </FormControl>
                     </FormItem>
@@ -122,7 +145,7 @@ export default function Page() {
                 />
                 <button
                   type='submit'
-                  className='flex h-[71rem] w-full items-center justify-center rounded-[40rem] bg-d-green text-[24rem] font-medium hover:bg-d-green/40'
+                  className='mt-[16rem] flex h-[54rem] w-full shrink-0 items-center justify-center rounded-[28rem] bg-d-green text-[18rem] font-semibold transition hover:bg-d-green/80'
                 >
                   {tActions('submit')}
                 </button>
