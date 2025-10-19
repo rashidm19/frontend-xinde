@@ -59,7 +59,7 @@ export function ReadingAnswerSheet({ data, locale, meta, bandMapping, onRetry }:
         status,
         answer: hasAnswer ? question.answer ?? null : null,
         correctAnswer: question.correct_answer ?? null,
-        detailHint: "Tip placeholder · Add targeted explanation once available.",
+        detailHint: null,
       } satisfies AnswerSheetQuestion;
     });
   }, [data.questions]);
@@ -81,7 +81,7 @@ export function ReadingAnswerSheet({ data, locale, meta, bandMapping, onRetry }:
     () => [
       {
         icon: <BookOpenText className="size-[16rem]" aria-hidden="true" />,
-        label: meta?.testName ?? `Practice set #${data.id}`,
+        label: meta?.testName ?? `Practice set #${data.reading_id}`,
       },
       {
         icon: <Clock3 className="size-[16rem]" aria-hidden="true" />,
@@ -106,7 +106,7 @@ export function ReadingAnswerSheet({ data, locale, meta, bandMapping, onRetry }:
       onRetry();
       return;
     }
-    router.push(`/${locale}/practice/reading`);
+    router.push(`/${locale}/practice/reading/rules`);
   }, [locale, onRetry, router]);
 
   const handleQuestionSelect = useCallback((questionNumber: number) => {
@@ -155,7 +155,7 @@ export function ReadingAnswerSheet({ data, locale, meta, bandMapping, onRetry }:
           totalCount={total}
           metaItems={metaItems}
           metaDescription={metaDescription}
-          contextDescription="Keep momentum by reviewing mistakes and revisiting tricky question types."
+          contextDescription={null}
           shouldReduceMotion={shouldReduceMotion}
         />
 
@@ -183,9 +183,11 @@ export function ReadingAnswerSheet({ data, locale, meta, bandMapping, onRetry }:
             <div className="mt-[18rem] space-y-[14rem] rounded-[22rem] border border-slate-100 bg-[#F8FAFF] px-[20rem] py-[16rem] text-[14rem] text-slate-600">
               <p className="font-semibold text-slate-900">Correct answer: {question.correctAnswer ?? "—"}</p>
               <p className="text-slate-600">Your answer: {question.answer ?? "—"}</p>
-              <div className="rounded-[18rem] border border-dashed border-slate-200 bg-white px-[18rem] py-[14rem] text-[13rem] text-slate-500">
-                {question.detailHint ?? "Tip placeholder · Add targeted explanation once available."}
-              </div>
+              {question.detailHint ? (
+                <div className="rounded-[18rem] border border-dashed border-slate-200 bg-white px-[18rem] py-[14rem] text-[13rem] text-slate-500">
+                  {question.detailHint}
+                </div>
+              ) : null}
             </div>
           )}
         />
@@ -271,12 +273,7 @@ export function ReadingAnswerSheet({ data, locale, meta, bandMapping, onRetry }:
         ) : null}
       </div>
 
-      <MistakesReviewModal
-        open={reviewModalOpen}
-        onOpenChange={open => setReviewModalOpen(open)}
-        questions={mistakeQuestions}
-        renderTip={() => "Tip placeholder · Reinforce scanning for keywords and synonyms in the passage before answering."}
-      />
+      <MistakesReviewModal open={reviewModalOpen} onOpenChange={open => setReviewModalOpen(open)} questions={mistakeQuestions} />
 
       <BandMappingModal
         open={bandModalOpen}

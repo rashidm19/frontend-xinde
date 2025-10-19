@@ -30,7 +30,7 @@ export interface ResultOverviewProps {
   totalCount: number;
   metaItems?: ResultOverviewMetaItem[];
   metaDescription?: string | null;
-  contextDescription: string;
+  contextDescription?: string | null;
   accuracyLabel?: string;
   accuracyHelpText?: string;
   shouldReduceMotion: boolean;

@@ -76,7 +76,7 @@ export function ListeningAnswerSheet({ data, locale, meta, bandMapping, onRetry 
         correctAnswer: question.correct_answer ?? null,
         sectionLabel,
         timestampSeconds,
-        detailHint: "Tip placeholder · Listen for paraphrased numbers, names, and locations.",
+        detailHint: null,
       } satisfies AnswerSheetQuestion;
     });
   }, [data.questions]);
@@ -98,7 +98,7 @@ export function ListeningAnswerSheet({ data, locale, meta, bandMapping, onRetry 
     () => [
       {
         icon: <BookOpenText className="size-[16rem]" aria-hidden="true" />,
-        label: meta?.testName ?? `Practice set #${data.id}`,
+        label: meta?.testName ?? `Practice set #${data.listening_id}`,
       },
       {
         icon: <Clock3 className="size-[16rem]" aria-hidden="true" />,
@@ -123,7 +123,7 @@ export function ListeningAnswerSheet({ data, locale, meta, bandMapping, onRetry 
       onRetry();
       return;
     }
-    router.push(`/${locale}/practice/listening`);
+    router.push(`/${locale}/practice/listening/rules`);
   }, [locale, onRetry, router]);
 
   const handleQuestionSelect = useCallback((questionNumber: number) => {
@@ -172,7 +172,7 @@ export function ListeningAnswerSheet({ data, locale, meta, bandMapping, onRetry 
           totalCount={total}
           metaItems={metaItems}
           metaDescription={metaDescription}
-          contextDescription="Keep momentum by reviewing mistakes and revisiting tricky audio cues."
+          contextDescription={null}
           shouldReduceMotion={shouldReduceMotion}
         />
 
@@ -279,12 +279,7 @@ export function ListeningAnswerSheet({ data, locale, meta, bandMapping, onRetry 
         ) : null}
       </div>
 
-      <MistakesReviewModal
-        open={reviewModalOpen}
-        onOpenChange={open => setReviewModalOpen(open)}
-        questions={mistakeQuestions}
-        renderTip={() => "Tip placeholder · Practice identifying paraphrased phrases during the audio."}
-      />
+      <MistakesReviewModal open={reviewModalOpen} onOpenChange={open => setReviewModalOpen(open)} questions={mistakeQuestions} />
 
       <BandMappingModal
         open={bandModalOpen}

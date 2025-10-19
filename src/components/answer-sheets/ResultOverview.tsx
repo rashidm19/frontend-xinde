@@ -115,9 +115,11 @@ export function ResultOverview({
           {renderMetaItems(metaItems)}
         </div>
         {metaDescription ? <p className="text-[13rem] text-slate-500">{metaDescription}</p> : null}
-        <div className="rounded-[20rem] border border-slate-200 bg-white px-[20rem] py-[12rem] text-[13rem] font-medium text-slate-600">
-          {contextDescription}
-        </div>
+        {contextDescription ? (
+          <div className="rounded-[20rem] border border-slate-200 bg-white px-[20rem] py-[12rem] text-[13rem] font-medium text-slate-600">
+            {contextDescription}
+          </div>
+        ) : null}
       </div>
     </motion.section>
   );

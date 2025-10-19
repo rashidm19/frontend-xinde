@@ -39,6 +39,7 @@ export function MistakesReviewModal({
           {questions.map(question => {
             const status = STATUS_STYLES[question.status];
             const timestamp = formatTimestamp(question.timestampSeconds);
+            const tipContent = renderTip ? renderTip(question) : question.detailHint;
             return (
               <article
                 key={`mistake-question-${question.number}`}
@@ -57,9 +58,11 @@ export function MistakesReviewModal({
                 </header>
                 <div className="mt-[14rem] space-y-[10rem] text-[13rem] text-slate-600">
                   <p>Your answer: {question.answer ?? "—"}</p>
-                  <div className="rounded-[18rem] border border-dashed border-slate-200 bg-[#F8FAFF] px-[18rem] py-[12rem] font-medium text-slate-500">
-                    {renderTip ? renderTip(question) : question.detailHint ?? "Tip placeholder · Practice identifying paraphrased phrases during the audio."}
-                  </div>
+                  {tipContent ? (
+                    <div className="rounded-[18rem] border border-dashed border-slate-200 bg-[#F8FAFF] px-[18rem] py-[12rem] font-medium text-slate-500">
+                      {tipContent}
+                    </div>
+                  ) : null}
                 </div>
               </article>
             );

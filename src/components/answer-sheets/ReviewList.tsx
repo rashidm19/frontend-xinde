@@ -157,15 +157,18 @@ export const ReviewList = forwardRef<ReviewListHandle, ReviewListProps>(function
       }
 
       const timestamp = formatTimestamp(question.timestampSeconds);
+      const hint = question.detailHint;
 
       return (
         <div className="mt-[18rem] space-y-[14rem] rounded-[22rem] border border-slate-100 bg-[#F8FAFF] px-[20rem] py-[16rem] text-[14rem] text-slate-600">
           <p className="font-semibold text-slate-900">Correct answer: {question.correctAnswer ?? "—"}</p>
           <p className="text-slate-600">Your answer: {question.answer ? question.answer : "—"}</p>
           {timestamp ? <p className="text-slate-500">Heard at ~{timestamp}</p> : null}
-          <div className="rounded-[18rem] border border-dashed border-slate-200 bg-white px-[18rem] py-[14rem] text-[13rem] text-slate-500">
-            {question.detailHint ?? "Tip placeholder · Add targeted explanation once available."}
-          </div>
+          {hint ? (
+            <div className="rounded-[18rem] border border-dashed border-slate-200 bg-white px-[18rem] py-[14rem] text-[13rem] text-slate-500">
+              {hint}
+            </div>
+          ) : null}
         </div>
       );
     },
@@ -183,7 +186,7 @@ export const ReviewList = forwardRef<ReviewListHandle, ReviewListProps>(function
 
       <div className="relative">
         <div
-          className="sticky z-[2] flex flex-wrap items-center justify-between gap-[12rem] rounded-[24rem] border border-white/60 bg-white/85 px-[18rem] py-[12rem] shadow-[0_18rem_40rem_-32rem_rgba(40,56,140,0.25)] backdrop-blur"
+          className="z-[2] flex flex-wrap items-center justify-between gap-[12rem] rounded-[24rem] border border-white/60 bg-white/85 px-[18rem] py-[12rem] shadow-[0_18rem_40rem_-32rem_rgba(40,56,140,0.25)] backdrop-blur"
           style={{ top: stickyOffset }}
         >
           <div className="flex flex-wrap items-center gap-[12rem]" role="tablist" aria-label="Question filter">
