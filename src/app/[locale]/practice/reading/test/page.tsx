@@ -22,6 +22,7 @@ import type { PracticeReadingContent, PracticeReadingPart, PracticeReadingResult
 
 import { useRouter } from 'next/navigation';
 import { useCustomTranslations } from '@/hooks/useCustomTranslations';
+import { PracticeLeaveGuard } from '@/components/PracticeLeaveGuard';
 
 type FormValues = {
   [key: string]: string | undefined;
@@ -194,7 +195,7 @@ export default function Page() {
   };
 
   return (
-    <>
+    <PracticeLeaveGuard>
       <HeaderDuringTest title={tCommon('practice')} tag={tCommon('reading')} />
 
       <main className='min-h-screen overflow-hidden bg-d-yellow-secondary'>
@@ -686,6 +687,6 @@ export default function Page() {
           </form>
         </Form>
       </main>
-    </>
+    </PracticeLeaveGuard>
   );
 }

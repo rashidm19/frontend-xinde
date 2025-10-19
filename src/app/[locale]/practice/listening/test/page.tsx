@@ -19,6 +19,7 @@ import { transformStringToArrayV4 } from '@/lib/utils';
 import { useCustomTranslations } from '@/hooks/useCustomTranslations';
 import axiosInstance from '@/lib/axiosInstance';
 import type { PracticeListeningResult } from '@/types/PracticeListening';
+import { PracticeLeaveGuard } from '@/components/PracticeLeaveGuard';
 
 type FormValues = {
   [key: string]: string | undefined;
@@ -145,7 +146,7 @@ export default function Page() {
   };
 
   return (
-    <>
+    <PracticeLeaveGuard>
       <HeaderDuringTest title={tCommon('practice')} tag={tCommon('listening')} audio={data.audio_url} />
 
       <main className='min-h-screen overflow-hidden bg-d-light-gray'>
@@ -604,6 +605,6 @@ export default function Page() {
           </form>
         </Form>
       </main>
-    </>
+    </PracticeLeaveGuard>
   );
 }

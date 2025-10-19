@@ -465,6 +465,9 @@
     }
   },
   "practice": {
+    "common": {
+      "leaveConfirmation": "You have an active practice session. Are you sure you want to leave the test?"
+    },
     "listening": {
       "title": "Practice listening section",
       "subtitle": "The points received will not be displayed <br></br> in the overall statistics",

@@ -3,6 +3,7 @@
 import { GET_practice_speaking_id } from '@/api/GET_practice_speaking_id';
 import { HeaderDuringTest } from '@/components/HeaderDuringTest';
 import { POST_practice_speaking_id_begin } from '@/api/POST_practice_speaking_id_begin';
+import { PracticeLeaveGuard } from '@/components/PracticeLeaveGuard';
 import dynamic from 'next/dynamic';
 import { useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
@@ -20,9 +21,9 @@ export default function Page() {
   }, []);
 
   return (
-    <>
+    <PracticeLeaveGuard>
       <HeaderDuringTest title='Practice' tag='Speaking' />
       {status === 'success' && <SpeakingTestForm data={data} />}
-    </>
+    </PracticeLeaveGuard>
   );
 }

@@ -107,11 +107,11 @@ export default function SpeakingTestForm({ data }: FormProps) {
 
                   return (
                     <Fragment key={question.number}>
-                      {question.number === 1 && question.intro_url && <Audio src={question.intro_url} title={'Examiner Introduction'} />}
+                      {question.number === 1 && question.intro_url && <Audio src={question.intro_url} title='Examiner Introduction' />}
                       <Audio src={question.question_url} title={`Question ${question.number}`} />
                       {formValues[question.number]?.recordingUrl && (
                         <div className='ml-auto'>
-                          <Audio src={formValues[question.number]?.recordingUrl} title={`Your Answer`} blob={formValues[question.number]?.audioBlob} />
+                          <Audio src={formValues[question.number]?.recordingUrl} title='Your Answer' blob={formValues[question.number]?.audioBlob} />
                         </div>
                       )}
                     </Fragment>

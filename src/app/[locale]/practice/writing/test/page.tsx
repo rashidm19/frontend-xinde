@@ -13,6 +13,7 @@ import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useCustomTranslations } from '@/hooks/useCustomTranslations';
 import { WritingFeedbackHeader } from '@/components/practice/WritingFeedbackHeader';
+import { PracticeLeaveGuard } from '@/components/PracticeLeaveGuard';
 
 export const dynamic = 'force-dynamic';
 
@@ -55,7 +56,7 @@ export default function Page() {
   }
 
   return (
-    <>
+    <PracticeLeaveGuard>
       <WritingFeedbackHeader
         topBarElevated
         title={tCommon('practicePartNumber', { number: data?.picture ? 1 : 2 })}
@@ -130,6 +131,6 @@ export default function Page() {
           </div>
         </div>
       </main>
-    </>
+    </PracticeLeaveGuard>
   );
 }
