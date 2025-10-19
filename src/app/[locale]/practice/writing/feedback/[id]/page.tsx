@@ -4,9 +4,9 @@ import { useEffect, useMemo, useState } from 'react';
 
 import { useQuery } from '@tanstack/react-query';
 import { StateContainer } from '@/components/feedback/StateContainer';
+import axiosInstance from '@/lib/axiosInstance';
 
 import { GET_practice_writing_feedback_id } from '@/api/GET_practice_writing_feedback_id';
-import { useCustomTranslations } from '@/hooks/useCustomTranslations';
 import type {
   WritingBreakdownItem,
   WritingFeedbackPart,
@@ -15,6 +15,8 @@ import type {
   WritingGeneralFeedback,
   WritingMlOutput,
 } from '@/types/WritingFeedback';
+import { PracticeWritingPassed } from '@/types/WritingFeedback';
+import { useCustomTranslations } from '@/hooks/useCustomTranslations';
 
 import { type CriteriaKey, type NormalizedWritingFeedback, WritingFeedbackView } from './_components/writing-feedback-view';
 
@@ -35,21 +37,39 @@ const CRITERIA_DEFINITIONS: Array<{
 ];
 
 export default function Page({ params }: { params: { id: string } }) {
-  const { t, tImgAlts } = useCustomTranslations('practice.writing.feedback');
+  const { tImgAlts } = useCustomTranslations('practice.writing.feedback');
+
+  const {
+    data: passedData,
+    status: passedStatus,
+    error: passedError,
+    refetch: refetchPassed,
+  } = useQuery<PracticeWritingPassed, FeedbackQueryError>({
+    queryKey: ['practice-writing-feedbacks'],
+    queryFn: async () => {
+      const response = await axiosInstance.get('/practice/writing/passed');
+      return response.data as PracticeWritingPassed;
+    },
+    enabled: !!params.id,
+    retry: false,
+    refetchInterval: query => {
+      const found = query?.state.data?.data.find(item => String(item.id) === params.id);
+      return found?.feedback_ready ? false : 3000;
+    },
+  });
+
+  const isFeedbackReady = passedData?.data.some(item => String(item.id) === params.id && item.feedback_ready) ?? false;
 
   const {
     data: feedbackData,
     status: feedbackStatus,
     error: feedbackError,
-    refetch,
+    refetch: refetchFeedback,
   } = useQuery<WritingFeedbackResponse, FeedbackQueryError>({
     queryKey: ['practice-writing-feedback', params.id],
     queryFn: () => GET_practice_writing_feedback_id(params.id),
     retry: false,
-    refetchInterval: query => {
-      const err = query.state.error as FeedbackQueryError | null;
-      return err?.status === 404 ? 10000 : false;
-    },
+    enabled: isFeedbackReady,
   });
 
   const [part, setPart] = useState<WritingFeedbackPartKey | undefined>(undefined);
@@ -84,44 +104,69 @@ export default function Page({ params }: { params: { id: string } }) {
     });
   }, [feedbackData, activePart, part, tImgAlts]);
 
-  return (
-    <>
-      {feedbackStatus === 'pending' && (
-        <StateContainer
-          color='bg-d-blue-secondary'
-          tone='info'
-          title={t('evaluating')}
-          description='We will notify you as soon as your band score is ready.'
-          section='writing'
-        />
-      )}
+  if (passedStatus === 'error') {
+    return (
+      <StateContainer
+        color='bg-d-blue-secondary'
+        tone='error'
+        title='We could not confirm your writing attempt.'
+        description={passedError?.message ?? 'Please retry loading this page.'}
+        actionLabel='Try again'
+        onAction={refetchPassed}
+      />
+    );
+  }
 
-      {feedbackStatus === 'error' && (
-        <StateContainer
-          color='bg-d-blue-secondary'
-          tone='error'
-          title='We were unable to load your feedback.'
-          description={feedbackError?.message ?? 'Please check your connection and try again.'}
-          actionLabel='Try again'
-          onAction={refetch}
-        />
-      )}
+  if (!isFeedbackReady) {
+    return (
+      <StateContainer
+        color='bg-d-blue-secondary'
+        tone='info'
+        title='Evaluating your response'
+        description='We will notify you as soon as your writing band score is ready.'
+        section='writing'
+      />
+    );
+  }
 
-      {feedbackStatus === 'success' && (!feedbackData || !normalizedFeedback) && (
-        <StateContainer
-          color='bg-d-blue-secondary'
-          tone='info'
-          title='Feedback is not ready yet'
-          description='Your writing is still being evaluated. Please give it a little more time.'
-          section='writing'
-        />
-      )}
+  if (feedbackStatus === 'error') {
+    return (
+      <StateContainer
+        color='bg-d-blue-secondary'
+        tone='error'
+        title='We were unable to load your feedback.'
+        description={feedbackError?.message ?? 'Please check your connection and try again.'}
+        actionLabel='Try again'
+        onAction={refetchFeedback}
+      />
+    );
+  }
 
-      {feedbackStatus === 'success' && normalizedFeedback && part && activePart && (
-        <WritingFeedbackView data={normalizedFeedback} activePart={part} partOptions={partOptions} onPartChange={setPart} />
-      )}
-    </>
-  );
+  if (feedbackStatus === 'pending' || !feedbackData) {
+    return (
+      <StateContainer
+        color='bg-d-blue-secondary'
+        tone='info'
+        title='Fetching feedback details'
+        description='Just a moment while we prepare your writing feedback.'
+        section='writing'
+      />
+    );
+  }
+
+  if (!normalizedFeedback || !part || !activePart) {
+    return (
+      <StateContainer
+        color='bg-d-blue-secondary'
+        tone='info'
+        title='Feedback is not ready yet'
+        description='Your writing responses are still being evaluated. Please give it a little more time.'
+        section='writing'
+      />
+    );
+  }
+
+  return <WritingFeedbackView data={normalizedFeedback} activePart={part} partOptions={partOptions} onPartChange={setPart} />;
 }
 
 interface BuildNormalizedArgs {

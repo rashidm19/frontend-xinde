@@ -53,3 +53,7 @@ export interface WritingBreakdownItem {
   name: string;
   score: number;
 }
+
+export interface PracticeWritingPassed {
+  data: Array<{ id: number; writing_id: number; feedback_ready: boolean }>;
+}
