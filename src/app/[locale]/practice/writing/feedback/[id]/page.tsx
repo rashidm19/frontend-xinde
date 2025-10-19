@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 
 import { useQuery } from '@tanstack/react-query';
+import { StateContainer } from '@/components/feedback/StateContainer';
 
 import { GET_practice_writing_feedback_id } from '@/api/GET_practice_writing_feedback_id';
 import { useCustomTranslations } from '@/hooks/useCustomTranslations';
@@ -85,10 +86,19 @@ export default function Page({ params }: { params: { id: string } }) {
 
   return (
     <>
-      {feedbackStatus === 'pending' && <StateContainer tone='info' title={t('evaluating')} description='We will notify you as soon as your band score is ready.' />}
+      {feedbackStatus === 'pending' && (
+        <StateContainer
+          color='bg-d-blue-secondary'
+          tone='info'
+          title={t('evaluating')}
+          description='We will notify you as soon as your band score is ready.'
+          section='writing'
+        />
+      )}
 
       {feedbackStatus === 'error' && (
         <StateContainer
+          color='bg-d-blue-secondary'
           tone='error'
           title='We were unable to load your feedback.'
           description={feedbackError?.message ?? 'Please check your connection and try again.'}
@@ -98,7 +108,13 @@ export default function Page({ params }: { params: { id: string } }) {
       )}
 
       {feedbackStatus === 'success' && (!feedbackData || !normalizedFeedback) && (
-        <StateContainer tone='info' title='Feedback is not ready yet' description='Your writing is still being evaluated. Please give it a little more time.' />
+        <StateContainer
+          color='bg-d-blue-secondary'
+          tone='info'
+          title='Feedback is not ready yet'
+          description='Your writing is still being evaluated. Please give it a little more time.'
+          section='writing'
+        />
       )}
 
       {feedbackStatus === 'success' && normalizedFeedback && part && activePart && (
@@ -238,38 +254,4 @@ function capitalizePhrase(value: string): string {
     .split(/\s+/)
     .map(part => part.charAt(0).toUpperCase() + part.slice(1))
     .join(' ');
-}
-
-type StateTone = 'info' | 'error';
-
-interface StateContainerProps {
-  tone: StateTone;
-  title: string;
-  description: string;
-  actionLabel?: string;
-  onAction?: () => void;
-}
-
-function StateContainer({ tone, title, description, actionLabel, onAction }: StateContainerProps) {
-  const iconStyles = tone === 'info' ? 'bg-slate-100 text-slate-500' : 'bg-[#FECACA] text-[#7F1D1D]';
-  const iconSymbol = tone === 'info' ? 'i' : '!';
-
-  return (
-    <div className='flex min-h-[calc(100dvh-93rem)] items-center justify-center bg-d-blue-secondary px-[24rem]'>
-      <div className='flex max-w-[480rem] flex-col items-center gap-[16rem] rounded-[28rem] border border-dashed border-slate-200 bg-white px-[40rem] py-[48rem] text-center shadow-[0_24rem_80rem_-64rem_rgba(46,67,139,0.35)]'>
-        <div className={'flex size-[56rem] items-center justify-center rounded-full text-[20rem] font-semibold ' + iconStyles}>{iconSymbol}</div>
-        <h2 className='text-[22rem] font-semibold text-slate-900'>{title}</h2>
-        <p className='text-[14rem] leading-[1.6] text-slate-500'>{description}</p>
-        {actionLabel && onAction && (
-          <button
-            type='button'
-            onClick={onAction}
-            className='rounded-[14rem] bg-slate-900 px-[24rem] py-[12rem] text-[13rem] font-semibold text-white transition hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 focus-visible:ring-offset-2'
-          >
-            {actionLabel}
-          </button>
-        )}
-      </div>
-    </div>
-  );
 }
