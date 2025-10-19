@@ -9,7 +9,7 @@ import { useRouter } from 'next/navigation';
 import { Logo } from '@/components/auth/Logo';
 
 export interface WritingFeedbackHeaderProps {
-  topBarElevated: boolean;
+  topBarElevated?: boolean;
   title: string;
   exitLabel?: string;
   exitHref?: string;

@@ -27,7 +27,7 @@ export default function Page() {
 
   return (
     <PracticeLeaveGuard>
-      <WritingFeedbackHeader topBarElevated title={'Practice Speaking'} exitLabel={tActions('exit')} onExit={() => router.push('/profile')} />
+      <WritingFeedbackHeader title={'Practice Speaking'} exitLabel={tActions('exit')} onExit={() => router.push('/profile')} />
 
       {status === 'success' && <SpeakingTestForm data={data} />}
     </PracticeLeaveGuard>

@@ -210,7 +210,7 @@ interface ActionButtonsProps {
 
 function ActionButtons({ reducedMotion, onGoToProfile, primaryLabel, secondaryLabel }: ActionButtonsProps) {
   const primaryText = primaryLabel ?? 'Go to Profile';
-  const secondaryText = secondaryLabel ?? 'Stay here and wait';
+  // const secondaryText = secondaryLabel ?? 'Stay here and wait';
 
   return (
     <motion.div
@@ -228,13 +228,13 @@ function ActionButtons({ reducedMotion, onGoToProfile, primaryLabel, secondaryLa
       >
         {primaryText}
       </motion.button>
-      <motion.button
-        type='button'
-        className='text-[14rem] font-medium text-slate-500 underline-offset-4 transition hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white'
-        whileHover={reducedMotion ? undefined : { opacity: 0.85 }}
-      >
-        {secondaryText}
-      </motion.button>
+      {/*<motion.button*/}
+      {/*  type='button'*/}
+      {/*  className='text-[14rem] font-medium text-slate-500 underline-offset-4 transition hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white'*/}
+      {/*  whileHover={reducedMotion ? undefined : { opacity: 0.85 }}*/}
+      {/*>*/}
+      {/*  {secondaryText}*/}
+      {/*</motion.button>*/}
     </motion.div>
   );
 }

@@ -20,21 +20,18 @@ type ToastMessage = {
   text: string;
 };
 
-const PART_DETAILS: Record<number, { label: string; helper: string; timeLimit: number; blurb?: string }> = {
+const PART_DETAILS: Record<number, { label: string; timeLimit: number; blurb?: string }> = {
   1: {
     label: 'Part 1',
-    helper: 'Warm-up questions',
     timeLimit: 45,
   },
   2: {
     label: 'Part 2',
-    helper: 'Cue card response',
     timeLimit: 120,
     blurb: 'You have up to 2 minutes to speak. Take a breath and cover the key points.',
   },
   3: {
     label: 'Part 3',
-    helper: 'Follow-up discussion',
     timeLimit: 60,
   },
 };
@@ -109,21 +106,21 @@ export default function SpeakingTestForm({ data }: FormProps) {
   const partDetails = partNumber ? PART_DETAILS[partNumber] : null;
   const timeLimitSeconds = partDetails?.timeLimit ?? 60;
 
-  const micStatus = useMemo(() => {
-    if (phase === 'recording') {
-      return { label: 'Recording', tone: CTA_ORANGE };
-    }
-    if (phase === 'review' || phase === 'submitted') {
-      return { label: 'Recorded', tone: '#0F9D58' };
-    }
-    if (phase === 'uploading') {
-      return { label: 'Submitting…', tone: CTA_ORANGE };
-    }
-    if (phase === 'error') {
-      return { label: 'Error', tone: '#C2402C' };
-    }
-    return { label: 'Idle', tone: '#384148' };
-  }, [phase]);
+  // const micStatus = useMemo(() => {
+  //   if (phase === 'recording') {
+  //     return { label: 'Recording', tone: CTA_ORANGE };
+  //   }
+  //   if (phase === 'review' || phase === 'submitted') {
+  //     return { label: 'Recorded', tone: '#0F9D58' };
+  //   }
+  //   if (phase === 'uploading') {
+  //     return { label: 'Submitting…', tone: CTA_ORANGE };
+  //   }
+  //   if (phase === 'error') {
+  //     return { label: 'Error', tone: '#C2402C' };
+  //   }
+  //   return { label: 'Idle', tone: '#384148' };
+  // }, [phase]);
 
   const recordingProgress = useMemo(() => {
     if (phase !== 'recording') return 0;
@@ -521,7 +518,11 @@ export default function SpeakingTestForm({ data }: FormProps) {
     return (
       <main className='min-h-screen bg-d-red-secondary'>
         <div className='mx-auto flex min-h-[100dvh] max-w-[720rem] items-center justify-center px-[16rem] py-[72rem]'>
-          <motion.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} className='w-full rounded-[28rem] bg-white/95 p-[40rem] text-center shadow-[0_24rem_64rem_-40rem_rgba(60,30,10,0.45)]'>
+          <motion.div
+            initial={{ opacity: 0, scale: 0.98 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className='w-full rounded-[28rem] bg-white/95 p-[40rem] text-center shadow-[0_24rem_64rem_-40rem_rgba(60,30,10,0.45)]'
+          >
             <div className='mb-[16rem] text-[26rem] font-semibold text-d-black'>No questions available right now</div>
             <p className='mb-[32rem] text-[18rem] text-d-black/70'>Please try again later or choose another practice set.</p>
             <button
@@ -547,19 +548,16 @@ export default function SpeakingTestForm({ data }: FormProps) {
           className='relative w-full max-w-[640rem] rounded-[24rem] border border-white/40 bg-white/95 px-[24rem] py-[24rem] shadow-[0_26rem_60rem_-42rem_rgba(80,44,14,0.55)] backdrop-blur-sm tablet:px-[28rem] tablet:py-[28rem]'
         >
           <header className='mb-[20rem] flex flex-col gap-[12rem]'>
-              <div>
-                <div className='flex flex-wrap items-center gap-[6rem] text-[12rem] font-medium tracking-[0.08em] text-d-black/60'>
-                  <span>{partDetails?.label ?? 'Speaking Practice'}</span>
-                  <span className='text-d-black/30'>•</span>
-                  <span>{`Question ${currentIndex + 1} of ${totalQuestions}`}</span>
-                  <span className='text-d-black/30'>•</span>
-                  <span className='capitalize'>{contentStage === 'intro' ? 'Response intro' : 'Question'}</span>
-                </div>
-                <h1 className='mt-[6rem] text-[22rem] font-semibold text-d-black'>Practice Speaking</h1>
-                <p className='mt-[6rem] text-[14rem] text-d-black/70'>Answer the question aloud. You can re-record before submitting.</p>
-              </div>
-            {partDetails?.helper && <div className='text-[13rem] text-d-black/60'>{partDetails.helper}</div>}
-            {partDetails?.blurb && <div className='rounded-[12rem] border border-[#F6D7B0]/80 bg-[#FFF7EE] px-[14rem] py-[10rem] text-[13rem] text-d-black/75'>{partDetails.blurb}</div>}
+            <div className='flex flex-wrap items-center gap-[6rem] text-[12rem] font-medium tracking-[0.08em] text-d-black/60'>
+              <span>{partDetails?.label ?? 'Speaking Practice'}</span>
+              <span className='text-d-black/30'>•</span>
+              <span>{`Question ${currentIndex + 1} of ${totalQuestions}`}</span>
+              <span className='text-d-black/30'>•</span>
+              <span className='capitalize'>{contentStage === 'intro' ? 'Intro' : 'Question'}</span>
+            </div>
+            {partDetails?.blurb && (
+              <div className='rounded-[12rem] border border-[#F6D7B0]/80 bg-[#FFF7EE] px-[14rem] py-[10rem] text-[13rem] text-d-black/75'>{partDetails.blurb}</div>
+            )}
             <div className='flex h-[4rem] w-full overflow-hidden rounded-full bg-[rgba(246,215,176,0.45)]'>
               <div className='h-full rounded-full transition-all' style={{ width: `${Math.min(1, progressRatio) * 100}%`, backgroundColor: CTA_ORANGE }} />
             </div>
@@ -573,42 +571,12 @@ export default function SpeakingTestForm({ data }: FormProps) {
             >
               <div className='mb-[10rem] flex items-center justify-between gap-[10rem]'>
                 <div className='flex flex-col gap-[4rem]'>
-                  <span className='text-[11rem] font-medium uppercase tracking-[0.12em] text-[#AB7633]'>Intro</span>
-                  <h2 className='text-[18rem] font-semibold leading-[1.45] text-d-black'>Examiner feedback</h2>
-                </div>
-                {question.intro_url && (
-                  <button
-                    type='button'
-                    onClick={() => handlePlayIntro(true)}
-                    className='flex size-[36rem] items-center justify-center rounded-full border border-[#F6D7B0] bg-white text-[#AB7633] transition hover:bg-[#FFF0DA] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F9A826]'
-                    aria-label='Play intro audio'
-                  >
-                    <Volume2 className={cn('size-[16rem] transition', introAudioState === 'playing' && 'animate-pulse')} />
-                  </button>
-                )}
-              </div>
-              {question.intro && <p className='rounded-[14rem] bg-[#FFF4E6] px-[12rem] py-[9rem] text-[14rem] text-d-black/70'>{question.intro}</p>}
-              {question.intro_url && (
-                <button
-                  type='button'
-                  onClick={() => handlePlayIntro(true)}
-                  className='mt-[12rem] flex w-fit items-center gap-[6rem] rounded-[20rem] border border-[#F6D7B0] px-[14rem] py-[6rem] text-[12.5rem] font-medium text-[#AB7633] transition hover:bg-[#FFF0DA]'
-                >
-                  <Volume2 className={cn('size-[14rem] transition', introAudioState === 'playing' && 'animate-pulse')} />
-                  Play intro
-                </button>
-              )}
-            </motion.div>
-
-            <motion.div
-              layout
-              whileHover={{ y: -3, boxShadow: '0 14rem 36rem -28rem rgba(120,64,12,0.35)' }}
-              className='rounded-[20rem] border border-[#F6D7B0] bg-white px-[18rem] py-[18rem] shadow-[0_14rem_36rem_-30rem_rgba(80,44,14,0.4)] transition tablet:px-[20rem] tablet:py-[20rem]'
-            >
-              <div className='mb-[10rem] flex items-center justify-between gap-[10rem]'>
-                <div className='flex flex-col gap-[4rem]'>
                   <span className='text-[11rem] font-medium uppercase tracking-[0.12em] text-[#AB7633]'>Question {question.number}</span>
-                  {partNumber === 3 && <span className='w-fit rounded-full bg-[#FFF4E6] px-[10rem] py-[4rem] text-[11rem] font-semibold uppercase tracking-[0.14em] text-[#AB7633]'>Follow-up</span>}
+                  {partNumber === 3 && (
+                    <span className='w-fit rounded-full bg-[#FFF4E6] px-[10rem] py-[4rem] text-[11rem] font-semibold uppercase tracking-[0.14em] text-[#AB7633]'>
+                      Follow-up
+                    </span>
+                  )}
                   <h2 className='text-[18rem] font-semibold leading-[1.45] text-d-black'>{question.question}</h2>
                 </div>
                 {question.question_url && (
@@ -627,24 +595,32 @@ export default function SpeakingTestForm({ data }: FormProps) {
             <motion.div layout className='flex flex-col gap-[14rem] rounded-[20rem] border border-[#F6D7B0]/70 bg-white px-[18rem] py-[18rem] tablet:px-[20rem]'>
               <div className='flex items-center justify-between gap-[14rem]'>
                 <div className='flex items-center gap-[10rem]'>
-                  <div className={cn('flex size-[36rem] items-center justify-center rounded-full border-2', phase === 'recording' ? 'border-[#F9A826]/80 bg-[#FFF2D9]' : 'border-[#F6D7B0] bg-white')}>
+                  <div
+                    className={cn(
+                      'flex size-[36rem] items-center justify-center rounded-full border-2',
+                      phase === 'recording' ? 'border-[#F9A826]/80 bg-[#FFF2D9]' : 'border-[#F6D7B0] bg-white'
+                    )}
+                  >
                     {micIcon}
                   </div>
                   <div>
-                    <div className='text-[14rem] font-semibold' style={{ color: micStatus.tone }}>
-                      {micStatus.label}
-                    </div>
+                    {/*<div className='text-[14rem] font-semibold' style={{ color: micStatus.tone }}>*/}
+                    {/*  {micStatus.label}*/}
+                    {/*</div>*/}
                     <div className='text-[12.5rem] text-d-black/60'>Up to {timeLimitSeconds} seconds</div>
                   </div>
                 </div>
                 <div className='flex items-center gap-[6rem] text-[12.5rem] text-d-black/60'>
-                  {phase === 'recording' ? (
-                    <span>{formatDuration(Date.now() - (recordStartRef.current ?? Date.now()))}</span>
-                  ) : recordDurationMs > 0 ? (
-                    <span>{formatDuration(recordDurationMs)}</span>
-                  ) : (
-                    <span>{contentStage === 'intro' ? 'Listen to examiner feedback' : 'Ready when you are'}</span>
-                  )}
+                  {
+                    phase === 'recording' ? (
+                      <span>{formatDuration(Date.now() - (recordStartRef.current ?? Date.now()))}</span>
+                    ) : (
+                      recordDurationMs > 0 && <span>{formatDuration(recordDurationMs)}</span>
+                    )
+                    //   : (
+                    //   <span>{contentStage === 'intro' ? 'Listen to examiner feedback' : 'Ready when you are'}</span>
+                    // )
+                  }
                 </div>
               </div>
               <div className='h-[4rem] w-full overflow-hidden rounded-full bg-[#F6D7B0]/50'>
@@ -670,7 +646,9 @@ export default function SpeakingTestForm({ data }: FormProps) {
                 {phase === 'idle' && (
                   <>
                     <div className='text-[13.5rem] text-d-black/70'>
-                      {contentStage === 'intro' && hasIntroContent(question) ? 'Listen to examiner feedback before answering.' : 'Take a moment to think, then start recording when ready.'}
+                      {contentStage === 'intro' && hasIntroContent(question)
+                        ? 'Listen to examiner feedback before answering.'
+                        : 'Take a moment to think, then start recording when ready.'}
                     </div>
                     <div className='flex items-center gap-[10rem]'>
                       {contentStage === 'intro' && hasIntroContent(question) ? (
@@ -679,18 +657,18 @@ export default function SpeakingTestForm({ data }: FormProps) {
                           onClick={() => handlePlayIntro(true)}
                           className='flex min-w-[150rem] items-center justify-center rounded-[24rem] border border-[#F6D7B0] bg-white px-[24rem] py-[12rem] text-[13.5rem] font-semibold text-[#AB7633] transition hover:bg-[#FFF0DA]'
                         >
-                          Play intro
+                          Next
                         </button>
                       ) : (
                         <>
-                      <button
-                        type='button'
-                        onClick={handleStartRecording}
-                        disabled={questionAudioState === 'playing'}
-                        className='flex min-w-[160rem] items-center justify-center rounded-[26rem] bg-[#F9A826] px-[26rem] py-[12rem] text-[14.5rem] font-semibold text-white transition hover:bg-[#f8b645] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F9A826] disabled:cursor-not-allowed disabled:bg-[#f7c76b] disabled:text-white/70'
-                      >
-                        Start recording
-                      </button>
+                          <button
+                            type='button'
+                            onClick={handleStartRecording}
+                            disabled={questionAudioState === 'playing'}
+                            className='flex min-w-[160rem] items-center justify-center rounded-[26rem] bg-[#F9A826] px-[26rem] py-[12rem] text-[14.5rem] font-semibold text-white transition hover:bg-[#f8b645] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F9A826] disabled:cursor-not-allowed disabled:bg-[#f7c76b] disabled:text-white/70'
+                          >
+                            Start recording
+                          </button>
                           <button
                             type='button'
                             disabled
@@ -750,7 +728,7 @@ export default function SpeakingTestForm({ data }: FormProps) {
                         <button
                           type='button'
                           onClick={toggleAnswerPlayback}
-                          className='flex items-center gap-[8rem] rounded-[22rem] border border-[#F6D7B0] px-[16rem] py-[8rem] text-[13rem] font-medium text-[#AB7633] transition hover.bg-[#FFF0DA]'
+                          className='hover.bg-[#FFF0DA] flex items-center gap-[8rem] rounded-[22rem] border border-[#F6D7B0] px-[16rem] py-[8rem] text-[13rem] font-medium text-[#AB7633] transition'
                         >
                           <Play className='size-[14rem]' /> Play your answer
                         </button>
@@ -762,7 +740,7 @@ export default function SpeakingTestForm({ data }: FormProps) {
                         onClick={handleSubmitRecording}
                         className='flex min-w-[140rem] items-center justify-center rounded-[26rem] bg-[#F9A826] px-[26rem] py-[12rem] text-[14.5rem] font-semibold text-white transition hover:bg-[#f8b645]'
                       >
-                        Submit
+                        Next
                       </button>
                       <button
                         type='button'
@@ -836,7 +814,7 @@ export default function SpeakingTestForm({ data }: FormProps) {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 20 }}
                 className={cn(
-                  'pointer-events-auto absolute left-1/2 bottom-[24rem] z-20 flex w-[auto] -translate-x-1/2 items-center gap-[12rem] rounded-[16rem] px-[20rem] py-[14rem] text-[14rem] shadow-[0_14rem_40rem_-28rem_rgba(80,44,14,0.5)] backdrop-blur-sm',
+                  'pointer-events-auto absolute bottom-[24rem] left-1/2 z-20 flex w-[auto] -translate-x-1/2 items-center gap-[12rem] rounded-[16rem] px-[20rem] py-[14rem] text-[14rem] shadow-[0_14rem_40rem_-28rem_rgba(80,44,14,0.5)] backdrop-blur-sm',
                   toast.tone === 'success' && 'bg-[#EAF7ED] text-[#1B6F41]',
                   toast.tone === 'warning' && 'bg-[#FFF4E6] text-[#BA6A24]',
                   toast.tone === 'error' && 'bg-[#FFE8E2] text-[#B5402B]',
@@ -873,4 +851,3 @@ const formatDuration = (ms: number) => {
   const remainder = seconds % 60;
   return `${minutes.toString().padStart(2, '0')}:${remainder.toString().padStart(2, '0')}`;
 };
-
