@@ -60,7 +60,7 @@ export function OnboardingLayout({ heading, description, supportingText, childre
         <div className='relative z-10 flex h-full w-full items-end justify-start px-[28rem] pb-[28rem] tablet:items-center tablet:justify-center tablet:px-[44rem] tablet:pb-0'>
           <div className='flex flex-col items-start gap-[10rem] text-left tablet:items-center tablet:text-center'>
             <span className='inline-flex w-fit items-center justify-center rounded-full bg-white/10 px-[14rem] py-[6rem] text-[12rem] font-semibold uppercase tracking-[0.18em] text-white/80 backdrop-blur-[18rem]'>
-              StudyBox
+              Studybox
             </span>
             {supportingText ? (
               <p className='max-w-[360rem] text-[16rem] font-medium leading-[1.4] text-white/90 desktop:text-[18rem]'>{supportingText}</p>

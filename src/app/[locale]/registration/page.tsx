@@ -180,7 +180,7 @@ export default function RegistrationPage({ params }: PageProps) {
 
   return (
     <AuthLayout>
-      <FormCard title="Let’s get you set up" subtitle="Create a StudyBox account tailored to your rhythm and the way you like to prepare.">
+      <FormCard title="Let’s get you set up" subtitle="Create a Studybox account tailored to your rhythm and the way you like to prepare.">
         <motion.form
           className="flex flex-col gap-[16rem]"
           onSubmit={handleSubmit(onSubmit)}
@@ -247,7 +247,7 @@ export default function RegistrationPage({ params }: PageProps) {
                 onChange={event => setValue("agreement", event.target.checked, { shouldValidate: true })}
                 className="mt-[4rem] size-[18rem] rounded-[4rem] border border-gray-300 accent-blue-600"
               />
-              <span>I agree to the StudyBox Terms and Privacy Policy.</span>
+              <span>I agree to the Studybox Terms and Privacy Policy.</span>
             </label>
             {errors.agreement ? <p className="text-[13rem] font-medium text-rose-500">{errors.agreement.message}</p> : null}
           </motion.div>
@@ -276,7 +276,7 @@ export default function RegistrationPage({ params }: PageProps) {
           )}
 
           <motion.div variants={prefersReducedMotion ? undefined : itemVariants} className="text-[13rem] text-gray-500">
-            <span>Already with StudyBox?</span>{" "}
+            <span>Already with Studybox?</span>{" "}
             <Link
               href={`/${locale}/login`}
               className="font-medium text-blue-600 transition hover:text-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-200"

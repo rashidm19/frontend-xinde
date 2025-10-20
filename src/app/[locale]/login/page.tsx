@@ -233,7 +233,7 @@ export default function LoginPage({ params }: PageProps) {
           )}
 
           <motion.div variants={prefersReducedMotion ? undefined : itemVariants} className='text-[13rem] text-gray-500'>
-            <span>New to StudyBox?</span>{' '}
+            <span>New to Studybox?</span>{' '}
             <Link
               href={`/${locale}/registration`}
               className='font-medium text-blue-600 transition hover:text-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-200'

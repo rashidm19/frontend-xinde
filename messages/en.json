@@ -266,7 +266,7 @@
     "userAgreement": "User Agreement",
     "effectiveDate": "Effective Date:",
     "section1Title": "1. Introduction",
-    "section1Content": "Welcome to StudyBox. By accessing or using our service, you agree to be bound by the terms and conditions of this User Agreement. If you do not agree to these terms, you must not use our service.",
+    "section1Content": "Welcome to Studybox. By accessing or using our service, you agree to be bound by the terms and conditions of this User Agreement. If you do not agree to these terms, you must not use our service.",
     "section2Title": "2. Definitions",
     "section2Content": "\"Service\" refers to [Service Name], including but not limited to any related websites, mobile applications, and other platforms operated by [Company Name].<br></br><br></br>\"User\" refers to any person or entity accessing or using the Service.<br></br><br></br>\"Content\" refers to all information, text, images, videos, and other material provided by the Service or its users.",
     "section3Title": "3. Eligibility",
@@ -315,7 +315,7 @@
         "google_payload_incomplete": "Google did not return the required data. Please try again.",
         "invalid_token": "The Google session has expired. Please try again.",
         "email_not_verified": "Your Google email address is not verified.",
-        "USER_ALREADY_LINKED": "Another StudyBox account is already linked to this Google account.",
+        "USER_ALREADY_LINKED": "Another Studybox account is already linked to this Google account.",
         "google_service_unavailable": "Google services are temporarily unavailable. Please try again later.",
         "google_auth_failed": "Google authentication failed. Please try again."
       }
@@ -671,9 +671,9 @@
     "steps": {
       "intro": {
         "title": "Let’s get acquainted",
-        "subtitle": "Tell us what brings you to StudyBox and we’ll tailor the experience.",
+        "subtitle": "Tell us what brings you to Studybox and we’ll tailor the experience.",
         "helper": "Select every option that applies.",
-        "ariaLabel": "Select the reasons you joined StudyBox",
+        "ariaLabel": "Select the reasons you joined Studybox",
         "options": {
           "academic": "I’m preparing for IELTS Academic",
           "general": "I’m preparing for IELTS General",

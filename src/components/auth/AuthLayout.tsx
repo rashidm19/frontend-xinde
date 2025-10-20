@@ -37,8 +37,8 @@ export function AuthLayout({
 
   return (
     <div className={cn('relative min-h-screen w-full overflow-y-auto bg-gray-50', className)}>
-      <div className='absolute left-[20rem] top-[20rem] z-20 flex items-center md:left-[36rem] md:top-[32rem]'>
-        <Logo showStudyboxText className='h-[24rem] md:h-[28rem]' />
+      <div className='md:left-[36rem] md:top-[32rem] absolute left-[20rem] top-[20rem] z-20 flex items-center'>
+        <Logo showStudyboxText className='md:h-[28rem] h-[24rem]' />
       </div>
       <div
         aria-hidden='true'
@@ -85,10 +85,10 @@ export function AuthLayout({
                     className='flex w-full max-w-[400rem] flex-col items-center justify-center gap-[14rem]'
                   >
                     <span className='inline-flex items-center justify-center rounded-full bg-white/60 px-[14rem] py-[6rem] text-[11rem] font-semibold uppercase tracking-[0.18em] text-gray-600 shadow-[0_14rem_34rem_-30rem_rgba(44,70,144,0.35)]'>
-                      StudyBox
+                      Studybox
                     </span>
                     <h2 className='text-[27rem] font-semibold leading-[1.24] text-gray-900 desktop:text-[33rem]'>{headline}</h2>
-                    <p className='text-[14.5rem] text-gray-600 leading-relaxed'>{tagline}</p>
+                    <p className='text-[14.5rem] leading-relaxed text-gray-600'>{tagline}</p>
                   </motion.div>
                 ) : null)}
             </div>
