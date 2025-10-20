@@ -3,8 +3,9 @@
 import { useEffect, useMemo, useState } from 'react';
 
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
-
+import { FEEDBACK_HIGHLIGHT_LABELS } from '@/lib/feedback';
 import { cn } from '@/lib/utils';
+import type { FeedbackModalSubmitPayload, FeedbackModalSubmitResult } from './types';
 
 type FeedbackStep = 0 | 1 | 2 | 'success';
 
@@ -22,12 +23,12 @@ const STEP_DESCRIPTIONS: Record<Exclude<FeedbackStep, 'success'>, string> = {
   2: 'Every message matters — feel free to share a few words.',
 };
 
-const OPTION_ITEMS = ['Reading or Listening', 'Writing', 'Speaking', 'AI feedback', 'Design', 'Other'] as const;
+const OPTION_ITEMS = ['Reading or Listening', 'Writing', 'Speaking', 'AI feedback', 'Design', 'other'] as const;
 
 interface FeedbackModalProps {
   open: boolean;
   onClose: () => void;
-  onSubmit?: (payload: { rating: number | null; highlights: string[]; otherText: string; comment: string }) => Promise<void> | void;
+  onSubmit?: (payload: FeedbackModalSubmitPayload) => Promise<FeedbackModalSubmitResult> | FeedbackModalSubmitResult;
   onSuccess?: () => void;
 }
 
@@ -39,6 +40,7 @@ export function FeedbackModal({ open, onClose, onSubmit, onSuccess }: FeedbackMo
   const [otherText, setOtherText] = useState('');
   const [comment, setComment] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!open) {
@@ -48,6 +50,7 @@ export function FeedbackModal({ open, onClose, onSubmit, onSuccess }: FeedbackMo
       setOtherText('');
       setComment('');
       setIsSubmitting(false);
+      setSubmitError(null);
     }
   }, [open]);
 
@@ -87,10 +90,10 @@ export function FeedbackModal({ open, onClose, onSubmit, onSuccess }: FeedbackMo
     return 0;
   }, [step]);
 
-  const toggleHighlight = (option: (typeof OPTION_ITEMS)[number]) => {
+  const toggleHighlight = (option: string) => {
     setHighlights(prev => {
       if (prev.includes(option)) {
-        if (option === 'Other') {
+        if (option === 'other') {
           setOtherText('');
         }
         return prev.filter(item => item !== option);
@@ -102,23 +105,49 @@ export function FeedbackModal({ open, onClose, onSubmit, onSuccess }: FeedbackMo
 
   const handleNext = async () => {
     if (step === 0) {
+      setSubmitError(null);
       setStep(1);
       return;
     }
 
     if (step === 1) {
+      setSubmitError(null);
       setStep(2);
       return;
     }
 
     if (step === 2) {
+      const trimmedComment = comment.trim();
+      const trimmedOther = otherText.trim();
+
+      if (highlights.includes('other') && trimmedOther.length === 0) {
+        setSubmitError('Please add a short note for “Other”.');
+        return;
+      }
+
       try {
         setIsSubmitting(true);
-        await onSubmit?.({ rating, highlights, otherText: highlights.includes('Other') ? otherText : '', comment });
-        setIsSubmitting(false);
-        setStep('success');
-        onSuccess?.();
+        setSubmitError(null);
+
+        const result = onSubmit
+          ? await onSubmit({
+              rating,
+              highlights,
+              otherText: trimmedOther,
+              comment: trimmedComment,
+            })
+          : ({ ok: true } as FeedbackModalSubmitResult);
+
+        if (result && 'ok' in result && result.ok) {
+          setStep('success');
+          onSuccess?.();
+        } else if (result && 'error' in result) {
+          setSubmitError(result.error);
+        }
       } catch (error) {
+        const message = error instanceof Error ? error.message : 'Could not submit feedback. Please try again.';
+        setSubmitError(message);
+      } finally {
         setIsSubmitting(false);
       }
     }
@@ -129,6 +158,8 @@ export function FeedbackModal({ open, onClose, onSubmit, onSuccess }: FeedbackMo
       onClose();
       return;
     }
+
+    setSubmitError(null);
 
     if (step === 1) {
       setStep(0);
@@ -144,7 +175,7 @@ export function FeedbackModal({ open, onClose, onSubmit, onSuccess }: FeedbackMo
   const isNextDisabled = useMemo(() => {
     if (step === 1) {
       if (highlights.length === 0) return true;
-      if (highlights.includes('Other')) {
+      if (highlights.includes('other')) {
         return otherText.trim().length === 0;
       }
     }
@@ -233,7 +264,7 @@ export function FeedbackModal({ open, onClose, onSubmit, onSuccess }: FeedbackMo
     }
 
     if (step === 1) {
-      const showOtherInput = highlights.includes('Other');
+      const showOtherInput = highlights.includes('other');
       return (
         <motion.div
           key='step-highlights'
@@ -258,7 +289,7 @@ export function FeedbackModal({ open, onClose, onSubmit, onSuccess }: FeedbackMo
                   whileHover={prefersReducedMotion ? undefined : { scale: 1.04 }}
                   whileTap={prefersReducedMotion ? undefined : { scale: 0.96 }}
                 >
-                  {option}
+                  {FEEDBACK_HIGHLIGHT_LABELS[option]}
                 </motion.button>
               );
             })}
@@ -339,6 +370,11 @@ export function FeedbackModal({ open, onClose, onSubmit, onSuccess }: FeedbackMo
           ) : (
             <span className='hidden tablet:block tablet:max-w-[140rem]' aria-hidden='true' />
           )}
+          {step === 2 && submitError ? (
+            <div className='w-full rounded-[14rem] border border-red-100 bg-red-50 px-[16rem] py-[10rem] text-[12.5rem] text-red-600 tablet:order-3 tablet:max-w-[240rem]'>
+              {submitError}
+            </div>
+          ) : null}
           <div className='flex w-full items-center gap-[16rem] tablet:justify-end'>
             {step === 2 ? (
               <button type='button' onClick={() => setStep('success')} className='px-[16rem] text-[12.5rem] font-medium text-slate-400 transition hover:text-slate-500'>

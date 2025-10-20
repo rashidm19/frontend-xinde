@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useCallback, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { BestResults } from './_components/BestResults';
 import { Header } from '@/components/Header';
@@ -14,6 +14,9 @@ import { useQuery } from '@tanstack/react-query';
 import { PracticeSectionKey } from '@/types/Stats';
 import { useRouter } from 'next/navigation';
 import { FeedbackModal } from '@/components/feedback/FeedbackModal';
+import { useFeedbackStatus } from '@/hooks/useFeedbackStatus';
+import type { SubmitFeedbackPayload } from '@/api/feedback';
+import type { FeedbackModalSubmitPayload, FeedbackModalSubmitResult } from '@/components/feedback/types';
 
 const sectionStartRoutes: Record<PracticeSectionKey, string> = {
   writing: '/practice/writing/customize',
@@ -28,30 +31,66 @@ export default function Page() {
   const isLoading = !profile && (status === 'idle' || status === 'loading');
 
   const [feedbackOpen, setFeedbackOpen] = useState(false);
-  const [storedState, setStoredState] = useState<'unknown' | 'submitted' | 'not-submitted'>('unknown');
+  const [hasPromptedFeedback, setHasPromptedFeedback] = useState(false);
+
+  const feedbackEnabled = useMemo(() => status !== 'idle', [status]);
+
+  const {
+    isLoading: feedbackStatusLoading,
+    hasSubmitted: feedbackAlreadySubmitted,
+    error: feedbackStatusError,
+    submitFeedback,
+    refetch: refetchFeedbackStatus,
+  } = useFeedbackStatus({ enabled: feedbackEnabled });
 
   useEffect(() => {
-    if (typeof window === 'undefined') {
-      setStoredState('submitted');
-      return;
-    }
-
-    const stored = window.localStorage.getItem('sb-feedback-submitted') === 'true' ? 'submitted' : 'not-submitted';
-    setStoredState(stored);
-  }, []);
-
-  useEffect(() => {
-    if (!isLoading && storedState === 'not-submitted') {
+    if (!isLoading && !feedbackStatusLoading && !feedbackAlreadySubmitted && !hasPromptedFeedback && !feedbackStatusError) {
       setFeedbackOpen(true);
+      setHasPromptedFeedback(true);
     }
-  }, [isLoading, storedState]);
+  }, [isLoading, feedbackStatusLoading, feedbackAlreadySubmitted, hasPromptedFeedback, feedbackStatusError]);
 
-  const markFeedbackSubmitted = useCallback(() => {
-    if (typeof window !== 'undefined') {
-      window.localStorage.setItem('sb-feedback-submitted', 'true');
-    }
-    setStoredState('submitted');
+  const handleFeedbackClose = useCallback(() => {
+    setFeedbackOpen(false);
   }, []);
+
+  const handleFeedbackSubmit = useCallback(
+    async ({ rating, highlights, otherText, comment }: FeedbackModalSubmitPayload): Promise<FeedbackModalSubmitResult> => {
+      if (rating === null) {
+        return { ok: false, error: 'Please rate your experience before submitting.' };
+      }
+
+      const trimmedOther = otherText.trim();
+      const trimmedComment = comment.trim();
+
+      if (highlights.includes('other') && trimmedOther.length === 0) {
+        return { ok: false, error: 'Please add a short note for “Other”.' };
+      }
+
+      const payload: SubmitFeedbackPayload = {
+        rating,
+        highlights,
+      };
+
+      if (highlights.includes('other')) {
+        payload.otherHighlight = trimmedOther;
+      }
+
+      if (trimmedComment.length > 0) {
+        payload.comment = trimmedComment.slice(0, 2000);
+      }
+
+      const result = await submitFeedback(payload);
+
+      if (result.ok) {
+        setHasPromptedFeedback(true);
+        void refetchFeedbackStatus();
+      }
+
+      return result;
+    },
+    [submitFeedback, refetchFeedbackStatus]
+  );
 
   const { data: practiceHistory, isLoading: practiceHistoryLoading } = useQuery({
     queryKey: ['practiceHistory'],
@@ -122,10 +161,11 @@ export default function Page() {
       </main>
       <FeedbackModal
         open={feedbackOpen}
-        onClose={() => setFeedbackOpen(false)}
+        onClose={handleFeedbackClose}
+        onSubmit={handleFeedbackSubmit}
         onSuccess={() => {
-          markFeedbackSubmitted();
-          setFeedbackOpen(false);
+          setHasPromptedFeedback(true);
+          void refetchFeedbackStatus();
         }}
       />
     </>
