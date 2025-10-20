@@ -1,5 +1,7 @@
 'use client';
 
+import { useEffect, useCallback, useState } from 'react';
+
 import { BestResults } from './_components/BestResults';
 import { Header } from '@/components/Header';
 import { IeltsGoal } from './_components/IeltsGoal';
@@ -11,6 +13,7 @@ import { useProfile } from '@/hooks/useProfile';
 import { useQuery } from '@tanstack/react-query';
 import { PracticeSectionKey } from '@/types/Stats';
 import { useRouter } from 'next/navigation';
+import { FeedbackModal } from '@/components/feedback/FeedbackModal';
 
 const sectionStartRoutes: Record<PracticeSectionKey, string> = {
   writing: '/practice/writing/customize',
@@ -23,6 +26,32 @@ export default function Page() {
   const router = useRouter();
   const { profile, status } = useProfile();
   const isLoading = !profile && (status === 'idle' || status === 'loading');
+
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
+  const [storedState, setStoredState] = useState<'unknown' | 'submitted' | 'not-submitted'>('unknown');
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      setStoredState('submitted');
+      return;
+    }
+
+    const stored = window.localStorage.getItem('sb-feedback-submitted') === 'true' ? 'submitted' : 'not-submitted';
+    setStoredState(stored);
+  }, []);
+
+  useEffect(() => {
+    if (!isLoading && storedState === 'not-submitted') {
+      setFeedbackOpen(true);
+    }
+  }, [isLoading, storedState]);
+
+  const markFeedbackSubmitted = useCallback(() => {
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem('sb-feedback-submitted', 'true');
+    }
+    setStoredState('submitted');
+  }, []);
 
   const { data: practiceHistory, isLoading: practiceHistoryLoading } = useQuery({
     queryKey: ['practiceHistory'],
@@ -91,6 +120,14 @@ export default function Page() {
           )}
         </div>
       </main>
+      <FeedbackModal
+        open={feedbackOpen}
+        onClose={() => setFeedbackOpen(false)}
+        onSuccess={() => {
+          markFeedbackSubmitted();
+          setFeedbackOpen(false);
+        }}
+      />
     </>
   );
 }

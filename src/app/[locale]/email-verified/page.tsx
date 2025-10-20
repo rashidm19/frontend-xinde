@@ -43,7 +43,7 @@ export default function EmailVerifiedPage({ params }: PageProps) {
           </motion.span>
 
           <p className='text-center text-[15rem] leading-relaxed text-gray-500'>
-            Enjoy full access to StudyBox. Your dashboard is already prepping gentle nudges to keep you moving.
+            Enjoy full access to Studybox. Your dashboard is already prepping gentle nudges to keep you moving.
           </p>
 
           <div className='flex w-full flex-col gap-[12rem]'>

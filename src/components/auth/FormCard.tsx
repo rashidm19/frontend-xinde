@@ -44,7 +44,7 @@ export function FormCard({ title, subtitle, eyebrow, children, footer, className
 
       {footer ? <footer className='border-t border-gray-100 pt-[12rem] text-[12.5rem] text-gray-500'>{footer}</footer> : null}
 
-      <p className='text-[11.5rem] font-medium text-gray-300 text-center'>© 2025 StudyBox. All rights reserved.</p>
+      <p className='text-[11.5rem] font-medium text-gray-300 text-center'>© 2025 Studybox. All rights reserved.</p>
     </motion.section>
   );
 }

@@ -14,7 +14,7 @@ interface HeadlineBlockProps {
   className?: string;
 }
 
-export function HeadlineBlock({ eyebrow = "StudyBox", title, description, children, className }: HeadlineBlockProps) {
+export function HeadlineBlock({ eyebrow = "Studybox", title, description, children, className }: HeadlineBlockProps) {
   const prefersReducedMotion = useReducedMotion();
 
   return (
