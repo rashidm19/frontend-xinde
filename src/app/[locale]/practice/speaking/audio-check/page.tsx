@@ -10,7 +10,7 @@ import { useSubscriptionGate } from '@/hooks/useSubscriptionGate';
 import { SubscriptionAccessLabel } from '@/components/SubscriptionAccessLabel';
 
 export default function Page() {
-  const { tImgAlts, tCommon, tActions } = useCustomTranslations('practice.speaking.audioCheck');
+  const { t, tImgAlts, tActions, tCommon } = useCustomTranslations('practice.speaking.audioCheck');
   const { requireSubscription, isCheckingAccess } = useSubscriptionGate();
   const visualizerRef = useRef<HTMLCanvasElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
@@ -71,7 +71,10 @@ export default function Page() {
                 <source src='/files/audio-check.mp3' />
               </audio>
 
-              <div className='text-center text-[16rem] font-medium leading-none text-d-black/80'>Check your audio system</div>
+              <div className='flex flex-col items-center gap-[8rem] text-center'>
+                <div className='text-[16rem] font-medium leading-none text-d-black/80'>{t('title')}</div>
+                <p className='max-w-[420rem] text-[14rem] leading-[1.5] text-d-black/70'>{t('instruction')}</p>
+              </div>
 
               <div className='flex items-center gap-x-[12rem]'>
                 <button

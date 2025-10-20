@@ -502,7 +502,11 @@
     },
     "speaking": {
       "title": "Practice speaking section",
-      "subtitle": "The points received will not be displayed <br></br> in the overall statistics"
+      "subtitle": "The points received will not be displayed <br></br> in the overall statistics",
+      "audioCheck": {
+        "title": "Check your audio system",
+        "instruction": "Play the sample audio and make sure you can hear it clearly before you continue."
+      }
     },
     "writing": {
       "title": "Practice writing section",

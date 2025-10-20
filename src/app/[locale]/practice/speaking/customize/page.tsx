@@ -61,7 +61,9 @@ export default function Page() {
         nProgress.start();
         const json = result.data;
         if (Array.isArray(json.data) && json.data.length > 0) {
-          localStorage.setItem('practiceSpeakingId', json.data[0].speaking_id.toString());
+          const randomIndex = Math.floor(Math.random() * json.data.length);
+          const randomSpeakingId = json.data[randomIndex].speaking_id;
+          localStorage.setItem('practiceSpeakingId', randomSpeakingId.toString());
           localStorage.setItem('practiceSpeakingPart', String(selectedPart));
           router.push('/practice/speaking/rules/');
         } else {
@@ -96,7 +98,10 @@ export default function Page() {
       {data && (
         <div className='relative z-[1] flex min-h-[100dvh] w-full items-center justify-center px-[16rem] py-[48rem]'>
           <div className='shadow-car relative flex w-full max-w-[720rem] flex-col gap-[32rem] rounded-[20rem] border border-white/80 bg-white/95 px-[40rem] py-[36rem] backdrop-blur-sm'>
-            <Link href='/practice' className='absolute right-[24rem] top-[24rem] flex size-[36rem] items-center justify-center rounded-full bg-slate-100 hover:bg-slate-200'>
+            <Link
+              href='/practice'
+              className='absolute right-[24rem] top-[24rem] flex size-[36rem] items-center justify-center rounded-full bg-slate-100 hover:bg-slate-200'
+            >
               <img src='/images/icon_cross.svg' alt={tImgAlts('close')} className='size-[18rem]' />
             </Link>
 
@@ -145,7 +150,10 @@ export default function Page() {
                   </SelectTrigger>
 
                   <SelectContent className='mt-0 max-h-[240rem] rounded-b-[24rem] border border-d-light-gray/70 bg-white/95 shadow-[0_18rem_45rem_-30rem_rgba(15,23,42,0.28)]'>
-                    <SelectItem value='random' className='h-[48rem] px-[28rem] text-[16rem] font-medium leading-none text-d-black hover:bg-d-light-gray/70 data-[highlighted=true]:bg-d-light-gray/90'>
+                    <SelectItem
+                      value='random'
+                      className='h-[48rem] px-[28rem] text-[16rem] font-medium leading-none text-d-black data-[highlighted=true]:bg-d-light-gray/90 hover:bg-d-light-gray/70'
+                    >
                       {tCommon('random')}
                     </SelectItem>
 
@@ -153,7 +161,7 @@ export default function Page() {
                       <SelectItem
                         key={tag.id}
                         value={String(tag.id)}
-                        className='h-[48rem] px-[28rem] text-[16rem] font-medium leading-none text-d-black hover:bg-d-light-gray/70 data-[highlighted=true]:bg-d-light-gray/90'
+                        className='h-[48rem] px-[28rem] text-[16rem] font-medium leading-none text-d-black data-[highlighted=true]:bg-d-light-gray/90 hover:bg-d-light-gray/70'
                       >
                         {tag.name}
                       </SelectItem>
