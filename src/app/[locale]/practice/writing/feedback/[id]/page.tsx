@@ -1,28 +1,78 @@
-'use client';
+﻿'use client';
 
-import React, { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+
+import { useQuery } from '@tanstack/react-query';
+import { StateContainer } from '@/components/feedback/StateContainer';
+import axiosInstance from '@/lib/axiosInstance';
 
 import { GET_practice_writing_feedback_id } from '@/api/GET_practice_writing_feedback_id';
-import { HeaderDuringTest } from '@/components/HeaderDuringTest';
-import { useQuery } from '@tanstack/react-query';
+import type {
+  WritingBreakdownItem,
+  WritingFeedbackPart,
+  WritingFeedbackPartKey,
+  WritingFeedbackResponse,
+  WritingGeneralFeedback,
+  WritingMlOutput,
+} from '@/types/WritingFeedback';
+import { PracticeWritingPassed } from '@/types/WritingFeedback';
 import { useCustomTranslations } from '@/hooks/useCustomTranslations';
 
-export default function Page({ params }: { params: { id: string } }) {
-  const { t, tImgAlts, tCommon } = useCustomTranslations('practice.writing.feedback');
+import { type CriteriaKey, type NormalizedWritingFeedback, WritingFeedbackView } from './_components/writing-feedback-view';
 
-  const { data: feedbackData, status: feedbackStatus } = useQuery({
-    queryKey: ['practice-writing-feedback', params.id],
-    queryFn: () => GET_practice_writing_feedback_id(params.id),
+type FeedbackQueryError = Error & { status?: number };
+
+type CriterionSourceKey = Exclude<keyof WritingMlOutput, 'General Feedback'>;
+
+const CRITERIA_DEFINITIONS: Array<{
+  key: CriteriaKey;
+  title: string;
+  description: string;
+  source: CriterionSourceKey;
+}> = [
+  { key: 'task', title: 'Task Achievement', description: 'Addresses the task with clear, accurate reporting.', source: 'Task Achievement' },
+  { key: 'coherence', title: 'Coherence & Cohesion', description: 'Organisation, paragraphing, and logical flow.', source: 'Coherence & Cohesion' },
+  { key: 'lexical', title: 'Lexical Resource', description: 'Vocabulary range and precision.', source: 'Lexical Resource' },
+  { key: 'grammar', title: 'Grammatical Range & Accuracy', description: 'Control of grammar and sentence variety.', source: 'Grammatical Range & Accuracy' },
+];
+
+export default function Page({ params }: { params: { id: string } }) {
+  const { tImgAlts } = useCustomTranslations('practice.writing.feedback');
+
+  const {
+    data: passedData,
+    status: passedStatus,
+    error: passedError,
+    refetch: refetchPassed,
+  } = useQuery<PracticeWritingPassed, FeedbackQueryError>({
+    queryKey: ['practice-writing-feedbacks'],
+    queryFn: async () => {
+      const response = await axiosInstance.get('/practice/writing/passed');
+      return response.data as PracticeWritingPassed;
+    },
+    enabled: !!params.id,
     retry: false,
     refetchInterval: query => {
-      const err = query.state.error as { status?: number } | null;
-
-      // Если статус 404 — вернуть 3000 (мс), иначе — false (не рефетчить)
-      return err?.status === 404 ? 10000 : false;
+      const found = query?.state.data?.data.find(item => String(item.id) === params.id);
+      return found?.feedback_ready ? false : 3000;
     },
   });
 
-  const [part, setPart] = useState<'part_1' | 'part_2' | undefined>(undefined);
+  const isFeedbackReady = passedData?.data.some(item => String(item.id) === params.id && item.feedback_ready) ?? false;
+
+  const {
+    data: feedbackData,
+    status: feedbackStatus,
+    error: feedbackError,
+    refetch: refetchFeedback,
+  } = useQuery<WritingFeedbackResponse, FeedbackQueryError>({
+    queryKey: ['practice-writing-feedback', params.id],
+    queryFn: () => GET_practice_writing_feedback_id(params.id),
+    retry: false,
+    enabled: isFeedbackReady,
+  });
+
+  const [part, setPart] = useState<WritingFeedbackPartKey | undefined>(undefined);
 
   useEffect(() => {
     if (feedbackData?.part_1?.question) {
@@ -34,239 +84,219 @@ export default function Page({ params }: { params: { id: string } }) {
     }
   }, [feedbackData]);
 
-  return (
-    <>
-      <HeaderDuringTest title={t('title')} tag={tCommon('writing')} />
+  const activePart = part && feedbackData ? (feedbackData[part] ?? null) : null;
 
-      {(feedbackStatus === 'pending' || !feedbackData) && (
-        <main className='flex h-[100dvh] items-center justify-center gap-x-[5rem] bg-d-blue-secondary'>
-          <div className='text-[20rem] font-medium leading-tight text-d-black/80'>{t('evaluating')}</div>
-          <svg className='size-[20rem] animate-spin text-black' xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24'>
-            <circle className='opacity-25' cx='12' cy='12' r='10' stroke='currentColor' stroke-width='4' />
-            <path
-              className='opacity-75'
-              fill='currentColor'
-              d='M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z'
-            />
-          </svg>
-        </main>
-      )}
+  const partOptions = useMemo(() => {
+    if (!feedbackData) return [];
+    const options: Array<{ key: WritingFeedbackPartKey; label: string }> = [];
+    if (feedbackData.part_1?.question) options.push({ key: 'part_1', label: 'Task 1' });
+    if (feedbackData.part_2?.question) options.push({ key: 'part_2', label: 'Task 2' });
+    return options;
+  }, [feedbackData]);
 
-      {feedbackStatus === 'success' && part !== undefined && (
-        <main className='min-h-[100dvh] bg-d-blue-secondary'>
-          <div className='container flex min-h-[100dvh] max-w-[1440rem] items-start justify-between p-[40rem]'>
-            {/* // * Left col */}
-            <div className='flex w-[1016rem] flex-col gap-y-[16rem] *:rounded-[16rem]'>
-              {/* // * Question & Answer */}
-              <section className='flex flex-col gap-y-[24rem] bg-white p-[40rem]'>
-                {/* // * Question */}
-                <div className='whitespace-pre-line text-[20rem] font-medium leading-tight text-d-black/80'>{feedbackData.task}</div>
-                <div className='rounded-[12rem] bg-d-gray px-[24rem] py-[20rem] text-[20rem] font-medium leading-tight'>{feedbackData[part].question}</div>
-                {feedbackData.picture && <img src={feedbackData.picture} alt={tImgAlts('writing')} className='mx-auto w-[600rem] rounded-[12rem]' />}
-                <div className='text-[20rem] font-medium leading-tight text-d-black/80'>{feedbackData.text}</div>
-                <hr className='my-[16rem] border-b-2 border-d-gray' />
-                {/* // * Answer */}
-                <div className='whitespace-pre-line text-[20rem] font-medium leading-tight'>{feedbackData.user_answer}</div>
-              </section>
+  const normalizedFeedback = useMemo<NormalizedWritingFeedback | null>(() => {
+    if (!feedbackData || !part || !activePart) return null;
+    return buildNormalizedFeedback({
+      response: feedbackData,
+      partKey: part,
+      part: activePart,
+      taskImageAlt: tImgAlts('writing'),
+    });
+  }, [feedbackData, activePart, part, tImgAlts]);
 
-              <div className='flex items-start gap-x-[16rem]'>
-                {/* // * Overall recommendations */}
-                <section className='flex w-[500rem] shrink-0 flex-col gap-[24rem] rounded-[16rem] bg-white p-[24rem]'>
-                  {/* // * Header */}
-                  <header className='flex items-center justify-between'>
-                    <div className='flex items-center gap-x-[12rem]'>
-                      <div className='flex size-[52rem] items-center justify-center rounded-[8rem] bg-d-blue-secondary'>
-                        <img src='/images/icon_writingSection.svg' alt={tImgAlts('writing')} className='size-[24rem]' />
-                      </div>
-                      <div className='text-[20rem] font-medium'>{tCommon('overallRecommendation')}</div>
-                    </div>
-                    <button type='button' className='flex size-[40rem] items-center justify-center rounded-full border border-d-gray'>
-                      <img src='/images/icon_bookmark--empty.svg' className='size-[16rem]' alt={tImgAlts('bookmark')} />
-                    </button>
-                  </header>
-                  {/* // * Recommendation */}
-                  <div className='text-[14rem] font-medium leading-tight'>
-                    {feedbackData[part].ml_output['General Feedback'].feedback}
-                    <br />
-                    <br />
-                    {feedbackData[part].ml_output['General Feedback'].recommendation}
-                  </div>
-                </section>
-                {/* // * Recommendations by bands */}
-                <section className='flex w-[500rem] shrink-0 flex-col gap-[24rem] rounded-[16rem] bg-white p-[24rem]'>
-                  {/* // * Header */}
-                  <header className='flex items-center justify-between'>
-                    <div className='flex items-center gap-x-[12rem]'>
-                      <div className='flex size-[52rem] items-center justify-center rounded-[8rem] bg-d-blue-secondary'>
-                        <img src='/images/icon_writingSection.svg' alt={tImgAlts('writing')} className='size-[24rem]' />
-                      </div>
-                      <div className='text-[20rem] font-medium'>{tCommon('recommendationsByBands')}</div>
-                    </div>
-                  </header>
-                  {/* // * Coherence & cohesion */}
-                  <div className='flex items-center justify-between gap-x-[24rem]'>
-                    <div className='flex w-[388rem] shrink-0 flex-col gap-y-[16rem]'>
-                      <div className='text-[14rem] font-semibold leading-normal'>Coherence & cohesion</div>
-                      <div className='text-[14rem] font-medium leading-tight text-d-black/80'>
-                        {feedbackData[part].ml_output['Coherence & Cohesion'].feedback}
-                        <br />
-                        <br />
-                        {feedbackData[part].ml_output['Coherence & Cohesion'].recommendation}
-                      </div>
-                    </div>
-                    <button type='button' className='flex size-[40rem] items-center justify-center rounded-full border border-d-gray'>
-                      <img src='/images/icon_bookmark--empty.svg' className='size-[16rem]' alt={tImgAlts('bookmark')} />
-                    </button>
-                  </div>
-                  {/* // * Coherence & cohesion */}
-                  <div className='flex items-center justify-between gap-x-[24rem]'>
-                    <div className='flex w-[388rem] shrink-0 flex-col gap-y-[16rem]'>
-                      <div className='text-[14rem] font-semibold leading-normal'>Lexical resource</div>
-                      <div className='text-[14rem] font-medium leading-tight text-d-black/80'>
-                        {feedbackData[part].ml_output['Lexical Resource'].feedback}
-                        <br />
-                        <br />
-                        {feedbackData[part].ml_output['Lexical Resource'].recommendation}
-                      </div>
-                    </div>
-                    <button type='button' className='flex size-[40rem] items-center justify-center rounded-full border border-d-gray'>
-                      <img src='/images/icon_bookmark--empty.svg' className='size-[16rem]' alt={tImgAlts('bookmark')} />
-                    </button>
-                  </div>
-                  {/* // * Grammatical range & accuracy */}
-                  <div className='flex items-center justify-between gap-x-[24rem]'>
-                    <div className='flex w-[388rem] shrink-0 flex-col gap-y-[16rem]'>
-                      <div className='text-[14rem] font-semibold leading-normal'>Grammatical range & accuracy</div>
-                      <div className='text-[14rem] font-medium leading-tight text-d-black/80'>
-                        {feedbackData[part].ml_output['Grammatical Range & Accuracy'].feedback}
-                        <br />
-                        <br />
-                        {feedbackData[part].ml_output['Grammatical Range & Accuracy'].recommendation}
-                      </div>
-                    </div>
-                    <button type='button' className='flex size-[40rem] items-center justify-center rounded-full border border-d-gray'>
-                      <img src='/images/icon_bookmark--empty.svg' className='size-[16rem]' alt={tImgAlts('bookmark')} />
-                    </button>
-                  </div>
-                  {/* // * Task achievement< */}
-                  <div className='flex items-center justify-between gap-x-[24rem]'>
-                    <div className='flex w-[388rem] shrink-0 flex-col gap-y-[16rem]'>
-                      <div className='text-[14rem] font-semibold leading-normal'>Task achievement</div>
-                      <div className='text-[14rem] font-medium leading-tight text-d-black/80'>
-                        {feedbackData[part].ml_output['Task Achievement'].feedback}
-                        <br />
-                        <br />
-                        {feedbackData[part].ml_output['Task Achievement'].recommendation}
-                      </div>
-                    </div>
-                    <button type='button' className='flex size-[40rem] items-center justify-center rounded-full border border-d-gray'>
-                      <img src='/images/icon_bookmark--empty.svg' className='size-[16rem]' alt={tImgAlts('bookmark')} />
-                    </button>
-                  </div>
-                </section>
-              </div>
-            </div>
-            {/* // * Right col */}
-            <div className='flex w-[328rem] flex-col gap-y-[16rem] *:rounded-[16rem]'>
-              {/* // * Overall score */}
-              <section className='flex h-[84rem] items-center justify-start gap-x-[8rem] bg-gradient-to-br from-d-green to-d-green-secondary px-[34rem]'>
-                <div className='text-[32rem] font-medium'>{feedbackData.score.toFixed(1)}</div>
-                <div className='text-[20rem] font-semibold'>{tCommon('overallBandScore')}</div>
-              </section>
-              {/* // * Grammar score */}
-              {/* <section className='flex flex-col gap-[24rem] bg-white p-[24rem]'>
-                <div className='flex items-center gap-x-[12rem]'>
-                  <div className='flex size-[52rem] items-center justify-center rounded-[8rem] bg-d-yellow-secondary text-[20rem] font-medium'>1</div>
-                  <div className='flex flex-col'>
-                    <span className='text-[20rem] font-medium leading-tight'>Linking words</span>
-                    <span className='text-[14rem] font-medium leading-tight text-d-black/80'>meeting the goal 7 or more</span>
-                  </div>
-                </div>
-                <div className='flex items-center gap-x-[12rem]'>
-                  <div className='flex size-[52rem] items-center justify-center rounded-[8rem] bg-d-gray text-[20rem] font-medium'>1</div>
-                  <div className='flex flex-col'>
-                    <span className='text-[20rem] font-medium leading-tight'>Word repetition</span>
-                    <span className='text-[14rem] font-medium leading-tight text-d-black/80'>meeting the goal of 3 or few</span>
-                  </div>
-                </div>
-                <div className='flex items-center gap-x-[12rem]'>
-                  <div className='flex size-[52rem] items-center justify-center rounded-[8rem] bg-d-red-disabled text-[20rem] font-medium'>0</div>
-                  <div className='flex flex-col'>
-                    <span className='text-[20rem] font-medium leading-tight'>Grammar mistakes</span>
-                  </div>
-                </div>
-                <div className='mt-[8rem] flex items-center justify-center gap-x-[64rem]'>
-                  <div className='text-[14rem] font-semibold leading-tight text-d-black/80'>
-                    <span className='text-d-black'>150</span> words
-                  </div>
-                  <div className='text-[14rem] font-semibold leading-tight text-d-black/80'>
-                    <span className='text-d-black'>5</span> paragraphs
-                  </div>
-                </div>
-              </section> */}
-              {/* // * Bands score -- Coherence & cohesion */}
-              <section className='flex flex-col gap-[16rem] bg-white p-[24rem]'>
-                <div className='mb-[8rem] text-[20rem] font-semibold'>Coherence & cohesion: {feedbackData[part].ml_output['Coherence & Cohesion'].score.toFixed(1)}</div>
-                {feedbackData[part].ml_output['Coherence & Cohesion'].breakdown.map((item: any) => (
-                  <div key={`coherence-cohesion-${item.name}`} className='flex items-center gap-x-[12rem]'>
-                    <div
-                      data-grade={+item.score >= 6 ? 'good' : 'bad'}
-                      className={`flex size-[34rem] items-center justify-center rounded-[4rem] text-[14rem] font-medium data-[grade=bad]:bg-d-red-disabled data-[grade=good]:bg-d-green-secondary`}
-                    >
-                      {item.score}
-                    </div>
-                    <div className='text-[14rem] font-medium leading-tight text-d-black/80'>{item.name}</div>
-                  </div>
-                ))}
-              </section>
-              {/* // * Bands score -- Lexical resource */}
-              <section className='flex flex-col gap-[16rem] bg-white p-[24rem]'>
-                <div className='mb-[8rem] text-[20rem] font-semibold'>Lexical resource: {feedbackData[part].ml_output['Lexical Resource'].score.toFixed(1)}</div>
-                {feedbackData[part].ml_output['Lexical Resource'].breakdown.map((item: any) => (
-                  <div key={`lexical-resource-${item.name}`} className='flex items-center gap-x-[12rem]'>
-                    <div
-                      data-grade={+item.score >= 6 ? 'good' : 'bad'}
-                      className={`flex size-[34rem] items-center justify-center rounded-[4rem] text-[14rem] font-medium data-[grade=bad]:bg-d-red-disabled data-[grade=good]:bg-d-green-secondary`}
-                    >
-                      {item.score}
-                    </div>
-                    <div className='text-[14rem] font-medium leading-tight text-d-black/80'>{item.name}</div>
-                  </div>
-                ))}
-              </section>
-              {/* // * Bands score -- Grammatical range */}
-              <section className='flex flex-col gap-[16rem] bg-white p-[24rem]'>
-                <div className='mb-[8rem] text-[20rem] font-semibold'>
-                  Grammatical range & accuracy: {feedbackData[part].ml_output['Grammatical Range & Accuracy'].score.toFixed(1)}
-                </div>
-                {feedbackData[part].ml_output['Grammatical Range & Accuracy'].breakdown.map((item: any) => (
-                  <div key={`grammatical-range-${item.name}`} className='flex items-center gap-x-[12rem]'>
-                    <div
-                      data-grade={+item.score >= 6 ? 'good' : 'bad'}
-                      className={`flex size-[34rem] items-center justify-center rounded-[4rem] text-[14rem] font-medium data-[grade=bad]:bg-d-red-disabled data-[grade=good]:bg-d-green-secondary`}
-                    >
-                      {item.score}
-                    </div>
-                    <div className='text-[14rem] font-medium leading-tight text-d-black/80'>{item.name}</div>
-                  </div>
-                ))}
-              </section>
-              {/* // * Bands score -- Task achievement */}
-              <section className='flex flex-col gap-[16rem] bg-white p-[24rem]'>
-                <div className='mb-[8rem] text-[20rem] font-semibold'>Task achievement: {feedbackData[part].ml_output['Task Achievement'].score.toFixed(1)}</div>
-                {feedbackData[part].ml_output['Task Achievement'].breakdown.map((item: any) => (
-                  <div key={`task-achievement-${item.name}`} className='flex items-center gap-x-[12rem]'>
-                    <div className='flex size-[34rem] items-center justify-center rounded-[4rem] bg-d-green-secondary text-[14rem] font-medium'>{item.score}</div>
-                    <div className='text-[14rem] font-medium leading-tight text-d-black/80'>{item.name}</div>
-                  </div>
-                ))}
-              </section>
-            </div>
-          </div>
-        </main>
-      )}
+  if (passedStatus === 'error') {
+    return (
+      <StateContainer
+        color='bg-d-blue-secondary'
+        tone='error'
+        title='We could not confirm your writing attempt.'
+        description={passedError?.message ?? 'Please retry loading this page.'}
+        actionLabel='Try again'
+        onAction={refetchPassed}
+      />
+    );
+  }
 
-      <footer className='bg-d-blue-secondary pb-[24rem] text-center text-[12rem]'>{tCommon('allRightsReserved')}</footer>
-    </>
-  );
+  if (!isFeedbackReady) {
+    return (
+      <StateContainer
+        color='bg-d-blue-secondary'
+        tone='info'
+        title='Evaluating your response'
+        description='We will notify you as soon as your writing band score is ready.'
+        section='writing'
+      />
+    );
+  }
+
+  if (feedbackStatus === 'error') {
+    return (
+      <StateContainer
+        color='bg-d-blue-secondary'
+        tone='error'
+        title='We were unable to load your feedback.'
+        description={feedbackError?.message ?? 'Please check your connection and try again.'}
+        actionLabel='Try again'
+        onAction={refetchFeedback}
+      />
+    );
+  }
+
+  if (feedbackStatus === 'pending' || !feedbackData) {
+    return (
+      <StateContainer
+        color='bg-d-blue-secondary'
+        tone='info'
+        title='Fetching feedback details'
+        description='Just a moment while we prepare your writing feedback.'
+        section='writing'
+      />
+    );
+  }
+
+  if (!normalizedFeedback || !part || !activePart) {
+    return (
+      <StateContainer
+        color='bg-d-blue-secondary'
+        tone='info'
+        title='Feedback is not ready yet'
+        description='Your writing responses are still being evaluated. Please give it a little more time.'
+        section='writing'
+      />
+    );
+  }
+
+  return <WritingFeedbackView data={normalizedFeedback} activePart={part} partOptions={partOptions} onPartChange={setPart} />;
+}
+
+interface BuildNormalizedArgs {
+  response: WritingFeedbackResponse;
+  partKey: WritingFeedbackPartKey;
+  part: WritingFeedbackPart;
+  taskImageAlt: string;
+}
+
+function buildNormalizedFeedback({ response, partKey, part, taskImageAlt }: BuildNormalizedArgs): NormalizedWritingFeedback {
+  const criteria = CRITERIA_DEFINITIONS.map(definition => {
+    const criterion = part.ml_output[definition.source];
+    return {
+      key: definition.key,
+      title: definition.title,
+      description: definition.description,
+      score: toScore(criterion?.score),
+      feedback: criterion?.feedback ?? undefined,
+      recommendation: criterion?.recommendation ?? undefined,
+      breakdown: (criterion?.breakdown ?? []).map(mapBreakdownItem),
+    };
+  });
+
+  const general = part.ml_output['General Feedback'];
+
+  const taskPrompt = buildTaskPrompt(response, part);
+
+  return {
+    sectionTitle: partKey === 'part_1' ? 'Writing Task 1' : 'Writing Task 2',
+    essayText: response.user_answer ?? '',
+    essayWordCount: countWords(response.user_answer),
+    bandScore: toScore(response.score) || 0,
+    bandStatus: determineBandStatus(toScore(response.score)),
+    criteria,
+    generalFeedback: general
+      ? {
+          overall: general.feedback,
+          recommendation: general.recommendation,
+          strengths: flattenAnalysis(general.strength_analysis, 'strength'),
+          weaknesses: flattenAnalysis(general.error_analysis, 'issue'),
+        }
+      : null,
+    idealResponse: general?.rewriting ? { text: sanitizeIdealResponse(general.rewriting) } : null,
+    task: {
+      title: partKey === 'part_1' ? 'Writing Task 1 prompt' : 'Writing Task 2 prompt',
+      prompt: taskPrompt,
+      instruction: response.task || null,
+      media: response.picture ? [{ url: response.picture, alt: taskImageAlt }] : undefined,
+    },
+  };
+}
+
+function mapBreakdownItem(item: WritingBreakdownItem) {
+  return {
+    name: item.name,
+    score: toScore(item.score),
+    feedback: item.feedback,
+    recommendation: item.recommendation,
+  };
+}
+
+function toScore(value: number | null | undefined): number | null {
+  if (typeof value !== 'number' || Number.isNaN(value)) {
+    return null;
+  }
+  return Number(value.toFixed(1));
+}
+
+function countWords(text: string | null | undefined): number {
+  if (!text) return 0;
+  const words = text.trim().split(/\s+/);
+  return words.filter(Boolean).length;
+}
+
+function determineBandStatus(score: number | null): string {
+  if (score === null) {
+    return 'Evaluation in progress';
+  }
+  if (score >= 7.5) {
+    return 'Excellent performance - keep refining the details.';
+  }
+  if (score >= 6.5) {
+    return 'Strong response with focused improvements ahead.';
+  }
+  if (score >= 5.5) {
+    return 'Developing well - address the highlighted priorities next.';
+  }
+  return 'Significant revision needed - follow the targeted guidance.';
+}
+
+function sanitizeIdealResponse(source: string): string {
+  return source
+    .replace(/<br\s*\/?>(\r?\n)?/gi, '\n')
+    .replace(/<fix>(.*?)<\/fix>/gi, '$1')
+    .replace(/<exp>.*?<\/exp>/gi, '')
+    .replace(/<\/?gr>/gi, '')
+    .replace(/<\/?red>/gi, '')
+    .replace(/<[^>]+>/g, '')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
+
+function buildTaskPrompt(response: WritingFeedbackResponse, part: WritingFeedbackPart): string {
+  const segments = [part.question, response.text].filter(Boolean);
+  if (segments.length === 0) {
+    return 'Task prompt unavailable.';
+  }
+  return segments.join('\n\n');
+}
+
+type AnalysisRecord = WritingGeneralFeedback['strength_analysis'];
+
+function flattenAnalysis(record: AnalysisRecord | WritingGeneralFeedback['error_analysis'], type: 'strength' | 'issue'): string[] {
+  if (!record) return [];
+  const prefix = type === 'strength' ? 'Strength' : 'Issue';
+
+  return Object.entries(record).flatMap(([domain, metrics]) => {
+    if (!metrics) return [];
+    return Object.entries(metrics).map(([label, count]) => {
+      const domainLabel = capitalizePhrase(domain);
+      const metricLabel = capitalizePhrase(label);
+      const suffix = typeof count === 'number' && count > 1 ? ' (x' + count + ')' : '';
+      return prefix + ': ' + domainLabel + ' - ' + metricLabel + suffix;
+    });
+  });
+}
+
+function capitalizePhrase(value: string): string {
+  return value
+    .split(/\s+/)
+    .map(part => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(' ');
 }

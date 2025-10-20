@@ -1,0 +1,810 @@
+'use client';
+
+import { type KeyboardEvent, type ReactNode, type UIEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+
+import { animate, AnimatePresence, motion, useReducedMotion } from 'framer-motion';
+import type { LucideIcon } from 'lucide-react';
+import { ArrowRight, BookOpenCheck, CheckCircle2, ChevronRight, FileText, Lightbulb, Sparkles } from 'lucide-react';
+
+import { cn } from '@/lib/utils';
+import type { WritingFeedbackPartKey } from '@/types/WritingFeedback';
+import { EmptyModalState, ModalScrollProgress, ModalShell } from '@/components/modals/UnifiedModalShell';
+import { WritingFeedbackHeader } from '@/components/practice/WritingFeedbackHeader';
+
+type ModalKey = 'criteria' | 'summary' | 'task' | 'ideal';
+
+export type CriteriaKey = 'task' | 'coherence' | 'lexical' | 'grammar';
+
+export interface TaskMediaItem {
+  url: string;
+  alt?: string;
+}
+
+export interface TaskInfo {
+  title: string;
+  prompt: string;
+  instruction?: string | null;
+  media?: TaskMediaItem[];
+}
+
+export interface CriterionBreakdownItem {
+  name: string;
+  score: number | null;
+  feedback: string;
+  recommendation?: string;
+}
+
+export interface NormalizedCriterion {
+  key: CriteriaKey;
+  title: string;
+  description: string;
+  score: number | null;
+  feedback?: string;
+  recommendation?: string;
+  breakdown: CriterionBreakdownItem[];
+}
+
+export interface GeneralFeedbackSummary {
+  overall?: string | null;
+  recommendation?: string | null;
+  strengths: string[];
+  weaknesses: string[];
+}
+
+export interface NormalizedWritingFeedback {
+  sectionTitle: string;
+  essayText: string;
+  essayWordCount: number;
+  bandScore: number;
+  bandStatus: string;
+  criteria: NormalizedCriterion[];
+  generalFeedback?: GeneralFeedbackSummary | null;
+  idealResponse?: { text: string | null } | null;
+  task: TaskInfo;
+  targetBand?: number | null;
+  goalCompletionPercent?: number | null;
+  cefrLevel?: string | null;
+}
+
+interface PartOption {
+  key: WritingFeedbackPartKey;
+  label: string;
+}
+
+interface WritingFeedbackViewProps {
+  data: NormalizedWritingFeedback;
+  activePart: WritingFeedbackPartKey;
+  partOptions: PartOption[];
+  onPartChange: (key: WritingFeedbackPartKey) => void;
+}
+
+const scoreVisuals = [
+  { threshold: 7.5, gradient: 'from-[#7EEAD5] via-[#70C5F8] to-[#5A7DE4]', text: 'text-white' },
+  { threshold: 6.5, gradient: 'from-[#FFE6A5] via-[#FFC87D] to-[#FF9F7A]', text: 'text-slate-900' },
+  { threshold: 0, gradient: 'from-[#FFB5B5] via-[#FF8D9A] to-[#F3646E]', text: 'text-white' },
+];
+
+const formatBandScore = (score: number | null | undefined) => {
+  if (score === null || score === undefined || Number.isNaN(score)) {
+    return '—';
+  }
+  return Number(score).toFixed(1);
+};
+
+const badgeByScore = (score: number | null) => {
+  if (score === null || Number.isNaN(score)) {
+    return 'bg-slate-200 text-slate-600';
+  }
+
+  if (score >= 7) {
+    return 'bg-d-green-secondary text-slate-900';
+  }
+
+  if (score >= 6) {
+    return 'bg-[#FFE9B2] text-slate-900';
+  }
+
+  return 'bg-[#FECACA] text-[#7F1D1D]';
+};
+
+export function WritingFeedbackView({ data, activePart, partOptions, onPartChange }: WritingFeedbackViewProps) {
+  const shouldReduceMotion = useReducedMotion();
+  const [openModal, setOpenModal] = useState<ModalKey | null>(null);
+  const [activeCriterionIndex, setActiveCriterionIndex] = useState(0);
+  const [displayScore, setDisplayScore] = useState(() => formatBandScore(data.bandScore));
+  const essayScrollRef = useRef<HTMLDivElement | null>(null);
+  const [showScrollHint, setShowScrollHint] = useState(false);
+  const tabRefs = useRef<Array<HTMLButtonElement | null>>([]);
+  const [topBarElevated, setTopBarElevated] = useState(false);
+  const criteriaContentRef = useRef<HTMLDivElement | null>(null);
+  const [criteriaScrollProgress, setCriteriaScrollProgress] = useState(0);
+
+  const availability = useMemo(
+    () => ({
+      criteria: data.criteria.length > 0,
+      summary:
+        !!data.generalFeedback?.overall ||
+        !!data.generalFeedback?.recommendation ||
+        (data.generalFeedback?.strengths?.length ?? 0) > 0 ||
+        (data.generalFeedback?.weaknesses?.length ?? 0) > 0,
+      ideal: !!data.idealResponse?.text,
+    }),
+    [data]
+  );
+
+  useEffect(() => {
+    if (openModal !== 'criteria') {
+      setActiveCriterionIndex(0);
+    }
+  }, [openModal]);
+
+  useEffect(() => {
+    setActiveCriterionIndex(0);
+  }, [data.criteria, activePart]);
+
+  useEffect(() => {
+    if (data.bandScore === null || Number.isNaN(data.bandScore)) {
+      setDisplayScore('—');
+      return;
+    }
+
+    if (shouldReduceMotion) {
+      setDisplayScore(formatBandScore(data.bandScore));
+      return;
+    }
+
+    const controls = animate(0, data.bandScore, {
+      duration: 0.8,
+      ease: 'easeOut',
+      onUpdate: value => {
+        setDisplayScore(formatBandScore(value));
+      },
+    });
+
+    return () => {
+      controls.stop();
+    };
+  }, [data.bandScore, shouldReduceMotion]);
+
+  const updateScrollHint = useCallback(() => {
+    const node = essayScrollRef.current;
+    if (!node) {
+      setShowScrollHint(false);
+      setTopBarElevated(false);
+      return;
+    }
+
+    const hasOverflow = node.scrollHeight - node.clientHeight > 12;
+    if (!hasOverflow) {
+      setShowScrollHint(false);
+      setTopBarElevated(false);
+      return;
+    }
+
+    const reachedBottom = node.scrollTop + node.clientHeight >= node.scrollHeight - 16;
+    setShowScrollHint(!reachedBottom);
+    setTopBarElevated(node.scrollTop > 8);
+  }, []);
+
+  useEffect(() => {
+    updateScrollHint();
+    const node = essayScrollRef.current;
+    if (!node) return;
+
+    node.addEventListener('scroll', updateScrollHint);
+    const handleResize = () => updateScrollHint();
+    window.addEventListener('resize', handleResize);
+
+    let observer: ResizeObserver | undefined;
+    if (typeof ResizeObserver !== 'undefined') {
+      observer = new ResizeObserver(() => updateScrollHint());
+      observer.observe(node);
+    }
+
+    return () => {
+      node.removeEventListener('scroll', updateScrollHint);
+      window.removeEventListener('resize', handleResize);
+      observer?.disconnect();
+    };
+  }, [updateScrollHint]);
+
+  const bandVisual = useMemo(() => {
+    if (data.bandScore === null || Number.isNaN(data.bandScore)) {
+      return { gradient: 'from-slate-200 to-slate-100', text: 'text-slate-500' };
+    }
+
+    const found = scoreVisuals.find(visual => data.bandScore >= visual.threshold);
+    return found ?? scoreVisuals[scoreVisuals.length - 1];
+  }, [data.bandScore]);
+
+  const paragraphs = useMemo(() => {
+    const trimmed = data.essayText.trim();
+    if (!trimmed) return [];
+    return trimmed.split(/\n{2,}/g).map(paragraph => paragraph.trim());
+  }, [data.essayText]);
+
+  useEffect(() => {
+    updateScrollHint();
+  }, [paragraphs, updateScrollHint]);
+
+  const goalInfo = useMemo(() => {
+    if (!data.targetBand || data.targetBand <= 0 || data.bandScore === null || Number.isNaN(data.bandScore)) {
+      return null;
+    }
+
+    const percent = data.goalCompletionPercent ?? Math.round((data.bandScore / data.targetBand) * 100);
+    if (!Number.isFinite(percent)) {
+      return null;
+    }
+
+    const bounded = Math.min(100, Math.max(0, Math.round(percent)));
+    return {
+      bounded,
+      label: `You're ${bounded}% towards goal ${formatBandScore(data.targetBand)}`,
+    };
+  }, [data.bandScore, data.goalCompletionPercent, data.targetBand]);
+
+  const cefrLine = useMemo(() => {
+    if (!data.cefrLevel) return null;
+    return `CEFR level ${data.cefrLevel}`;
+  }, [data.cefrLevel]);
+
+  const cefrTooltip = useMemo(() => {
+    if (!data.cefrLevel) return null;
+    return `≈ CEFR ${data.cefrLevel}`;
+  }, [data.cefrLevel]);
+
+  const activeCriterion = data.criteria[activeCriterionIndex] ?? null;
+
+  const nextSteps = useMemo(
+    () => [
+      {
+        key: 'summary' as const,
+        label: 'View feedback summary',
+        description: 'Review strengths, key issues, and recommendations.',
+        icon: BookOpenCheck,
+        variant: 'primary' as const,
+        disabled: !availability.summary,
+        action: () => setOpenModal('summary'),
+      },
+      {
+        key: 'criteria' as const,
+        label: 'View detailed feedback',
+        description: 'Band-by-band breakdown with targeted advice.',
+        icon: Lightbulb,
+        variant: 'secondary' as const,
+        disabled: !availability.criteria,
+        action: () => setOpenModal('criteria'),
+      },
+      {
+        key: 'ideal' as const,
+        label: 'Check ideal response',
+        description: 'Compare your answer with a high-scoring sample.',
+        icon: Sparkles,
+        variant: 'tertiary' as const,
+        disabled: !availability.ideal,
+        action: () => setOpenModal('ideal'),
+      },
+    ],
+    [availability.criteria, availability.ideal, availability.summary]
+  );
+
+  const handleCriterionTabsKeyDown = useCallback(
+    (event: KeyboardEvent<HTMLDivElement>) => {
+      if (event.key !== 'ArrowRight' && event.key !== 'ArrowLeft') {
+        return;
+      }
+
+      event.preventDefault();
+      const direction = event.key === 'ArrowRight' ? 1 : -1;
+      const nextIndex = (activeCriterionIndex + direction + data.criteria.length) % data.criteria.length;
+      setActiveCriterionIndex(nextIndex);
+      tabRefs.current[nextIndex]?.focus();
+    },
+    [activeCriterionIndex, data.criteria.length]
+  );
+
+  const handleCriteriaContentScroll = useCallback((event: UIEvent<HTMLDivElement>) => {
+    const target = event.currentTarget;
+    const maxScroll = target.scrollHeight - target.clientHeight;
+    if (maxScroll <= 0) {
+      setCriteriaScrollProgress(1);
+      return;
+    }
+
+    const progress = Math.min(1, Math.max(0, target.scrollTop / maxScroll));
+    setCriteriaScrollProgress(progress);
+  }, []);
+
+  useEffect(() => {
+    const node = criteriaContentRef.current;
+    if (!node) return;
+    const maxScroll = node.scrollHeight - node.clientHeight;
+    if (maxScroll <= 0) {
+      setCriteriaScrollProgress(1);
+    } else {
+      setCriteriaScrollProgress(Math.min(1, Math.max(0, node.scrollTop / maxScroll)));
+    }
+  }, [activeCriterion]);
+
+  return (
+    <div className='relative flex min-h-[100dvh] flex-col bg-d-blue-secondary'>
+      <WritingFeedbackHeader topBarElevated={topBarElevated} title='Writing Feedback' />
+
+      <div className='flex-1'>
+        <div
+          className='mx-auto flex h-full w-full max-w-[1440rem] gap-[28rem] px-[40rem] pb-[28rem] pt-[24rem] tablet:px-[32rem]'
+          style={{ height: 'calc(100dvh - 64rem)' }}
+        >
+          <section className='flex h-full flex-[0.68] flex-col overflow-hidden rounded-[28rem] bg-white shadow-[0_40rem_120rem_-60rem_rgba(64,75,172,0.35)]'>
+            <header className='flex flex-wrap items-center justify-between gap-[16rem] border-b border-slate-100 px-[32rem] py-[24rem]'>
+              <div className='flex flex-col gap-[6rem]'>
+                <span className='text-[13rem] font-semibold uppercase tracking-[0.18em] text-slate-400'>Response</span>
+                <h2 className='text-[24rem] font-semibold text-slate-900'>{data.sectionTitle}</h2>
+                <div className='flex items-center gap-[12rem] text-[13rem] font-medium text-slate-500'>
+                  <span>{data.essayWordCount} words</span>
+                  <span className='size-[6rem] rounded-full bg-slate-200' />
+                  <span>{data.bandStatus}</span>
+                </div>
+              </div>
+              <div className='flex items-center gap-[12rem]'>
+                {partOptions.length > 1 && (
+                  <nav className='flex items-center gap-[8rem] rounded-[999rem] border border-slate-200 bg-slate-50 p-[6rem]' aria-label='Task selection'>
+                    {partOptions.map(option => (
+                      <button
+                        key={option.key}
+                        type='button'
+                        onClick={() => onPartChange(option.key)}
+                        className={cn(
+                          'rounded-[999rem] px-[18rem] py-[10rem] text-[13rem] font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 focus-visible:ring-offset-2',
+                          option.key === activePart ? 'bg-slate-900 text-white shadow-[0_8rem_20rem_-12rem_rgba(15,23,42,0.45)]' : 'text-slate-600 hover:bg-white'
+                        )}
+                      >
+                        {option.label}
+                      </button>
+                    ))}
+                  </nav>
+                )}
+                <button
+                  type='button'
+                  onClick={() => setOpenModal('task')}
+                  className='inline-flex items-center gap-[10rem] rounded-[16rem] bg-slate-900 px-[20rem] py-[12rem] text-[13rem] font-semibold text-white shadow-[0_18rem_32rem_-20rem_rgba(15,23,42,0.5)] transition hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 focus-visible:ring-offset-2'
+                >
+                  View task
+                  <ArrowRight className='size-[16rem]' aria-hidden='true' />
+                </button>
+              </div>
+            </header>
+            <div className='relative flex flex-1 flex-col overflow-hidden px-[28rem] pb-[28rem] pt-[24rem]'>
+              <div
+                ref={essayScrollRef}
+                className='relative h-full overflow-y-auto px-[12rem] pr-[24rem] scrollbar-thin scrollbar-track-transparent scrollbar-thumb-slate-200 hover:scrollbar-thumb-slate-300'
+                onScroll={updateScrollHint}
+              >
+                {paragraphs.length === 0 ? (
+                  <div className='flex h-full items-center justify-center rounded-[20rem] border border-slate-100 bg-[#F8FAFF] text-[15rem] font-medium text-slate-500'>
+                    Your essay will appear here as soon as it is available.
+                  </div>
+                ) : (
+                  <article className='mx-auto flex w-full max-w-[90%] flex-col gap-[22rem] px-[12rem] py-[4rem] text-[16rem] leading-[1.45] tracking-[-0.08rem] text-slate-700 tablet:max-w-[92%]'>
+                    {paragraphs.map((paragraph, index) => (
+                      <p key={index} className='whitespace-pre-wrap'>
+                        {paragraph}
+                      </p>
+                    ))}
+                  </article>
+                )}
+              </div>
+              <div
+                aria-hidden='true'
+                className={cn(
+                  'pointer-events-none absolute bottom-[24rem] left-[28rem] right-[28rem] h-[88rem] rounded-b-[24rem] bg-gradient-to-t from-white via-white/75 to-transparent transition-opacity duration-300',
+                  showScrollHint ? 'opacity-100' : 'opacity-0'
+                )}
+              />
+            </div>
+          </section>
+
+          <aside className='flex h-full min-w-[340rem] flex-[0.32] flex-col gap-[24rem]'>
+            <motion.section
+              initial={{ opacity: shouldReduceMotion ? 1 : 0, y: shouldReduceMotion ? 0 : 16, backgroundPosition: '0% 50%' }}
+              animate={{
+                opacity: 1,
+                y: 0,
+                backgroundPosition: shouldReduceMotion ? '50% 50%' : ['0% 50%', '100% 50%', '0% 50%'],
+              }}
+              transition={{
+                duration: shouldReduceMotion ? 0 : 0.5,
+                ease: 'easeOut',
+                backgroundPosition: {
+                  duration: shouldReduceMotion ? 0 : 12,
+                  ease: 'linear',
+                  repeat: shouldReduceMotion ? 0 : Infinity,
+                },
+              }}
+              className={cn(
+                'relative overflow-hidden rounded-[28rem] px-[32rem] py-[28rem] text-white shadow-[0_30rem_80rem_-48rem_rgba(62,104,221,0.35)]',
+                'bg-gradient-to-br',
+                bandVisual.gradient,
+                bandVisual.text
+              )}
+              style={{ backgroundSize: shouldReduceMotion ? undefined : '200% 200%' }}
+            >
+              <div className='flex flex-col gap-[12rem]'>
+                <span className='text-[13rem] font-semibold uppercase tracking-[0.2em] opacity-80'>Overall band</span>
+                <div className='flex items-end gap-[12rem]'>
+                  <span className='text-[62rem] font-semibold leading-none' title={cefrTooltip ?? undefined} aria-label={cefrTooltip ?? undefined}>
+                    {displayScore}
+                  </span>
+                  <span className='pb-[8rem] text-[14rem] font-medium opacity-80'>Based on IELTS band descriptors</span>
+                </div>
+                {cefrLine && <p className='text-[13rem] font-medium opacity-80'>{cefrLine}</p>}
+                {goalInfo && (
+                  <div className='mt-[12rem] space-y-[10rem]'>
+                    <div className='flex items-center justify-between text-[12rem] font-semibold opacity-80'>
+                      <span>Progress to goal</span>
+                      <span>{goalInfo.bounded}%</span>
+                    </div>
+                    <div className='h-[6rem] w-full rounded-[999rem] bg-white/25'>
+                      <motion.div
+                        className='h-full rounded-[999rem] bg-white'
+                        initial={{ width: 0 }}
+                        animate={{ width: `${goalInfo.bounded}%` }}
+                        transition={{ duration: shouldReduceMotion ? 0 : 0.6, ease: 'easeOut' }}
+                      />
+                    </div>
+                    <p className='text-[13rem] font-medium opacity-85'>{goalInfo.label}</p>
+                  </div>
+                )}
+                <p className='text-[13rem] font-medium opacity-75'>Band score generated against official IELTS criteria.</p>
+              </div>
+            </motion.section>
+
+            <section className='flex flex-1 flex-col rounded-[28rem] border border-slate-100 bg-white px-[32rem] py-[28rem] shadow-[0_24rem_64rem_-48rem_rgba(46,67,139,0.25)]'>
+              <header className='flex flex-col gap-[6rem]'>
+                <span className='text-[13rem] font-semibold uppercase tracking-[0.2em] text-slate-400'>Next steps</span>
+              </header>
+              <nav className='mt-[24rem] flex flex-1 flex-col gap-[14rem]' aria-label='Next steps options'>
+                {nextSteps.map(step => (
+                  <StepButton
+                    key={step.key}
+                    icon={step.icon}
+                    label={step.label}
+                    description={step.description}
+                    variant={step.variant}
+                    disabled={step.disabled}
+                    onClick={step.action}
+                  />
+                ))}
+              </nav>
+            </section>
+          </aside>
+        </div>
+      </div>
+
+      <ModalShell
+        title='Detailed feedback by band'
+        open={openModal === 'criteria'}
+        onOpenChange={open => setOpenModal(open ? 'criteria' : null)}
+        size='lg'
+        contentRef={node => {
+          criteriaContentRef.current = node;
+          if (!node) {
+            setCriteriaScrollProgress(0);
+            return;
+          }
+          const maxScroll = node.scrollHeight - node.clientHeight;
+          if (maxScroll <= 0) {
+            setCriteriaScrollProgress(1);
+          } else {
+            setCriteriaScrollProgress(Math.min(1, Math.max(0, node.scrollTop / maxScroll)));
+          }
+        }}
+        onContentScroll={handleCriteriaContentScroll}
+        progressSlot={<ModalScrollProgress value={criteriaScrollProgress} label='Scroll progress' />}
+      >
+        {availability.criteria && activeCriterion ? (
+          <div className='flex flex-col gap-[28rem]'>
+            <div
+              role='tablist'
+              aria-label='Detailed feedback criteria'
+              className='flex flex-wrap gap-[12rem] rounded-[22rem] border border-slate-100 bg-[#F4F6FF] p-[10rem]'
+              onKeyDown={handleCriterionTabsKeyDown}
+            >
+              {data.criteria.map((criterion, index) => {
+                const isActive = index === activeCriterionIndex;
+                return (
+                  <button
+                    key={criterion.key}
+                    ref={element => {
+                      tabRefs.current[index] = element;
+                    }}
+                    type='button'
+                    role='tab'
+                    aria-selected={isActive}
+                    tabIndex={isActive ? 0 : -1}
+                    onClick={() => setActiveCriterionIndex(index)}
+                    className={cn(
+                      'relative inline-flex items-center justify-center rounded-[18rem] px-[18rem] py-[12rem] text-[13rem] font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 focus-visible:ring-offset-2',
+                      isActive ? 'text-slate-900' : 'text-slate-500 hover:text-slate-700'
+                    )}
+                  >
+                    {isActive && (
+                      <motion.span
+                        layoutId='criterion-tab-indicator'
+                        className='absolute inset-0 rounded-[18rem] bg-white shadow-[0_12rem_36rem_-20rem_rgba(46,67,139,0.3)]'
+                        transition={{ duration: shouldReduceMotion ? 0 : 0.24, ease: 'easeOut' }}
+                      />
+                    )}
+                    <span className='relative z-[1]'>{criterion.title}</span>
+                  </button>
+                );
+              })}
+            </div>
+
+            <AnimatePresence mode='wait'>
+              <motion.div
+                key={activeCriterion.key}
+                initial={{ opacity: shouldReduceMotion ? 1 : 0, y: shouldReduceMotion ? 0 : 18 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: shouldReduceMotion ? 1 : 0, y: shouldReduceMotion ? 0 : -18 }}
+                transition={{ duration: shouldReduceMotion ? 0 : 0.32, ease: 'easeOut' }}
+                className='flex flex-col gap-[24rem]'
+              >
+                <div className='rounded-[24rem] border border-slate-100 bg-[#F8FAFF] p-[24rem]'>
+                  <div className='flex flex-wrap items-center justify-between gap-[18rem]'>
+                    <div className='max-w-[520rem]'>
+                      <p className='text-[13rem] font-semibold uppercase tracking-[0.18em] text-slate-500'>Criterion</p>
+                      <h3 className='mt-[6rem] text-[22rem] font-semibold text-slate-900'>{activeCriterion.title}</h3>
+                      <p className='mt-[6rem] text-[14rem] text-slate-500'>{activeCriterion.description}</p>
+                    </div>
+                    <span className={cn('rounded-[999rem] px-[20rem] py-[10rem] text-[16rem] font-semibold', badgeByScore(activeCriterion.score))}>
+                      {formatBandScore(activeCriterion.score)}
+                    </span>
+                  </div>
+                  {activeCriterion.feedback && <p className='mt-[16rem] text-[15rem] leading-[1.7] text-slate-700'>{activeCriterion.feedback}</p>}
+                </div>
+
+                <div className='rounded-[24rem] border border-d-blue/25 bg-d-blue-secondary/70 px-[24rem] py-[20rem] text-[15rem] leading-[1.65] text-d-black/80'>
+                  <p className='text-[13rem] font-semibold uppercase tracking-[0.18em] text-d-black/60'>Focus next</p>
+                  <p className='mt-[10rem]'>{activeCriterion.recommendation || 'We will highlight the next priority action as soon as it becomes available.'}</p>
+                </div>
+
+                <div className='flex flex-col gap-[18rem]'>
+                  <div className='flex items-center gap-[10rem]'>
+                    <CheckCircle2 className='size-[16rem] text-slate-500' />
+                    <p className='text-[14rem] font-semibold uppercase tracking-[0.18em] text-slate-500'>Sub-criteria insights</p>
+                  </div>
+                  {activeCriterion.breakdown.length > 0 ? (
+                    <div className='flex flex-col gap-[14rem]'>
+                      {activeCriterion.breakdown.map(item => (
+                        <article
+                          key={`${activeCriterion.key}-${item.name}`}
+                          className='space-y-[10rem] rounded-[22rem] border border-slate-100 bg-white px-[24rem] py-[18rem] shadow-[0_16rem_48rem_-32rem_rgba(15,23,42,0.28)]'
+                        >
+                          <div className='flex flex-wrap items-center justify-between gap-[12rem]'>
+                            <div>
+                              <h4 className='text-[15rem] font-semibold text-slate-900'>{item.name}</h4>
+                              <p className='text-[13rem] text-slate-500'>Weighted within this band descriptor.</p>
+                            </div>
+                            <span className={cn('rounded-[999rem] px-[16rem] py-[6rem] text-[13rem] font-semibold', badgeByScore(item.score))}>
+                              {formatBandScore(item.score)}
+                            </span>
+                          </div>
+                          <p className='text-[14rem] leading-[1.6] text-slate-700'>{item.feedback}</p>
+                          {item.recommendation && <p className='text-[13rem] font-medium text-slate-600'>Action: {item.recommendation}</p>}
+                        </article>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className='text-[14rem] text-slate-500'>Sub-criteria insights will appear here once they are generated.</p>
+                  )}
+                </div>
+              </motion.div>
+            </AnimatePresence>
+          </div>
+        ) : (
+          <EmptyModalState description='Detailed feedback is not available yet. Check back once evaluation is complete.' />
+        )}
+      </ModalShell>
+
+      <ModalShell title='Feedback summary' open={openModal === 'summary'} onOpenChange={open => setOpenModal(open ? 'summary' : null)}>
+        <div className='flex flex-col gap-[24rem] text-[15rem] leading-[1.68] text-slate-700'>
+          <SummarySection title='Overall impression'>
+            {data.generalFeedback?.overall ? (
+              <p className='whitespace-pre-wrap'>{data.generalFeedback.overall}</p>
+            ) : (
+              <p className='text-[14rem] text-slate-500'>Overall feedback will appear here once the evaluation is complete.</p>
+            )}
+          </SummarySection>
+
+          <SummarySection title='Main issues'>
+            {data.generalFeedback?.weaknesses && data.generalFeedback.weaknesses.length > 0 ? (
+              <ul className='flex list-disc flex-col gap-[8rem] pl-[20rem]'>
+                {data.generalFeedback.weaknesses.map((item, index) => (
+                  <li key={`weakness-${index}`} className='text-[14rem]'>
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className='text-[14rem] text-slate-500'>Main issues will be listed as soon as they are available.</p>
+            )}
+          </SummarySection>
+
+          <SummarySection title='Notable strengths'>
+            {data.generalFeedback?.strengths && data.generalFeedback.strengths.length > 0 ? (
+              <ul className='flex list-disc flex-col gap-[8rem] pl-[20rem]'>
+                {data.generalFeedback.strengths.map((item, index) => (
+                  <li key={`strength-${index}`} className='text-[14rem]'>
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className='text-[14rem] text-slate-500'>We will surface strengths once they are detected.</p>
+            )}
+          </SummarySection>
+
+          <SummarySection title='Recommendations'>
+            {data.generalFeedback?.recommendation ? (
+              <p className='whitespace-pre-wrap'>{data.generalFeedback.recommendation}</p>
+            ) : (
+              <p className='text-[14rem] text-slate-500'>Recommendations will appear once this section is generated.</p>
+            )}
+          </SummarySection>
+        </div>
+      </ModalShell>
+
+      <ModalShell
+        title='Original IELTS Task'
+        open={openModal === 'task'}
+        onOpenChange={open => setOpenModal(open ? 'task' : null)}
+        renderFooter={({ close }) => (
+          <div className='flex flex-wrap items-center justify-between gap-[12rem]'>
+            <button
+              type='button'
+              onClick={close}
+              className='rounded-[16rem] border border-slate-200 px-[22rem] py-[12rem] text-[14rem] font-semibold text-slate-600 transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 focus-visible:ring-offset-2'
+            >
+              Close
+            </button>
+            <button
+              type='button'
+              onClick={() => setOpenModal('ideal')}
+              disabled={!availability.ideal}
+              className={cn(
+                'inline-flex items-center gap-[8rem] rounded-[16rem] bg-slate-900 px-[24rem] py-[12rem] text-[14rem] font-semibold text-white transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 focus-visible:ring-offset-2',
+                !availability.ideal && 'cursor-not-allowed bg-slate-300 text-slate-500 focus-visible:ring-0'
+              )}
+            >
+              Open ideal response
+              <ArrowRight className='size-[16rem]' />
+            </button>
+          </div>
+        )}
+      >
+        <div className='flex flex-col gap-[24rem] text-[15rem] leading-[1.65] text-slate-700'>
+          {data.task.instruction && (
+            <SummarySection title='Instructions'>
+              <p className='whitespace-pre-wrap'>{data.task.instruction}</p>
+            </SummarySection>
+          )}
+          <SummarySection title='Prompt'>
+            <p className='whitespace-pre-wrap'>{data.task.prompt}</p>
+          </SummarySection>
+          {data.task.media && data.task.media.length > 0 && (
+            <div className='flex flex-col gap-[16rem]'>
+              <div className='flex items-center gap-[10rem] text-[14rem] font-semibold text-slate-500'>
+                <FileText className='size-[16rem]' /> Task visuals
+              </div>
+              <div className='grid gap-[16rem]'>
+                {data.task.media.map((mediaItem, index) => (
+                  <figure key={`${mediaItem.url}-${index}`} className='overflow-hidden rounded-[22rem] border border-slate-100 bg-slate-50'>
+                    <img src={mediaItem.url} alt={mediaItem.alt ?? 'Task reference'} className='h-auto w-full object-contain' />
+                    {mediaItem.alt && <figcaption className='px-[18rem] py-[12rem] text-[13rem] text-slate-500'>{mediaItem.alt}</figcaption>}
+                  </figure>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      </ModalShell>
+
+      <ModalShell title='Ideal response example' open={openModal === 'ideal'} onOpenChange={open => setOpenModal(open ? 'ideal' : null)}>
+        {availability.ideal && data.idealResponse?.text ? (
+          <div className='flex flex-col gap-[20rem]'>
+            <p className='text-[14rem] font-medium text-slate-500'>Use this sample for inspiration—tailor your own response rather than copying it.</p>
+            <article className='space-y-[16rem] rounded-[24rem] border border-slate-100 bg-[#F8FAFF] px-[24rem] py-[24rem] text-[15rem] leading-[1.7] text-slate-700'>
+              {data.idealResponse.text.split(/\n{2,}/g).map((paragraph, index) => (
+                <p key={index} className='whitespace-pre-wrap'>
+                  {paragraph.trim()}
+                </p>
+              ))}
+            </article>
+          </div>
+        ) : (
+          <EmptyModalState description='The exemplar response is on its way. Please check again soon.' />
+        )}
+      </ModalShell>
+    </div>
+  );
+}
+
+interface StepButtonProps {
+  icon: LucideIcon;
+  label: string;
+  description: string;
+  variant: 'primary' | 'secondary' | 'tertiary';
+  disabled?: boolean;
+  onClick: () => void;
+}
+
+function StepButton({ icon: Icon, label, variant, disabled, onClick }: StepButtonProps) {
+  const baseClasses =
+    'group flex min-h-[82rem] items-center justify-between gap-[16rem] rounded-[24rem] border px-[24rem] py-[20rem] text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 focus-visible:ring-offset-2';
+  const variantClasses: Record<StepButtonProps['variant'], string> = {
+    primary: 'border-transparent bg-gradient-to-r from-[#4F86F7] to-[#7C5CFF] text-white shadow-[0_24rem_48rem_-32rem_rgba(72,85,190,0.65)] hover:brightness-[1.04]',
+    secondary: 'border-slate-200 bg-white text-slate-800 hover:bg-slate-50',
+    tertiary: 'border-slate-100 bg-d-blue-secondary text-slate-700 hover:bg-white',
+  };
+  const iconWrapperClasses: Record<StepButtonProps['variant'], string> = {
+    primary: 'bg-white/20 text-white',
+    secondary: 'bg-slate-100 text-slate-600',
+    tertiary: 'bg-white text-slate-600',
+  };
+
+  return (
+    <motion.button
+      type='button'
+      onClick={onClick}
+      disabled={disabled}
+      className={cn(
+        baseClasses,
+        disabled ? 'cursor-not-allowed border-slate-100 bg-slate-50 text-slate-300 hover:bg-slate-50 focus-visible:ring-0' : variantClasses[variant]
+      )}
+      whileHover={
+        disabled
+          ? undefined
+          : {
+              y: -4,
+              scale: 1.01,
+              boxShadow: variant === 'primary' ? '0 24px 56px -30px rgba(72,85,190,0.75)' : '0 18px 40px -32px rgba(15,23,42,0.35)',
+            }
+      }
+      whileTap={disabled ? undefined : { scale: 0.99 }}
+    >
+      <span className='flex items-center gap-[16rem] text-left'>
+        <span className={cn('mt-[2rem] rounded-[16rem] p-[10rem]', disabled ? 'bg-slate-100 text-slate-300' : iconWrapperClasses[variant])}>
+          <Icon className='size-[18rem]' aria-hidden='true' />
+        </span>
+        <span className='text-[15rem] font-semibold leading-tight'>{label}</span>
+      </span>
+      <ChevronRight
+        className={cn(
+          'size-[18rem] transition-transform',
+          disabled ? 'text-slate-300' : 'group-hover:translate-x-[4rem]',
+          !disabled && variant === 'primary' ? 'text-white/80' : !disabled ? 'text-slate-500' : ''
+        )}
+        aria-hidden='true'
+      />
+    </motion.button>
+  );
+}
+
+interface SummarySectionProps {
+  title: string;
+  children: ReactNode;
+}
+
+function SummarySection({ title, children }: SummarySectionProps) {
+  return (
+    <section className='flex flex-col gap-[14rem] rounded-[24rem] border border-slate-100 bg-white px-[26rem] py-[22rem] shadow-[0_18rem_40rem_-34rem_rgba(15,23,42,0.18)]'>
+      <div className='flex flex-col gap-[8rem]'>
+        <h4 className='text-[13rem] font-semibold uppercase tracking-[0.18em] text-slate-500'>{title}</h4>
+        <div className='h-[1px] w-full bg-slate-100' />
+      </div>
+      <div className='text-[14rem] leading-[1.68] text-slate-700'>{children}</div>
+    </section>
+  );
+}

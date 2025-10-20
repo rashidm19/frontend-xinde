@@ -7,14 +7,15 @@ import { useSubscriptionStore } from '@/stores/subscriptionStore';
 
 export const SubscriptionInitializer = () => {
   const fetchSubscription = useSubscriptionStore(state => state.fetchSubscription);
+  const fetchBalance = useSubscriptionStore(state => state.fetchBalance);
   const pathname = usePathname();
   const isFirstPathCheck = useRef(true);
 
   useEffect(() => {
-    fetchSubscription().catch(() => {
+    Promise.all([fetchSubscription(), fetchBalance()]).catch(() => {
       // errors are handled within the store
     });
-  }, [fetchSubscription]);
+  }, [fetchBalance, fetchSubscription]);
 
   useEffect(() => {
     if (isFirstPathCheck.current) {
@@ -22,10 +23,10 @@ export const SubscriptionInitializer = () => {
       return;
     }
 
-    fetchSubscription(true).catch(() => {
+    Promise.all([fetchSubscription(true), fetchBalance(true)]).catch(() => {
       // errors are handled within the store
     });
-  }, [fetchSubscription, pathname]);
+  }, [fetchBalance, fetchSubscription, pathname]);
 
   useEffect(() => {
     if (typeof document === 'undefined') {
@@ -34,7 +35,7 @@ export const SubscriptionInitializer = () => {
 
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
-        fetchSubscription(true).catch(() => {
+        Promise.all([fetchSubscription(true), fetchBalance(true)]).catch(() => {
           // errors are handled within the store
         });
       }
@@ -45,7 +46,7 @@ export const SubscriptionInitializer = () => {
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, [fetchSubscription]);
+  }, [fetchBalance, fetchSubscription]);
 
   return null;
 };

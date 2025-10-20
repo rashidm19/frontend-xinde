@@ -4,7 +4,7 @@ import * as React from 'react';
 import { useSearchParams } from 'next/navigation';
 
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { refreshSubscription } from '@/stores/subscriptionStore';
+import { refreshSubscriptionAndBalance } from '@/stores/subscriptionStore';
 import { useCustomTranslations } from '@/hooks/useCustomTranslations';
 
 export const SubscriptionPaymentStatusModal = () => {
@@ -32,7 +32,7 @@ export const SubscriptionPaymentStatusModal = () => {
     window.history.replaceState(null, '', url.toString());
 
     if (normalizedStatus === 'success') {
-      refreshSubscription().catch(() => {
+      refreshSubscriptionAndBalance().catch(() => {
         // Background refresh; errors will be handled elsewhere by the app.
       });
     }

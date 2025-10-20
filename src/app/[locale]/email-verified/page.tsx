@@ -1,75 +1,64 @@
 'use client';
 
+import { useEffect } from 'react';
+
+import { motion, useReducedMotion } from 'framer-motion';
 import Link from 'next/link';
-import { CheckCircle2 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { useCustomTranslations } from '@/hooks/useCustomTranslations';
+import { AuthButton, AuthLayout, FormCard } from '@/components/auth';
 
-export default function EmailVerified() {
-  const { t, tActions } = useCustomTranslations('emailVerified');
+interface PageProps {
+  params: {
+    locale: string;
+  };
+}
 
-  const continueHref = sanitizeHref(t('continueHref'), '/login');
-  const secondaryHref = sanitizeHref(t('secondaryLinkHref'), '');
-  const secondaryLabel = sanitizeLabel(t('secondaryLinkLabel'), 'secondaryLinkLabel');
-  const showSecondaryLink = Boolean(secondaryHref && secondaryLabel);
+export default function EmailVerifiedPage({ params }: PageProps) {
+  const { locale } = params;
+  const router = useRouter();
+  const prefersReducedMotion = useReducedMotion();
+
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      router.prefetch(`/${locale}`);
+    }, 0);
+    return () => clearTimeout(timeout);
+  }, [locale, router]);
 
   return (
-    <main className='relative flex min-h-[100vh] w-full items-center justify-center bg-background px-[16rem] py-[64rem] tablet:px-[40rem] tablet:py-[96rem]'>
-      <div className='container flex w-full justify-center'>
-        <Card
-          role='status'
-          aria-live='polite'
-          className='relative flex w-full max-w-[620rem] flex-col items-center rounded-[32rem] border border-d-black/10 bg-card/90 px-[32rem] py-[48rem] text-center shadow-card backdrop-blur supports-[backdrop-filter]:bg-card/70 tablet:px-[48rem] tablet:py-[64rem]'
-        >
-          <CardHeader className='flex w-full flex-col items-center gap-y-[24rem] space-y-0 p-0 tablet:gap-y-[32rem]'>
-            <span className='flex h-[120rem] w-[120rem] items-center justify-center rounded-full bg-d-mint'>
-              <CheckCircle2 aria-hidden='true' className='h-[64rem] w-[64rem] text-d-green' />
-              <span className='sr-only'>{t('successIconLabel')}</span>
-            </span>
-            <CardTitle className='font-poppins text-[40rem] font-semibold leading-[48rem] tracking-[-2rem] text-card-foreground tablet:text-[48rem] tablet:leading-[56rem]'>
-              {t('headline')}
-            </CardTitle>
-            <CardDescription className='mx-auto max-w-[440rem] text-[18rem] leading-[28rem] text-muted-foreground tablet:text-[20rem] tablet:leading-[30rem]'>
-              {t('description')}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className='mt-[32rem] flex w-full flex-col gap-y-[20rem] space-y-0 p-0'>
-            <Button
-              asChild
-              className='h-[56rem] w-full rounded-full text-[18rem] font-semibold leading-none tablet:h-[60rem] tablet:text-[20rem]'
-              autoFocus
+    <AuthLayout>
+      <FormCard title='You’re all set' subtitle='Thanks for confirming your email. Let’s keep the momentum going.'>
+        <div className='flex flex-col items-center gap-[24rem]'>
+          <motion.span
+            initial={prefersReducedMotion ? undefined : { scale: 0.8, opacity: 0 }}
+            animate={prefersReducedMotion ? undefined : { scale: [1, 1.06, 1], opacity: 1 }}
+            transition={prefersReducedMotion ? undefined : { duration: 0.9, repeat: Infinity, repeatDelay: 2.2 }}
+            className='flex size-[72rem] items-center justify-center rounded-full bg-emerald-500 text-white shadow-[0_28rem_90rem_-60rem_rgba(16,185,129,0.75)]'
+            aria-hidden='true'
+          >
+            <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='1.5' className='size-[36rem]'>
+              <path strokeLinecap='round' strokeLinejoin='round' d='m4.5 12.75 6 6 9-13.5' />
+            </svg>
+          </motion.span>
+
+          <p className='text-center text-[15rem] leading-relaxed text-gray-500'>
+            Enjoy full access to StudyBox. Your dashboard is already prepping gentle nudges to keep you moving.
+          </p>
+
+          <div className='flex w-full flex-col gap-[12rem]'>
+            <AuthButton type='button' onClick={() => router.push(`/${locale}/login`)}>
+              Login now
+            </AuthButton>
+            <Link
+              href={`https://www.studybox.kz/${locale}`}
+              className='text-center text-[13rem] font-medium text-blue-600 transition hover:text-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-200'
             >
-              <Link href={continueHref}>{tActions('continue')}</Link>
-            </Button>
-            {showSecondaryLink ? (
-              <Link
-                href={secondaryHref}
-                className='text-center text-[16rem] font-medium leading-[24rem] text-muted-foreground underline-offset-[6rem] transition-colors hover:text-card-foreground hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-d-green focus-visible:ring-offset-2 focus-visible:ring-offset-background'
-              >
-                {secondaryLabel}
-              </Link>
-            ) : null}
-          </CardContent>
-        </Card>
-      </div>
-    </main>
+              Back to the homepage
+            </Link>
+          </div>
+        </div>
+      </FormCard>
+    </AuthLayout>
   );
-}
-
-function sanitizeHref(value: string, fallback: string) {
-  if (!value || value === 'continueHref' || value === 'secondaryLinkHref' || value.startsWith('emailVerified.')) {
-    return fallback;
-  }
-
-  return value;
-}
-
-function sanitizeLabel(value: string, key: string) {
-  if (!value || value === key || value === `emailVerified.${key}`) {
-    return '';
-  }
-
-  return value;
 }

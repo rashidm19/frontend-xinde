@@ -5,6 +5,7 @@ import React, { useState } from 'react';
 import { useCustomTranslations } from '@/hooks/useCustomTranslations';
 import { useSubscriptionGate } from '@/hooks/useSubscriptionGate';
 import { SubscriptionAccessLabel } from '@/components/SubscriptionAccessLabel';
+import { PracticeWritingCard } from '@/components/practice/PracticeWritingCard';
 
 export default function Page() {
   const { t, tImgAlts, tCommon, tActions } = useCustomTranslations('practice.writing.rules');
@@ -12,56 +13,45 @@ export default function Page() {
   const [isStarting, setIsStarting] = useState(false);
 
   return (
-    <main className='realtive min-h-screen bg-d-blue-secondary'>
-      <img src='/images/illustration_torusArray--02.png' className='absolute bottom-0 left-0 h-auto w-[320rem] opacity-80' alt={tImgAlts('flower')} />
-      <img src='/images/illustration_molecule.png' className='absolute right-0 top-0 h-auto w-[250rem] opacity-50' alt={tImgAlts('molecule')} />
-      <div className='d container max-w-[1440rem] px-[270rem] pb-[150rem] pt-[80rem]'>
-        <div className='shadow-car flex flex-col gap-[48rem] rounded-[16rem] bg-white p-[64rem]'>
-          {/* // * Header */}
-          <div className='flex items-center gap-x-[12rem]'>
-            <div className='flex size-[52rem] items-center justify-center bg-d-blue-secondary'>
-              <img src='/images/icon_writingSection.svg' className='size-[24rem]' alt={tImgAlts('writing')} />
-            </div>
-            <div className='flex flex-col gap-y-[6rem]'>
-              <div className='text-[16rem] font-medium leading-none text-d-black/80'>{tCommon('writing')}</div>
-              <div className='text-[20rem] font-medium leading-none'>{tCommon('minCount', { count: 60 })}</div>
-            </div>
-            <div className='ml-[12rem] flex flex-col gap-y-[6rem]'>
-              <div className='text-[16rem] font-medium leading-none text-d-black/80'>{tCommon('parts')}</div>
-              <div className='text-[20rem] font-medium leading-none'>2</div>
-            </div>
-          </div>
-          {/* // * Selection */}
-          <div>
-            <h1 className='mb-[32rem] text-[32rem] font-medium leading-none'>{t('title')}</h1>
-            <p className='mb-[48rem] text-[20rem] font-medium leading-tight text-d-black/80'>{t('text')}</p>
-            <h1 className='mb-[32rem] text-[32rem] font-medium leading-none'>{tCommon('marking')}</h1>
-            <p className='mb-[48rem] text-[20rem] font-medium leading-tight text-d-black/80'>{t('marking')}</p>
-            <Link
-              href='/practice/writing/test'
-              onClick={async event => {
-                if (isStarting || isCheckingAccess) {
-                  event.preventDefault();
-                  return;
-                }
+    <main className='relative min-h-screen bg-d-blue-secondary'>
+      <div className='relative z-[1] flex min-h-[100dvh] w-full items-center justify-center px-[16rem] py-[48rem]'>
+        <PracticeWritingCard
+          closeHref='/practice'
+          closeAlt={tImgAlts('close')}
+          iconAlt={tImgAlts('writing')}
+          headingLabel={tCommon('writing')}
+          durationLabel={tCommon('minCount', { count: 60 })}
+          partsLabel={tCommon('parts')}
+          partsValue='2'
+        >
+          <h1 className='mb-[8rem] text-[20rem] font-semibold leading-tight text-d-black'>{t('title')}</h1>
+          <p className='mb-[16rem] text-[14rem] leading-[1.65] text-d-black/80'>{t('text')}</p>
+          <h1 className='mb-[8rem] text-[20rem] font-semibold leading-tight text-d-black'>{tCommon('marking')}</h1>
+          <p className='mb-[24rem] text-[14rem] leading-[1.65] text-d-black/80'>{t('marking')}</p>
+          <Link
+            href='/practice/writing/test'
+            onClick={async event => {
+              if (isStarting || isCheckingAccess) {
+                event.preventDefault();
+                return;
+              }
 
-                setIsStarting(true);
-                const canStart = await requireSubscription();
-                setIsStarting(false);
+              setIsStarting(true);
+              const canStart = await requireSubscription();
+              setIsStarting(false);
 
-                if (!canStart) {
-                  event.preventDefault();
-                }
-              }}
-              className={`mx-auto flex h-[63rem] w-[280rem] items-center justify-center rounded-[40rem] bg-d-green text-[20rem] font-semibold hover:bg-d-green/40 ${
-                isCheckingAccess || isStarting ? 'pointer-events-none cursor-wait opacity-70' : ''
-              }`}
-            >
-              {isCheckingAccess || isStarting ? '...' : tActions('continue')}
-            </Link>
-            <SubscriptionAccessLabel className='mt-[12rem] text-center' />
-          </div>
-        </div>
+              if (!canStart) {
+                event.preventDefault();
+              }
+            }}
+            className={`mx-auto flex h-[56rem] w-[240rem] items-center justify-center rounded-[32rem] bg-d-green text-[18rem] font-semibold hover:bg-d-green/40 ${
+              isCheckingAccess || isStarting ? 'pointer-events-none cursor-wait opacity-70' : ''
+            }`}
+          >
+            {isCheckingAccess || isStarting ? '...' : tActions('continue')}
+          </Link>
+          <SubscriptionAccessLabel className='mt-[10rem] text-center text-[12rem]' />
+        </PracticeWritingCard>
       </div>
     </main>
   );

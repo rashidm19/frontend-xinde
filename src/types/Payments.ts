@@ -2,7 +2,6 @@ export interface IPaymentOrder {
   orderId: number;
   invoiceId?: string | null;
   amount: number;
-  discount_amount?: number | null;
   token?: {
     access_token: string;
   } | null;

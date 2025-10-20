@@ -8,7 +8,7 @@ import { SubscriptionAccessLabel } from '@/components/SubscriptionAccessLabel';
 const Mic = dynamic(() => import('../../../../practice/speaking/mic-check/_components/Mic').then(mod => mod.default), { ssr: false });
 
 export default function Page() {
-  const { requireSubscription, isCheckingAccess } = useSubscriptionGate();
+  const { requireSubscription, isCheckingAccess } = useSubscriptionGate('mock');
 
   return (
     <main className='min-h-screen overflow-hidden bg-d-red-secondary'>

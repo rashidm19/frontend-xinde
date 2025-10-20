@@ -14,7 +14,7 @@ export default function Page() {
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   const [currentTimestamp, setCurrentTimestamp] = useState<number>();
   const [playStatus, setPlayStatus] = useState<'paused' | 'playing'>('paused');
-  const { requireSubscription, isCheckingAccess } = useSubscriptionGate();
+  const { requireSubscription, isCheckingAccess } = useSubscriptionGate('mock');
 
   useEffect(() => {
     const fetchAudioFile = async () => {

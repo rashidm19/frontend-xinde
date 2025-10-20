@@ -1,8 +1,11 @@
 import axiosInstance from '@/lib/axiosInstance';
-import { IClientSubscription, ISubscriptionPlan } from '@/types/Billing';
+import { IBillingBalance, IClientSubscription, ISubscriptionPlan } from '@/types/Billing';
 
 const CURRENT_SUBSCRIPTION_ENDPOINT = '/billing/subscriptions/current';
 const SUBSCRIPTION_PLANS_ENDPOINT = '/billing/subscriptions/plans';
+const SUBSCRIPTION_CANCEL_ENDPOINT = '/billing/subscriptions/cancel';
+const SUBSCRIPTION_RESUME_ENDPOINT = '/billing/subscriptions/resume';
+const BILLING_BALANCE_ENDPOINT = '/billing/balance';
 
 type ApiPayload<T> = { data?: T } | T | null | undefined;
 
@@ -63,4 +66,31 @@ export const fetchSubscriptionPlans = async (): Promise<ISubscriptionPlan[]> => 
   }
 
   return [];
+};
+
+export const fetchBillingBalance = async (): Promise<IBillingBalance> => {
+  const response = await axiosInstance.get(BILLING_BALANCE_ENDPOINT);
+  const payload = unwrapData<IBillingBalance>(response.data);
+
+  return (
+    payload ?? {
+      tenge_balance: 0,
+      mock_balance: 0,
+      practice_balance: 0,
+    }
+  );
+};
+
+export const cancelSubscription = async (): Promise<IClientSubscription | null> => {
+  const { data } = await axiosInstance.post(SUBSCRIPTION_CANCEL_ENDPOINT, {});
+  const payload = unwrapData<IClientSubscription>(data);
+
+  return normalizeSubscription(payload ?? null);
+};
+
+export const resumeSubscription = async (): Promise<IClientSubscription | null> => {
+  const { data } = await axiosInstance.post(SUBSCRIPTION_RESUME_ENDPOINT, {});
+  const payload = unwrapData<IClientSubscription>(data);
+
+  return normalizeSubscription(payload ?? null);
 };

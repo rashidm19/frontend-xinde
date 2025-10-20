@@ -11,7 +11,7 @@ export const MockBySections = () => {
   const router = useRouter();
   const [isLoadingPart, setIsLoadingPart] = useState<string | null>(null);
   const { setMockData } = mockStore();
-  const { requireSubscription, isCheckingAccess } = useSubscriptionGate();
+  const { requireSubscription, isCheckingAccess } = useSubscriptionGate('mock');
 
   const startMock = async (part: string) => {
     if (isLoadingPart || isCheckingAccess) {

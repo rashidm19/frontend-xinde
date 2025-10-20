@@ -1,0 +1,67 @@
+"use client";
+
+import { useEffect } from "react";
+
+import { motion, useReducedMotion } from "framer-motion";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+
+import { AuthButton, AuthLayout, FormCard } from "@/components/auth";
+
+interface PageProps {
+  params: {
+    locale: string;
+  };
+}
+
+export default function PasswordSentPage({ params }: PageProps) {
+  const { locale } = params;
+  const router = useRouter();
+  const prefersReducedMotion = useReducedMotion();
+
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      router.prefetch(`/${locale}/login`);
+    }, 0);
+    return () => clearTimeout(timeout);
+  }, [locale, router]);
+
+  return (
+    <AuthLayout>
+      <FormCard
+        title="Email on its way"
+        subtitle="We’ve sent over a reset link. It should arrive in the next minute or two."
+      >
+        <div className="flex flex-col items-center gap-[24rem]">
+          <motion.span
+            initial={prefersReducedMotion ? undefined : { scale: 0.8, opacity: 0 }}
+            animate={prefersReducedMotion ? undefined : { scale: [1, 1.05, 1], opacity: 1 }}
+            transition={prefersReducedMotion ? undefined : { duration: 0.9, repeat: Infinity, repeatDelay: 2 }}
+            className="flex size-[72rem] items-center justify-center rounded-full bg-emerald-50 text-emerald-500 shadow-[0_24rem_80rem_-60rem_rgba(16,185,129,0.65)]"
+            aria-hidden="true"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="size-[36rem]">
+              <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+            </svg>
+          </motion.span>
+
+          <p className="text-center text-[15rem] leading-relaxed text-gray-500">
+            If it doesn’t show up, peek at your promotions or spam folder, then request a fresh link.
+          </p>
+
+          <div className="flex w-full flex-col gap-[12rem]">
+            <AuthButton type="button" onClick={() => router.push(`/${locale}/login`)}>
+              Return to login
+            </AuthButton>
+            <Link
+              href={`/${locale}/login`}
+              className="text-center text-[13rem] font-medium text-blue-600 transition hover:text-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-200"
+            >
+              Back to login
+            </Link>
+          </div>
+        </div>
+      </FormCard>
+    </AuthLayout>
+  );
+}

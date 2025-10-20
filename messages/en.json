@@ -25,7 +25,7 @@
     "correctAnswer": "Correct answer",
     "overallScore": "Overall score",
     "tasksSelection": "Tasks selection",
-    "pleaseSelectTopic": "Please select a topic.",
+    "pleaseSelectType": "Please select a type.",
     "random": "Random",
     "practicePartNumber": "Practice - part {number}",
     "wordsCount": "Words: {count}",
@@ -62,7 +62,11 @@
     "play": "Play",
     "submit": "Submit",
     "next": "Next",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "practiceNow": "Practice now",
+    "review": "Review",
+    "showMore": "Show more",
+    "refresh": "Refresh"
   },
   "subscription": {
     "availableLabel": "Available with subscription",
@@ -140,7 +144,8 @@
     "cross": "Cross",
     "start": "Start",
     "globe": "Globe",
-    "remove": "Remove"
+    "remove": "Remove",
+    "practiceHistoryIllustration": "Practice illustration"
   },
   "header": {
     "menu": {
@@ -148,7 +153,62 @@
       "link_2": "MOCK",
       "link_3": "Notes"
     },
+    "accountMenu": {
+      "open": "Open account menu",
+      "subscription": "Subscription & billing",
+      "viewPlans": "View plans",
+      "buyPractices": "Buy practices",
+      "settings": "Profile settings",
+      "language": "Change language",
+      "logout": "Log out",
+      "user": "Guest"
+    },
+    "chips": {
+      "subscription": "Subscription active",
+      "practiceBalance": "Practice: {count, plural, one {# credit} other {# credits}}",
+      "balanceSublabel": "Practice balance: {count}",
+      "buyPractices": "Buy practices"
+    },
     "support": "Support"
+  },
+  "subscriptionModal": {
+    "title": "Subscription & billing",
+    "description": "Manage your plan, renewal and practice credits in one place.",
+    "status": {
+      "active": "Active subscription",
+      "inactive": "No active subscription"
+    },
+    "labels": {
+      "status": "Status",
+      "plan": "Plan",
+      "renewal": "Next renewal"
+    },
+    "plan": {
+      "none": "No plan selected"
+    },
+    "renewal": {
+      "renewsOn": "Renews on {date}",
+      "cancelsOn": "Cancels on {date}",
+      "unknown": "Renewal date unavailable"
+    },
+    "balance": {
+      "label": "Practice balance",
+      "count": "{count, plural, one {# credit available} other {# credits available}}",
+      "none": "No practice credits"
+    },
+    "actions": {
+      "manage": "Manage subscription",
+      "history": "Billing history",
+      "refresh": "Refresh",
+      "retry": "Retry"
+    },
+    "error": {
+      "subscription": "We couldn’t load your subscription details.",
+      "balance": "We couldn’t load your practice balance."
+    },
+    "empty": {
+      "description": "You don’t have an active subscription yet."
+    }
   },
   "headerDuringTest": {
     "audioIsPlaying": "Audio is playing"
@@ -325,12 +385,57 @@
       "title": "IELTS Target Assessment",
       "selectGoal": "Select the score you would like to achieve"
     },
-    "timeSpent": {
-      "title": "Time spent on studying",
-      "dailyAverage": "Daily average",
-      "weekTotal": "Week total",
-      "weeklyGoal": "Weekly goal",
-      "start": "Start practicing by section or take MOCK test to view results"
+    "practiceHistory": {
+      "title": "Practice history",
+      "subtitle": "Latest attempts and progress by section.",
+      "filters": {
+        "all": "All"
+      },
+      "stats": {
+        "sessions": "Sessions",
+        "medianBand": "Median band",
+        "streak": "Streak",
+        "streakValue": "{count}d"
+      },
+      "emptyFilter": {
+        "title": "No sessions for the selected filter",
+        "description": "Clear the filter or continue practicing in the needed section.",
+        "reset": "Reset filters",
+        "start": "Start practice"
+      },
+      "metrics": {
+        "band": "Band",
+        "part": "Part",
+        "tag": "Tag"
+      },
+      "groups": {
+        "today": "Today",
+        "thisWeek": "This week",
+        "earlier": "Earlier"
+      },
+      "status": {
+        "completed": "Completed",
+        "cancelled": "Cancelled",
+        "review": "Reviewed"
+      },
+      "streakBanner": "🔥 {count}-day streak — keep going!",
+      "empty": {
+        "title": "No practice sessions yet",
+        "description": "Start any section to see your progress here.",
+        "cardTitle": "Start {section}",
+        "cardSubtitle": "Practice now",
+        "footer": "Each completed task will show up here."
+      },
+      "sections": {
+        "iconAlt": "{section} icon"
+      }
+    },
+    "subscriptionIndicator": {
+      "headline": "Your IELTS progress",
+      "active": "Subscription active",
+      "practices": "{count} practices left",
+      "noAccess": "Upgrade to unlock practice",
+      "loading": "Checking access..."
     },
     "practiceList": {
       "title": "Practice by section",
@@ -360,6 +465,9 @@
     }
   },
   "practice": {
+    "common": {
+      "leaveConfirmation": "You have an active practice session. Are you sure you want to leave the test?"
+    },
     "listening": {
       "title": "Practice listening section",
       "subtitle": "The points received will not be displayed <br></br> in the overall statistics",
@@ -381,8 +489,8 @@
       "subtitle": "The points received will not be displayed <br></br> in the overall statistics",
       "rules": {
         "title": "What’s in the IELTS Academic Reading paper?",
-        "text": "What’s in the IELTS Academic Reading paper? Texts come from books, journals, magazines, newspapers and online resources, written for a non-specialist audience. All the topics are of general interest to students at undergraduate or postgraduate level. The texts may be written in different styles, for example, narrative, descriptive or discursive/argumentative. At least one text contains detailed logical argument. Texts may also contain diagrams, graphs or illustrations. If texts use technical vocabulary, then a simple dictionary definition is provided. You will need to transfer your answers to an answer sheet. You must transfer your answers during the hour you are given for the Reading test. Unlike the Listening test, no extra transfer time is given. You should be careful when writing your answers on the answer sheet because you will lose marks for incorrect spelling and grammar.",
-        "marking": "Each correct answer receives 1 mark. Your final score is given as a band score from 1–9 in whole or half bands, e.g. 4 or 6.5"
+        "text": "The IELTS Academic Reading paper includes texts from books, journals, magazines, newspapers, and online sources for a non-specialist audience. Topics are of general interest to undergraduate or postgraduate students and may be narrative, descriptive, or argumentative. At least one text contains detailed logical argument and may include diagrams or graphs. Technical vocabulary is explained with simple definitions. Answers must be transferred to the answer sheet within the one-hour test, as no extra time is given. Be careful with spelling and grammar, as mistakes lose marks.",
+        "marking": "Each correct answer receives 1 mark. Your final score is given as a band score from 1–9 in whole or half bands, e.g. 4 or 6.5."
       },
       "test": {
         "readTextAndAnswerQuestions": "Read the text and answer questions "
@@ -394,7 +502,11 @@
     },
     "speaking": {
       "title": "Practice speaking section",
-      "subtitle": "The points received will not be displayed <br></br> in the overall statistics"
+      "subtitle": "The points received will not be displayed <br></br> in the overall statistics",
+      "audioCheck": {
+        "title": "Check your audio system",
+        "instruction": "Play the sample audio and make sure you can hear it clearly before you continue."
+      }
     },
     "writing": {
       "title": "Practice writing section",
@@ -523,5 +635,117 @@
       "Authorized partner of IDP IELTS in Kazakhstan",
       "Interactive Study Materials"
     ]
+  },
+  "onboarding": {
+    "progress": {
+      "label": "Step {current} of {total}"
+    },
+    "navigator": {
+      "back": "Back",
+      "next": "Next step",
+      "finish": "Go to dashboard"
+    },
+    "supporting": {
+      "intro": "Share what brings you here so we can meet you where you are.",
+      "goal": "Understanding your goal helps us shape the milestones you'll see.",
+      "score": "Your target score sets the pace of exercises and mock exams.",
+      "timeline": "We'll match reminders and study rhythm to your exam timeframe.",
+      "priority": "We’ll surface drills and tips for the sections you highlight.",
+      "finish": "Take a breath—your tailored dashboard is ready with next steps."
+    },
+    "transition": {
+      "preparing": "Preparing your onboarding journey…",
+      "srMessage": "Loading onboarding"
+    },
+    "accessibility": {
+      "stepAnnouncement": "Step {current} of {total}: {title}"
+    },
+    "errors": {
+      "introRequired": "Pick at least one reason to continue.",
+      "goalRequired": "Choose a goal (or describe your own) to continue.",
+      "scoreRequired": "Select the score you're aiming for.",
+      "timelineRequired": "Let us know your exam timeline.",
+      "priorityRequired": "Choose at least one section that feels challenging.",
+      "submitFailed": "We couldn’t save your onboarding preferences. Try again in a moment."
+    },
+    "steps": {
+      "intro": {
+        "title": "Let’s get acquainted",
+        "subtitle": "Tell us what brings you to StudyBox and we’ll tailor the experience.",
+        "helper": "Select every option that applies.",
+        "ariaLabel": "Select the reasons you joined StudyBox",
+        "options": {
+          "academic": "I’m preparing for IELTS Academic",
+          "general": "I’m preparing for IELTS General",
+          "improveEnglish": "I just want to improve my English",
+          "explore": "I’m exploring the platform"
+        }
+      },
+      "goal": {
+        "title": "Clarify your goal",
+        "subtitle": "We’ll prioritise content and reminders around what motivates you.",
+        "helper": "Choose the main reason you’re preparing right now.",
+        "ariaLabel": "Select your IELTS goal",
+        "options": {
+          "university": "University admission",
+          "work": "Work / migration",
+          "self": "Personal challenge / self-development",
+          "other": "Other"
+        },
+        "otherLabel": "Describe your goal",
+        "otherPlaceholder": "Tell us what you’re aiming for",
+        "otherHint": "A short note helps us fine-tune your study plan."
+      },
+      "score": {
+        "title": "Choose your target score",
+        "subtitle": "We’ll set milestones that make reaching it feel achievable.",
+        "helper": "Select the band you’re aiming for next.",
+        "ariaLabel": "Select your target IELTS band",
+        "options": {
+          "fiveFive": "5.5",
+          "six": "6.0",
+          "sixFive": "6.5",
+          "seven": "7.0",
+          "sevenFive": "7.5",
+          "eightPlus": "8.0+"
+        }
+      },
+      "timeline": {
+        "title": "When is your exam?",
+        "subtitle": "We’ll match your practice rhythm to your schedule.",
+        "helper": "Pick the timeframe that best fits your plans.",
+        "ariaLabel": "Select when you plan to take the exam",
+        "options": {
+          "soon": "Within the next month",
+          "mid": "In 2–3 months",
+          "later": "In 4–6 months",
+          "unknown": "I’m not sure yet"
+        }
+      },
+      "priority": {
+        "title": "Prioritize your practice",
+        "subtitle": "Tell us which sections feel toughest right now.",
+        "helper": "Select all sections that need extra support.",
+        "ariaLabel": "Select the IELTS sections that are hardest for you",
+        "options": {
+          "writing": "Writing",
+          "speaking": "Speaking",
+          "reading": "Reading",
+          "listening": "Listening",
+          "unknown": "I’m not sure yet"
+        }
+      },
+      "finish": {
+        "title": "You’re all set",
+        "subtitle": "We’ve prepared a gentle start tailored to your answers.",
+        "summary": {
+          "intro": "Why you’re here",
+          "goal": "Your goal",
+          "score": "Target score",
+          "timeline": "Timeline",
+          "priority": "Priority sections"
+        }
+      }
+    }
   }
 }

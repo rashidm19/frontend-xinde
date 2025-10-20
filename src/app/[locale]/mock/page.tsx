@@ -142,7 +142,7 @@ const data_rows = [
 export default function Page() {
   const router = useRouter();
   const { profile } = useProfile();
-  const { requireSubscription, isCheckingAccess } = useSubscriptionGate();
+  const { requireSubscription, isCheckingAccess } = useSubscriptionGate('mock');
 
   const [isLoading, setIsLoading] = useState(false);
   const subscription = useSubscriptionStore(state => state.subscription);
@@ -175,7 +175,7 @@ export default function Page() {
 
   return (
     <>
-      <Header name={profile?.name} avatar={profile?.avatar} />
+      <Header name={profile?.name} avatar={profile?.avatar ?? undefined} />
       <main>
         <div className='container grid max-w-[1440rem] grid-cols-[1016rem,328rem] gap-x-[16rem] gap-y-[16rem] px-[40rem] pb-[150rem] pt-[40rem]'>
           {hasCancellationScheduled && (

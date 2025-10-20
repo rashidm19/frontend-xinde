@@ -1,7 +1,9 @@
+import type { PracticeWritingAttempt } from '@/types/PracticeWriting';
+
 import axiosInstance from '@/lib/axiosInstance';
 
-export const POST_practice_writing_id = async (id: string, answer: string) => {
-  const { data } = await axiosInstance.post(`/practice/writing/${id}`, { answer });
+export const POST_practice_writing_id = async (id: string, answer: string): Promise<PracticeWritingAttempt> => {
+  const response = await axiosInstance.post<PracticeWritingAttempt>(`/practice/writing/${id}`, { answer });
 
-  return data;
+  return response.data;
 };

@@ -1,25 +1,31 @@
 import { create } from 'zustand';
 
+import type { MockOut } from '@/types/Mock';
+
 interface MockStore {
-  mockData: {
-    listening: any;
-    reading: any;
-    speaking: any;
-    writing: any;
-  };
-  setMockData: (value: MockStore['mockData']) => void;
+  mockData: MockOut;
+  setMockData: (value: MockOut) => void;
 
   timer: number | null;
   setTimer: (value: MockStore['timer']) => void;
 }
 
-export const mockStore = create<MockStore>(set => ({
-  mockData: {
-    listening: null,
-    reading: null,
-    speaking: null,
-    writing: null,
+const defaultMockData: MockOut = {
+  listening: null,
+  reading: null,
+  writing: {
+    part_1: null,
+    part_2: null,
   },
+  speaking: {
+    part_1: null,
+    part_2: null,
+    part_3: null,
+  },
+};
+
+export const mockStore = create<MockStore>(set => ({
+  mockData: defaultMockData,
 
   setMockData: value => set(() => ({ mockData: value })),
 

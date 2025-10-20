@@ -2,20 +2,31 @@ import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import axios from 'axios';
 
-import { fetchCurrentSubscription } from '@/api/subscriptions';
-import { IClientSubscription } from '@/types/Billing';
+import { cancelSubscription, fetchBillingBalance, fetchCurrentSubscription, resumeSubscription } from '@/api/subscriptions';
+import { IBillingBalance, IClientSubscription } from '@/types/Billing';
 
 type SubscriptionFetchStatus = 'idle' | 'loading' | 'success' | 'error';
+type AccessRequirement = 'subscription' | 'practice' | 'mock';
 
 interface SubscriptionStore {
   subscription: IClientSubscription | null;
   status: SubscriptionFetchStatus;
   error: string | null;
   hasActiveSubscription: boolean;
+  balance: IBillingBalance | null;
+  balanceStatus: SubscriptionFetchStatus;
+  balanceError: string | null;
+  hasPracticeCredits: boolean;
+  hasMockCredits: boolean;
   isPaywallOpen: boolean;
   fetchSubscription: (force?: boolean) => Promise<IClientSubscription | null>;
   setSubscription: (subscription: IClientSubscription | null) => void;
-  ensureAccess: () => Promise<boolean>;
+  fetchBalance: (force?: boolean) => Promise<IBillingBalance | null>;
+  setBalance: (balance: IBillingBalance | null) => void;
+  cancelCurrentSubscription: () => Promise<IClientSubscription | null>;
+  resumeCurrentSubscription: () => Promise<IClientSubscription | null>;
+  refreshSubscriptionAndBalance: () => Promise<void>;
+  ensureAccess: (requirement?: AccessRequirement) => Promise<boolean>;
   openPaywall: () => void;
   closePaywall: () => void;
   setPaywallOpen: (open: boolean) => void;
@@ -28,8 +39,9 @@ const computeHasActiveSubscription = (subscription: IClientSubscription | null):
   }
 
   const status = typeof subscription.status === 'string' ? subscription.status.toLowerCase() : '';
+  const activeStatuses = new Set(['active', 'trialing', 'pending_cancel']);
 
-  if (status !== 'active') {
+  if (!activeStatuses.has(status)) {
     return false;
   }
 
@@ -44,6 +56,17 @@ const computeHasActiveSubscription = (subscription: IClientSubscription | null):
   }
 
   return periodEnd.getTime() >= Date.now();
+};
+
+const computeBalanceFlags = (balance: IBillingBalance | null) => ({
+  hasPracticeCredits: (balance?.practice_balance ?? 0) > 0,
+  hasMockCredits: (balance?.mock_balance ?? 0) > 0,
+});
+
+const EMPTY_BALANCE: IBillingBalance = {
+  tenge_balance: 0,
+  mock_balance: 0,
+  practice_balance: 0,
 };
 
 const parseError = (error: unknown): string => {
@@ -66,6 +89,11 @@ export const useSubscriptionStore = create<SubscriptionStore>()(
       status: 'idle',
       error: null,
       hasActiveSubscription: false,
+      balance: null,
+      balanceStatus: 'idle',
+      balanceError: null,
+      hasPracticeCredits: false,
+      hasMockCredits: false,
       isPaywallOpen: false,
       fetchSubscription: async (force = false) => {
         const { status } = get();
@@ -110,10 +138,97 @@ export const useSubscriptionStore = create<SubscriptionStore>()(
           error: null,
         });
       },
-      ensureAccess: async () => {
+      fetchBalance: async (force = false) => {
+        const balanceStatus = get().balanceStatus;
+
+        if (!force && (balanceStatus === 'loading' || balanceStatus === 'success')) {
+          return get().balance;
+        }
+
+        if (typeof window !== 'undefined') {
+          const token = localStorage.getItem('token');
+          if (!token) {
+            const flags = computeBalanceFlags(EMPTY_BALANCE);
+            set({ balance: EMPTY_BALANCE, balanceStatus: 'success', balanceError: null, ...flags });
+            return EMPTY_BALANCE;
+          }
+        }
+
+        set({ balanceStatus: 'loading', balanceError: null });
+
         try {
-          const subscription = await get().fetchSubscription(true);
-          const hasAccess = computeHasActiveSubscription(subscription);
+          const balance = await fetchBillingBalance();
+          const flags = computeBalanceFlags(balance);
+          set({ balance, balanceStatus: 'success', balanceError: null, ...flags });
+          return balance;
+        } catch (error) {
+          if (axios.isAxiosError(error)) {
+            const statusCode = error.response?.status;
+            if (statusCode === 401 || statusCode === 404) {
+              const flags = computeBalanceFlags(null);
+              set({ balance: null, balanceStatus: 'success', balanceError: null, ...flags });
+              return null;
+            }
+          }
+
+          const flags = computeBalanceFlags(null);
+          set({ balanceStatus: 'error', balanceError: parseError(error), balance: null, ...flags });
+          throw error;
+        }
+      },
+      setBalance: balance => {
+        const flags = computeBalanceFlags(balance);
+        set({ balance, balanceStatus: 'success', balanceError: null, ...flags });
+      },
+      cancelCurrentSubscription: async () => {
+        set({ status: 'loading', error: null });
+        try {
+          const subscription = await cancelSubscription();
+          const hasActiveSubscription = computeHasActiveSubscription(subscription);
+          set({ subscription, hasActiveSubscription, status: 'success', error: null });
+          await get().fetchBalance(true);
+          return subscription;
+        } catch (error) {
+          set({ status: 'error', error: parseError(error) });
+          throw error;
+        }
+      },
+      resumeCurrentSubscription: async () => {
+        set({ status: 'loading', error: null });
+        try {
+          const subscription = await resumeSubscription();
+          const hasActiveSubscription = computeHasActiveSubscription(subscription);
+          set({ subscription, hasActiveSubscription, status: 'success', error: null });
+          await get().fetchBalance(true);
+          return subscription;
+        } catch (error) {
+          set({ status: 'error', error: parseError(error) });
+          throw error;
+        }
+      },
+      refreshSubscriptionAndBalance: async () => {
+        await Promise.all([get().fetchSubscription(true), get().fetchBalance(true)]);
+      },
+      ensureAccess: async (requirement: AccessRequirement = 'practice') => {
+        try {
+          const [subscription, balance] = await Promise.all([
+            get().fetchSubscription(true),
+            get().fetchBalance(true),
+          ]);
+
+          const hasActiveSubscription = computeHasActiveSubscription(subscription);
+          const balanceFlags = computeBalanceFlags(balance);
+          set({ hasActiveSubscription, ...balanceFlags });
+
+          let hasAccess = false;
+
+          if (requirement === 'mock') {
+            hasAccess = balanceFlags.hasMockCredits;
+          } else if (requirement === 'subscription') {
+            hasAccess = hasActiveSubscription;
+          } else {
+            hasAccess = hasActiveSubscription || balanceFlags.hasPracticeCredits;
+          }
 
           if (!hasAccess) {
             set({ isPaywallOpen: true });
@@ -134,6 +249,11 @@ export const useSubscriptionStore = create<SubscriptionStore>()(
           status: 'idle',
           error: null,
           hasActiveSubscription: false,
+          balance: null,
+          balanceStatus: 'idle',
+          balanceError: null,
+          hasPracticeCredits: false,
+          hasMockCredits: false,
           isPaywallOpen: false,
         }),
     }),
@@ -148,7 +268,18 @@ export const fetchSubscriptionOnce = () => useSubscriptionStore.getState().fetch
 
 export const refreshSubscription = () => useSubscriptionStore.getState().fetchSubscription(true);
 
-export const ensureSubscriptionAccess = () => useSubscriptionStore.getState().ensureAccess();
+export const fetchBalanceOnce = () => useSubscriptionStore.getState().fetchBalance();
+
+export const refreshBalance = () => useSubscriptionStore.getState().fetchBalance(true);
+
+export const refreshSubscriptionAndBalance = () => useSubscriptionStore.getState().refreshSubscriptionAndBalance();
+
+export const cancelActiveSubscription = () => useSubscriptionStore.getState().cancelCurrentSubscription();
+
+export const resumeActiveSubscription = () => useSubscriptionStore.getState().resumeCurrentSubscription();
+
+export const ensureSubscriptionAccess = (requirement?: 'subscription' | 'practice' | 'mock') =>
+  useSubscriptionStore.getState().ensureAccess(requirement);
 
 export const openSubscriptionPaywall = () => useSubscriptionStore.getState().openPaywall();
 

@@ -16,10 +16,13 @@ import { Label } from '@/components/ui/label';
 import { transformStringToArrayV4 } from '@/lib/utils';
 import { mockStore } from '@/stores/mock';
 import nProgress from 'nprogress';
+import type { ListeningPart } from '@/types/PracticeListening';
 
 type FormValues = {
   [key: string]: string | undefined;
 };
+
+type PartKey = 'part_1' | 'part_2' | 'part_3' | 'part_4';
 
 export default function Page() {
   const router = useRouter();
@@ -96,13 +99,15 @@ export default function Page() {
 
   const questionsCountString = () => {
     if (activeTab === 'p1') {
-      return `1 – ${data['part_1'].questions_count}`;
+      return `1 – ${data.part_1.questions_count}`;
     } else if (activeTab === 'p2') {
-      return `${1 + data['part_1'].questions_count} – ${data['part_1'].questions_count + data['part_2'].questions_count}`;
+      return `${1 + data.part_1.questions_count} – ${data.part_1.questions_count + data.part_2.questions_count}`;
     } else if (activeTab === 'p3') {
-      return `${1 + data['part_1'].questions_count + data['part_2'].questions_count} – ${data['part_1'].questions_count + data['part_2'].questions_count + data['part_3'].questions_count}`;
+      return `${1 + data.part_1.questions_count + data.part_2.questions_count} – ${data.part_1.questions_count + data.part_2.questions_count + data.part_3.questions_count}`;
     } else if (activeTab === 'p4') {
-      return `${1 + data['part_1'].questions_count + data['part_2'].questions_count + data['part_3'].questions_count} – ${data['part_1'].questions_count + data['part_2'].questions_count + data['part_3'].questions_count + data['part_4'].questions_count}`;
+      return `${1 + data.part_1.questions_count + data.part_2.questions_count + data.part_3.questions_count} – ${
+        data.part_1.questions_count + data.part_2.questions_count + data.part_3.questions_count + data.part_4.questions_count
+      }`;
     }
   };
 
@@ -154,11 +159,13 @@ export default function Page() {
 
                 {/* // * Навигация по вопросам */}
                 {[
-                  Array.from({ length: data[`part_1`].questions_count }).map((_, index) => index + 1),
-                  Array.from({ length: data[`part_2`].questions_count }).map((_, index) => data[`part_1`].questions_count + index + 1),
-                  Array.from({ length: data[`part_3`].questions_count }).map((_, index) => data[`part_1`].questions_count + data[`part_2`].questions_count + index + 1),
-                  Array.from({ length: data[`part_4`].questions_count }).map(
-                    (_, index) => data[`part_1`].questions_count + data[`part_2`].questions_count + data[`part_3`].questions_count + index + 1
+                  Array.from({ length: data.part_1.questions_count }).map((_, index) => index + 1),
+                  Array.from({ length: data.part_2.questions_count }).map((_, index) => data.part_1.questions_count + index + 1),
+                  Array.from({ length: data.part_3.questions_count }).map(
+                    (_, index) => data.part_1.questions_count + data.part_2.questions_count + index + 1
+                  ),
+                  Array.from({ length: data.part_4.questions_count }).map(
+                    (_, index) => data.part_1.questions_count + data.part_2.questions_count + data.part_3.questions_count + index + 1
                   ),
                 ].map((tab: number[], tabIndex: number) => (
                   <TabsContent
@@ -195,7 +202,9 @@ export default function Page() {
                   className='flex w-full flex-col gap-y-[40rem] rounded-[16rem] bg-white p-[40rem] data-[state=inactive]:hidden'
                 >
                   {/* // *  Текст */}
-                  {data[`part_${tab}`].blocks.map((block: any, index: number) => (
+                  {(
+                    data[`part_${tab}` as PartKey] as ListeningPart
+                  ).blocks.map((block: any, index: number) => (
                     <div key={`questions-block-${index}`}>
                       <div className='mb-[40rem] flex flex-col items-center justify-center rounded-[13rem] bg-d-gray p-[20rem]'>
                         <p className='mb-[8rem] text-[20rem] font-bold leading-[24rem] tracking-[-0.2rem] text-d-black'>{block.task_questions} </p>

@@ -10,12 +10,23 @@ import { useSubscriptionStore } from '@/stores/subscriptionStore';
 export const GlobalSubscriptionPaywall = () => {
   const isOpen = useSubscriptionStore(state => state.isPaywallOpen);
   const setPaywallOpen = useSubscriptionStore(state => state.setPaywallOpen);
+  const fetchBalance = useSubscriptionStore(state => state.fetchBalance);
 
   const [isPromoModalOpen, setPromoModalOpen] = React.useState(false);
   const [selectedPlanId, setSelectedPlanId] = React.useState<string | null>(null);
-  const [planDiscounts, setPlanDiscounts] = React.useState<Record<string, { amount: number; discount: number; currency: string }>>({});
+  const [planDiscounts, setPlanDiscounts] = React.useState<Record<string, { amount: number; currency: string }>>({});
   const [promoMessage, setPromoMessage] = React.useState<string | null>(null);
   const [promoError, setPromoError] = React.useState<string | null>(null);
+
+  React.useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+
+    fetchBalance(true).catch(() => {
+      // handled by store
+    });
+  }, [fetchBalance, isOpen]);
 
   const handlePlanSelect = (planId: string) => {
     setSelectedPlanId(planId);

@@ -18,21 +18,25 @@ import { DndText } from './components/DndText';
 import { GET_practice_reading_id } from '@/api/GET_practice_reading_id';
 import axiosInstance from '@/lib/axiosInstance';
 import { transformStringToArrayV2, transformStringToArrayV4 } from '@/lib/utils';
+import type { PracticeReadingContent, PracticeReadingPart, PracticeReadingResult } from '@/types/PracticeReading';
 
 import { useRouter } from 'next/navigation';
 import { useCustomTranslations } from '@/hooks/useCustomTranslations';
+import { PracticeLeaveGuard } from '@/components/PracticeLeaveGuard';
 
 type FormValues = {
   [key: string]: string | undefined;
 };
 
+type PartNumber = 1 | 2 | 3;
+
 export default function Page() {
   const router = useRouter();
   const { t, tCommon, tActions } = useCustomTranslations('practice.reading.test');
 
-  const [activeTab, setActiveTab] = useState<string>('p1');
+  const [activeTab, setActiveTab] = useState<'p1' | 'p2' | 'p3'>('p1');
 
-  const { data, status } = useQuery({
+  const { data, status } = useQuery<PracticeReadingContent>({
     queryKey: ['practice-reading'],
     queryFn: () => GET_practice_reading_id(localStorage.getItem('practiceReadingId') as string),
   });
@@ -96,13 +100,14 @@ export default function Page() {
     };
     // Выписываем все номера вопросов типа чекбокс
     let checkboxQuestionBlocks: number[][] = [];
-    [1, 2, 3].map(p =>
-      data[`part_${p}`].blocks
+    ([1, 2, 3] as PartNumber[]).forEach(partNumber => {
+      getPart(partNumber)
+        .blocks
         .filter((block: any) => block.kind === 'checkboxes')
         .forEach((block: any) => {
           checkboxQuestionBlocks.push(block.answers.map((q: any) => q.number));
-        })
-    );
+        });
+    });
     // В финальном ответе для бека, все чекбоксы вопросы, которые записаны как A|B|C - переделываем в одиночные ответы
     checkboxQuestionBlocks.forEach((block: number[]) => {
       block.forEach((question: number, index: number) => {
@@ -115,9 +120,13 @@ export default function Page() {
 
     formattedValues.answers = formattedValues.answers.filter(item => item.answer);
 
-    const response = await axiosInstance.post(`/practice/reading/${localStorage.getItem('practiceReadingId')}`, formattedValues, {
+    const response = await axiosInstance.post<PracticeReadingResult>(
+      `/practice/reading/${localStorage.getItem('practiceReadingId')}`,
+      formattedValues,
+      {
       validateStatus: () => true,
-    });
+      }
+    );
 
     if (response.status >= 200 && response.status < 300) {
       const result = response.data;
@@ -130,13 +139,21 @@ export default function Page() {
   const values = form.watch();
 
   const questionsCountString = () => {
-    if (activeTab === 'p1') {
-      return `1 – ${data['part_1'].questions_count}`;
-    } else if (activeTab === 'p2') {
-      return `${1 + data['part_1'].questions_count} – ${data['part_1'].questions_count + data['part_2'].questions_count}`;
-    } else if (activeTab === 'p3') {
-      return `${1 + data['part_1'].questions_count + data['part_2'].questions_count} – ${data['part_1'].questions_count + data['part_2'].questions_count + data['part_3'].questions_count}`;
+    if (!data) {
+      return '';
     }
+
+    if (activeTab === 'p1') {
+      return `1 – ${data.part_1.questions_count}`;
+    } else if (activeTab === 'p2') {
+      return `${1 + data.part_1.questions_count} – ${data.part_1.questions_count + data.part_2.questions_count}`;
+    } else if (activeTab === 'p3') {
+      return `${1 + data.part_1.questions_count + data.part_2.questions_count} – ${
+        data.part_1.questions_count + data.part_2.questions_count + data.part_3.questions_count
+      }`;
+    }
+
+    return '';
   };
 
   const getQuestionAt = (block: any, x: number, y: number) => block.questions?.find((q: any) => q.x === x && q.y === y);
@@ -161,8 +178,24 @@ export default function Page() {
     return <></>;
   }
 
+  if (!data) {
+    return <></>;
+  }
+
+  const getPart = (partNumber: PartNumber): PracticeReadingPart => {
+    if (partNumber === 1) {
+      return data.part_1;
+    }
+
+    if (partNumber === 2) {
+      return data.part_2;
+    }
+
+    return data.part_3;
+  };
+
   return (
-    <>
+    <PracticeLeaveGuard>
       <HeaderDuringTest title={tCommon('practice')} tag={tCommon('reading')} />
 
       <main className='min-h-screen overflow-hidden bg-d-yellow-secondary'>
@@ -171,7 +204,7 @@ export default function Page() {
             <Tabs
               defaultValue='p1'
               value={activeTab}
-              onValueChange={setActiveTab}
+              onValueChange={value => setActiveTab(value as 'p1' | 'p2' | 'p3')}
               className='container flex min-h-[100dvh] max-w-[1440rem] flex-col px-[40rem] pb-[24rem] pt-[40rem]'
             >
               {/* // * Навигация */}
@@ -200,9 +233,11 @@ export default function Page() {
 
                 {/* // * Навигация по вопросам */}
                 {[
-                  Array.from({ length: data[`part_1`].questions_count }).map((_, index) => index + 1),
-                  Array.from({ length: data[`part_2`].questions_count }).map((_, index) => data[`part_1`].questions_count + index + 1),
-                  Array.from({ length: data[`part_3`].questions_count }).map((_, index) => data[`part_1`].questions_count + data[`part_2`].questions_count + index + 1),
+                  Array.from({ length: data.part_1.questions_count }).map((_, index) => index + 1),
+                  Array.from({ length: data.part_2.questions_count }).map((_, index) => data.part_1.questions_count + index + 1),
+                  Array.from({ length: data.part_3.questions_count }).map(
+                    (_, index) => data.part_1.questions_count + data.part_2.questions_count + index + 1
+                  ),
                 ].map((tab: number[], tabIndex: number) => (
                   <TabsContent
                     key={`questions-nav-tab-${tabIndex + 1}`}
@@ -231,15 +266,18 @@ export default function Page() {
                 {t('readTextAndAnswerQuestions')} {questionsCountString()}
               </div>
 
-              {[1, 2, 3].map(tab => (
-                <TabsContent key={`questions-content-tab-${tab}`} value={`p${tab}`} className='flex items-start justify-between'>
-                  {/* // * Текст */}
-                  <div className='w-[672rem] whitespace-pre-line rounded-[16rem] bg-white p-[40rem] text-[16rem] font-normal leading-tight'>
-                    {data[`part_${tab}`].text}
-                  </div>
+              {[1, 2, 3].map(tab => {
+                const part = getPart(tab as PartNumber);
 
-                  <div className='flex w-[672rem] flex-col gap-y-[16rem]'>
-                    {data[`part_${tab}`].blocks.map((block: any, index: number) => (
+                return (
+                  <TabsContent key={`questions-content-tab-${tab}`} value={`p${tab}`} className='flex items-start justify-between'>
+                    {/* // * Текст */}
+                    <div className='w-[672rem] whitespace-pre-line rounded-[16rem] bg-white p-[40rem] text-[16rem] font-normal leading-tight'>
+                      {part.text}
+                    </div>
+
+                    <div className='flex w-[672rem] flex-col gap-y-[16rem]'>
+                      {part.blocks.map((block: any, index: number) => (
                       <div key={`questions-block-${index}`} className='flex w-full flex-col gap-y-[48rem] rounded-[16rem] bg-white p-[40rem]'>
                         <div className='flex flex-col'>
                           <p className='mb-[16rem] text-[20rem] font-medium leading-[24rem] tracking-[-0.2rem] text-d-black'>{block.task_questions}</p>
@@ -642,12 +680,13 @@ export default function Page() {
                       </button>
                     )}
                   </div>
-                </TabsContent>
-              ))}
+                  </TabsContent>
+                );
+              })}
             </Tabs>
           </form>
         </Form>
       </main>
-    </>
+    </PracticeLeaveGuard>
   );
 }

@@ -5,7 +5,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { useCustomTranslations } from '@/hooks/useCustomTranslations';
 import { useMutation } from '@tanstack/react-query';
 import { POST_payment_checkout_order } from '@/api/POST_payment_checkout_order';
-import { refreshSubscription } from '@/stores/subscriptionStore';
+import { refreshSubscriptionAndBalance } from '@/stores/subscriptionStore';
 import { EPAY_PROD_URL, EPAY_TEST_URL } from '@/lib/config';
 import { IPaymentOrder } from '@/types/Payments';
 import axios from 'axios';
@@ -19,7 +19,6 @@ declare global {
 
 interface DiscountInfo {
   amount: number;
-  discount: number;
   currency: string;
 }
 
@@ -134,13 +133,22 @@ export const PromoPromptModal = ({ open, planId, onClose, onBackToPlans, onDisco
       return false;
     }
 
+    const parsedPlanId = Number(planId);
+
+    if (!Number.isFinite(parsedPlanId)) {
+      const message = t('promo.errorDefault');
+      setPromoError(message);
+      onErrorMessage?.(message);
+      return false;
+    }
+
     setProcessingPlanId(planId);
     setPromoError(null);
     onErrorMessage?.(null);
 
     try {
       const response = await mutation.mutateAsync({
-        subscription_plan_id: planId,
+        plan_id: parsedPlanId,
         promo_code: code?.trim() ? code.trim() : undefined,
       });
 
@@ -149,13 +157,12 @@ export const PromoPromptModal = ({ open, planId, onClose, onBackToPlans, onDisco
       if (order?.amount !== undefined && order?.currency) {
         onDiscountUpdate?.(planId, {
           amount: order.amount,
-          discount: order.discount_amount ?? 0,
           currency: order.currency,
         });
       }
 
       if (!requiresPayment) {
-        await refreshSubscription();
+        await refreshSubscriptionAndBalance();
         onSuccessMessage?.(t('promo.accessGranted'));
 
         const discountCoveredTotal = order?.amount !== undefined ? order.amount <= 0 : true;

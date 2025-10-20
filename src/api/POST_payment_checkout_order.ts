@@ -2,9 +2,7 @@ import axiosInstance from '@/lib/axiosInstance';
 import { ICheckoutOrderResponse } from '@/types/Payments';
 
 interface IValues {
-  service_id?: string;
-  subscription_id?: string;
-  subscription_plan_id?: string;
+  plan_id: number;
   promo_code?: string;
 }
 

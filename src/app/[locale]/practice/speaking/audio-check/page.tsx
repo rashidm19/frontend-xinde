@@ -1,20 +1,22 @@
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
-
-import { AudioVisualizer } from 'react-audio-visualize';
 import Link from 'next/link';
+import { AudioVisualizer } from 'react-audio-visualize';
 import axiosInstance from '@/lib/axiosInstance';
+import { useCustomTranslations } from '@/hooks/useCustomTranslations';
+import { PracticeWritingCard } from '@/components/practice/PracticeWritingCard';
 import { useSubscriptionGate } from '@/hooks/useSubscriptionGate';
 import { SubscriptionAccessLabel } from '@/components/SubscriptionAccessLabel';
 
 export default function Page() {
+  const { t, tImgAlts, tActions, tCommon } = useCustomTranslations('practice.speaking.audioCheck');
+  const { requireSubscription, isCheckingAccess } = useSubscriptionGate();
   const visualizerRef = useRef<HTMLCanvasElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   const [currentTimestamp, setCurrentTimestamp] = useState<number>();
   const [playStatus, setPlayStatus] = useState<'paused' | 'playing'>('paused');
-  const { requireSubscription, isCheckingAccess } = useSubscriptionGate();
 
   useEffect(() => {
     const fetchAudioFile = async () => {
@@ -29,33 +31,35 @@ export default function Page() {
   }, []);
 
   return (
-    <main className='min-h-screen overflow-hidden bg-d-red-secondary'>
-      <div className='container relative max-w-[1440rem] px-[248rem] pb-[48rem] pt-[64rem]'>
-        <img
-          src='/images/illustration_halfspheres.png'
-          alt='illustration'
-          className='pointer-events-none absolute right-[120rem] top-[140rem] h-auto w-[264rem] rotate-[14deg] opacity-20 mix-blend-multiply'
-        />
-        <img
-          src='/images/illustration_flowerOrange.png'
-          alt='illustration'
-          className='pointer-events-none absolute left-[-60rem] top-[716rem] h-auto w-[392rem] rotate-[-16deg] opacity-20 mix-blend-multiply'
-        />
-
-        <div className='relative z-10 flex flex-col items-center gap-[56rem] rounded-[16rem] bg-white p-[64rem] shadow-card'>
-          {/* // * Cancel practice  */}
-          <Link href='/practice' className='absolute right-[30rem] top-[30rem] flex size-[40rem] items-center justify-center'>
-            <img src='/images/icon_cross.svg' alt='close' className='size-[20rem]' />
-          </Link>
-
-          {/* // * Header */}
-          <header className='flex items-center gap-x-[12rem]'>
-            <div className='w-full text-center text-[32rem] font-medium leading-none'>Check your audio system</div>
-          </header>
-          {/* // * Seclection */}
-
+    <main className='relative min-h-screen bg-d-red-secondary'>
+      <div className='relative z-[1] flex min-h-[100dvh] w-full items-center justify-center px-[16rem] py-[48rem]'>
+        <PracticeWritingCard
+          closeHref='/practice'
+          closeAlt={tImgAlts('close')}
+          iconAlt={tImgAlts('speaking')}
+          headingLabel={tCommon('speaking')}
+          durationLabel={tCommon('minCount', { count: 14 })}
+          partsLabel={tCommon('parts')}
+          partsValue='3'
+          headingSlot={
+            <div className='flex items-center gap-x-[12rem]'>
+              <div className='flex size-[48rem] items-center justify-center rounded-full bg-d-red-secondary'>
+                <img src='/images/icon_speakingSection.svg' className='size-[22rem]' alt={tImgAlts('speaking')} />
+              </div>
+              <div className='flex flex-col gap-y-[6rem]'>
+                <div className='text-[14rem] font-medium leading-none text-d-black/80'>{tCommon('speaking')}</div>
+                <div className='text-[18rem] font-semibold leading-none text-d-black'>{tCommon('minCount', { count: 14 })}</div>
+              </div>
+              <div className='ml-[12rem] flex flex-col gap-y-[6rem]'>
+                <div className='text-[14rem] font-medium leading-none text-d-black/80'>{tCommon('parts')}</div>
+                <div className='text-[18rem] font-semibold leading-none text-d-black'>3</div>
+              </div>
+            </div>
+          }
+          className='gap-[28rem]'
+        >
           {audioBlob && audioRef && (
-            <div className='flex flex-col gap-y-[24rem]'>
+            <div className='flex flex-col items-center gap-[20rem]'>
               <audio
                 controls
                 ref={audioRef}
@@ -67,58 +71,61 @@ export default function Page() {
                 <source src='/files/audio-check.mp3' />
               </audio>
 
-              <div className='text-center text-[20rem] font-medium leading-none text-d-black/80'>Test record: 1:54</div>
+              <div className='flex flex-col items-center gap-[8rem] text-center'>
+                <div className='text-[16rem] font-medium leading-none text-d-black/80'>{t('title')}</div>
+                <p className='max-w-[420rem] text-[14rem] leading-[1.5] text-d-black/70'>{t('instruction')}</p>
+              </div>
 
-              <div className='flex items-center gap-x-[8rem]'>
+              <div className='flex items-center gap-x-[12rem]'>
                 <button
                   type='button'
                   onClick={() => (playStatus === 'paused' ? audioRef?.current?.play() : audioRef?.current?.pause())}
-                  className='flex size-[72rem] items-center justify-center rounded-full bg-d-green'
+                  className='flex size-[64rem] items-center justify-center rounded-full bg-d-green text-white'
                 >
                   {playStatus === 'playing' ? (
-                    <img src='/images/icon_audioPause.svg' className='size-[24rem]' alt='pause' />
+                    <img src='/images/icon_audioPause.svg' className='size-[20rem]' alt={tImgAlts('pause')} />
                   ) : (
-                    <img src='/images/icon_audioPlay.svg' className='size-[24rem]' alt='play' />
+                    <img src='/images/icon_audioPlay.svg' className='size-[20rem]' alt={tImgAlts('play')} />
                   )}
                 </button>
 
                 <AudioVisualizer
                   ref={visualizerRef}
                   blob={audioBlob}
-                  width={362}
-                  height={52}
+                  width={360}
+                  height={50}
                   barWidth={2}
                   gap={2}
-                  barColor={'#EAEAEA'}
-                  barPlayedColor={'#383838'}
+                  barColor='#EAEAEA'
+                  barPlayedColor='#383838'
                   currentTime={currentTimestamp || 0}
                 />
               </div>
+
+              <Link
+                href='/practice/speaking/mic-check/'
+                onClick={async event => {
+                  if (isCheckingAccess) {
+                    event.preventDefault();
+                    return;
+                  }
+
+                  const canStart = await requireSubscription();
+
+                  if (!canStart) {
+                    event.preventDefault();
+                  }
+                }}
+                className={`mx-auto flex h-[56rem] w-[240rem] items-center justify-center rounded-[32rem] bg-d-green text-[18rem] font-semibold hover:bg-d-green/40 ${
+                  isCheckingAccess ? 'pointer-events-none cursor-wait opacity-70' : ''
+                }`}
+              >
+                {isCheckingAccess ? '...' : tActions('continue')}
+              </Link>
             </div>
           )}
-
-          <Link
-            href='/practice/speaking/mic-check/'
-            onClick={async event => {
-              if (isCheckingAccess) {
-                event.preventDefault();
-                return;
-              }
-
-              const canStart = await requireSubscription();
-
-              if (!canStart) {
-                event.preventDefault();
-              }
-            }}
-            className={`mx-auto flex h-[63rem] w-[280rem] items-center justify-center rounded-[40rem] bg-d-green text-[20rem] font-semibold hover:bg-d-green/40 ${
-              isCheckingAccess ? 'pointer-events-none cursor-wait opacity-70' : ''
-            }`}
-          >
-            {isCheckingAccess ? '...' : 'Continue'}
-          </Link>
-          <SubscriptionAccessLabel className='text-center' />
-        </div>
+          <SubscriptionAccessLabel className='mt-[12rem] text-center text-[12rem]' />
+        </PracticeWritingCard>
       </div>
     </main>
   );

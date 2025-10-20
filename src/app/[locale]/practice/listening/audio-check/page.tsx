@@ -1,29 +1,43 @@
 'use client';
 
-import { Footer } from '@/components/Footer';
 import Link from 'next/link';
 import { useCustomTranslations } from '@/hooks/useCustomTranslations';
 import React from 'react';
-import { useSubscriptionGate } from '@/hooks/useSubscriptionGate';
+
 import { SubscriptionAccessLabel } from '@/components/SubscriptionAccessLabel';
+import { PracticeWritingCard } from '@/components/practice/PracticeWritingCard';
+import { useSubscriptionGate } from '@/hooks/useSubscriptionGate';
 
 export default function Page() {
   const { t, tImgAlts, tActions } = useCustomTranslations('practice.listening.audioCheck');
   const { requireSubscription, isCheckingAccess } = useSubscriptionGate();
 
   return (
-    <>
-      <main className='min-h-screen overflow-hidden bg-d-light-gray'>
-        <div className='container relative min-h-[100dvh] max-w-[1440rem] px-[270rem] py-[80rem]'>
-          <section className='relative flex flex-col gap-[24rem] rounded-[16rem] bg-white p-[64rem] shadow-primary'>
-            {/* // * Cancel practice  */}
-            <Link href='/practice' className='absolute right-[30rem] top-[30rem] flex size-[40rem] items-center justify-center'>
-              <img src='/images/icon_cross.svg' alt={tImgAlts('close')} className='size-[20rem]' />
-            </Link>
-
-            <h1 className='text-[32rem] font-medium leading-none'>{t('title')}</h1>
-
-            <p className='mb-[32rem] text-[20rem] font-medium leading-tight text-d-black/80'>
+    <main className='relative min-h-screen bg-d-mint'>
+      <div className='relative z-[1] flex min-h-screen items-center justify-center px-[16rem] py-[48rem]'>
+        <PracticeWritingCard
+          closeHref='/practice'
+          closeAlt={tImgAlts('close')}
+          iconAlt={tImgAlts('listening')}
+          headingLabel={null}
+          durationLabel={null}
+          partsLabel={null}
+          partsValue={null}
+          headingSlot={
+            <div className='flex items-center gap-[16rem]'>
+              <div className='flex size-[44rem] items-center justify-center rounded-full bg-d-mint'>
+                <img src='/images/icon_listeningSection.svg' className='size-[22rem]' alt={tImgAlts('listening')} />
+              </div>
+              <div className='flex flex-col gap-[4rem] text-left'>
+                <span className='text-[14rem] font-medium leading-none text-slate-600'>{t('title')}</span>
+                <span className='text-[18rem] font-semibold leading-none text-slate-900'>{tActions('play')}</span>
+              </div>
+            </div>
+          }
+          className='max-w-[620rem] gap-[24rem] border-none bg-white px-[32rem] py-[28rem] shadow-[0_24rem_60rem_-44rem_rgba(15,23,42,0.28)]'
+        >
+          <section className='flex flex-col gap-[20rem] text-[15rem] leading-[1.65] text-slate-700'>
+            <p className='text-center text-[16rem] font-semibold text-slate-700'>
               {t.rich('subtitle', {
                 br: () => <br />,
               })}
@@ -41,18 +55,17 @@ export default function Page() {
                   event.preventDefault();
                 }
               }}
-              className={`mx-auto flex h-[63rem] w-[280rem] items-center justify-center gap-x-[8rem] rounded-[40rem] bg-d-green text-[20rem] font-semibold hover:bg-d-green/40 ${
+              className={`mx-auto flex gap-[6rem] h-[56rem] w-[240rem] pb-[2rem] items-center justify-center rounded-[32rem] bg-d-green text-[18rem] font-semibold hover:bg-d-green/40 ${
                 isCheckingAccess ? 'pointer-events-none cursor-wait opacity-70' : ''
               }`}
             >
               <img src='/images/icon_audioPlay.svg' alt={tImgAlts('play')} className='size-[16rem]' />
               {isCheckingAccess ? '...' : tActions('play')}
             </Link>
-            <SubscriptionAccessLabel className='text-center' />
+            <SubscriptionAccessLabel className='text-center text-[12rem]' />
           </section>
-        </div>
-      </main>
-      <Footer />
-    </>
+        </PracticeWritingCard>
+      </div>
+    </main>
   );
 }

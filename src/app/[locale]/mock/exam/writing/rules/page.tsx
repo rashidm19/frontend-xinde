@@ -6,7 +6,7 @@ import { useSubscriptionGate } from '@/hooks/useSubscriptionGate';
 import { SubscriptionAccessLabel } from '@/components/SubscriptionAccessLabel';
 
 export default function Page() {
-  const { requireSubscription, isCheckingAccess } = useSubscriptionGate();
+  const { requireSubscription, isCheckingAccess } = useSubscriptionGate('mock');
   const [isStarting, setIsStarting] = useState(false);
 
   return (
