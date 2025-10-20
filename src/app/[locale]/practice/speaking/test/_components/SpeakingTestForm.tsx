@@ -171,8 +171,21 @@ export default function SpeakingTestForm({ data }: FormProps) {
       if (toastTimerRef.current) {
         window.clearTimeout(toastTimerRef.current);
       }
-      questionAudioRef.current?.pause();
-      reviewAudioRef.current?.pause();
+      if (questionAudioRef.current) {
+        questionAudioRef.current.pause();
+        questionAudioRef.current.currentTime = 0;
+        questionAudioRef.current = null;
+      }
+      if (reviewAudioRef.current) {
+        reviewAudioRef.current.pause();
+        reviewAudioRef.current.currentTime = 0;
+        reviewAudioRef.current = null;
+      }
+      if (introAudioRef.current) {
+        introAudioRef.current.pause();
+        introAudioRef.current.currentTime = 0;
+        introAudioRef.current = null;
+      }
     };
   }, []);
 
