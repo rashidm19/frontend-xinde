@@ -17,6 +17,8 @@ import { FeedbackModal } from '@/components/feedback/FeedbackModal';
 import { useFeedbackStatus } from '@/hooks/useFeedbackStatus';
 import type { SubmitFeedbackPayload } from '@/api/feedback';
 import type { FeedbackModalSubmitPayload, FeedbackModalSubmitResult } from '@/components/feedback/types';
+import { FreePracticeTestModal } from '@/components/modals/FreePracticeTestModal';
+import { useSubscription } from '@/hooks/useSubscription';
 
 const sectionStartRoutes: Record<PracticeSectionKey, string> = {
   writing: '/practice/writing/customize',
@@ -32,6 +34,8 @@ export default function Page() {
 
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [hasPromptedFeedback, setHasPromptedFeedback] = useState(false);
+  const [freeTestModalOpen, setFreeTestModalOpen] = useState(false);
+  const [hasAutoOpenedFreeTestModal, setHasAutoOpenedFreeTestModal] = useState(false);
 
   const feedbackEnabled = useMemo(() => status !== 'idle', [status]);
 
@@ -44,11 +48,31 @@ export default function Page() {
   } = useFeedbackStatus({ enabled: feedbackEnabled });
 
   useEffect(() => {
-    if (!isLoading && !feedbackStatusLoading && !feedbackAlreadySubmitted && !hasPromptedFeedback && !feedbackStatusError) {
+    if (
+      !isLoading &&
+      !feedbackStatusLoading &&
+      !feedbackAlreadySubmitted &&
+      !hasPromptedFeedback &&
+      !feedbackStatusError &&
+      !freeTestModalOpen
+    ) {
       setFeedbackOpen(true);
       setHasPromptedFeedback(true);
     }
-  }, [isLoading, feedbackStatusLoading, feedbackAlreadySubmitted, hasPromptedFeedback, feedbackStatusError]);
+  }, [
+    isLoading,
+    feedbackStatusLoading,
+    feedbackAlreadySubmitted,
+    hasPromptedFeedback,
+    feedbackStatusError,
+    freeTestModalOpen,
+  ]);
+
+  useEffect(() => {
+    if (freeTestModalOpen && feedbackOpen) {
+      setFeedbackOpen(false);
+    }
+  }, [freeTestModalOpen, feedbackOpen]);
 
   const handleFeedbackClose = useCallback(() => {
     setFeedbackOpen(false);
@@ -97,6 +121,8 @@ export default function Page() {
     queryFn: getPracticeHistory,
   });
 
+  const { hasActiveSubscription, status: subscriptionStatus } = useSubscription();
+
   const handleStartSection = (section: PracticeSectionKey) => {
     const target = sectionStartRoutes[section];
     router.push(target);
@@ -114,6 +140,31 @@ export default function Page() {
     router.push(`/practice/${section}/results/${id}`);
     return;
   };
+
+  useEffect(() => {
+    if (hasAutoOpenedFreeTestModal || isLoading || !profile || subscriptionStatus !== 'success') {
+      return;
+    }
+
+    if (profile.practice_balance === 1 && !hasActiveSubscription) {
+      if (typeof window !== 'undefined') {
+        const storageKey = 'studybox.free-test.welcome-shown';
+        const alreadyShown = window.sessionStorage.getItem(storageKey);
+        if (!alreadyShown) {
+          window.sessionStorage.setItem(storageKey, '1');
+          setFreeTestModalOpen(true);
+        }
+      } else {
+        setFreeTestModalOpen(true);
+      }
+
+      setHasAutoOpenedFreeTestModal(true);
+    }
+  }, [hasAutoOpenedFreeTestModal, hasActiveSubscription, isLoading, profile, subscriptionStatus]);
+
+  const handleFreeTestStart = useCallback(async () => {
+    router.push(sectionStartRoutes.writing);
+  }, [router]);
 
   return (
     <>
@@ -159,6 +210,15 @@ export default function Page() {
           )}
         </div>
       </main>
+      <FreePracticeTestModal
+        open={freeTestModalOpen}
+        onOpenChange={setFreeTestModalOpen}
+        onStart={handleFreeTestStart}
+        onDismiss={() => {
+          setFreeTestModalOpen(false);
+        }}
+        hasFreeTest={(profile?.practice_balance ?? 0) > 0}
+      />
       <FeedbackModal
         open={feedbackOpen}
         onClose={handleFeedbackClose}
