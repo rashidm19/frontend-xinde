@@ -86,24 +86,26 @@ export const SubscriptionDetailsModal = ({ open, onOpenChange }: Props) => {
               </dl>
             </section>
 
-            <section className='rounded-[16rem] border border-d-light-gray/80 p-[20rem]'>
-              <div className='flex items-center justify-between'>
-                <div>
-                  <div className='text-[12rem] font-medium uppercase tracking-[0.16rem] text-d-black/60'>{t('balance.label')}</div>
-                  <div className='text-[18rem] font-semibold text-d-black'>
-                    {practiceBalance > 0 ? t('balance.count', { count: practiceBalance }) : t('balance.none')}
+            {!hasActiveSubscription && (
+              <section className='rounded-[16rem] border border-d-light-gray/80 p-[20rem]'>
+                <div className='flex items-center justify-between'>
+                  <div>
+                    <div className='text-[12rem] font-medium uppercase tracking-[0.16rem] text-d-black/60'>{t('balance.label')}</div>
+                    <div className='text-[18rem] font-semibold text-d-black'>
+                      {practiceBalance > 0 ? t('balance.count', { count: practiceBalance }) : t('balance.none')}
+                    </div>
                   </div>
+                  <button
+                    type='button'
+                    onClick={handleRetry}
+                    className='rounded-[32rem] border border-d-light-gray px-[16rem] py-[8rem] text-[13rem] font-semibold text-d-black transition-all duration-200 hover:-translate-y-[1rem] hover:border-d-black/40'
+                  >
+                    {t('actions.refresh')}
+                  </button>
                 </div>
-                <button
-                  type='button'
-                  onClick={handleRetry}
-                  className='rounded-[32rem] border border-d-light-gray px-[16rem] py-[8rem] text-[13rem] font-semibold text-d-black transition-all duration-200 hover:-translate-y-[1rem] hover:border-d-black/40'
-                >
-                  {t('actions.refresh')}
-                </button>
-              </div>
-              {balanceError ? <p className='mt-[12rem] text-[12rem] leading-tight text-red-500'>{t('error.balance')}</p> : null}
-            </section>
+                {balanceError ? <p className='mt-[12rem] text-[12rem] leading-tight text-red-500'>{t('error.balance')}</p> : null}
+              </section>
+            )}
 
             <div className='flex flex-col gap-y-[12rem] text-[12rem] leading-tight text-d-black/70'>
               {error ? <p className='rounded-[12rem] bg-red-50 px-[16rem] py-[12rem] text-red-600'>{t('error.subscription')}</p> : null}

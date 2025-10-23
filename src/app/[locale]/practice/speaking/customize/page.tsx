@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import nProgress from 'nprogress';
@@ -11,7 +11,10 @@ import axiosInstance from '@/lib/axiosInstance';
 import { useSubscriptionGate } from '@/hooks/useSubscriptionGate';
 import { SubscriptionAccessLabel } from '@/components/SubscriptionAccessLabel';
 import { GET_practice_speaking_categories } from '@/api/GET_practice_speaking_categories';
-import type { PracticeSpeakingCategoriesResponse, PracticeSpeakingListResponse } from '@/types/PracticeSpeaking';
+import type { PracticeSpeakingCategoriesResponse, PracticeSpeakingListResponse, PracticeSpeakingPartValue } from '@/types/PracticeSpeaking';
+import { isPracticeSpeakingPartValue } from '@/types/PracticeSpeaking';
+
+const PART_OPTIONS: PracticeSpeakingPartValue[] = ['all', '1', '2', '3'];
 
 export default function Page() {
   const router = useRouter();
@@ -23,10 +26,17 @@ export default function Page() {
     queryFn: GET_practice_speaking_categories,
   });
 
-  const [selectedPart, setSelectedPart] = useState<1 | 2 | 3>(1);
+  const [selectedPart, setSelectedPart] = useState<PracticeSpeakingPartValue>('1');
   const [selectedTopic, setSelectedTopic] = useState<string>('random');
 
   const [isStarting, setIsStarting] = useState(false);
+
+  useEffect(() => {
+    const storedPart = typeof window !== 'undefined' ? window.localStorage.getItem('practiceSpeakingPart') : null;
+    if (isPracticeSpeakingPartValue(storedPart)) {
+      setSelectedPart(storedPart === '2-3' ? 'all' : storedPart);
+    }
+  }, []);
 
   const startPractice = async () => {
     if (isStarting || isCheckingAccess) {
@@ -44,7 +54,7 @@ export default function Page() {
 
       const topicParam = selectedTopic === 'random' ? randomTopic() : selectedTopic;
 
-      const params: Record<string, string | number> = {
+      const params: Record<string, string> = {
         part: selectedPart,
       };
 
@@ -64,7 +74,7 @@ export default function Page() {
           const randomIndex = Math.floor(Math.random() * json.data.length);
           const randomSpeakingId = json.data[randomIndex].speaking_id;
           localStorage.setItem('practiceSpeakingId', randomSpeakingId.toString());
-          localStorage.setItem('practiceSpeakingPart', String(selectedPart));
+          localStorage.setItem('practiceSpeakingPart', selectedPart);
           router.push('/practice/speaking/rules/');
         } else {
           console.error('Нет доступных speaking_id');
@@ -80,7 +90,13 @@ export default function Page() {
       return [] as PracticeSpeakingCategoriesResponse['data'][number]['tags'];
     }
 
-    return data.data.find(category => category.name === `speaking_part_${selectedPart}`)?.tags ?? [];
+    if (!data) {
+      return [] as PracticeSpeakingCategoriesResponse['data'][number]['tags'];
+    }
+
+    const categoryName = selectedPart === 'all' ? 'speaking_part_all' : `speaking_part_${selectedPart}`;
+
+    return data.data.find(category => category.name === categoryName)?.tags ?? [];
   }, [data, selectedPart]);
 
   const randomTopic = () => {
@@ -123,8 +139,8 @@ export default function Page() {
               <h1 className='mb-[28rem] text-[24rem] font-semibold leading-tight text-d-black'>{tCommon('tasksSelection')}</h1>
               <div className='mb-[32rem]'>
                 <label className='mb-[12rem] block text-[16rem] leading-snug text-d-black/80'>Please select a part of Speaking section you want to practice.</label>
-                <div className='grid grid-cols-3 gap-x-[12rem]'>
-                  {[1, 2, 3].map(part => (
+                <div className='grid grid-cols-4 gap-x-[12rem]'>
+                  {PART_OPTIONS.map(part => (
                     <button
                       key={part}
                       type='button'
@@ -132,11 +148,11 @@ export default function Page() {
                       onClick={() => {
                         if (selectedPart !== part) {
                           setSelectedTopic('random');
-                          setSelectedPart(part as 1 | 2 | 3);
+                          setSelectedPart(part);
                         }
                       }}
                     >
-                      {tCommon('partNumber', { number: part })}
+                      {part === 'all' ? 'All parts' : tCommon('partNumber', { number: Number(part) })}
                     </button>
                   ))}
                 </div>

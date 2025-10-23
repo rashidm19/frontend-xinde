@@ -1,3 +1,5 @@
+import type { PracticeSpeakingPartValue } from './PracticeSpeaking';
+
 export interface IPracticeScoresStats {
   best_listening_score: number;
   best_reading_score: number;
@@ -27,7 +29,7 @@ export interface PracticeHistoryEntry {
 
 export interface PracticeSectionHistory {
   title?: string;
-  part?: number;
+  part?: PracticeSpeakingPartValue | number;
   tag?: string;
 }
 

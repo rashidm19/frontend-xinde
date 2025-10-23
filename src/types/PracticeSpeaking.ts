@@ -1,3 +1,10 @@
+export const SPEAKING_PART_VALUES = ['1', '2', '3', 'all', '2-3'] as const;
+
+export type PracticeSpeakingPartValue = (typeof SPEAKING_PART_VALUES)[number];
+
+export const isPracticeSpeakingPartValue = (value: unknown): value is PracticeSpeakingPartValue =>
+  typeof value === 'string' && (SPEAKING_PART_VALUES as readonly string[]).includes(value);
+
 export interface PracticeSpeakingSummary {
   speaking_id: number;
   title: string;
@@ -5,6 +12,7 @@ export interface PracticeSpeakingSummary {
   best_score: number | null;
   questions_count: number;
   attempts: number;
+  part?: PracticeSpeakingPartValue;
 }
 
 export interface PracticeSpeakingListResponse {
@@ -37,10 +45,12 @@ export interface PracticeSpeakingQuestion {
 
 export interface PracticeSpeakingPartResponse {
   questions: PracticeSpeakingQuestion[];
+  part?: PracticeSpeakingPartValue;
 }
 
 export interface PracticeSpeakingAttempt {
   id: number;
+  part?: PracticeSpeakingPartValue;
 }
 
 export interface PracticeSpeakingAnswer {
