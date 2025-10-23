@@ -5,7 +5,13 @@ import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useReactMediaRecorder } from 'react-media-recorder';
 import axiosInstance from '@/lib/axiosInstance';
-import type { PracticeSpeakingAnswer, PracticeSpeakingAttempt, PracticeSpeakingPartResponse } from '@/types/PracticeSpeaking';
+import type {
+  PracticeSpeakingAnswer,
+  PracticeSpeakingAttempt,
+  PracticeSpeakingPartResponse,
+  PracticeSpeakingPartValue,
+} from '@/types/PracticeSpeaking';
+import { isPracticeSpeakingPartValue } from '@/types/PracticeSpeaking';
 import { cn } from '@/lib/utils';
 import { AlertTriangle, CheckCircle, Info, Loader2, Mic, MicOff, Play, RefreshCw, SkipForward, Square, Volume2 } from 'lucide-react';
 
@@ -20,19 +26,27 @@ type ToastMessage = {
   text: string;
 };
 
-const PART_DETAILS: Record<number, { label: string; timeLimit: number; blurb?: string }> = {
-  1: {
+const PART_DETAILS: Partial<Record<PracticeSpeakingPartValue, { label: string; timeLimit: number; blurb?: string }>> = {
+  '1': {
     label: 'Part 1',
     timeLimit: 45,
   },
-  2: {
+  '2': {
     label: 'Part 2',
     timeLimit: 120,
     blurb: 'You have up to 2 minutes to speak. Take a breath and cover the key points.',
   },
-  3: {
+  '3': {
     label: 'Part 3',
     timeLimit: 60,
+  },
+  'all': {
+    label: 'All Parts',
+    timeLimit: 60,
+  },
+  '2-3': {
+    label: 'Part 2+3',
+    timeLimit: 90,
   },
 };
 
@@ -56,7 +70,7 @@ export default function SpeakingTestForm({ data }: FormProps) {
   const [toast, setToast] = useState<ToastMessage | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [submittedQuestions, setSubmittedQuestions] = useState<Record<number, boolean>>({});
-  const [partNumber, setPartNumber] = useState<1 | 2 | 3 | null>(null);
+  const [partValue, setPartValue] = useState<PracticeSpeakingPartValue | null>(null);
   const [feedbackAttemptId, setFeedbackAttemptId] = useState<number | null>(null);
   const [isFinishingAttempt, setIsFinishingAttempt] = useState(false);
   const [introAudioState, setIntroAudioState] = useState<'idle' | 'playing'>('idle');
@@ -75,12 +89,19 @@ export default function SpeakingTestForm({ data }: FormProps) {
   const totalQuestions = sortedQuestions.length;
 
   useEffect(() => {
-    const partFromStorage = Number(localStorage.getItem('practiceSpeakingPart'));
-    if (partFromStorage === 1 || partFromStorage === 2 || partFromStorage === 3) {
-      setPartNumber(partFromStorage);
+    const storedPart = localStorage.getItem('practiceSpeakingPart');
+    if (isPracticeSpeakingPartValue(storedPart)) {
+      setPartValue(storedPart);
     }
     practiceAttemptIdRef.current = localStorage.getItem('practiceSpeakingIdStarted');
   }, []);
+
+  useEffect(() => {
+    if (isPracticeSpeakingPartValue(data.part)) {
+      setPartValue(data.part);
+      localStorage.setItem('practiceSpeakingPart', data.part);
+    }
+  }, [data.part]);
 
   useEffect(() => {
     emitTelemetry('speaking_view_opened', { totalQuestions });
@@ -103,7 +124,7 @@ export default function SpeakingTestForm({ data }: FormProps) {
     },
   });
 
-  const partDetails = partNumber ? PART_DETAILS[partNumber] : null;
+  const partDetails = partValue ? PART_DETAILS[partValue] ?? null : null;
   const timeLimitSeconds = partDetails?.timeLimit ?? 60;
 
   // const micStatus = useMemo(() => {
@@ -337,6 +358,10 @@ export default function SpeakingTestForm({ data }: FormProps) {
     try {
       const response = await axiosInstance.post<PracticeSpeakingAttempt>(`/practice/speaking/${practiceId}/finish`, undefined);
       const finishData = response.data;
+      if (isPracticeSpeakingPartValue(finishData?.part)) {
+        setPartValue(finishData.part);
+        localStorage.setItem('practiceSpeakingPart', finishData.part);
+      }
       if (finishData?.id) {
         setFeedbackAttemptId(finishData.id);
         pushToast({ tone: 'info', text: 'Feedback is ready. You can review it now.' });
@@ -585,7 +610,7 @@ export default function SpeakingTestForm({ data }: FormProps) {
               <div className='mb-[10rem] flex items-center justify-between gap-[10rem]'>
                 <div className='flex flex-col gap-[4rem]'>
                   <span className='text-[11rem] font-medium uppercase tracking-[0.12em] text-[#AB7633]'>Question {question.number}</span>
-                  {partNumber === 3 && (
+                  {partValue === '3' && (
                     <span className='w-fit rounded-full bg-[#FFF4E6] px-[10rem] py-[4rem] text-[11rem] font-semibold uppercase tracking-[0.14em] text-[#AB7633]'>
                       Follow-up
                     </span>

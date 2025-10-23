@@ -9,6 +9,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useCustomTranslations } from '@/hooks/useCustomTranslations';
 import { cn } from '@/lib/utils';
 import { PracticeHistoryEntry, PracticeSectionKey } from '@/types/Stats';
+import type { PracticeSpeakingPartValue } from '@/types/PracticeSpeaking';
 
 interface PracticeHistoryProps {
   entries: PracticeHistoryEntry[];
@@ -212,7 +213,7 @@ export function PracticeHistory({ entries, loading, onRetry, onCta, onStartSecti
                       <div className='flex flex-1 items-center justify-end gap-[14rem] tablet:w-full tablet:flex-wrap tablet:justify-start'>
                         <MetricsCluster
                           band={item.score != null ? item.score.toFixed(1) : '--'}
-                          part={item.practice?.part != null ? String(item.practice?.part) : undefined}
+                          part={item.section === 'speaking' ? formatSpeakingPart(item.practice?.part) : undefined}
                           tag={item.practice?.tag != null ? item.practice?.tag : undefined}
                           labels={{
                             band: t('metrics.band'),
@@ -378,6 +379,34 @@ function MetricsCluster({
       ))}
     </div>
   );
+}
+
+function formatSpeakingPart(part: PracticeSpeakingPartValue | number | null | undefined) {
+  if (part == null) {
+    return undefined;
+  }
+
+  if (typeof part === 'number') {
+    if (part === 2) {
+      return 'Part 2+3';
+    }
+    return `Part ${part}`;
+  }
+
+  switch (part) {
+    case '1':
+      return 'Part 1';
+    case '2':
+      return 'Part 2';
+    case '3':
+      return 'Part 3';
+    case 'all':
+      return 'All parts';
+    case '2-3':
+      return 'Part 2+3';
+    default:
+      return part;
+  }
 }
 
 function HistorySkeleton() {
