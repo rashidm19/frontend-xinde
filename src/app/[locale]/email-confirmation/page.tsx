@@ -5,9 +5,11 @@ import { useEffect, useState } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { CheckCircle2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 
 import { AuthResendVerificationError, postAuthResendVerification } from '@/api/POST_auth_resend_verification';
-import { AuthAlert, AuthButton, AuthLayout, FormCard } from '@/components/auth';
+import { AuthAlert, AuthButton, AuthLayout, CaptchaGate, FormCard } from '@/components/auth';
+import { useCaptcha, type CaptchaExecutionResult } from '@/hooks/useCaptcha';
 import { cn } from '@/lib/utils';
 
 interface PageProps {
@@ -22,6 +24,9 @@ export default function EmailConfirmationPage({ params }: PageProps) {
   const [serverMessage, setServerMessage] = useState<{ type: 'error' | 'success'; text: string } | null>(null);
   const [isResending, setIsResending] = useState(false);
   const [email, setEmail] = useState('');
+  const [captchaMessage, setCaptchaMessage] = useState<string | null>(null);
+  const captcha = useCaptcha({ action: 'auth_resend_verification', locale });
+  const tCaptcha = useTranslations('auth.captcha');
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -40,12 +45,61 @@ export default function EmailConfirmationPage({ params }: PageProps) {
     try {
       setIsResending(true);
       setServerMessage(null);
-      await postAuthResendVerification({ email });
+      setCaptchaMessage(null);
+
+      let captchaResult: CaptchaExecutionResult | null = null;
+
+      if (captcha.enabled) {
+        try {
+          captchaResult = await captcha.execute({ action: 'auth_resend_verification' });
+        } catch (error) {
+          setCaptchaMessage(tCaptcha('errors.unavailable'));
+          captcha.requireChallenge('network');
+          setIsResending(false);
+          return;
+        }
+
+        if (!captchaResult || !captcha.provider) {
+          setCaptchaMessage(tCaptcha('errors.unavailable'));
+          captcha.requireChallenge('manual');
+          setIsResending(false);
+          return;
+        }
+      }
+
+      await postAuthResendVerification({
+        email,
+        ...(captcha.enabled && captchaResult && captcha.provider
+          ? {
+              captchaToken: captchaResult.token,
+              captchaProvider: captcha.provider,
+              captchaMode: captchaResult.mode,
+            }
+          : {}),
+      });
       setServerMessage({ type: 'success', text: 'Confirmation email resent. Please check your inbox.' });
+      captcha.handleBackendResult(true);
     } catch (error) {
       if (error instanceof AuthResendVerificationError) {
-        setServerMessage({ type: 'error', text: error.message || 'Could not resend the email. Try again later.' });
+        if (error.code === 'captcha_low_score') {
+          captcha.handleBackendResult(false, 'low_score');
+          setCaptchaMessage(tCaptcha('server.lowScore'));
+        } else if (error.code === 'captcha_unavailable') {
+          captcha.handleBackendResult(false, 'network');
+          captcha.requireChallenge('network');
+          setCaptchaMessage(tCaptcha('errors.unavailable'));
+        } else if (error.code === 'captcha_required' || error.code === 'captcha_failed' || error.code === 'captcha_timeout') {
+          captcha.handleBackendResult(false, 'backend');
+          setCaptchaMessage(tCaptcha('server.challenge'));
+        } else if (error.code && error.code.startsWith('captcha')) {
+          captcha.handleBackendResult(false, 'backend');
+          setCaptchaMessage(tCaptcha('server.challenge'));
+        } else {
+          setServerMessage({ type: 'error', text: error.message || 'Could not resend the email. Try again later.' });
+          captcha.handleBackendResult(false);
+        }
       } else {
+        captcha.handleBackendResult(false);
         setServerMessage({ type: 'error', text: 'An unexpected error occurred. Please try again.' });
       }
     } finally {
@@ -100,12 +154,17 @@ export default function EmailConfirmationPage({ params }: PageProps) {
             )}
           </button>
 
-          {(serverMessage?.type === 'error' || serverMessage?.type === 'success') && (
+          <CaptchaGate controller={captcha} />
+
+          {(serverMessage?.type === 'error' || serverMessage?.type === 'success' || !!captchaMessage) && (
             <div aria-live='polite' className='min-h-[32rem]'>
               <AnimatePresence>
                 {serverMessage ? (
                   <AuthAlert key={serverMessage.text} variant={serverMessage.type === 'error' ? 'error' : 'success'} description={serverMessage.text} />
                 ) : null}
+              </AnimatePresence>
+              <AnimatePresence>
+                {captchaMessage ? <AuthAlert key={captchaMessage} variant='error' description={captchaMessage} /> : null}
               </AnimatePresence>
             </div>
           )}

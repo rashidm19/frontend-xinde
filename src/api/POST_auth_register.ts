@@ -2,15 +2,18 @@
 
 import { z } from 'zod';
 
+import { captchaMetadataSchema } from '@/api/schemas/captcha';
 import axiosInstance from '@/lib/axiosInstance';
 
-const requestSchema = z.object({
-  name: z.string().min(1),
-  email: z.string().min(1).email(),
-  password: z.string().min(8),
-  region: z.string().min(1),
-  avatar: z.instanceof(Blob).optional(),
-});
+const requestSchema = z
+  .object({
+    name: z.string().min(1),
+    email: z.string().min(1).email(),
+    password: z.string().min(8),
+    region: z.string().min(1),
+    avatar: z.instanceof(Blob).optional(),
+  })
+  .merge(captchaMetadataSchema.partial());
 
 const responseSchema = z.object({
   message: z.string().min(1),
@@ -46,6 +49,12 @@ export const postAuthRegister = async (input: AuthRegisterRequest): Promise<Auth
 
   if (payload.avatar) {
     body.append('avatar', payload.avatar);
+  }
+
+  if (payload.captchaToken && payload.captchaProvider && payload.captchaMode) {
+    body.append('captchaToken', payload.captchaToken);
+    body.append('captchaProvider', payload.captchaProvider);
+    body.append('captchaMode', payload.captchaMode);
   }
 
   const response = await axiosInstance.post('/auth/register', body, {

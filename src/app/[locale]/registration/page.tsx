@@ -10,12 +10,14 @@ import { useRouter } from "next/navigation";
 import * as NProgress from "nprogress";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { useTranslations } from "next-intl";
 
 import { AuthRegisterError, postAuthRegister } from "@/api/POST_auth_register";
 import { GoogleLoginError, postAuthLoginGoogle } from "@/api/POST_auth_login_google";
-import { AuthAlert, AuthButton, AuthInput, AuthLayout, FormCard, OAuthButtons, PasswordInput } from "@/components/auth";
+import { AuthAlert, AuthButton, AuthInput, AuthLayout, CaptchaGate, FormCard, OAuthButtons, PasswordInput } from "@/components/auth";
 import { REGIONS, type RegionValue } from "@/lib/regions";
 import { cn } from "@/lib/utils";
+import { useCaptcha, type CaptchaExecutionResult } from "@/hooks/useCaptcha";
 import { resetProfile } from "@/stores/profileStore";
 
 const registerSchema = z
@@ -72,7 +74,10 @@ export default function RegistrationPage({ params }: PageProps) {
   const [serverMessage, setServerMessage] = useState<{ type: "error" | "success"; text: string } | null>(null);
   const [googleError, setGoogleError] = useState<string | null>(null);
   const [googleProcessing, setGoogleProcessing] = useState(false);
+  const [captchaMessage, setCaptchaMessage] = useState<string | null>(null);
   const prefersReducedMotion = useReducedMotion();
+  const captcha = useCaptcha({ action: "auth_register", locale });
+  const tCaptcha = useTranslations("auth.captcha");
 
   const {
     register,
@@ -110,17 +115,75 @@ export default function RegistrationPage({ params }: PageProps) {
     setGoogleProcessing(true);
     setGoogleError(null);
     setServerMessage(null);
+    setCaptchaMessage(null);
+
+    let captchaResult: CaptchaExecutionResult | null = null;
+
+    if (captcha.enabled) {
+      try {
+        captchaResult = await captcha.execute({ action: "auth_register_google" });
+      } catch (error) {
+        setCaptchaMessage(tCaptcha("errors.unavailable"));
+        captcha.requireChallenge("network");
+        setGoogleProcessing(false);
+        return;
+      }
+
+      if (!captchaResult || !captcha.provider) {
+        setCaptchaMessage(tCaptcha("errors.unavailable"));
+        captcha.requireChallenge("manual");
+        setGoogleProcessing(false);
+        return;
+      }
+    }
 
     try {
-      const result = await postAuthLoginGoogle({ token: credential });
+      const result = await postAuthLoginGoogle({
+        token: credential,
+        ...(captcha.enabled && captchaResult && captcha.provider
+          ? {
+              captchaToken: captchaResult.token,
+              captchaProvider: captcha.provider,
+              captchaMode: captchaResult.mode,
+            }
+          : {}),
+      });
       localStorage.setItem("token", result.token);
       resetProfile();
+      captcha.handleBackendResult(true);
       navigateToProfile();
     } catch (error) {
+      let handledByCaptcha = false;
+
       if (error instanceof GoogleLoginError) {
-        setGoogleError(resolveGoogleError(error.code));
+        switch (error.code) {
+          case "captcha_low_score":
+            setCaptchaMessage(tCaptcha("server.lowScore"));
+            captcha.handleBackendResult(false, "low_score");
+            handledByCaptcha = true;
+            break;
+          case "captcha_required":
+          case "captcha_failed":
+          case "captcha_timeout":
+            setCaptchaMessage(tCaptcha("server.challenge"));
+            captcha.handleBackendResult(false, "backend");
+            handledByCaptcha = true;
+            break;
+          case "captcha_unavailable":
+            setCaptchaMessage(tCaptcha("errors.unavailable"));
+            captcha.handleBackendResult(false, "network");
+            captcha.requireChallenge("network");
+            handledByCaptcha = true;
+            break;
+          default:
+            setGoogleError(resolveGoogleError(error.code));
+        }
       } else {
         setGoogleError(GOOGLE_ERROR_MESSAGES.default);
+      }
+
+      if (!handledByCaptcha) {
+        captcha.handleBackendResult(false);
       }
     } finally {
       setGoogleProcessing(false);
@@ -132,14 +195,41 @@ export default function RegistrationPage({ params }: PageProps) {
   };
 
   const onSubmit = async (values: RegisterSchema) => {
+    setServerMessage(null);
+    setGoogleError(null);
+    setCaptchaMessage(null);
+
+    let captchaResult: CaptchaExecutionResult | null = null;
+
+    if (captcha.enabled) {
+      try {
+        captchaResult = await captcha.execute({ action: "auth_register" });
+      } catch (error) {
+        setCaptchaMessage(tCaptcha("errors.unavailable"));
+        captcha.requireChallenge("network");
+        return;
+      }
+
+      if (!captchaResult || !captcha.provider) {
+        setCaptchaMessage(tCaptcha("errors.unavailable"));
+        captcha.requireChallenge("manual");
+        return;
+      }
+    }
+
     try {
-      setServerMessage(null);
-      setGoogleError(null);
       await postAuthRegister({
         name: values.name,
         email: values.email,
         password: values.password,
         region: values.region,
+        ...(captcha.enabled && captchaResult && captcha.provider
+          ? {
+              captchaToken: captchaResult.token,
+              captchaProvider: captcha.provider,
+              captchaMode: captchaResult.mode,
+            }
+          : {}),
       });
 
       if (typeof window !== "undefined") {
@@ -147,19 +237,47 @@ export default function RegistrationPage({ params }: PageProps) {
       }
 
       setServerMessage({ type: "success", text: "Account created. Please verify your email." });
+      captcha.handleBackendResult(true);
       setTimeout(() => {
         router.push(`/${locale}/email-confirmation`);
       }, 400);
     } catch (error) {
       if (error instanceof AuthRegisterError) {
+        if (error.code === "captcha_low_score") {
+          captcha.handleBackendResult(false, "low_score");
+          setCaptchaMessage(tCaptcha("server.lowScore"));
+          return;
+        }
+
+        if (error.code === "captcha_unavailable") {
+          captcha.handleBackendResult(false, "network");
+          captcha.requireChallenge("network");
+          setCaptchaMessage(tCaptcha("errors.unavailable"));
+          return;
+        }
+
+        if (error.code === "captcha_required" || error.code === "captcha_failed" || error.code === "captcha_timeout") {
+          captcha.handleBackendResult(false, "backend");
+          setCaptchaMessage(tCaptcha("server.challenge"));
+          return;
+        }
+
+        if (error.code && error.code.startsWith("captcha")) {
+          captcha.handleBackendResult(false, "backend");
+          setCaptchaMessage(tCaptcha("server.challenge"));
+          return;
+        }
+
         if (error.code === "email_in_use") {
           setServerMessage({ type: "error", text: "This email is already registered." });
         } else {
           setServerMessage({ type: "error", text: error.message || "Registration failed. Try again." });
         }
+        captcha.handleBackendResult(false);
         return;
       }
 
+      captcha.handleBackendResult(false);
       setServerMessage({ type: "error", text: "An unexpected error occurred. Please try again." });
     }
   };
@@ -258,7 +376,11 @@ export default function RegistrationPage({ params }: PageProps) {
             </AuthButton>
           </motion.div>
 
-          {(serverMessage?.type === "error" || serverMessage?.type === "success" || !!googleError) && (
+          <motion.div variants={prefersReducedMotion ? undefined : itemVariants}>
+            <CaptchaGate controller={captcha} />
+          </motion.div>
+
+          {(serverMessage?.type === "error" || serverMessage?.type === "success" || !!googleError || !!captchaMessage) && (
             <motion.div variants={prefersReducedMotion ? undefined : itemVariants} aria-live="polite" className="flex flex-col gap-[10rem]">
               <AnimatePresence>
                 {serverMessage ? (
@@ -271,6 +393,9 @@ export default function RegistrationPage({ params }: PageProps) {
               </AnimatePresence>
               <AnimatePresence>
                 {googleError ? <AuthAlert key={googleError} variant="error" description={googleError} /> : null}
+              </AnimatePresence>
+              <AnimatePresence>
+                {captchaMessage ? <AuthAlert key={captchaMessage} variant="error" description={captchaMessage} /> : null}
               </AnimatePresence>
             </motion.div>
           )}
