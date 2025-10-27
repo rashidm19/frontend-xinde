@@ -2,11 +2,14 @@
 
 import { z } from 'zod';
 
+import { captchaMetadataSchema } from '@/api/schemas/captcha';
 import axiosInstance from '@/lib/axiosInstance';
 
-const requestSchema = z.object({
-  token: z.string().min(1, 'Google ID token is required.'),
-});
+const requestSchema = z
+  .object({
+    token: z.string().min(1, 'Google ID token is required.'),
+  })
+  .merge(captchaMetadataSchema.partial());
 
 const responseSchema = z.object({
   token: z.string().min(1),

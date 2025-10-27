@@ -2,12 +2,15 @@
 
 import { z } from 'zod';
 
+import { captchaMetadataSchema } from '@/api/schemas/captcha';
 import axiosInstance from '@/lib/axiosInstance';
 
-const requestSchema = z.object({
+const requestSchema = z
+  .object({
   email: z.string().min(1),
   password: z.string().min(1),
-});
+  })
+  .merge(captchaMetadataSchema.partial());
 
 const responseSchema = z.object({
   token: z.string().min(1),

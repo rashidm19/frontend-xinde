@@ -747,5 +747,28 @@
         }
       }
     }
+  },
+  "auth": {
+    "captcha": {
+      "title": "Quick verification",
+      "description": "Complete the CAPTCHA so we can be sure you’re not a bot.",
+      "status": {
+        "loading": "Preparing challenge…",
+        "ready": "Challenge ready"
+      },
+      "actions": {
+        "refresh": "Refresh CAPTCHA"
+      },
+      "errors": {
+        "expired": "The verification expired. Please try again.",
+        "network": "We couldn’t load the CAPTCHA. Check your connection and retry.",
+        "unavailable": "CAPTCHA is temporarily unavailable. Please try again in a moment.",
+        "closed": "The challenge was closed before completion."
+      },
+      "server": {
+        "lowScore": "We just need a quick extra check. Please complete the CAPTCHA.",
+        "challenge": "Please solve the CAPTCHA to continue."
+      }
+    }
   }
 }
