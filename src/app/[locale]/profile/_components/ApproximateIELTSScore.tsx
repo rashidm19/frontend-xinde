@@ -7,15 +7,15 @@ export const ApproximateIELTSScore = ({ score = 0, loading }: { score: number; l
   const { t } = useCustomTranslations('profile.approximateIELTSSCore');
 
   return (
-    <div className='relative flex w-[260rem] flex-col items-center text-center'>
+    <div className='relative flex w-full flex-col items-center text-center tablet:max-w-[320rem] desktop:w-[260rem]'>
       <h2 className='mb-[12rem] text-[20rem] leading-tight'>{t('title')}</h2>
 
-      {loading && <Skeleton className='mb-[24rem] h-[16rem] w-[180rem]' />}
+      {loading ? <Skeleton className='mb-[24rem] h-[16rem] w-full max-w-[180rem]' /> : null}
 
       <HorseshoeProgressBar
         value={score}
-        width={220}
-        height={140}
+        width={200}
+        height={128}
         maxValue={10}
         strokeWidth={14.5}
         textColor='#383838'

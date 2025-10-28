@@ -200,7 +200,8 @@
       "manage": "Manage subscription",
       "history": "Billing history",
       "refresh": "Refresh",
-      "retry": "Retry"
+      "retry": "Retry",
+      "close": "Close"
     },
     "error": {
       "subscription": "We couldn’t load your subscription details.",
@@ -235,6 +236,21 @@
       ],
       "price": "{price}<span> /{monthCount, select, 3 { 3} other {}} month</span>",
       "about": "Activated for unlimited time"
+    },
+    "billing": {
+      "interval": {
+        "day": "day",
+        "week": "week",
+        "month": "month",
+        "year": "year"
+      }
+    },
+    "mobileHeader": {
+      "choosePlan": "Choose your plan",
+      "choosePlanSubtitle": "Upgrade to get full access"
+    },
+    "cta": {
+      "footerHint": "Tap any plan to continue"
     },
     "promo": {
       "label": "Promo code",

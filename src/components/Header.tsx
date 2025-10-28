@@ -1,5 +1,6 @@
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
-import { Dialog, DialogContent, DialogTrigger } from './ui/dialog';
+import { BottomSheet } from './ui/bottom-sheet';
+import { Dialog, DialogContent } from './ui/dialog';
 import Link from 'next/link';
 import { PromoPromptModal } from './PromoPromptModal';
 import React from 'react';
@@ -12,22 +13,32 @@ import { ProfileEditFormModal } from '@/app/[locale]/profile/settings/_component
 import { logout } from '@/lib/logout';
 import { SubscriptionDetailsModal } from '@/components/SubscriptionDetailsModal';
 import { PricesModal } from '@/components/PricesModal';
+import { cn } from '@/lib/utils';
+import { useMediaQuery } from 'usehooks-ts';
+import { useLocale } from 'next-intl';
 
 interface Props {
   name?: string;
   email?: string;
   avatar?: string;
+  title?: string;
+  onOpenSubscription?: () => void;
+  onOpenProfileSettings?: () => void;
+  onOpenLanguage?: () => void;
+  onLogout?: () => void;
 }
 
-export const Header = ({ name, email, avatar }: Props) => {
+export const Header = ({ name, email, avatar, title: _title, onOpenSubscription, onOpenProfileSettings, onOpenLanguage, onLogout }: Props) => {
   const router = useRouter();
   const { t, tImgAlts, tActions } = useCustomTranslations('header');
-  const { hasActiveSubscription, subscription, balance, balanceStatus } = useSubscription();
+  const { hasActiveSubscription, subscription, balanceStatus } = useSubscription();
+  const locale = useLocale();
 
   const [isUserMenuOpen, setUserMenuOpen] = React.useState(false);
   const [isSettingsModalOpen, setSettingsModalOpen] = React.useState(false);
   const [isLangModalOpen, setLangModalOpen] = React.useState(false);
   const [isSubscriptionModalOpen, setSubscriptionModalOpen] = React.useState(false);
+  const [hasScrolled, setHasScrolled] = React.useState(false);
   const userMenuRef = React.useRef<HTMLDivElement | null>(null);
 
   const [isPricesModalOpen, setPricesModalOpen] = React.useState(false);
@@ -36,6 +47,7 @@ export const Header = ({ name, email, avatar }: Props) => {
   const [planDiscounts, setPlanDiscounts] = React.useState<Record<string, { amount: number; currency: string }>>({});
   const [promoMessage, setPromoMessage] = React.useState<string | null>(null);
   const [promoError, setPromoError] = React.useState<string | null>(null);
+  const isMobile = useMediaQuery('(max-width: 767px)');
 
   React.useEffect(() => {
     if (!isUserMenuOpen) {
@@ -62,6 +74,23 @@ export const Header = ({ name, email, avatar }: Props) => {
       document.removeEventListener('keydown', handleKeydown);
     };
   }, [isUserMenuOpen]);
+
+  React.useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    const handleScroll = () => {
+      setHasScrolled(window.scrollY > 4);
+    };
+
+    handleScroll();
+    window.addEventListener('scroll', handleScroll, { passive: true });
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, []);
 
   const handlePlanSelect = (planId: string) => {
     setSelectedPlanId(planId);
@@ -95,74 +124,171 @@ export const Header = ({ name, email, avatar }: Props) => {
 
   const closeUserMenu = () => setUserMenuOpen(false);
 
+  const handleUpgradeClick = React.useCallback(() => {
+    setPromoMessage(null);
+    setPromoError(null);
+
+    if (isMobile) {
+      router.push(`/${locale}/pricing`);
+      return;
+    }
+
+    setPricesModalOpen(true);
+  }, [isMobile, locale, router, setPricesModalOpen, setPromoError, setPromoMessage]);
+
+  const triggerSubscriptionModal = React.useCallback(() => {
+    if (onOpenSubscription) {
+      onOpenSubscription();
+    } else {
+      setSubscriptionModalOpen(true);
+    }
+  }, [onOpenSubscription]);
+
+  const triggerProfileSettings = React.useCallback(() => {
+    if (onOpenProfileSettings) {
+      onOpenProfileSettings();
+    } else {
+      if (isMobile) {
+        router.push(`/${locale}/profile/edit`);
+        return;
+      }
+
+      setSettingsModalOpen(true);
+    }
+  }, [onOpenProfileSettings, isMobile, router, locale]);
+
+  const triggerLanguageModal = React.useCallback(() => {
+    if (onOpenLanguage) {
+      onOpenLanguage();
+    } else {
+      setLangModalOpen(true);
+    }
+  }, [onOpenLanguage]);
+
+  const triggerLogout = React.useCallback(() => {
+    if (onLogout) {
+      onLogout();
+      return;
+    }
+
+    logout();
+    nProgress.start();
+    router.push('/');
+  }, [onLogout, router]);
+
   const openSettingsModal = () => {
     closeUserMenu();
-    setSettingsModalOpen(true);
+    triggerProfileSettings();
   };
 
   const openLanguageModal = () => {
     closeUserMenu();
-    setLangModalOpen(true);
+    triggerLanguageModal();
   };
 
   const handleLogout = () => {
     closeUserMenu();
-    logout();
-    nProgress.start();
-    router.push('/');
+    triggerLogout();
   };
-
   const displayName = name?.trim() || t('accountMenu.user');
   const displayEmail = email?.trim() || null;
   const planName = subscription?.plan?.name ?? subscription?.subscription_plan?.name ?? null;
-  const practiceBalance = Math.max(0, balance?.practice_balance ?? 0);
   const isBalanceReady = balanceStatus === 'success' || balanceStatus === 'error';
 
-  const headerChip = React.useMemo(() => {
-    if (hasActiveSubscription) {
-      return (
-        <button
-          type='button'
-          onClick={() => setSubscriptionModalOpen(true)}
-          className='inline-flex items-center rounded-full bg-d-green px-[18rem] py-[10rem] text-[13rem] font-semibold text-d-black transition-all duration-200 hover:-translate-y-[1rem] hover:shadow-[0_8rem_20rem_rgba(0,0,0,0.08)]'
-        >
-          <span>{t('chips.subscription')}</span>
-          {planName ? <span className='ml-[8rem] text-[12rem] font-medium text-d-black/70'>• {planName}</span> : null}
-        </button>
-      );
-    }
+  const upgradeTrigger = (
+    <button
+      type='button'
+      onClick={handleUpgradeClick}
+      className='inline-flex w-full items-center justify-center gap-x-[4rem] rounded-[40rem] bg-d-green px-[20rem] py-[12rem] text-left text-black transition-colors duration-200 hover:bg-d-green'
+    >
+      <span className='text-[13rem] font-semibold leading-tight'>{tActions('upgradePlan')}</span>
+      <img src='/images/icon_stars--black.svg' alt={tImgAlts('star')} className='size-[14rem]' />
+    </button>
+  );
 
-    if (!isBalanceReady) {
-      return null;
-    }
+  const headerChip = hasActiveSubscription ? (
+    <button
+      type='button'
+      onClick={triggerSubscriptionModal}
+      className='inline-flex items-center rounded-full bg-d-green px-[18rem] py-[10rem] text-[13rem] font-semibold text-d-black transition-all duration-200 hover:-translate-y-[1rem] hover:shadow-[0_8rem_20rem_rgba(0,0,0,0.08)]'
+    >
+      <span>{t('chips.subscription')}</span>
+      {planName ? <span className='ml-[8rem] text-[12rem] font-medium text-d-black/70'>• {planName}</span> : null}
+    </button>
+  ) : !isBalanceReady ? null : (
+    upgradeTrigger
+  );
 
-    return (
-      <Dialog open={isPricesModalOpen} onOpenChange={handlePricesModalOpenChange}>
-        <DialogTrigger
-          className='inline-flex w-full items-center justify-center gap-x-[4rem] rounded-[40rem] bg-d-green px-[20rem] py-[12rem] text-left text-black transition-colors duration-200 hover:bg-d-green'
-          onClick={() => {
-            setPromoMessage(null);
-            setPromoError(null);
-          }}
-        >
-          <span className='text-[13rem] font-semibold leading-tight'>{tActions('upgradePlan')}</span>
-          <img src='/images/icon_stars--black.svg' alt={tImgAlts('star')} className='size-[14rem]' />
-        </DialogTrigger>
-
-        <DialogContent className='fixed left-[50%] top-[50%] flex h-auto w-[1280rem] -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center'>
-          <PricesModal onSelectPlan={handlePlanSelect} promoMessage={promoMessage} promoError={promoError} planDiscounts={planDiscounts} />
-        </DialogContent>
-      </Dialog>
-    );
-  }, [hasActiveSubscription, isBalanceReady, planName, practiceBalance, t, tActions]);
+  const headerClass = cn(
+    'sticky top-0 z-40 border-b border-d-light-gray/60 bg-white/90 backdrop-blur-md transition-shadow duration-200',
+    hasScrolled ? 'shadow-[0_10rem_24rem_-20rem_rgba(56,56,56,0.45)]' : ''
+  );
+  const showUpgradeChip = !hasActiveSubscription;
 
   return (
-    <header className='h-[93rem] rounded-b-[32rem] bg-white'>
-      <nav className='container flex h-full max-w-[1200rem] items-center'>
-        <Link href='/profile' className='mr-[90rem] flex items-center gap-x-[6rem]'>
-          <img src='/images/logo.svg' className='size-[36rem]' alt={tImgAlts('logo')} />
-          <div className='font-poppins text-[21rem] font-semibold'>studybox</div>
+    <header className={headerClass}>
+      <nav className='container flex h-[60rem] max-w-[1200rem] items-center px-[16rem] tablet:hidden'>
+        <Link href='/profile' className='flex items-center gap-x-[8rem]'>
+          <img src='/images/logo.svg' className='size-[32rem]' alt={tImgAlts('logo')} />
+          <span className='font-poppins text-[18rem] font-semibold text-d-black'>Studybox</span>
         </Link>
+        <span className='flex-1' />
+        {showUpgradeChip ? (
+          <button
+            type='button'
+            onClick={() => router.push('/pricing')}
+            className='mx-[12rem] rounded-[16rem] border border-d-violet/50 px-[12rem] py-[6rem] text-[12rem] font-semibold text-d-violet transition-colors hover:border-d-violet'
+          >
+            {tActions('upgradePlan')}
+          </button>
+        ) : null}
+
+        <div className='ml-auto flex items-center gap-[12rem]'>
+          <button
+            type='button'
+            onClick={triggerLanguageModal}
+            className='flex size-[40rem] items-center justify-center rounded-full bg-d-light-gray/80 text-d-black transition hover:bg-d-light-gray'
+            aria-label={t('accountMenu.language')}
+          >
+            <img src='/images/icon_globe.svg' alt={tImgAlts('globe')} className='size-[18rem]' />
+          </button>
+          {/*<button*/}
+          {/*  type='button'*/}
+          {/*  className='flex size-[40rem] items-center justify-center rounded-full bg-d-light-gray/40 text-d-black/70 transition hover:bg-d-light-gray/70'*/}
+          {/*  aria-label='Notifications'*/}
+          {/*>*/}
+          {/*  <Bell className='size-[18rem]' />*/}
+          {/*</button>*/}
+          <button
+            type='button'
+            className='relative flex size-[42rem] items-center justify-center rounded-full border border-d-gray/60 bg-white'
+            aria-label={t('accountMenu.open')}
+          >
+            <Avatar className='size-[36rem] border border-transparent bg-d-light-gray'>
+              <AvatarImage src={avatar} />
+              <AvatarFallback className='text-[14rem]'>{displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
+            </Avatar>
+            {hasActiveSubscription ? (
+              <span className='absolute right-[4rem] top-[4rem] size-[8rem] rounded-full bg-d-green shadow-[0_0_0_2rem_#fff]' aria-hidden />
+            ) : null}
+          </button>
+        </div>
+      </nav>
+
+      <nav className='container hidden h-[93rem] max-w-[1200rem] items-center tablet:flex'>
+        <Link href='/profile' className='mr-[16rem] flex items-center gap-x-[6rem] tablet:mr-[90rem]'>
+          <img src='/images/logo.svg' className='size-[36rem]' alt={tImgAlts('logo')} />
+          <div className='hidden font-poppins text-[21rem] font-semibold tablet:block'>studybox</div>
+        </Link>
+
+        <button
+          type='button'
+          onClick={triggerLanguageModal}
+          className='ml-auto flex size-[44rem] items-center justify-center rounded-full bg-d-light-gray transition hover:bg-d-light-gray/60 tablet:hidden'
+          aria-label={t('accountMenu.language')}
+        >
+          <img src='/images/icon_globe.svg' alt={tImgAlts('globe')} className='size-[20rem]' />
+        </button>
 
         {/*<div className='flex h-full'>*/}
         {/*  {links.map((link, index) =>*/}
@@ -191,7 +317,7 @@ export const Header = ({ name, email, avatar }: Props) => {
         {/*  )}*/}
         {/*</div>*/}
 
-        <div className='ml-auto flex items-center gap-x-[22rem]'>
+        <div className='ml-auto hidden items-center gap-x-[22rem] tablet:flex'>
           {headerChip}
 
           <div className='relative flex items-center' ref={userMenuRef}>
@@ -230,22 +356,17 @@ export const Header = ({ name, email, avatar }: Props) => {
 
                 {!hasActiveSubscription && (
                   <div className='mb-[12rem] border-b border-d-light-gray/60 pb-[12rem]'>
-                    <Dialog open={isPricesModalOpen} onOpenChange={handlePricesModalOpenChange}>
-                      <DialogTrigger
-                        className='inline-flex w-full items-center justify-center gap-x-[4rem] rounded-[40rem] bg-d-green px-[20rem] py-[12rem] text-left text-black transition-colors duration-200 hover:bg-d-green'
-                        onClick={() => {
-                          setPromoMessage(null);
-                          setPromoError(null);
-                        }}
-                      >
-                        <span className='text-[13rem] font-semibold leading-tight'>{tActions('upgradePlan')}</span>
-                        <img src='/images/icon_stars--black.svg' alt={tImgAlts('star')} className='size-[14rem]' />
-                      </DialogTrigger>
-
-                      <DialogContent className='fixed left-[50%] top-[50%] flex h-auto w-[1280rem] -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center'>
-                        <PricesModal onSelectPlan={handlePlanSelect} promoMessage={promoMessage} promoError={promoError} planDiscounts={planDiscounts} />
-                      </DialogContent>
-                    </Dialog>
+                    <button
+                      type='button'
+                      onClick={() => {
+                        closeUserMenu();
+                        handleUpgradeClick();
+                      }}
+                      className='inline-flex w-full items-center justify-center gap-x-[4rem] rounded-[40rem] bg-d-green px-[20rem] py-[12rem] text-left text-black transition-colors duration-200 hover:bg-d-green'
+                    >
+                      <span className='text-[13rem] font-semibold leading-tight'>{tActions('upgradePlan')}</span>
+                      <img src='/images/icon_stars--black.svg' alt={tImgAlts('star')} className='size-[14rem]' />
+                    </button>
                   </div>
                 )}
 
@@ -253,7 +374,7 @@ export const Header = ({ name, email, avatar }: Props) => {
                   type='button'
                   onClick={() => {
                     closeUserMenu();
-                    setSubscriptionModalOpen(true);
+                    triggerSubscriptionModal();
                   }}
                   className='mb-[4rem] flex w-full items-center justify-between rounded-[12rem] px-[12rem] py-[12rem] text-left text-[14rem] font-medium text-d-black hover:bg-d-light-gray/40'
                   role='menuitem'
@@ -294,19 +415,37 @@ export const Header = ({ name, email, avatar }: Props) => {
         </div>
       </nav>
 
-      <Dialog open={isLangModalOpen} onOpenChange={setLangModalOpen}>
-        <DialogContent className='fixed left-[50%] top-[50%] flex h-auto w-[1280rem] -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center backdrop-brightness-90'>
-          <ChangeLangModal />
-        </DialogContent>
-      </Dialog>
+      {!onOpenLanguage ? (
+        isMobile ? (
+          <BottomSheet open={isLangModalOpen} onOpenChange={setLangModalOpen}>
+            <ChangeLangModal variant='mobile' />
+          </BottomSheet>
+        ) : (
+          <Dialog open={isLangModalOpen} onOpenChange={setLangModalOpen}>
+            <DialogContent className='fixed left-[50%] top-[50%] flex h-auto w-[1280rem] -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center backdrop-brightness-90'>
+              <ChangeLangModal variant='desktop' />
+            </DialogContent>
+          </Dialog>
+        )
+      ) : null}
 
-      <Dialog open={isSettingsModalOpen} onOpenChange={setSettingsModalOpen}>
-        <DialogContent className='fixed left-[50%] top-[50%] flex h-auto w-[1280rem] -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center backdrop-brightness-90'>
-          <ProfileEditFormModal />
-        </DialogContent>
-      </Dialog>
+      {!onOpenProfileSettings ? (
+        <Dialog open={isSettingsModalOpen} onOpenChange={setSettingsModalOpen}>
+          <DialogContent className='fixed left-[50%] top-[50%] flex h-auto w-[1280rem] -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center backdrop-brightness-90'>
+            <ProfileEditFormModal />
+          </DialogContent>
+        </Dialog>
+      ) : null}
 
-      <SubscriptionDetailsModal open={isSubscriptionModalOpen} onOpenChange={setSubscriptionModalOpen} />
+      {!onOpenSubscription ? <SubscriptionDetailsModal open={isSubscriptionModalOpen} onOpenChange={setSubscriptionModalOpen} /> : null}
+
+      {!isMobile ? (
+        <Dialog open={isPricesModalOpen} onOpenChange={handlePricesModalOpenChange}>
+          <DialogContent className='fixed left-[50%] top-[50%] flex h-auto w-[1280rem] -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center backdrop-brightness-90'>
+            <PricesModal onSelectPlan={handlePlanSelect} promoMessage={promoMessage} promoError={promoError} planDiscounts={planDiscounts} />
+          </DialogContent>
+        </Dialog>
+      ) : null}
 
       <PromoPromptModal
         open={isPromoModalOpen}

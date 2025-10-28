@@ -4,9 +4,8 @@ import React from 'react';
 import { DialogClose } from './ui/dialog';
 import Image from 'next/image';
 import { useCustomTranslations } from '@/hooks/useCustomTranslations';
-import { useQuery } from '@tanstack/react-query';
-import { ISubscriptionPlan } from '@/types/Billing';
-import { fetchSubscriptionPlans } from '@/api/subscriptions';
+import { normalizeInterval } from '@/lib/pricing';
+import { usePricingPlans } from '@/hooks/usePricingPlans';
 
 interface PricesModalProps {
   onSelectPlan: (planId: string) => void;
@@ -21,12 +20,7 @@ export const PricesModal = ({ onSelectPlan, promoMessage = null, promoError = nu
   const demoIncludes: string[] = t.raw('demo.includes');
   const premiumIncludes: string[] = t.raw('premium.includes');
 
-  const { data: subscriptionPlans, status: subscriptionStatus } = useQuery<ISubscriptionPlan[]>({
-    queryKey: ['/billing/subscriptions/plans'],
-    queryFn: fetchSubscriptionPlans,
-  });
-
-  const activePlans = React.useMemo(() => (subscriptionPlans ?? []).filter(plan => plan.is_active), [subscriptionPlans]);
+  const { activePlans, status: subscriptionStatus } = usePricingPlans();
 
   const currencyFormatter = React.useMemo(
     () =>
@@ -37,33 +31,18 @@ export const PricesModal = ({ onSelectPlan, promoMessage = null, promoError = nu
     []
   );
 
-  const getPlanMonths = React.useCallback((plan: ISubscriptionPlan) => {
-    if (plan.is_period_manual && plan.period_start && plan.period_end) {
-      const startDate = new Date(plan.period_start);
-      const endDate = new Date(plan.period_end);
-      const monthDiff = (endDate.getFullYear() - startDate.getFullYear()) * 12 + (endDate.getMonth() - startDate.getMonth());
-
-      return monthDiff > 0 ? monthDiff : 1;
-    }
-
-    if (!plan.interval) {
-      return 1;
-    }
-
-    const interval = plan.interval.toLowerCase();
-
-    if (interval === 'year') {
-      return Math.max(plan.interval_count, 1) * 12;
-    }
-
-    if (interval === 'month') {
-      return Math.max(plan.interval_count, 1);
-    }
-
-    return Math.max(plan.interval_count, 1);
-  }, []);
-
   const formatCurrency = React.useCallback((value: number, currency: string) => `${currencyFormatter.format(value)} ${currency}`, [currencyFormatter]);
+
+  const getIntervalLabel = React.useCallback(
+    (interval?: string) => {
+      const intervalKey = normalizeInterval(interval);
+      const translationKey = `billing.interval.${intervalKey}`;
+      const translated = t(translationKey, { defaultValue: intervalKey });
+
+      return translated || intervalKey;
+    },
+    [t]
+  );
 
   return (
     // <ScrollArea className='tablet:h-[684rem] tablet:w-[96dvw] desktop:h-[726rem] desktop:w-[1280rem]'>
@@ -115,7 +94,7 @@ export const PricesModal = ({ onSelectPlan, promoMessage = null, promoError = nu
                 const isPrimaryPlan = index === 0;
                 const planFeatures = plan.features && plan.features.length ? plan.features : premiumIncludes;
                 const priceLabel = `${currencyFormatter.format(plan.price)} ${plan.currency}`;
-                const monthCount = getPlanMonths(plan);
+                const intervalLabel = getIntervalLabel(plan.interval);
                 const imageIndex = (index % 2) + 1;
                 const planId = String(plan.id);
 
@@ -141,11 +120,10 @@ export const PricesModal = ({ onSelectPlan, promoMessage = null, promoError = nu
 
                     <div className='mt-auto'>
                       <h3 className='text-[32rem] font-medium'>
-                        {t.rich('premium.price', {
-                          price: priceLabel,
-                          monthCount: String(monthCount),
-                          span: chunks => <span className='text-[14rem] font-normal tablet:text-[16rem]'>{chunks}</span>,
-                        })}
+                        {priceLabel}
+                        <span className='text-[14rem] font-normal tablet:text-[16rem]'>
+                          {' '}/ {intervalLabel}
+                        </span>
                       </h3>
                       <button
                         onClick={() => onSelectPlan(planId)}

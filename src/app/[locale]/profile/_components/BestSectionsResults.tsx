@@ -34,14 +34,14 @@ export const BestSectionsResults = ({ stats, loading }: { stats?: IPracticeScore
   ];
 
   return (
-    <div className='mr-[140rem] w-[290rem]'>
+    <div className='w-full tablet:max-w-[360rem] desktop:mr-[140rem] desktop:w-[290rem]'>
       <h2 className='mb-[24rem] text-[20rem] font-medium leading-tight'>{t('title')}</h2>
 
       {!loading ? (
-        <div className='flex flex-wrap items-center'>
+        <ul className='grid grid-cols-2 gap-x-[16rem] gap-y-[20rem]'>
           {list.map((item, index) => (
-            <li key={index} className={`flex w-[50%] items-center ${index === 2 || index === 3 ? 'mt-[12rem]' : ''}`}>
-              <div className={`mr-[12rem] flex size-[52rem] items-center justify-center rounded-[8rem] ${item.bg}`}>
+            <li key={index} className='flex items-center gap-[12rem]'>
+              <div className={`flex size-[52rem] items-center justify-center rounded-[8rem] ${item.bg}`}>
                 <img src={item.icon} className='size-[24rem]' alt='icon' />
               </div>
               <div>
@@ -50,14 +50,17 @@ export const BestSectionsResults = ({ stats, loading }: { stats?: IPracticeScore
               </div>
             </li>
           ))}
-        </div>
+        </ul>
       ) : (
-        <>
-          <p className='mb-[46rem] font-poppins text-[14rem] leading-tight'>{t('subtitle')}</p>
-          <Link href='/mock' className='flex h-[50rem] items-center rounded-full bg-d-green px-[85rem] text-[14rem] font-semibold hover:bg-d-green/40'>
+        <div className='flex flex-col gap-[24rem]'>
+          <p className='font-poppins text-[14rem] leading-tight text-d-black/70'>{t('subtitle')}</p>
+          <Link
+            href='/mock'
+            className='flex h-[50rem] items-center justify-center rounded-full bg-d-green px-[40rem] text-[14rem] font-semibold text-d-black transition-colors hover:bg-d-green/40'
+          >
             {tActions('completeMOCK')}
           </Link>
-        </>
+        </div>
       )}
     </div>
   );

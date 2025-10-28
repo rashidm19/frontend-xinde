@@ -29,8 +29,8 @@ export const BestResults = () => {
 
   return (
     <section>
-      <div className='rounded-[16rem] bg-white p-[24rem]'>
-        <div className='flex justify-between gap-x-[24rem]'>
+      <div className='rounded-[16rem] bg-white p-[20rem] tablet:p-[24rem]'>
+        <div className='flex flex-col gap-[24rem] tablet:flex-row tablet:items-start tablet:justify-between tablet:gap-[24rem]'>
           <BestSectionsResults stats={practiceStats} loading={practiceStatsLoading} />
           <ApproximateIELTSScore score={overallScore} loading={practiceStatsLoading} />
         </div>

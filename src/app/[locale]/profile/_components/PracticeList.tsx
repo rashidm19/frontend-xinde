@@ -33,7 +33,7 @@ export const PracticeBySections = () => {
   const { t, tCommon } = useCustomTranslations('profile.practiceList');
 
   return (
-    <section className='rounded-[16rem] bg-white p-[24rem]'>
+    <section className='rounded-[16rem] bg-white p-[20rem] tablet:p-[24rem]'>
       <h2 className='mb-[24rem] text-[20rem] font-medium leading-tight'>{t('title')}</h2>
       <p className='mb-[32rem] font-poppins text-[14rem] leading-tight'>{t('subtitle')}</p>
 

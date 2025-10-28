@@ -13,12 +13,21 @@ import { useProfile } from '@/hooks/useProfile';
 import { useQuery } from '@tanstack/react-query';
 import { PracticeSectionKey } from '@/types/Stats';
 import { useRouter } from 'next/navigation';
+import { useLocale } from 'next-intl';
 import { FeedbackModal } from '@/components/feedback/FeedbackModal';
 import { useFeedbackStatus } from '@/hooks/useFeedbackStatus';
 import type { SubmitFeedbackPayload } from '@/api/feedback';
 import type { FeedbackModalSubmitPayload, FeedbackModalSubmitResult } from '@/components/feedback/types';
 import { FreePracticeTestModal } from '@/components/modals/FreePracticeTestModal';
 import { useSubscription } from '@/hooks/useSubscription';
+import { useMediaQuery } from 'usehooks-ts';
+import { cn } from '@/lib/utils';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { ProfileEditFormModal } from '@/app/[locale]/profile/settings/_components/ProfileEditFormModal';
+import { ChangeLangModal } from '@/app/[locale]/profile/settings/_components/ChangeLangModal';
+import { SubscriptionDetailsModal } from '@/components/SubscriptionDetailsModal';
+import nProgress from 'nprogress';
+import { logout } from '@/lib/logout';
 
 const sectionStartRoutes: Record<PracticeSectionKey, string> = {
   writing: '/practice/writing/customize',
@@ -27,8 +36,11 @@ const sectionStartRoutes: Record<PracticeSectionKey, string> = {
   speaking: '/practice/speaking/customize',
 };
 
+const FEEDBACK_NUDGE_STORAGE_KEY = 'studybox.feedback.nudge.dismissedAt';
+
 export default function Page() {
   const router = useRouter();
+  const locale = useLocale();
   const { profile, status } = useProfile();
   const isLoading = !profile && (status === 'idle' || status === 'loading');
 
@@ -47,36 +59,46 @@ export default function Page() {
     refetch: refetchFeedbackStatus,
   } = useFeedbackStatus({ enabled: feedbackEnabled });
 
+  const isDesktop = useMediaQuery('(min-width: 1440px)');
+  const isTabletUp = useMediaQuery('(min-width: 768px)');
+  const isMobile = !isTabletUp;
+
   useEffect(() => {
-    if (
-      !isLoading &&
-      !feedbackStatusLoading &&
-      !feedbackAlreadySubmitted &&
-      !hasPromptedFeedback &&
-      !feedbackStatusError &&
-      !freeTestModalOpen
-    ) {
-      setFeedbackOpen(true);
-      setHasPromptedFeedback(true);
+    if (isMobile) {
+      router.replace(`/${locale}/m/stats`);
     }
-  }, [
-    isLoading,
-    feedbackStatusLoading,
-    feedbackAlreadySubmitted,
-    hasPromptedFeedback,
-    feedbackStatusError,
-    freeTestModalOpen,
-  ]);
+  }, [isMobile, router, locale]);
+
+  if (isMobile) {
+    return null;
+  }
+
+  const shouldPromptFeedback = useMemo(
+    () => !isLoading && !feedbackStatusLoading && !feedbackAlreadySubmitted && !hasPromptedFeedback && !feedbackStatusError && !freeTestModalOpen,
+    [isLoading, feedbackStatusLoading, feedbackAlreadySubmitted, hasPromptedFeedback, feedbackStatusError, freeTestModalOpen]
+  );
+
+  useEffect(() => {
+    if (!shouldPromptFeedback) {
+      return;
+    }
+
+    setFeedbackOpen(true);
+    setHasPromptedFeedback(true);
+  }, [shouldPromptFeedback]);
+
+  const handleFeedbackClose = useCallback(() => {
+    setFeedbackOpen(false);
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem(FEEDBACK_NUDGE_STORAGE_KEY, Date.now().toString());
+    }
+  }, []);
 
   useEffect(() => {
     if (freeTestModalOpen && feedbackOpen) {
       setFeedbackOpen(false);
     }
   }, [freeTestModalOpen, feedbackOpen]);
-
-  const handleFeedbackClose = useCallback(() => {
-    setFeedbackOpen(false);
-  }, []);
 
   const handleFeedbackSubmit = useCallback(
     async ({ rating, highlights, otherText, comment }: FeedbackModalSubmitPayload): Promise<FeedbackModalSubmitResult> => {
@@ -122,6 +144,9 @@ export default function Page() {
   });
 
   const { hasActiveSubscription, status: subscriptionStatus } = useSubscription();
+  const [profileSettingsOpen, setProfileSettingsOpen] = useState(false);
+  const [languageModalOpen, setLanguageModalOpen] = useState(false);
+  const [subscriptionModalOpen, setSubscriptionModalOpen] = useState(false);
 
   const handleStartSection = (section: PracticeSectionKey) => {
     const target = sectionStartRoutes[section];
@@ -166,49 +191,106 @@ export default function Page() {
     router.push(sectionStartRoutes.writing);
   }, [router]);
 
+  const handleLogout = useCallback(() => {
+    logout();
+    nProgress.start();
+    router.push('/');
+  }, [router]);
+
+  const openSubscriptionModal = useCallback(() => {
+    setSubscriptionModalOpen(true);
+  }, []);
+
+  const openProfileSettings = useCallback(() => {
+    setProfileSettingsOpen(true);
+  }, []);
+
+  const openLanguageModal = useCallback(() => {
+    setLanguageModalOpen(true);
+  }, []);
+
   return (
     <>
-      <Header name={profile?.name} email={profile?.email} avatar={profile?.avatar ?? undefined} />
-      <main className='container flex max-w-[1200rem] flex-wrap justify-between gap-x-[16rem] pb-[80rem] pt-[32rem]'>
-        <div className='flex w-[856rem] flex-col gap-y-[16rem]'>
-          {isLoading ? (
-            <>
-              <Skeleton className='h-[400rem] w-full rounded-[16rem]' />
-              <Skeleton className='h-[400rem] w-full rounded-[16rem]' />
-              <Skeleton className='h-[400rem] w-full rounded-[16rem]' />
-            </>
-          ) : (
-            <>
-              <BestResults />
-              {/*<Achievements />*/}
-              {/*<PracticeHistory data={practiceHistory} loading={practiceHistoryLoading} />*/}
-              <div className='flex flex-col gap-[28rem]'>
-                <PracticeHistory
-                  entries={practiceHistory || []}
-                  loading={isLoading || practiceHistoryLoading}
-                  onCta={handleHistoryCta}
-                  onStartSection={handleStartSection}
-                />
-              </div>
-            </>
-          )}
-        </div>
-        <div className='flex w-[328rem] flex-col gap-y-[16rem]'>
-          {isLoading ? (
-            <>
-              <Skeleton className='h-[380rem] w-full rounded-[16rem]' />
-              <Skeleton className='h-[200rem] w-full rounded-[16rem]' />
-              <Skeleton className='h-[300rem] w-full rounded-[16rem]' />
-            </>
-          ) : (
-            <>
-              <PracticeBySections />
-              {/*<Notifications />*/}
-              {/*<Referrals />*/}
-              <IeltsGoal grade={profile?.target_grade || 9} />
-            </>
-          )}
-        </div>
+      <Header
+        name={profile?.name}
+        email={profile?.email}
+        avatar={profile?.avatar ?? undefined}
+        onOpenSubscription={openSubscriptionModal}
+        onOpenProfileSettings={openProfileSettings}
+        onOpenLanguage={openLanguageModal}
+        onLogout={handleLogout}
+      />
+      <main className={cn('container max-w-[1200rem]', isDesktop ? 'flex flex-wrap justify-between gap-x-[16rem] pb-[80rem] pt-[32rem]' : 'pb-[96rem] pt-[28rem]')}>
+        {isDesktop ? (
+          <>
+            <div className='flex w-[856rem] flex-col gap-y-[16rem]'>
+              {isLoading ? (
+                <>
+                  <Skeleton className='h-[400rem] w-full rounded-[16rem]' />
+                  <Skeleton className='h-[400rem] w-full rounded-[16rem]' />
+                  <Skeleton className='h-[400rem] w-full rounded-[16rem]' />
+                </>
+              ) : (
+                <>
+                  <BestResults />
+                  <div className='flex flex-col gap-[28rem]'>
+                    <PracticeHistory
+                      entries={practiceHistory || []}
+                      loading={isLoading || practiceHistoryLoading}
+                      onCta={handleHistoryCta}
+                      onStartSection={handleStartSection}
+                    />
+                  </div>
+                </>
+              )}
+            </div>
+            <div className='flex w-[328rem] flex-col gap-y-[16rem]'>
+              {isLoading ? (
+                <>
+                  <Skeleton className='h-[380rem] w-full rounded-[16rem]' />
+                  <Skeleton className='h-[200rem] w-full rounded-[16rem]' />
+                  <Skeleton className='h-[300rem] w-full rounded-[16rem]' />
+                </>
+              ) : (
+                <>
+                  <PracticeBySections />
+                  <IeltsGoal grade={profile?.target_grade || 9} />
+                </>
+              )}
+            </div>
+          </>
+        ) : (
+          <div className='grid w-full grid-cols-1 gap-[20rem] tablet:grid-cols-2 tablet:gap-[20rem]'>
+            {isLoading ? (
+              <>
+                <Skeleton className='h-[360rem] w-full rounded-[16rem] tablet:col-span-2' />
+                <Skeleton className='h-[220rem] w-full rounded-[16rem]' />
+                <Skeleton className='h-[260rem] w-full rounded-[16rem]' />
+                <Skeleton className='h-[420rem] w-full rounded-[16rem] tablet:col-span-2' />
+              </>
+            ) : (
+              <>
+                <div className='tablet:col-span-2'>
+                  <BestResults />
+                </div>
+                <div className='flex flex-col gap-[16rem]'>
+                  <PracticeBySections />
+                </div>
+                <div className='flex flex-col gap-[16rem]'>
+                  <IeltsGoal grade={profile?.target_grade || 9} />
+                </div>
+                <div className='tablet:col-span-2'>
+                  <PracticeHistory
+                    entries={practiceHistory || []}
+                    loading={isLoading || practiceHistoryLoading}
+                    onCta={handleHistoryCta}
+                    onStartSection={handleStartSection}
+                  />
+                </div>
+              </>
+            )}
+          </div>
+        )}
       </main>
       <FreePracticeTestModal
         open={freeTestModalOpen}
@@ -228,6 +310,17 @@ export default function Page() {
           void refetchFeedbackStatus();
         }}
       />
+      <Dialog open={profileSettingsOpen} onOpenChange={setProfileSettingsOpen}>
+        <DialogContent className='fixed left-[50%] top-[50%] flex h-auto w-[min(672rem,90vw)] -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center backdrop-brightness-90'>
+          <ProfileEditFormModal />
+        </DialogContent>
+      </Dialog>
+      <Dialog open={languageModalOpen} onOpenChange={setLanguageModalOpen}>
+        <DialogContent className='fixed left-[50%] top-[50%] flex h-auto w-[min(672rem,90vw)] -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center backdrop-brightness-90'>
+          <ChangeLangModal variant='desktop' />
+        </DialogContent>
+      </Dialog>
+      <SubscriptionDetailsModal open={subscriptionModalOpen} onOpenChange={setSubscriptionModalOpen} />
     </>
   );
 }

@@ -3,9 +3,13 @@
 import { useEffect, useMemo, useState } from 'react';
 
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
+import { BottomSheet, BottomSheetContent } from '@/components/ui/bottom-sheet';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { FEEDBACK_HIGHLIGHT_LABELS } from '@/lib/feedback';
 import { cn } from '@/lib/utils';
 import type { FeedbackModalSubmitPayload, FeedbackModalSubmitResult } from './types';
+import { useMediaQuery } from 'usehooks-ts';
+import { BottomSheetHeader } from '@/components/mobile/MobilePageHeader';
 
 type FeedbackStep = 0 | 1 | 2 | 'success';
 
@@ -32,8 +36,14 @@ interface FeedbackModalProps {
   onSuccess?: () => void;
 }
 
-export function FeedbackModal({ open, onClose, onSubmit, onSuccess }: FeedbackModalProps) {
+export function FeedbackModal(props: FeedbackModalProps) {
+  return <FeedbackModalContent {...props} />;
+}
+
+export function FeedbackModalContent({ open, onClose, onSubmit, onSuccess }: FeedbackModalProps) {
   const prefersReducedMotion = useReducedMotion();
+  const isTabletUp = useMediaQuery('(min-width: 768px)');
+  const isMobile = !isTabletUp;
   const [step, setStep] = useState<FeedbackStep>(0);
   const [rating, setRating] = useState<number | null>(null);
   const [highlights, setHighlights] = useState<string[]>([]);
@@ -181,6 +191,20 @@ export function FeedbackModal({ open, onClose, onSubmit, onSuccess }: FeedbackMo
     }
     return false;
   }, [highlights, otherText, step]);
+
+  const handleSecondary = () => {
+    if (step === 2) {
+      setStep('success');
+      return;
+    }
+    onClose();
+  };
+
+  const isSuccessStep = step === 'success';
+  const isLastStep = step === 2;
+  const primaryLabel = isLastStep ? (isSubmitting ? 'Sending…' : 'Submit') : 'Next';
+  const secondaryLabel = isLastStep ? 'Skip' : 'Later';
+  const showSubmitError = step === 2 && submitError;
 
   const renderStepContent = () => {
     if (step === 'success') {
@@ -337,22 +361,20 @@ export function FeedbackModal({ open, onClose, onSubmit, onSuccess }: FeedbackMo
     );
   };
 
-  const renderFooter = () => {
-    if (step === 'success') {
+  const renderDesktopFooter = () => {
+    if (isSuccessStep) {
       return null;
     }
 
-    const isLastStep = step === 2;
-
     return (
-      <div className='flex flex-col gap-[10rem]'>
+      <div className='flex flex-col gap-[12rem]'>
         <div className='flex items-center justify-between text-[12rem] font-medium text-slate-400' aria-live='polite'>
           <span>step</span>
           <span>{progressLabel}</span>
         </div>
-        <div className='h-[4rem] w-full overflow-hidden rounded-full bg-slate-100'>
+        <div className='h-1.5 w-full overflow-hidden rounded-full bg-slate-100'>
           <motion.div
-            className='h-full w-full rounded-full bg-gradient-to-r from-blue-500 via-blue-600 to-indigo-600'
+            className='h-full w-full rounded-full bg-gradient-to-r from-violet-500 via-blue-500 to-blue-400'
             style={{ transformOrigin: 'left center' }}
             animate={{ scaleX: progressValue }}
             transition={{ duration: prefersReducedMotion ? 0 : 0.4, ease: 'easeInOut' }}
@@ -370,21 +392,15 @@ export function FeedbackModal({ open, onClose, onSubmit, onSuccess }: FeedbackMo
           ) : (
             <span className='hidden tablet:block tablet:max-w-[140rem]' aria-hidden='true' />
           )}
-          {step === 2 && submitError ? (
+          {showSubmitError ? (
             <div className='w-full rounded-[14rem] border border-red-100 bg-red-50 px-[16rem] py-[10rem] text-[12.5rem] text-red-600 tablet:order-3 tablet:max-w-[240rem]'>
               {submitError}
             </div>
           ) : null}
           <div className='flex w-full items-center gap-[16rem] tablet:justify-end'>
-            {step === 2 ? (
-              <button type='button' onClick={() => setStep('success')} className='px-[16rem] text-[12.5rem] font-medium text-slate-400 transition hover:text-slate-500'>
-                Skip
-              </button>
-            ) : (
-              <button type='button' onClick={onClose} className='px-[16rem] text-[12.5rem] font-medium text-slate-400 transition hover:text-slate-500'>
-                Later
-              </button>
-            )}
+            <button type='button' onClick={handleSecondary} className='px-[16rem] text-[12.5rem] font-medium text-slate-400 transition hover:text-slate-500'>
+              {secondaryLabel}
+            </button>
             <motion.button
               type='button'
               onClick={handleNext}
@@ -394,7 +410,7 @@ export function FeedbackModal({ open, onClose, onSubmit, onSuccess }: FeedbackMo
               className='inline-flex min-w-[100rem] items-center justify-center rounded-full bg-blue-600 px-[22rem] py-[8rem] text-[13rem] font-semibold text-white shadow-[0_20rem_48rem_-28rem_rgba(37,99,235,0.55)] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-200 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:bg-blue-400/70'
             >
               <span className='flex items-center gap-[8rem]'>
-                {isLastStep ? (isSubmitting ? 'Sending…' : 'Submit') : 'Next'}
+                {primaryLabel}
                 {isSubmitting ? <span className='h-[14rem] w-[14rem] animate-spin rounded-full border-[2rem] border-white/40 border-t-white' aria-hidden='true' /> : null}
               </span>
             </motion.button>
@@ -403,6 +419,91 @@ export function FeedbackModal({ open, onClose, onSubmit, onSuccess }: FeedbackMo
       </div>
     );
   };
+
+  const stepContent = <AnimatePresence mode='wait'>{renderStepContent()}</AnimatePresence>;
+  const desktopFooter = renderDesktopFooter();
+  const headerTitle = step === 'success' ? 'Thank you for the feedback!' : STEP_TITLES[step];
+  const headerDescription = step === 'success' ? 'Your voice helps us grow.' : STEP_DESCRIPTIONS[step];
+
+  if (isMobile) {
+    const handleSheetOpenChange = (nextOpen: boolean) => {
+      if (!nextOpen) {
+        onClose();
+      }
+    };
+
+    return (
+      <BottomSheet open={open} onOpenChange={handleSheetOpenChange}>
+        <BottomSheetContent aria-labelledby='feedback-sheet-title'>
+          <div className='flex min-h-0 flex-1 flex-col overflow-hidden'>
+            <BottomSheetHeader
+              title={headerTitle}
+              subtitle={headerDescription}
+              closeLabel='Close feedback form'
+              onClose={onClose}
+            />
+
+            <ScrollArea className='flex-1 px-[20rem]'>
+              <div className='pb-[24rem]'>{stepContent}</div>
+            </ScrollArea>
+
+            {!isSuccessStep ? (
+              <div className='border-t border-gray-100 bg-white/95 px-[20rem] pt-[16rem] pb-[env(safe-area-inset-bottom)] shadow-[0_-4px_16px_rgba(15,23,42,0.08)]'>
+                <div className='flex flex-col gap-[14rem] pb-[16rem]'>
+                  <div className='flex items-center justify-between text-[12rem] font-medium text-slate-400' aria-live='polite'>
+                    <span>step</span>
+                    <span>{progressLabel}</span>
+                  </div>
+                  <div className='h-1.5 w-full overflow-hidden rounded-full bg-slate-100'>
+                    <motion.div
+                      className='h-full w-full rounded-full bg-gradient-to-r from-violet-500 via-blue-500 to-blue-400'
+                      style={{ transformOrigin: 'left center' }}
+                      animate={{ scaleX: progressValue }}
+                      transition={{ duration: prefersReducedMotion ? 0 : 0.4, ease: 'easeInOut' }}
+                    />
+                  </div>
+                  {showSubmitError ? (
+                    <div className='w-full rounded-[14rem] border border-red-100 bg-red-50 px-[16rem] py-[10rem] text-[12.5rem] text-red-600'>
+                      {submitError}
+                    </div>
+                  ) : null}
+                  <motion.button
+                    type='button'
+                    onClick={handleNext}
+                    disabled={(step === 0 && rating === null) || isNextDisabled || isSubmitting}
+                    whileHover={prefersReducedMotion ? undefined : { scale: 1.02 }}
+                    whileTap={prefersReducedMotion ? undefined : { scale: 0.97 }}
+                    className='flex w-full items-center justify-center rounded-full bg-blue-600 px-[22rem] py-[12rem] text-[13rem] font-semibold text-white shadow-[0_20rem_48rem_-28rem_rgba(37,99,235,0.55)] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-200 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:bg-blue-400/70'
+                  >
+                    <span className='flex items-center gap-[8rem]'>
+                      {primaryLabel}
+                      {isSubmitting ? <span className='h-[14rem] w-[14rem] animate-spin rounded-full border-[2rem] border-white/40 border-t-white' aria-hidden='true' /> : null}
+                    </span>
+                  </motion.button>
+                  <div className='flex items-center gap-[12rem]'>
+                    <button
+                      type='button'
+                      onClick={handleSecondary}
+                      className='flex-1 rounded-full border border-slate-200 px-[16rem] py-[10rem] text-[12.5rem] font-medium text-slate-600 transition hover:border-slate-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-200 focus-visible:ring-offset-2'
+                    >
+                      {secondaryLabel}
+                    </button>
+                    <button
+                      type='button'
+                      onClick={handleBack}
+                      className='flex-1 rounded-full border border-slate-200 px-[16rem] py-[10rem] text-[12.5rem] font-medium text-slate-600 transition hover:border-slate-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-200 focus-visible:ring-offset-2'
+                    >
+                      Back
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ) : null}
+          </div>
+        </BottomSheetContent>
+      </BottomSheet>
+    );
+  }
 
   return (
     <AnimatePresence>
@@ -427,18 +528,16 @@ export function FeedbackModal({ open, onClose, onSubmit, onSuccess }: FeedbackMo
             <header className='flex flex-col gap-[10rem] text-left'>
               <p className='text-[11.5rem] font-medium uppercase tracking-[0.14em] text-blue-500/80'>feedback</p>
               <h2 className='text-[24rem] font-semibold text-slate-900' aria-live='polite'>
-                {step === 'success' ? 'Thank you for the feedback!' : STEP_TITLES[step]}
+                {headerTitle}
               </h2>
               {step === 'success' ? (
-                <p className='text-[14rem] text-slate-500'>Your voice helps us grow.</p>
+                <p className='text-[14rem] text-slate-500'>{headerDescription}</p>
               ) : (
-                <p className='text-[14rem] leading-[1.5] text-slate-500'>{STEP_DESCRIPTIONS[step]}</p>
+                <p className='text-[14rem] leading-[1.5] text-slate-500'>{headerDescription}</p>
               )}
             </header>
-            <div className='flex flex-1 flex-col'>
-              <AnimatePresence mode='wait'>{renderStepContent()}</AnimatePresence>
-            </div>
-            {renderFooter()}
+            <div className='flex flex-1 flex-col'>{stepContent}</div>
+            {desktopFooter}
           </motion.div>
         </motion.div>
       ) : null}

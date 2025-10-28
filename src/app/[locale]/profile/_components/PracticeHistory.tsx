@@ -1,6 +1,6 @@
 'use client';
 
-import { Fragment, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { format, isSameWeek, isToday, parseISO, startOfDay, subDays } from 'date-fns';
 
@@ -117,23 +117,20 @@ export function PracticeHistory({ entries, loading, onRetry, onCta, onStartSecti
   const noResultsForFilter = !limitedEntries.length && !loading;
 
   return (
-    <section className='rounded-[24rem] bg-gradient-to-br from-white to-slate-50 p-[24rem] shadow-[0_16rem_40rem_-28rem_rgba(56,56,56,0.28)]'>
+    <section className='w-full rounded-[24rem] bg-gradient-to-br from-white to-slate-50 p-[20rem] shadow-[0_16rem_40rem_-28rem_rgba(56,56,56,0.28)] tablet:p-[24rem]'>
       <header className='mb-[20rem] flex flex-col gap-[16rem]'>
-        <div className='flex items-center justify-between gap-[12rem] tablet:flex-col tablet:items-start'>
-          <div>
-            <h2 className='text-[20rem] font-semibold leading-tight text-d-black'>{t('title')}</h2>
-            <p className='text-[13rem] text-d-black/70'>{t('subtitle')}</p>
-          </div>
-          <div className='flex items-center gap-[16rem] rounded-[18rem] border border-d-gray/60 bg-d-light-gray/40 px-[16rem] py-[10rem] text-[12.5rem] tablet:w-full tablet:justify-between'>
-            <MiniStat label={t('stats.sessions')} value={weekStats.sessions} />
-            <Divider />
-            <MiniStat label={t('stats.medianBand')} value={weekStats.medianBand} />
-            <Divider />
-            <MiniStat label={t('stats.streak')} value={t('stats.streakValue', { count: weekStats.streak })} />
-          </div>
+        <div className='flex flex-col gap-[6rem]'>
+          <h1 className='text-[22rem] font-semibold leading-tight text-d-black'>{t('title')}</h1>
+          <p className='text-[13rem] text-d-black/70'>{t('subtitle')}</p>
         </div>
 
-        <div className='flex flex-wrap items-center gap-[8rem]'>
+        <div className='grid grid-cols-3 gap-[8rem] rounded-[16rem] bg-d-light-gray/40 p-[12rem] text-center tablet:gap-[12rem]'>
+          <MiniStat label={t('stats.sessions')} value={weekStats.sessions} />
+          <MiniStat label={t('stats.medianBand')} value={weekStats.medianBand} />
+          <MiniStat label={t('stats.streak')} value={t('stats.streakValue', { count: weekStats.streak })} />
+        </div>
+
+        <div className='-mx-[4rem] flex items-center gap-[8rem] overflow-x-auto pb-[4rem] pl-[4rem] pr-[4rem] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden'>
           {filterItems.map(item => (
             <button
               key={item.value}
@@ -143,8 +140,10 @@ export function PracticeHistory({ entries, loading, onRetry, onCta, onStartSecti
                 setLimit(DEFAULT_LIMIT);
               }}
               className={cn(
-                'rounded-full px-[16rem] py-[8rem] text-[12.5rem] font-medium transition-colors',
-                filter === item.value ? 'bg-d-violet text-white' : 'bg-d-light-gray/60 text-d-black hover:bg-d-light-gray'
+                'flex h-[36rem] flex-shrink-0 items-center justify-center whitespace-nowrap rounded-full border px-[18rem] text-[12rem] font-semibold transition-colors',
+                filter === item.value
+                  ? 'border-d-violet bg-d-violet text-white shadow-[0_6rem_18rem_-12rem_rgba(99,106,251,0.6)]'
+                  : 'border-d-gray/50 bg-white text-d-black hover:border-d-violet/60'
               )}
             >
               {item.label}
@@ -193,46 +192,45 @@ export function PracticeHistory({ entries, loading, onRetry, onCta, onStartSecti
                     const statusKey: StatusKey = item.completed_at ? 'completed' : 'cancelled';
 
                     return (
-                    <motion.li
-                      key={item.id}
-                      variants={itemVariants}
-                      whileHover={{ y: -2, boxShadow: '0 18rem 36rem -24rem rgba(56,56,56,0.32)' }}
-                      transition={{ duration: 0.18, ease: 'easeOut' }}
-                      className='flex items-center justify-between gap-[16rem] rounded-[18rem] border border-d-gray/50 bg-white px-[20rem] py-[16rem] shadow-[0_10rem_24rem_-22rem_rgba(56,56,56,0.28)] tablet:flex-col tablet:items-start tablet:gap-[12rem]'
-                    >
-                      <div className='flex items-center gap-[16rem] tablet:flex-wrap tablet:gap-[12rem]'>
-                        <div className={cn('flex size-[44rem] items-center justify-center rounded-full', SECTION_META[item.section].hue)}>
-                          <img src={SECTION_META[item.section].icon} alt={t('sections.iconAlt', { section: sectionLabels[item.section] })} className='size-[20rem]' />
+                      <motion.li
+                        key={item.id}
+                        variants={itemVariants}
+                        transition={{ duration: 0.18, ease: 'easeOut' }}
+                        className='flex flex-col gap-[12rem] rounded-[18rem] border border-d-gray/50 bg-white px-[20rem] py-[16rem] shadow-[0_10rem_24rem_-22rem_rgba(56,56,56,0.28)] tablet:flex-row tablet:items-start tablet:justify-between tablet:gap-[16rem]'
+                      >
+                        <div className='flex min-w-0 items-start gap-[12rem] tablet:gap-[16rem]'>
+                          <div className={cn('flex size-[44rem] flex-shrink-0 items-center justify-center rounded-full', SECTION_META[item.section].hue)}>
+                            <img src={SECTION_META[item.section].icon} alt={t('sections.iconAlt', { section: sectionLabels[item.section] })} className='size-[20rem]' />
+                          </div>
+                          <div className='flex min-w-0 flex-col gap-[6rem]'>
+                            <span className='line-clamp-2 text-[15rem] font-semibold leading-snug text-d-black'>{item?.practice?.title || ''}</span>
+                            <span className='text-[12rem] font-medium text-d-black/60'>{format(parseISO(item.created_at), 'd MMM • HH:mm')}</span>
+                          </div>
                         </div>
-                        <div className='flex flex-col gap-[4rem]'>
-                          <span className='text-[15rem] font-semibold text-d-black'>{item?.practice?.title || ''}</span>
-                          <span className='text-[12.5rem] text-d-black/65'>{format(parseISO(item.created_at), 'd MMM • HH:mm')}</span>
-                        </div>
-                      </div>
 
-                      <div className='flex flex-1 items-center justify-end gap-[14rem] tablet:w-full tablet:flex-wrap tablet:justify-start'>
-                        <MetricsCluster
-                          band={item.score != null ? item.score.toFixed(1) : '--'}
-                          part={item.section === 'speaking' ? formatSpeakingPart(item.practice?.part) : undefined}
-                          tag={item.practice?.tag != null ? item.practice?.tag : undefined}
-                          labels={{
-                            band: t('metrics.band'),
-                            part: t('metrics.part'),
-                            tag: t('metrics.tag'),
-                          }}
-                        />
-                        <span className={cn('rounded-full px-[12rem] py-[6rem] text-[12rem] font-medium', STATUS_PILL_CLASSES[statusKey])}>
-                          {statusLabels[statusKey]}
-                        </span>
-                        <Button
-                          onClick={() => onCta(item.section, item.id)}
-                          className='h-[auto] rounded-[22rem] bg-d-violet px-[12rem] py-[6rem] text-[12rem] text-white hover:bg-d-violet/80'
-                        >
-                          {tActions('review')}
-                        </Button>
-                      </div>
-                    </motion.li>
-                  );
+                        <div className='flex flex-wrap items-center gap-[8rem] tablet:justify-end'>
+                          <MetricsCluster
+                            band={item.score != null ? item.score.toFixed(1) : '--'}
+                            part={item.section === 'speaking' ? formatSpeakingPart(item.practice?.part) : undefined}
+                            tag={item.practice?.tag != null ? item.practice?.tag : undefined}
+                            labels={{
+                              band: t('metrics.band'),
+                              part: t('metrics.part'),
+                              tag: t('metrics.tag'),
+                            }}
+                          />
+                          <span className={cn('rounded-full px-[12rem] py-[6rem] text-[12rem] font-medium', STATUS_PILL_CLASSES[statusKey])}>
+                            {statusLabels[statusKey]}
+                          </span>
+                          <Button
+                            onClick={() => onCta(item.section, item.id)}
+                            className='h-auto rounded-[22rem] bg-d-violet px-[16rem] py-[8rem] text-[12rem] text-white hover:bg-d-violet/80'
+                          >
+                            {tActions('review')}
+                          </Button>
+                        </div>
+                      </motion.li>
+                    );
                   })}
                 </motion.ul>
               </motion.div>
@@ -335,15 +333,11 @@ function computeStreak(entries: PracticeHistoryEntry[]) {
 
 function MiniStat({ label, value }: { label: string; value: string | number }) {
   return (
-    <div className='flex flex-col gap-[2rem] text-center'>
-      <span className='text-[11.5rem] uppercase tracking-[0.3rem] text-d-black/60'>{label}</span>
+    <div className='flex flex-col items-center gap-[4rem] text-center'>
+      <span className='text-[11rem] font-medium uppercase tracking-[0.2rem] text-d-black/55'>{label}</span>
       <span className='text-[16rem] font-semibold text-d-black'>{value}</span>
     </div>
   );
-}
-
-function Divider() {
-  return <span className='h-[28rem] w-[1.5rem] rounded-full bg-d-gray/60' />;
 }
 
 function MetricsCluster({
@@ -367,15 +361,15 @@ function MetricsCluster({
   }
 
   return (
-    <div className='flex items-stretch gap-[10rem]'>
-      {metrics.map((metric, index) => (
-        <Fragment key={metric.label}>
-          <div className='flex h-[43rem] min-w-[84rem] flex-col items-center justify-center rounded-[16rem] border border-d-gray/40 bg-d-light-gray/50 px-[8rem]'>
-            <span className='text-[11rem] uppercase tracking-[0.3rem] text-d-black/60'>{metric.label}</span>
-            <span className='text-[13rem] leading-tight text-d-black'>{metric.value}</span>
-          </div>
-          {index < metrics.length - 1 ? <div className='h-[32rem] w-[1rem] self-center rounded-full bg-d-gray/40' /> : null}
-        </Fragment>
+    <div className='flex flex-wrap items-center gap-[8rem]'>
+      {metrics.map(metric => (
+        <div
+          key={metric.label}
+          className='flex min-w-[88rem] flex-col gap-[2rem] rounded-[14rem] border border-d-gray/50 bg-d-light-gray/40 px-[10rem] py-[8rem] text-left'
+        >
+          <span className='text-[10.5rem] font-medium uppercase tracking-[0.24rem] text-d-black/55'>{metric.label}</span>
+          <span className='text-[13rem] font-semibold text-d-black'>{metric.value}</span>
+        </div>
       ))}
     </div>
   );
