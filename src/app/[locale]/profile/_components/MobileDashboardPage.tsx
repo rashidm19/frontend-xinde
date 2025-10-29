@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { AnimatePresence, motion } from 'framer-motion';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useLocale } from 'next-intl';
 import { useMediaQuery } from 'usehooks-ts';
@@ -282,17 +283,6 @@ export function MobileDashboardPage({ activeTab }: MobileDashboardPageProps) {
     openPaywall();
   }, [openPaywall]);
 
-  const handleTabNavigation = useCallback(
-    (tab: MobileTabKey) => {
-      if (tab === activeTab) {
-        return;
-      }
-      const targetPath = tab === 'profile' ? 'profile' : tab;
-      router.push(localePath(targetPath));
-    },
-    [activeTab, localePath, router]
-  );
-
   const basePaddingBottom = feedbackNudgeVisible ? '200rem' : '140rem';
 
   const statsContent = isLoadingProfile ? (
@@ -510,18 +500,16 @@ export function MobileDashboardPage({ activeTab }: MobileDashboardPageProps) {
           {MOBILE_TABS.map(tab => {
             const Icon = tab.icon;
             const isActive = tab.key === activeTab;
+            const targetPath = localePath(tab.path);
             return (
-              <motion.button
+              <Link
                 key={tab.key}
-                type='button'
-                onClick={() => handleTabNavigation(tab.key)}
-                whileTap={{ scale: 0.92, opacity: 0.85 }}
+                href={targetPath}
                 className={cn(
                   'relative flex flex-1 flex-col items-center gap-[4rem] rounded-[20rem] px-[10rem] py-[8rem] text-[12rem] font-medium transition-colors',
                   isActive ? 'text-d-violet' : 'text-d-black/60 hover:text-d-black'
                 )}
-                aria-pressed={isActive}
-                aria-label={tab.label}
+                aria-current={isActive ? 'page' : undefined}
               >
                 {isActive ? (
                   <motion.span
@@ -532,7 +520,7 @@ export function MobileDashboardPage({ activeTab }: MobileDashboardPageProps) {
                 ) : null}
                 <Icon className='size-[20rem]' />
                 <span>{tab.label}</span>
-              </motion.button>
+              </Link>
             );
           })}
         </div>
