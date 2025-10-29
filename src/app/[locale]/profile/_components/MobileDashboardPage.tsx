@@ -275,6 +275,8 @@ export function MobileDashboardPage({ activeTab }: MobileDashboardPageProps) {
     router.push(`/${locale}/profile/edit`);
   }, [locale, router]);
 
+  const profileSettingsHref = `/${locale}/profile/edit`;
+
   const openLanguageModal = useCallback(() => {
     setLanguageModalOpen(true);
   }, []);
@@ -379,7 +381,7 @@ export function MobileDashboardPage({ activeTab }: MobileDashboardPageProps) {
           {
             key: 'settings',
             label: 'Profile settings',
-            action: openProfileSettings,
+            href: profileSettingsHref,
           },
           {
             key: 'language',
@@ -392,17 +394,30 @@ export function MobileDashboardPage({ activeTab }: MobileDashboardPageProps) {
             action: handleLogout,
           },
         ].map(item => (
-          <button
-            key={item.key}
-            type='button'
-            onClick={item.action}
-            className='flex w-full items-center justify-between rounded-[12rem] px-[20rem] py-[16rem] text-left text-[14rem] font-medium text-d-black transition hover:bg-d-light-gray/50'
-          >
-            <span>{item.label}</span>
-            <svg className='size-[16rem]' viewBox='0 0 16 16' fill='none' xmlns='http://www.w3.org/2000/svg'>
-              <path d='M6 4l4 4-4 4' stroke='currentColor' strokeWidth='1.5' strokeLinecap='round' strokeLinejoin='round' />
-            </svg>
-          </button>
+          'href' in item && item.href ? (
+            <Link
+              key={item.key}
+              href={item.href}
+              className='flex w-full items-center justify-between rounded-[12rem] px-[20rem] py-[16rem] text-left text-[14rem] font-medium text-d-black transition hover:bg-d-light-gray/50'
+            >
+              <span>{item.label}</span>
+              <svg className='size-[16rem]' viewBox='0 0 16 16' fill='none' xmlns='http://www.w3.org/2000/svg'>
+                <path d='M6 4l4 4-4 4' stroke='currentColor' strokeWidth='1.5' strokeLinecap='round' strokeLinejoin='round' />
+              </svg>
+            </Link>
+          ) : (
+            <button
+              key={item.key}
+              type='button'
+              onClick={item.action}
+              className='flex w-full items-center justify-between rounded-[12rem] px-[20rem] py-[16rem] text-left text-[14rem] font-medium text-d-black transition hover:bg-d-light-gray/50'
+            >
+              <span>{item.label}</span>
+              <svg className='size-[16rem]' viewBox='0 0 16 16' fill='none' xmlns='http://www.w3.org/2000/svg'>
+                <path d='M6 4l4 4-4 4' stroke='currentColor' strokeWidth='1.5' strokeLinecap='round' strokeLinejoin='round' />
+              </svg>
+            </button>
+          )
         ))}
       </section>
     </div>

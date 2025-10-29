@@ -9,6 +9,8 @@ import { useSubscriptionStore } from '@/stores/subscriptionStore';
 import { useMediaQuery } from 'usehooks-ts';
 import { useRouter } from 'next/navigation';
 import { useLocale } from 'next-intl';
+import Router from 'next/router';
+import NProgress from 'nprogress';
 
 export const GlobalSubscriptionPaywall = () => {
   const isOpen = useSubscriptionStore(state => state.isPaywallOpen);
@@ -25,6 +27,20 @@ export const GlobalSubscriptionPaywall = () => {
   const locale = useLocale();
 
   React.useEffect(() => {
+    const handleDone = () => {
+      NProgress.done();
+    };
+
+    Router.events.on('routeChangeComplete', handleDone);
+    Router.events.on('routeChangeError', handleDone);
+
+    return () => {
+      Router.events.off('routeChangeComplete', handleDone);
+      Router.events.off('routeChangeError', handleDone);
+    };
+  }, []);
+
+  React.useEffect(() => {
     if (!isOpen) {
       return;
     }
@@ -37,6 +53,7 @@ export const GlobalSubscriptionPaywall = () => {
   React.useEffect(() => {
     if (isOpen && isMobile) {
       setPaywallOpen(false);
+      NProgress.start();
       router.push(`/${locale}/pricing`);
     }
   }, [isOpen, isMobile, locale, router, setPaywallOpen]);

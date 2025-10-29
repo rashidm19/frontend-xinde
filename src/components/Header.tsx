@@ -234,13 +234,12 @@ export const Header = ({ name, email, avatar, title: _title, onOpenSubscription,
         </Link>
         <span className='flex-1' />
         {showUpgradeChip ? (
-          <button
-            type='button'
-            onClick={() => router.push('/pricing')}
+          <Link
+            href='/pricing'
             className='mx-[12rem] rounded-[16rem] border border-d-violet/50 px-[12rem] py-[6rem] text-[12rem] font-semibold text-d-violet transition-colors hover:border-d-violet'
           >
             {tActions('upgradePlan')}
-          </button>
+          </Link>
         ) : null}
 
         <div className='ml-auto flex items-center gap-[12rem]'>
