@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { BottomSheet, BottomSheetContent } from './ui/bottom-sheet';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from './ui/dialog';
 import { ScrollArea } from './ui/scroll-area';
@@ -39,7 +39,14 @@ interface PromoPromptModalProps {
 export const PromoPromptModal = ({ open, planId, onClose, onBackToPlans, onDiscountUpdate, onSuccessMessage, onErrorMessage }: PromoPromptModalProps) => {
   const { t, tActions } = useCustomTranslations('pricesModal');
   const router = useRouter();
-  const isMobile = useMediaQuery('(max-width: 767px)');
+  const isMobileMedia = useMediaQuery('(max-width: 767px)');
+  const [hasMounted, setHasMounted] = useState(false);
+
+  useEffect(() => {
+    setHasMounted(true);
+  }, []);
+
+  const isMobile = hasMounted && isMobileMedia;
 
   const [step, setStep] = React.useState<'prompt' | 'input'>('prompt');
   const [promoCode, setPromoCode] = React.useState('');
@@ -338,6 +345,10 @@ export const PromoPromptModal = ({ open, planId, onClose, onBackToPlans, onDisco
       </button>
     </div>
   );
+
+  if (!hasMounted) {
+    return null;
+  }
 
   if (isMobile) {
     return (
