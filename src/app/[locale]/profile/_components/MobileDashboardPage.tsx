@@ -1,10 +1,11 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import type { MouseEvent } from 'react';
 
 import { AnimatePresence, motion } from 'framer-motion';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useLocale } from 'next-intl';
 import { useMediaQuery } from 'usehooks-ts';
 import { useQuery } from '@tanstack/react-query';
@@ -35,6 +36,7 @@ import { BottomSheet } from '@/components/ui/bottom-sheet';
 import { logout } from '@/lib/logout';
 import nProgress from 'nprogress';
 import { trackScreenView } from '@/lib/analytics';
+import { WritingSheet } from '@/components/practice/writing/WritingSheet';
 
 const sectionStartRoutes: Record<PracticeSectionKey, string> = {
   writing: '/practice/writing/customize',
@@ -62,6 +64,8 @@ interface MobileDashboardPageProps {
 
 export function MobileDashboardPage({ activeTab }: MobileDashboardPageProps) {
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const locale = useLocale();
   const isMobile = useMediaQuery('(max-width: 767px)');
   const [hasMounted, setHasMounted] = useState(false);
@@ -98,6 +102,47 @@ export function MobileDashboardPage({ activeTab }: MobileDashboardPageProps) {
   const [languageModalOpen, setLanguageModalOpen] = useState(false);
   const [subscriptionModalOpen, setSubscriptionModalOpen] = useState(false);
   const [transitionDirection, setTransitionDirection] = useState<0 | 1 | -1>(0);
+
+  const mutateSearch = useCallback(
+    (updates: Record<string, string | null>, history: 'push' | 'replace' = 'push') => {
+      const nextParams = new URLSearchParams(searchParams.toString());
+      Object.entries(updates).forEach(([key, value]) => {
+        if (value === null) {
+          nextParams.delete(key);
+        } else {
+          nextParams.set(key, value);
+        }
+      });
+
+      const query = nextParams.toString();
+      const target = query ? `${pathname}?${query}` : pathname;
+
+      if (history === 'replace') {
+        router.replace(target, { scroll: false });
+      } else {
+        router.push(target, { scroll: false });
+      }
+    },
+    [pathname, router, searchParams]
+  );
+
+  const writingSheetOpen = searchParams.get('sheet') === 'writing';
+  const writingStep: 'customize' | 'rules' = searchParams.get('step') === 'rules' ? 'rules' : 'customize';
+
+  const openWritingSheet = useCallback(() => {
+    mutateSearch({ sheet: 'writing', step: 'customize' }, 'push');
+  }, [mutateSearch]);
+
+  const closeWritingSheet = useCallback(() => {
+    mutateSearch({ sheet: null, step: null }, 'replace');
+  }, [mutateSearch]);
+
+  const setWritingStep = useCallback(
+    (nextStep: 'customize' | 'rules', history: 'push' | 'replace' = 'replace') => {
+      mutateSearch({ sheet: 'writing', step: nextStep }, history);
+    },
+    [mutateSearch]
+  );
 
   const localePath = useCallback(
     (path: string) => `/${locale}/m/${path}`,
@@ -249,6 +294,18 @@ export function MobileDashboardPage({ activeTab }: MobileDashboardPageProps) {
     [router]
   );
 
+  const handlePracticeSectionPress = useCallback(
+    (section: 'writing' | 'reading' | 'listening' | 'speaking', event: MouseEvent<HTMLAnchorElement>) => {
+      if (section !== 'writing') {
+        return;
+      }
+
+      event.preventDefault();
+      openWritingSheet();
+    },
+    [openWritingSheet]
+  );
+
   const handleHistoryCta = useCallback(
     (section: PracticeSectionKey, id: number) => {
       if (section === 'writing') {
@@ -318,7 +375,7 @@ export function MobileDashboardPage({ activeTab }: MobileDashboardPageProps) {
           </button>
         </div>
       ) : null}
-      <PracticeBySections />
+      <PracticeBySections onSectionPress={handlePracticeSectionPress} />
     </div>
   );
 
@@ -549,6 +606,16 @@ export function MobileDashboardPage({ activeTab }: MobileDashboardPageProps) {
           })}
         </div>
       </nav>
+
+      <WritingSheet
+        open={writingSheetOpen}
+        step={writingStep}
+        onRequestClose={closeWritingSheet}
+        onRequestStep={(nextStep, options) => {
+          const history = options?.history ?? 'replace';
+          setWritingStep(nextStep, history);
+        }}
+      />
 
       <FreePracticeTestModal
         open={freeTestModalOpen}
