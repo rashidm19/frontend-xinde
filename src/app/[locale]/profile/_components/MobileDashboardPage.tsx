@@ -64,6 +64,11 @@ export function MobileDashboardPage({ activeTab }: MobileDashboardPageProps) {
   const router = useRouter();
   const locale = useLocale();
   const isMobile = useMediaQuery('(max-width: 767px)');
+  const [hasMounted, setHasMounted] = useState(false);
+
+  useEffect(() => {
+    setHasMounted(true);
+  }, []);
 
   const { profile, status: profileStatus } = useProfile();
   const isLoadingProfile = !profile && (profileStatus === 'idle' || profileStatus === 'loading');
@@ -473,6 +478,10 @@ export function MobileDashboardPage({ activeTab }: MobileDashboardPageProps) {
     },
     [refetchFeedbackStatus, submitFeedback]
   );
+
+  if (!hasMounted) {
+    return null;
+  }
 
   if (!isMobile) {
     return null;

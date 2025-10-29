@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import { BottomSheet, BottomSheetContent } from '@/components/ui/bottom-sheet';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -61,6 +61,11 @@ export const GlobalConfirmationModal = () => {
   const isMobile = useMediaQuery('(max-width: 767px)');
   const sheetTitle = options?.title ?? tActions('confirm');
   const sheetMessage = options?.message ?? undefined;
+  const [hasMounted, setHasMounted] = useState(false);
+
+  useEffect(() => {
+    setHasMounted(true);
+  }, []);
 
   const handleClose = useCallback(() => {
     if (isLoading || !isOpen) {
@@ -125,6 +130,10 @@ export const GlobalConfirmationModal = () => {
       </button>
     </div>
   );
+
+  if (!hasMounted) {
+    return null;
+  }
 
   if (isMobile) {
     return (
