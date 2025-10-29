@@ -38,6 +38,7 @@ import nProgress from 'nprogress';
 import { trackScreenView } from '@/lib/analytics';
 import { WritingSheet } from '@/components/practice/writing/WritingSheet';
 import { ReadingRulesSheet } from '@/components/practice/reading/ReadingRulesSheet';
+import { ListeningSheet } from '@/components/practice/listening/ListeningSheet';
 
 const sectionStartRoutes: Record<PracticeSectionKey, string> = {
   writing: '/practice/writing/customize',
@@ -133,6 +134,8 @@ export function MobileDashboardPage({ activeTab }: MobileDashboardPageProps) {
   const writingSheetOpen = sheetParam === 'writing';
   const writingStep: 'customize' | 'rules' = stepParam === 'rules' ? 'rules' : 'customize';
   const readingSheetOpen = sheetParam === 'reading';
+  const listeningSheetOpen = sheetParam === 'listening';
+  const listeningStep: 'rules' | 'audio-check' = stepParam === 'audio-check' ? 'audio-check' : 'rules';
 
   const openWritingSheet = useCallback(() => {
     mutateSearch({ sheet: 'writing', step: 'customize' }, 'push');
@@ -152,6 +155,17 @@ export function MobileDashboardPage({ activeTab }: MobileDashboardPageProps) {
   const openReadingSheet = useCallback(() => {
     mutateSearch({ sheet: 'reading', step: 'rules' }, 'push');
   }, [mutateSearch]);
+
+  const openListeningSheet = useCallback(() => {
+    mutateSearch({ sheet: 'listening', step: 'rules' }, 'push');
+  }, [mutateSearch]);
+
+  const setListeningStep = useCallback(
+    (step: 'rules' | 'audio-check', history: 'push' | 'replace' = 'replace') => {
+      mutateSearch({ sheet: 'listening', step }, history);
+    },
+    [mutateSearch]
+  );
 
   const localePath = useCallback(
     (path: string) => `/${locale}/m/${path}`,
@@ -314,9 +328,15 @@ export function MobileDashboardPage({ activeTab }: MobileDashboardPageProps) {
       if (section === 'reading') {
         event.preventDefault();
         openReadingSheet();
+        return;
+      }
+
+      if (section === 'listening') {
+        event.preventDefault();
+        openListeningSheet();
       }
     },
-    [openReadingSheet, openWritingSheet]
+    [openListeningSheet, openReadingSheet, openWritingSheet]
   );
 
   const handleHistoryCta = useCallback(
@@ -631,6 +651,16 @@ export function MobileDashboardPage({ activeTab }: MobileDashboardPageProps) {
       />
 
       <ReadingRulesSheet open={readingSheetOpen} onRequestClose={closeSheet} />
+
+      <ListeningSheet
+        open={listeningSheetOpen}
+        step={listeningStep}
+        onRequestClose={closeSheet}
+        onStepChange={(nextStep, options) => {
+          const history = options?.history ?? 'replace';
+          setListeningStep(nextStep, history);
+        }}
+      />
 
       <FreePracticeTestModal
         open={freeTestModalOpen}
