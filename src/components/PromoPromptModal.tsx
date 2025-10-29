@@ -1,7 +1,9 @@
 'use client';
 
 import React from 'react';
+import { BottomSheet, BottomSheetContent } from './ui/bottom-sheet';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from './ui/dialog';
+import { ScrollArea } from './ui/scroll-area';
 import { useCustomTranslations } from '@/hooks/useCustomTranslations';
 import { useMutation } from '@tanstack/react-query';
 import { POST_payment_checkout_order } from '@/api/POST_payment_checkout_order';
@@ -10,6 +12,8 @@ import { EPAY_PROD_URL, EPAY_TEST_URL } from '@/lib/config';
 import { IPaymentOrder } from '@/types/Payments';
 import axios from 'axios';
 import { useRouter } from 'next/navigation';
+import { useMediaQuery } from 'usehooks-ts';
+import { BottomSheetHeader } from '@/components/mobile/MobilePageHeader';
 
 declare global {
   interface Window {
@@ -35,6 +39,7 @@ interface PromoPromptModalProps {
 export const PromoPromptModal = ({ open, planId, onClose, onBackToPlans, onDiscountUpdate, onSuccessMessage, onErrorMessage }: PromoPromptModalProps) => {
   const { t, tActions } = useCustomTranslations('pricesModal');
   const router = useRouter();
+  const isMobile = useMediaQuery('(max-width: 767px)');
 
   const [step, setStep] = React.useState<'prompt' | 'input'>('prompt');
   const [promoCode, setPromoCode] = React.useState('');
@@ -254,96 +259,120 @@ export const PromoPromptModal = ({ open, planId, onClose, onBackToPlans, onDisco
     }
   };
 
+  const headerTitle = step === 'prompt' ? t('promo.promptTitle') : t('promo.inputTitle');
+  const headerDescription = step === 'prompt' ? t('promo.promptQuestion') : t('promo.inputHint');
+
+  const bodyContent = step === 'input' ? (
+    <div className='flex flex-col gap-[12rem]'>
+      <input
+        value={promoCode}
+        onChange={event => {
+          setPromoCode(event.target.value);
+          setPromoError(null);
+          onErrorMessage?.(null);
+        }}
+        placeholder={t('promo.placeholder')}
+        className='w-full rounded-full border border-d-light-gray bg-white px-[24rem] py-[12rem] text-[16rem] font-medium leading-tight text-d-black outline-none transition focus:border-d-green'
+      />
+      {promoError ? <p className='rounded-[16rem] bg-d-red/10 px-[24rem] py-[8rem] text-[14rem] font-medium text-d-red'>{promoError}</p> : null}
+    </div>
+  ) : null;
+
+  const footerContent = step === 'prompt' ? (
+    <div className='flex flex-col gap-[12rem] tablet:flex-row tablet:justify-center tablet:gap-[16rem]'>
+      <button
+        type='button'
+        onClick={handleNoPromo}
+        disabled={isAnswerNoPending || processingPlanId === planId}
+        className='w-full rounded-full bg-d-green px-[24rem] py-[12rem] text-[16rem] font-semibold text-black transition hover:bg-d-green/80 disabled:cursor-not-allowed tablet:w-[200rem]'
+      >
+        {isAnswerNoPending ? (
+          <svg className='mx-auto size-[20rem] animate-spin text-d-black' xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24'>
+            <circle className='opacity-25' cx='12' cy='12' r='10' stroke='currentColor' strokeWidth='4' />
+            <path
+              className='opacity-75'
+              fill='currentColor'
+              d='M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z'
+            />
+          </svg>
+        ) : (
+          t('promo.answerNo')
+        )}
+      </button>
+
+      <button
+        type='button'
+        onClick={handlePromoYes}
+        className='w-full rounded-full border border-d-light-gray px-[24rem] py-[12rem] text-[16rem] font-semibold text-d-black transition hover:border-d-green disabled:border-d-light-gray disabled:text-d-black/60 tablet:w-[160rem]'
+      >
+        {t('promo.answerYes')}
+      </button>
+    </div>
+  ) : (
+    <div className='flex flex-col gap-[12rem] tablet:flex-row tablet:justify-center tablet:gap-[16rem]'>
+      <button
+        type='button'
+        onClick={handleConfirmPromo}
+        disabled={processingPlanId === planId}
+        className='w-full rounded-full bg-d-green px-[24rem] py-[12rem] text-[16rem] font-semibold text-black transition hover:bg-d-green/80 disabled:cursor-not-allowed disabled:bg-d-gray/60 disabled:text-d-black/60 tablet:w-[200rem]'
+      >
+        {processingPlanId === planId ? (
+          <svg className='mx-auto size-[20rem] animate-spin text-black' xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24'>
+            <circle className='opacity-25' cx='12' cy='12' r='10' stroke='currentColor' strokeWidth='4' />
+            <path
+              className='opacity-75'
+              fill='currentColor'
+              d='M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z'
+            />
+          </svg>
+        ) : (
+          t('promo.confirm')
+        )}
+      </button>
+      <button
+        type='button'
+        onClick={handleBack}
+        className='w-full rounded-full border border-d-light-gray px-[24rem] py-[12rem] text-[16rem] font-semibold text-d-black transition hover:border-d-green tablet:w-[160rem]'
+      >
+        {tActions('back')}
+      </button>
+    </div>
+  );
+
+  if (isMobile) {
+    return (
+      <BottomSheet open={open} onOpenChange={handleOpenChange}>
+        <BottomSheetContent aria-labelledby='promo-modal-title'>
+          <div className='flex min-h-0 flex-1 flex-col overflow-hidden'>
+            <BottomSheetHeader
+              title={headerTitle}
+              subtitle={headerDescription}
+              onClose={() => handleOpenChange(false)}
+              closeButton
+            />
+
+            <ScrollArea className='flex-1 px-[20rem]'>
+              {bodyContent ? <div className='pb-[24rem]'>{bodyContent}</div> : <div className='pb-[24rem]' />}
+            </ScrollArea>
+
+            <div className='border-t border-gray-100 bg-white/95 px-[20rem] pb-[calc(16rem+env(safe-area-inset-bottom))] pt-[16rem] shadow-[0_-4px_16px_rgba(15,23,42,0.08)]'>
+              {footerContent}
+            </div>
+          </div>
+        </BottomSheetContent>
+      </BottomSheet>
+    );
+  }
+
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className='fixed left-1/2 top-1/2 flex w-[90vw] max-w-[520rem] -translate-x-1/2 -translate-y-1/2 flex-col gap-y-[20rem] rounded-[24rem] bg-white p-[32rem] text-center shadow-lg'>
-        {step === 'prompt' ? (
-          <>
-            <DialogHeader>
-              <DialogTitle className='text-[20rem] font-semibold'>{t('promo.promptTitle')}</DialogTitle>
-              <DialogDescription className='text-[16rem] leading-tight text-d-black/80'>{t('promo.promptQuestion')}</DialogDescription>
-            </DialogHeader>
-
-            <div className='mt-[12rem] flex flex-col gap-[12rem] tablet:flex-row tablet:justify-center tablet:gap-[16rem]'>
-              <button
-                type='button'
-                onClick={handleNoPromo}
-                disabled={isAnswerNoPending || processingPlanId === planId}
-                className='w-full rounded-full bg-d-green px-[24rem] py-[12rem] text-[16rem] font-semibold text-black hover:bg-d-green/80 disabled:cursor-not-allowed tablet:w-[200rem]'
-              >
-                {isAnswerNoPending ? (
-                  <svg className='mx-auto size-[20rem] animate-spin text-d-black' xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24'>
-                    <circle className='opacity-25' cx='12' cy='12' r='10' stroke='currentColor' strokeWidth='4' />
-                    <path
-                      className='opacity-75'
-                      fill='currentColor'
-                      d='M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z'
-                    />
-                  </svg>
-                ) : (
-                  t('promo.answerNo')
-                )}
-              </button>
-
-              <button
-                type='button'
-                onClick={handlePromoYes}
-                className='w-full rounded-full border border-d-light-gray px-[24rem] py-[12rem] text-[16rem] font-semibold text-d-black hover:border-d-green disabled:border-d-light-gray disabled:text-d-black/60 tablet:w-[160rem]'
-              >
-                {t('promo.answerYes')}
-              </button>
-            </div>
-          </>
-        ) : (
-          <>
-            <DialogHeader>
-              <DialogTitle className='text-[20rem] font-semibold'>{t('promo.inputTitle')}</DialogTitle>
-              <DialogDescription className='text-[16rem] leading-tight text-d-black/80'>{t('promo.inputHint')}</DialogDescription>
-            </DialogHeader>
-
-            <input
-              value={promoCode}
-              onChange={event => {
-                setPromoCode(event.target.value);
-                setPromoError(null);
-                onErrorMessage?.(null);
-              }}
-              placeholder={t('promo.placeholder')}
-              className='w-full rounded-full border border-d-light-gray bg-white px-[24rem] py-[12rem] text-[16rem] font-medium leading-tight text-d-black outline-none focus:border-d-green'
-            />
-
-            {promoError && <p className='rounded-[16rem] bg-d-red/10 px-[24rem] py-[8rem] text-[14rem] font-medium text-d-red'>{promoError}</p>}
-
-            <div className='mt-[12rem] flex flex-col gap-[12rem] tablet:flex-row tablet:justify-center tablet:gap-[16rem]'>
-              <button
-                type='button'
-                onClick={handleConfirmPromo}
-                disabled={processingPlanId === planId}
-                className='w-full rounded-full bg-d-green px-[24rem] py-[12rem] text-[16rem] font-semibold text-black hover:bg-d-green/80 disabled:cursor-not-allowed disabled:bg-d-gray/60 disabled:text-d-black/60 tablet:w-[200rem]'
-              >
-                {processingPlanId === planId ? (
-                  <svg className='mx-auto size-[20rem] animate-spin text-black' xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24'>
-                    <circle className='opacity-25' cx='12' cy='12' r='10' stroke='currentColor' strokeWidth='4' />
-                    <path
-                      className='opacity-75'
-                      fill='currentColor'
-                      d='M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z'
-                    />
-                  </svg>
-                ) : (
-                  t('promo.confirm')
-                )}
-              </button>
-              <button
-                type='button'
-                onClick={handleBack}
-                className='w-full rounded-full border border-d-light-gray px-[24rem] py-[12rem] text-[16rem] font-semibold text-d-black hover:border-d-green tablet:w-[160rem]'
-              >
-                {tActions('back')}
-              </button>
-            </div>
-          </>
-        )}
+        <DialogHeader>
+          <DialogTitle className='text-[20rem] font-semibold'>{headerTitle}</DialogTitle>
+          <DialogDescription className='text-[16rem] leading-tight text-d-black/80'>{headerDescription}</DialogDescription>
+        </DialogHeader>
+        {bodyContent}
+        {footerContent}
       </DialogContent>
     </Dialog>
   );

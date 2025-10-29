@@ -60,9 +60,9 @@ export const ProfileEditForm = ({ form, isChangingPassword, setIsChangingPasswor
 
   return (
     <Form {...form}>
-      <form className='grid grid-cols-2 gap-[24rem]' onSubmit={handleFormSubmit}>
+      <form className='grid grid-cols-1 gap-[24rem] tablet:grid-cols-2' onSubmit={handleFormSubmit}>
         {/* // * Title */}
-        <h1 className='col-span-2 text-[20rem] font-medium leading-none'>{t('title')}</h1>
+        <h1 className='hidden text-[20rem] font-medium leading-none tablet:col-span-2 tablet:block'>{t('title')}</h1>
 
         {/* // * Input fields */}
         {/* // * Name */}

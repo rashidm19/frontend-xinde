@@ -3,8 +3,9 @@
 @tailwind utilities;
 
 html {
-    font-size: calc(100vw / 1440);
+    font-size: 1px;
     @apply scroll-smooth;
+    overflow-x: hidden;
 }
 
 @media screen and (min-width: 1440px) {
@@ -14,16 +15,16 @@ html {
     }
 }
 
-html.sb-auth-fixed-scale {
-    font-size: 1px;
-}
+/*html.sb-auth-fixed-scale {*/
+/*    font-size: 1px;*/
+/*}*/
 
-@media screen and (min-width: 1440px) {
-    html.sb-auth-fixed-scale {
-        font-size: calc(1440px / 1440);
-        overflow-x: hidden;
-    }
-}
+/*@media screen and (min-width: 1440px) {*/
+/*    html.sb-auth-fixed-scale {*/
+/*        font-size: calc(1440px / 1440);*/
+/*        overflow-x: hidden;*/
+/*    }*/
+/*}*/
 
 /* @media screen and (min-width: 500px) {
   html {
@@ -57,7 +58,7 @@ html * {
 }
 
 body {
-    @apply relative;
+    @apply relative overflow-x-hidden;
 }
 
 @layer base {

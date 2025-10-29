@@ -2,146 +2,30 @@
 
 import { DialogClose } from '@/components/ui/dialog';
 import { ProfileEditForm } from './ProfileEditForm';
-import React, { useEffect, useRef, useState } from 'react';
-import nProgress from 'nprogress';
-import { useMutation } from '@tanstack/react-query';
-import { useRouter } from 'next/navigation';
+import React, { useRef } from 'react';
 import { useCustomTranslations } from '@/hooks/useCustomTranslations';
-import { postUser } from '@/api/POST_user';
-import { SubmitHandler, useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-
-import { profileEditFormSchema, ProfileEditFormValues } from './profileEditSchema';
-import { deleteProfile, ProfileUpdateRequest, ProfileUpdateResponse } from '@/api/profile';
-import { regionSchema } from '@/types/types';
-import { useProfile } from '@/hooks/useProfile';
-import { refreshProfile } from '@/stores/profileStore';
-import { openConfirmationModal } from '@/stores/confirmationModalStore';
 import { ProfileAvatarManager } from './ProfileAvatarManager';
-import { useSubscription } from '@/hooks/useSubscription';
-import { logout } from '@/lib/logout';
-
-const DEFAULT_REGION = 'kz';
-
-const resolveRegion = (region?: string | null): string => {
-  const parsed = regionSchema.safeParse(region ?? undefined);
-  if (parsed.success) {
-    return parsed.data;
-  }
-
-  return DEFAULT_REGION;
-};
+import { useProfileEditController } from './useProfileEditController';
 
 export const ProfileEditFormModal = () => {
-  const router = useRouter();
   const closeRef = useRef<HTMLButtonElement>(null);
   const { tImgAlts, tCommon, tActions } = useCustomTranslations();
-  const { t: tProfileSettings } = useCustomTranslations('profileSettings.profileEditForm');
-  const { profile, status, setProfile: setProfileInStore } = useProfile();
-  const { hasActiveSubscription } = useSubscription();
+  const {
+    profile,
+    hasActiveSubscription,
+    isProfileLoading,
+    form,
+    isChangingPassword,
+    setIsChangingPassword,
+    onSubmit,
+    submitForm,
+    isSubmitting,
+    isDeleting,
+    handleDeleteAccount,
+    handleLogout,
+  } = useProfileEditController({ onClose: () => closeRef.current?.click() });
 
-  const form = useForm<ProfileEditFormValues>({
-    resolver: zodResolver(profileEditFormSchema),
-    defaultValues: {
-      name: '',
-      email: '',
-      region: DEFAULT_REGION,
-      oldPassword: '',
-      newPassword: '',
-    },
-  });
-
-  const mutation = useMutation<ProfileUpdateResponse, Error, ProfileUpdateRequest>({
-    mutationFn: postUser,
-    onSuccess: async updatedUser => {
-      setProfileInStore(updatedUser);
-      let syncedProfile = updatedUser;
-
-      try {
-        const refreshed = await refreshProfile();
-        if (refreshed) {
-          syncedProfile = refreshed;
-        }
-      } catch (error) {
-        console.error(error);
-      }
-
-      setProfileInStore(syncedProfile);
-      form.reset({
-        name: syncedProfile.name ?? '',
-        email: syncedProfile.email,
-        region: resolveRegion(syncedProfile.region ?? undefined),
-        oldPassword: '',
-        newPassword: '',
-      });
-      setIsChangingPassword(false);
-      closeRef.current?.click();
-    },
-  });
-
-  const deleteAccountMutation = useMutation<void, Error>({
-    mutationFn: deleteProfile,
-    onSuccess: () => {
-      logout();
-      closeRef.current?.click();
-      nProgress.start();
-      router.push('/');
-    },
-    onError: error => {
-      console.error(error);
-    },
-  });
-
-  const [isChangingPassword, setIsChangingPassword] = useState(false);
-
-  useEffect(() => {
-    if (!profile) {
-      return;
-    }
-
-    form.reset({
-      name: profile.name ?? '',
-      email: profile.email,
-      region: resolveRegion(profile.region ?? undefined),
-      oldPassword: '',
-      newPassword: '',
-    });
-    setIsChangingPassword(false);
-  }, [form, profile]);
-
-  const onSubmit: SubmitHandler<ProfileEditFormValues> = async values => {
-    const payload: ProfileUpdateRequest = {
-      name: values.name.trim(),
-      region: values.region,
-    };
-
-    if (values.oldPassword && values.newPassword) {
-      payload.oldPassword = values.oldPassword;
-      payload.newPassword = values.newPassword;
-    }
-
-    try {
-      await mutation.mutateAsync(payload);
-    } catch (error) {
-      console.error(error);
-    }
-  };
-  const submitForm = form.handleSubmit(onSubmit);
-
-  const handleDeleteAccount = () => {
-    openConfirmationModal({
-      title: tProfileSettings('deleteAccount.title'),
-      message: tProfileSettings('deleteAccount.description'),
-      confirmText: tActions('deleteAccount'),
-      cancelText: tActions('cancel'),
-      variant: 'destructive',
-      onConfirm: () => deleteAccountMutation.mutateAsync(),
-    });
-
-    closeRef.current?.click();
-  };
-
-  if (status === 'idle' || status === 'loading') {
+  if (isProfileLoading) {
     return <></>;
   }
 
@@ -166,7 +50,7 @@ export const ProfileEditFormModal = () => {
         isChangingPassword={isChangingPassword}
         setIsChangingPassword={setIsChangingPassword}
         onSubmit={onSubmit}
-        isSubmitting={mutation.isPending}
+        isSubmitting={isSubmitting}
       />
 
       {/* // * Logout & Delete */}
@@ -175,9 +59,9 @@ export const ProfileEditFormModal = () => {
           type='button'
           onClick={submitForm}
           className='flex h-[50rem] items-center justify-center rounded-full bg-d-green px-[32rem] hover:bg-d-green/40 disabled:cursor-not-allowed disabled:bg-d-green/60'
-          disabled={mutation.isPending}
+          disabled={isSubmitting}
         >
-          {mutation.isPending ? (
+          {isSubmitting ? (
             <svg className='size-[20rem] animate-spin text-black' xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24'>
               <circle className='opacity-25' cx='12' cy='12' r='10' stroke='currentColor' stroke-width='4' />
               <path
@@ -194,11 +78,7 @@ export const ProfileEditFormModal = () => {
         <div className='flex justify-start gap-x-[6rem]'>
           <button
             type='button'
-            onClick={() => {
-              logout();
-              nProgress.start();
-              router.push('/');
-            }}
+            onClick={handleLogout}
             className='flex h-[50rem] items-center justify-center rounded-full bg-d-light-gray px-[32rem] hover:bg-d-green/40'
           >
             <span className='text-[14rem] font-medium leading-none'>{tActions('logout')}</span>
@@ -207,7 +87,7 @@ export const ProfileEditFormModal = () => {
           <button
             type='button'
             onClick={handleDeleteAccount}
-            disabled={deleteAccountMutation.isPending}
+            disabled={isDeleting}
             className='flex h-[50rem] items-center justify-center rounded-full bg-white px-[32rem] transition-colors hover:bg-d-red/10 disabled:cursor-not-allowed disabled:opacity-60'
           >
             <span className='text-[14rem] font-medium leading-none'>{tActions('deleteAccount')}</span>
