@@ -37,6 +37,7 @@ import { logout } from '@/lib/logout';
 import nProgress from 'nprogress';
 import { trackScreenView } from '@/lib/analytics';
 import { WritingSheet } from '@/components/practice/writing/WritingSheet';
+import { ReadingRulesSheet } from '@/components/practice/reading/ReadingRulesSheet';
 
 const sectionStartRoutes: Record<PracticeSectionKey, string> = {
   writing: '/practice/writing/customize',
@@ -126,14 +127,18 @@ export function MobileDashboardPage({ activeTab }: MobileDashboardPageProps) {
     [pathname, router, searchParams]
   );
 
-  const writingSheetOpen = searchParams.get('sheet') === 'writing';
-  const writingStep: 'customize' | 'rules' = searchParams.get('step') === 'rules' ? 'rules' : 'customize';
+  const sheetParam = searchParams.get('sheet');
+  const stepParam = searchParams.get('step');
+
+  const writingSheetOpen = sheetParam === 'writing';
+  const writingStep: 'customize' | 'rules' = stepParam === 'rules' ? 'rules' : 'customize';
+  const readingSheetOpen = sheetParam === 'reading';
 
   const openWritingSheet = useCallback(() => {
     mutateSearch({ sheet: 'writing', step: 'customize' }, 'push');
   }, [mutateSearch]);
 
-  const closeWritingSheet = useCallback(() => {
+  const closeSheet = useCallback(() => {
     mutateSearch({ sheet: null, step: null }, 'replace');
   }, [mutateSearch]);
 
@@ -143,6 +148,10 @@ export function MobileDashboardPage({ activeTab }: MobileDashboardPageProps) {
     },
     [mutateSearch]
   );
+
+  const openReadingSheet = useCallback(() => {
+    mutateSearch({ sheet: 'reading', step: 'rules' }, 'push');
+  }, [mutateSearch]);
 
   const localePath = useCallback(
     (path: string) => `/${locale}/m/${path}`,
@@ -296,14 +305,18 @@ export function MobileDashboardPage({ activeTab }: MobileDashboardPageProps) {
 
   const handlePracticeSectionPress = useCallback(
     (section: 'writing' | 'reading' | 'listening' | 'speaking', event: MouseEvent<HTMLAnchorElement>) => {
-      if (section !== 'writing') {
+      if (section === 'writing') {
+        event.preventDefault();
+        openWritingSheet();
         return;
       }
 
-      event.preventDefault();
-      openWritingSheet();
+      if (section === 'reading') {
+        event.preventDefault();
+        openReadingSheet();
+      }
     },
-    [openWritingSheet]
+    [openReadingSheet, openWritingSheet]
   );
 
   const handleHistoryCta = useCallback(
@@ -610,12 +623,14 @@ export function MobileDashboardPage({ activeTab }: MobileDashboardPageProps) {
       <WritingSheet
         open={writingSheetOpen}
         step={writingStep}
-        onRequestClose={closeWritingSheet}
+        onRequestClose={closeSheet}
         onRequestStep={(nextStep, options) => {
           const history = options?.history ?? 'replace';
           setWritingStep(nextStep, history);
         }}
       />
+
+      <ReadingRulesSheet open={readingSheetOpen} onRequestClose={closeSheet} />
 
       <FreePracticeTestModal
         open={freeTestModalOpen}
