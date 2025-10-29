@@ -32,7 +32,8 @@ const NO_TEST_TITLE = 'Free practice test';
 const NO_TEST_DESCRIPTION = 'You’ve already used your free IELTS practice test.';
 
 export function FreePracticeTestModal({ open, onOpenChange, onStart, onDismiss, hasFreeTest }: FreePracticeTestModalProps) {
-  const prefersReducedMotion = useReducedMotion();
+  const reducedMotionPreference = useReducedMotion();
+  const prefersReducedMotion = reducedMotionPreference ?? false;
   const isMobile = useMediaQuery('(max-width: 767px)');
   const closingReasonRef = useRef<'start' | 'dismiss' | null>(null);
   const [isStarting, setIsStarting] = useState(false);
