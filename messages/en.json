@@ -61,6 +61,7 @@
     "continue": "Continue",
     "play": "Play",
     "submit": "Submit",
+    "sending": "Sending...",
     "next": "Next",
     "cancel": "Cancel",
     "practiceNow": "Practice now",
@@ -537,7 +538,13 @@
         "marking": "Certificated IELTS examiners assess your performance on each Writing task. There are four assessment criteria (things which the examiner thinks about when deciding what score to give you):"
       },
       "test": {
-        "writeAboutTopic": "Write about the following topic:"
+        "writeAboutTopic": "Write about the following topic:",
+        "infoBarStartTyping": "Start typing your essay below",
+        "imagePreview": {
+          "open": "Open image preview",
+          "close": "Close image preview",
+          "title": "Task image preview"
+        }
       },
       "feedback": {
         "title": "Writing section feedback",
