@@ -7,7 +7,6 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
 import { useReactMediaRecorder } from 'react-media-recorder';
 import dynamic from 'next/dynamic';
-import type { AudioVisualizerProps } from 'react-audio-visualize';
 
 import { BottomSheet, BottomSheetContent } from '@/components/ui/bottom-sheet';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -35,7 +34,7 @@ const INTERACTIVE_TAP = { scale: 0.97 };
 const SHEET_MAX_HEIGHT = 'max-h-[90dvh]';
 const PART_OPTIONS: PracticeSpeakingPartValue[] = ['1', '2', '3', 'all'];
 
-const AudioVisualizer = dynamic<AudioVisualizerProps>(
+const AudioVisualizer = dynamic(
   async () => {
     const module = await import('react-audio-visualize');
     return module.AudioVisualizer;

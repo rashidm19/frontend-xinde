@@ -1,11 +1,11 @@
 "use client";
 
-import React, { useState } from "react";
-import Link from "next/link";
-import { useCustomTranslations } from "@/hooks/useCustomTranslations";
-import { useSubscriptionGate } from "@/hooks/useSubscriptionGate";
-import { SubscriptionAccessLabel } from "@/components/SubscriptionAccessLabel";
-import { PracticeWritingCard } from "@/components/practice/PracticeWritingCard";
+import React, { useState } from 'react';
+import Link from 'next/link';
+import { useCustomTranslations } from '@/hooks/useCustomTranslations';
+import { useSubscriptionGate } from '@/hooks/useSubscriptionGate';
+import { SubscriptionAccessLabel } from '@/components/SubscriptionAccessLabel';
+import { PracticeWritingCard } from '@/components/practice/PracticeWritingCard';
 
 export function SpeakingRulesClient() {
   const { tImgAlts, tCommon, tActions } = useCustomTranslations("practice.speaking.rules");
@@ -39,7 +39,7 @@ export function SpeakingRulesClient() {
             </div>
           }
         >
-          <h1 className='mb-[8rem] text-[20rem] font-semibold leading-tight text-d-black'>What¡¯s in the IELTS Academic Speaking paper?</h1>
+          <h1 className='mb-[8rem] text-[20rem] font-semibold leading-tight text-d-black'>Whatâ€™s in the IELTS Academic Speaking paper?</h1>
           <p className='mb-[16rem] text-[14rem] leading-[1.65] text-d-black/80'>
             The Speaking test is a face-to-face interview between the test taker and an examiner. The test is recorded. There are three parts to the test, and each part
             follows a specific pattern of tasks in order to test your speaking ability in different ways.
