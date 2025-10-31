@@ -1,8 +1,16 @@
 import React from 'react';
 import Link from 'next/link';
+import type { MouseEvent } from 'react';
 import { useCustomTranslations } from '@/hooks/useCustomTranslations';
 
-const list = [
+type PracticeSection = 'writing' | 'reading' | 'listening' | 'speaking';
+
+const list: Array<{
+  text: PracticeSection;
+  link: string;
+  icon: string;
+  bg: string;
+}> = [
   {
     text: 'writing',
     link: '/practice/writing/customize',
@@ -29,7 +37,11 @@ const list = [
   },
 ];
 
-export const PracticeBySections = () => {
+interface PracticeBySectionsProps {
+  onSectionPress?: (section: PracticeSection, event: MouseEvent<HTMLAnchorElement>) => void;
+}
+
+export const PracticeBySections = ({ onSectionPress }: PracticeBySectionsProps) => {
   const { t, tCommon } = useCustomTranslations('profile.practiceList');
 
   return (
@@ -38,8 +50,15 @@ export const PracticeBySections = () => {
       <p className='mb-[32rem] font-poppins text-[14rem] leading-tight'>{t('subtitle')}</p>
 
       <div className='flex flex-col gap-y-[16rem]'>
-        {list.map((item, i) => (
-          <Link key={i} href={item.link} className='flex items-center'>
+        {list.map(item => (
+          <Link
+            key={item.text}
+            href={item.link}
+            className='flex items-center'
+            onClick={event => {
+              onSectionPress?.(item.text, event);
+            }}
+          >
             <div className={`mr-[12rem] flex size-[52rem] items-center justify-center rounded-[8rem] ${item.bg}`}>
               <img src={item.icon} className='size-[24rem]' alt='icon' />
             </div>

@@ -494,7 +494,8 @@
       },
       "audioCheck": {
         "title": "Play the record",
-        "subtitle": "You will be listening to an audio clip during this test. <br></br> You will not be permitted to pause or rewind the audio while answering the questions."
+        "subtitle": "You will be listening to an audio clip during this test. <br></br> You will not be permitted to pause or rewind the audio while answering the questions.",
+        "instruction": "Play the sample track to confirm your volume is comfortable before you continue."
       },
       "results": {
         "title": "Listening section results"

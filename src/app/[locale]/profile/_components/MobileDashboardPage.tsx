@@ -1,10 +1,11 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import type { MouseEvent } from 'react';
 
 import { AnimatePresence, motion } from 'framer-motion';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useLocale } from 'next-intl';
 import { useMediaQuery } from 'usehooks-ts';
 import { useQuery } from '@tanstack/react-query';
@@ -35,6 +36,10 @@ import { BottomSheet } from '@/components/ui/bottom-sheet';
 import { logout } from '@/lib/logout';
 import nProgress from 'nprogress';
 import { trackScreenView } from '@/lib/analytics';
+import { WritingSheet } from '@/components/practice/writing/WritingSheet';
+import { ReadingRulesSheet } from '@/components/practice/reading/ReadingRulesSheet';
+import { ListeningSheet } from '@/components/practice/listening/ListeningSheet';
+import { SpeakingSheet } from '@/components/practice/speaking/SpeakingSheet';
 
 const sectionStartRoutes: Record<PracticeSectionKey, string> = {
   writing: '/practice/writing/customize',
@@ -62,6 +67,8 @@ interface MobileDashboardPageProps {
 
 export function MobileDashboardPage({ activeTab }: MobileDashboardPageProps) {
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const locale = useLocale();
   const isMobile = useMediaQuery('(max-width: 767px)');
   const [hasMounted, setHasMounted] = useState(false);
@@ -98,6 +105,81 @@ export function MobileDashboardPage({ activeTab }: MobileDashboardPageProps) {
   const [languageModalOpen, setLanguageModalOpen] = useState(false);
   const [subscriptionModalOpen, setSubscriptionModalOpen] = useState(false);
   const [transitionDirection, setTransitionDirection] = useState<0 | 1 | -1>(0);
+
+  const mutateSearch = useCallback(
+    (updates: Record<string, string | null>, history: 'push' | 'replace' = 'push') => {
+      const nextParams = new URLSearchParams(searchParams.toString());
+      Object.entries(updates).forEach(([key, value]) => {
+        if (value === null) {
+          nextParams.delete(key);
+        } else {
+          nextParams.set(key, value);
+        }
+      });
+
+      const query = nextParams.toString();
+      const target = query ? `${pathname}?${query}` : pathname;
+
+      if (history === 'replace') {
+        router.replace(target, { scroll: false });
+      } else {
+        router.push(target, { scroll: false });
+      }
+    },
+    [pathname, router, searchParams]
+  );
+
+  const sheetParam = searchParams.get('sheet');
+  const stepParam = searchParams.get('step');
+
+  const writingSheetOpen = sheetParam === 'writing';
+  const writingStep: 'customize' | 'rules' = stepParam === 'rules' ? 'rules' : 'customize';
+  const readingSheetOpen = sheetParam === 'reading';
+  const listeningSheetOpen = sheetParam === 'listening';
+  const listeningStep: 'rules' | 'audio-check' = stepParam === 'audio-check' ? 'audio-check' : 'rules';
+  const speakingSheetOpen = sheetParam === 'speaking';
+  const speakingStep: 'customize' | 'rules' | 'audio-check' | 'mic-check' = stepParam === 'rules' ? 'rules' : stepParam === 'audio-check' ? 'audio-check' : stepParam === 'mic-check' ? 'mic-check' : 'customize';
+
+  const openWritingSheet = useCallback(() => {
+    mutateSearch({ sheet: 'writing', step: 'customize' }, 'push');
+  }, [mutateSearch]);
+
+  const closeSheet = useCallback(() => {
+    mutateSearch({ sheet: null, step: null }, 'replace');
+  }, [mutateSearch]);
+
+  const setWritingStep = useCallback(
+    (nextStep: 'customize' | 'rules', history: 'push' | 'replace' = 'replace') => {
+      mutateSearch({ sheet: 'writing', step: nextStep }, history);
+    },
+    [mutateSearch]
+  );
+
+  const openReadingSheet = useCallback(() => {
+    mutateSearch({ sheet: 'reading', step: 'rules' }, 'push');
+  }, [mutateSearch]);
+
+  const openListeningSheet = useCallback(() => {
+    mutateSearch({ sheet: 'listening', step: 'rules' }, 'push');
+  }, [mutateSearch]);
+
+  const setListeningStep = useCallback(
+    (step: 'rules' | 'audio-check', history: 'push' | 'replace' = 'replace') => {
+      mutateSearch({ sheet: 'listening', step }, history);
+    },
+    [mutateSearch]
+  );
+
+  const openSpeakingSheet = useCallback(() => {
+    mutateSearch({ sheet: 'speaking', step: 'customize' }, 'push');
+  }, [mutateSearch]);
+
+  const setSpeakingStep = useCallback(
+    (step: 'customize' | 'rules' | 'audio-check' | 'mic-check', history: 'push' | 'replace' = 'replace') => {
+      mutateSearch({ sheet: 'speaking', step }, history);
+    },
+    [mutateSearch]
+  );
 
   const localePath = useCallback(
     (path: string) => `/${locale}/m/${path}`,
@@ -249,6 +331,35 @@ export function MobileDashboardPage({ activeTab }: MobileDashboardPageProps) {
     [router]
   );
 
+  const handlePracticeSectionPress = useCallback(
+    (section: 'writing' | 'reading' | 'listening' | 'speaking', event: MouseEvent<HTMLAnchorElement>) => {
+      if (section === 'writing') {
+        event.preventDefault();
+        openWritingSheet();
+        return;
+      }
+
+      if (section === 'reading') {
+        event.preventDefault();
+        openReadingSheet();
+        return;
+      }
+
+      if (section === 'listening') {
+        event.preventDefault();
+        openListeningSheet();
+        return;
+      }
+
+      if (section === 'speaking') {
+        event.preventDefault();
+        openSpeakingSheet();
+        return;
+      }
+    },
+    [openListeningSheet, openReadingSheet, openSpeakingSheet, openWritingSheet]
+  );
+
   const handleHistoryCta = useCallback(
     (section: PracticeSectionKey, id: number) => {
       if (section === 'writing') {
@@ -318,7 +429,7 @@ export function MobileDashboardPage({ activeTab }: MobileDashboardPageProps) {
           </button>
         </div>
       ) : null}
-      <PracticeBySections />
+      <PracticeBySections onSectionPress={handlePracticeSectionPress} />
     </div>
   );
 
@@ -549,6 +660,38 @@ export function MobileDashboardPage({ activeTab }: MobileDashboardPageProps) {
           })}
         </div>
       </nav>
+
+      <WritingSheet
+        open={writingSheetOpen}
+        step={writingStep}
+        onRequestClose={closeSheet}
+        onRequestStep={(nextStep, options) => {
+          const history = options?.history ?? 'replace';
+          setWritingStep(nextStep, history);
+        }}
+      />
+
+      <ReadingRulesSheet open={readingSheetOpen} onRequestClose={closeSheet} />
+
+      <ListeningSheet
+        open={listeningSheetOpen}
+        step={listeningStep}
+        onRequestClose={closeSheet}
+        onStepChange={(nextStep, options) => {
+          const history = options?.history ?? 'replace';
+          setListeningStep(nextStep, history);
+        }}
+      />
+
+      <SpeakingSheet
+        open={speakingSheetOpen}
+        step={speakingStep}
+        onRequestClose={closeSheet}
+        onStepChange={(nextStep, options) => {
+          const history = options?.history ?? 'replace';
+          setSpeakingStep(nextStep, history);
+        }}
+      />
 
       <FreePracticeTestModal
         open={freeTestModalOpen}
