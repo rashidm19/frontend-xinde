@@ -214,7 +214,7 @@ interface AudioCheckStepContentProps {
   onPlayed: () => void;
 }
 
-const AudioCheckStepContent = ({ tAudio, tImgAlts, audioRef, onAudioError, onPlayed }: AudioCheckStepContentProps) => {
+export const AudioCheckStepContent = ({ tAudio, tImgAlts, audioRef, onAudioError, onPlayed }: AudioCheckStepContentProps) => {
   const [playState, setPlayState] = useState<'playing' | 'paused'>('paused');
 
   const handleToggle = useCallback(async () => {

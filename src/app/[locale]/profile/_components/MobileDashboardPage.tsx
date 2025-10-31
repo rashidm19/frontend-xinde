@@ -39,6 +39,7 @@ import { trackScreenView } from '@/lib/analytics';
 import { WritingSheet } from '@/components/practice/writing/WritingSheet';
 import { ReadingRulesSheet } from '@/components/practice/reading/ReadingRulesSheet';
 import { ListeningSheet } from '@/components/practice/listening/ListeningSheet';
+import { SpeakingSheet } from '@/components/practice/speaking/SpeakingSheet';
 
 const sectionStartRoutes: Record<PracticeSectionKey, string> = {
   writing: '/practice/writing/customize',
@@ -136,6 +137,8 @@ export function MobileDashboardPage({ activeTab }: MobileDashboardPageProps) {
   const readingSheetOpen = sheetParam === 'reading';
   const listeningSheetOpen = sheetParam === 'listening';
   const listeningStep: 'rules' | 'audio-check' = stepParam === 'audio-check' ? 'audio-check' : 'rules';
+  const speakingSheetOpen = sheetParam === 'speaking';
+  const speakingStep: 'customize' | 'rules' | 'audio-check' | 'mic-check' = stepParam === 'rules' ? 'rules' : stepParam === 'audio-check' ? 'audio-check' : stepParam === 'mic-check' ? 'mic-check' : 'customize';
 
   const openWritingSheet = useCallback(() => {
     mutateSearch({ sheet: 'writing', step: 'customize' }, 'push');
@@ -163,6 +166,17 @@ export function MobileDashboardPage({ activeTab }: MobileDashboardPageProps) {
   const setListeningStep = useCallback(
     (step: 'rules' | 'audio-check', history: 'push' | 'replace' = 'replace') => {
       mutateSearch({ sheet: 'listening', step }, history);
+    },
+    [mutateSearch]
+  );
+
+  const openSpeakingSheet = useCallback(() => {
+    mutateSearch({ sheet: 'speaking', step: 'customize' }, 'push');
+  }, [mutateSearch]);
+
+  const setSpeakingStep = useCallback(
+    (step: 'customize' | 'rules' | 'audio-check' | 'mic-check', history: 'push' | 'replace' = 'replace') => {
+      mutateSearch({ sheet: 'speaking', step }, history);
     },
     [mutateSearch]
   );
@@ -334,9 +348,16 @@ export function MobileDashboardPage({ activeTab }: MobileDashboardPageProps) {
       if (section === 'listening') {
         event.preventDefault();
         openListeningSheet();
+        return;
+      }
+
+      if (section === 'speaking') {
+        event.preventDefault();
+        openSpeakingSheet();
+        return;
       }
     },
-    [openListeningSheet, openReadingSheet, openWritingSheet]
+    [openListeningSheet, openReadingSheet, openSpeakingSheet, openWritingSheet]
   );
 
   const handleHistoryCta = useCallback(
@@ -659,6 +680,16 @@ export function MobileDashboardPage({ activeTab }: MobileDashboardPageProps) {
         onStepChange={(nextStep, options) => {
           const history = options?.history ?? 'replace';
           setListeningStep(nextStep, history);
+        }}
+      />
+
+      <SpeakingSheet
+        open={speakingSheetOpen}
+        step={speakingStep}
+        onRequestClose={closeSheet}
+        onStepChange={(nextStep, options) => {
+          const history = options?.history ?? 'replace';
+          setSpeakingStep(nextStep, history);
         }}
       />
 
