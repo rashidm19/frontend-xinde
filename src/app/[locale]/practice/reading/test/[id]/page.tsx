@@ -23,6 +23,9 @@ import type { PracticeReadingContent, PracticeReadingPart, PracticeReadingResult
 import { useRouter } from 'next/navigation';
 import { useCustomTranslations } from '@/hooks/useCustomTranslations';
 import { PracticeLeaveGuard } from '@/components/PracticeLeaveGuard';
+import { useMediaQuery } from 'usehooks-ts';
+import { MobileMatching } from '@/components/practice/reading/mobile/MobileMatching';
+import { MobileTextInsert } from '@/components/practice/reading/mobile/MobileTextInsert';
 
 type FormValues = {
   [key: string]: string | undefined;
@@ -35,6 +38,7 @@ export default function Page({ params }: { params: { id: string } }) {
   const { t, tCommon, tActions } = useCustomTranslations('practice.reading.test');
 
   const [activeTab, setActiveTab] = useState<'p1' | 'p2' | 'p3'>('p1');
+  const isMobile = useMediaQuery('(max-width: 767px)');
 
   const { data, status } = useQuery<PracticeReadingContent>({
     queryKey: ['practice-reading'],
@@ -625,9 +629,19 @@ export default function Page({ params }: { params: { id: string } }) {
                           </div>
                         )}
                         {/* Драг-н-дроп списки */}
-                        {block.kind === 'dragdrop' && <DndMatching value={form.getValues()} block={block} setFieldValue={form.setValue} />}
+                        {block.kind === 'dragdrop' &&
+                          (isMobile ? (
+                            <MobileMatching block={block} value={values} setFieldValue={form.setValue} />
+                          ) : (
+                            <DndMatching value={values} block={block} setFieldValue={form.setValue} />
+                          ))}
                         {/* Драг-н-дроп текст */}
-                        {block.kind === 'dragdrop-type2' && <DndText value={form.getValues()} block={block} setFieldValue={form.setValue} />}
+                        {block.kind === 'dragdrop-type2' &&
+                          (isMobile ? (
+                            <MobileTextInsert block={block} value={values} setFieldValue={form.setValue} />
+                          ) : (
+                            <DndText value={values} block={block} setFieldValue={form.setValue} />
+                          ))}
                       </div>
                     ))}
 

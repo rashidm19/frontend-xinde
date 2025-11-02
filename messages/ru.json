@@ -509,7 +509,61 @@
         "marking": "За каждый правильный ответ начисляется 1 балл. Ваш итоговый балл по шкале от 1 до 9 выражается целыми или половинными значениями, например 4 или 6.5."
       },
       "test": {
-        "readTextAndAnswerQuestions": "Прочитайте текст и ответьте на вопросы "
+        "readTextAndAnswerQuestions": "Прочитайте текст и ответьте на вопросы ",
+        "mobile": {
+          "progressAccessibility": "Ответы есть на {percent}% вопросов",
+          "rangeLabel": "№{from}–{to}",
+          "partSheet": {
+            "title": "Выберите часть",
+            "subtitle": "Переключитесь на другую часть чтения",
+            "close": "Закрыть",
+            "open": "Открыть части",
+            "openAria": "Открыть выбор части {part}"
+          },
+          "questionsMap": {
+            "title": "Карта вопросов",
+            "subtitle": "Выберите вопрос, чтобы перейти к нему",
+            "close": "Закрыть карту",
+            "answered": "Есть ответ",
+            "flagged": "Отмечено",
+            "open": "Открыть карту вопросов",
+            "questionAria": "Перейти к вопросу {number}"
+          },
+          "notes": {
+            "title": "Заметки и подсказки",
+            "description": "Записывайте короткие заметки во время чтения. Они сохраняются только на этом устройстве.",
+            "placeholder": "Введите заметку...",
+            "clear": "Очистить заметки",
+            "close": "Закрыть",
+            "open": "Открыть заметки"
+          },
+          "passage": {
+            "expand": "Показать весь текст",
+            "collapse": "Свернуть текст"
+          },
+          "matching": {
+            "choicesLabel": "Варианты ответов",
+            "choiceSelected": "{choice} выбрано",
+            "inserted": "{choice} добавлено в вопрос {number}",
+            "removed": "Ответ удалён из вопроса {number}",
+            "slotAria": "Вопрос {number}",
+            "slotPlaceholder": "Ответ для вопроса {number}"
+          },
+          "textInsert": {
+            "choicesLabel": "Словарный набор",
+            "choiceSelected": "{choice} выбрано",
+            "inserted": "{choice} добавлено в пропуск {number}",
+            "removed": "Пропуск {number} очищен",
+            "blankAria": "Пропуск {number}",
+            "blankPlaceholder": "Пропуск {number}"
+          },
+          "contextBar": {
+            "hint": "Прочитайте текст и ответьте на вопросы {range}",
+            "hintShow": "Показать инструкцию",
+            "hintHide": "Скрыть инструкцию"
+          },
+          "scrollTop": "Вернуться наверх"
+        }
       },
       "results": {
         "title": "Результаты раздела чтения"

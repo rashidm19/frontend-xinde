@@ -511,7 +511,61 @@
         "marking": "Each correct answer receives 1 mark. Your final score is given as a band score from 1–9 in whole or half bands, e.g. 4 or 6.5."
       },
       "test": {
-        "readTextAndAnswerQuestions": "Read the text and answer questions "
+        "readTextAndAnswerQuestions": "Read the text and answer questions ",
+        "mobile": {
+          "progressAccessibility": "{percent}% of questions answered",
+          "rangeLabel": "Q{from}–{to}",
+          "partSheet": {
+            "title": "Select part",
+            "subtitle": "Jump to another reading part",
+            "close": "Close",
+            "open": "Open parts",
+            "openAria": "Open part selector for {part}"
+          },
+          "questionsMap": {
+            "title": "Questions map",
+            "subtitle": "Pick a question to jump to it",
+            "close": "Close map",
+            "answered": "Answered",
+            "flagged": "Flagged",
+            "open": "Open questions map",
+            "questionAria": "Go to question {number}"
+          },
+          "notes": {
+            "title": "Notes & helper",
+            "description": "Write quick notes while reading. They stay only on this device.",
+            "placeholder": "Type your notes here...",
+            "clear": "Clear notes",
+            "close": "Close",
+            "open": "Open notes"
+          },
+          "passage": {
+            "expand": "Show full passage",
+            "collapse": "Collapse passage"
+          },
+          "matching": {
+            "choicesLabel": "Answer choices",
+            "choiceSelected": "{choice} selected",
+            "inserted": "{choice} inserted into question {number}",
+            "removed": "Removed answer from question {number}",
+            "slotAria": "Question {number}",
+            "slotPlaceholder": "Answer for question {number}"
+          },
+          "textInsert": {
+            "choicesLabel": "Word bank",
+            "choiceSelected": "{choice} selected",
+            "inserted": "{choice} inserted into blank {number}",
+            "removed": "Cleared blank {number}",
+            "blankAria": "Blank {number}",
+            "blankPlaceholder": "Blank {number}"
+          },
+          "contextBar": {
+            "hint": "Read and answer questions {range}",
+            "hintShow": "Show instruction",
+            "hintHide": "Hide instruction"
+          },
+          "scrollTop": "Scroll to top"
+        }
       },
       "results": {
         "title": "Reading section results",
