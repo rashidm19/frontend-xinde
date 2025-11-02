@@ -20,6 +20,9 @@ import { DndMatching } from '@/app/[locale]/practice/reading/test/components/Dnd
 import { DndText } from '@/app/[locale]/practice/reading/test/components/DndText';
 import { mockStore } from '@/stores/mock';
 import nProgress from 'nprogress';
+import { useMediaQuery } from 'usehooks-ts';
+import { MobileMatching } from '@/components/practice/reading/mobile/MobileMatching';
+import { MobileTextInsert } from '@/components/practice/reading/mobile/MobileTextInsert';
 
 type FormValues = {
   [key: string]: string | undefined;
@@ -30,6 +33,7 @@ type PartNumber = 1 | 2 | 3;
 export default function Page() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<'p1' | 'p2' | 'p3'>('p1');
+  const isMobile = useMediaQuery('(max-width: 767px)');
 
   const { mockData, setTimer } = mockStore();
   const data = mockData.reading;
@@ -621,9 +625,19 @@ export default function Page() {
                           </div>
                         )}
                         {/* Драг-н-дроп списки */}
-                        {block.kind === 'dragdrop' && <DndMatching value={form.getValues()} block={block} setFieldValue={form.setValue} />}
+                        {block.kind === 'dragdrop' &&
+                          (isMobile ? (
+                            <MobileMatching block={block} value={values} setFieldValue={form.setValue} />
+                          ) : (
+                            <DndMatching value={values} block={block} setFieldValue={form.setValue} />
+                          ))}
                         {/* Драг-н-дроп текст */}
-                        {block.kind === 'dragdrop-type2' && <DndText value={form.getValues()} block={block} setFieldValue={form.setValue} />}
+                        {block.kind === 'dragdrop-type2' &&
+                          (isMobile ? (
+                            <MobileTextInsert block={block} value={values} setFieldValue={form.setValue} />
+                          ) : (
+                            <DndText value={values} block={block} setFieldValue={form.setValue} />
+                          ))}
                       </div>
                     ))}
 
