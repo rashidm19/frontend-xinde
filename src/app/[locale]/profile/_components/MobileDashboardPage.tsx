@@ -40,6 +40,7 @@ import { WritingSheet } from '@/components/practice/writing/WritingSheet';
 import { ReadingRulesSheet } from '@/components/practice/reading/ReadingRulesSheet';
 import { ListeningSheet } from '@/components/practice/listening/ListeningSheet';
 import { SpeakingSheet } from '@/components/practice/speaking/SpeakingSheet';
+import { SectionHandoffSheet } from '@/components/mobile/SectionHandoffSheet';
 
 const sectionStartRoutes: Record<PracticeSectionKey, string> = {
   writing: '/practice/writing/customize',
@@ -60,6 +61,14 @@ const MOBILE_TABS: Array<{ key: MobileTabKey; label: string; icon: LucideIcon; p
 const FEEDBACK_NUDGE_STORAGE_KEY = 'studybox.feedback.nudge.dismissedAt';
 const FEEDBACK_NUDGE_COOLDOWN_MS = 1000 * 60 * 60 * 24 * 3; // 3 days
 const LAST_TAB_STORAGE_KEY = 'studybox.mobile-dashboard.last-tab';
+const PRACTICE_HANDOFF_STORAGE_KEY = 'studybox.practice.handoff.seen';
+
+const createDefaultHandoffState = (): Record<PracticeSectionKey, boolean> => ({
+  writing: false,
+  reading: false,
+  listening: false,
+  speaking: false,
+});
 
 interface MobileDashboardPageProps {
   activeTab: MobileTabKey;
@@ -97,6 +106,58 @@ export function MobileDashboardPage({ activeTab }: MobileDashboardPageProps) {
   const planName = subscription?.plan?.name ?? subscription?.subscription_plan?.name ?? null;
   const isSubscriptionReady = subscriptionStatus === 'success' || subscriptionStatus === 'error';
 
+  const [handoffSeen, setHandoffSeen] = useState<Record<PracticeSectionKey, boolean>>(() => {
+    if (typeof window === 'undefined') {
+      return createDefaultHandoffState();
+    }
+    try {
+      const raw = window.localStorage.getItem(PRACTICE_HANDOFF_STORAGE_KEY);
+      if (!raw) {
+        return createDefaultHandoffState();
+      }
+      const parsed = JSON.parse(raw) as Partial<Record<PracticeSectionKey, boolean>>;
+      return { ...createDefaultHandoffState(), ...parsed };
+    } catch (error) {
+      console.warn('Failed to parse practice handoff state', error);
+      return createDefaultHandoffState();
+    }
+  });
+
+  const [desktopPracticeUrls, setDesktopPracticeUrls] = useState<Record<PracticeSectionKey, string | null>>(() => {
+    if (typeof window === 'undefined') {
+      return {
+        writing: null,
+        reading: null,
+        listening: null,
+        speaking: null,
+      };
+    }
+    const origin = window.location.origin;
+    return {
+      writing: `${origin}/${locale}${sectionStartRoutes.writing}`,
+      reading: `${origin}/${locale}${sectionStartRoutes.reading}`,
+      listening: `${origin}/${locale}${sectionStartRoutes.listening}`,
+      speaking: `${origin}/${locale}${sectionStartRoutes.speaking}`,
+    };
+  });
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+    const origin = window.location.origin;
+    setDesktopPracticeUrls(prev => {
+      const next = {
+        writing: `${origin}/${locale}${sectionStartRoutes.writing}`,
+        reading: `${origin}/${locale}${sectionStartRoutes.reading}`,
+        listening: `${origin}/${locale}${sectionStartRoutes.listening}`,
+        speaking: `${origin}/${locale}${sectionStartRoutes.speaking}`,
+      };
+      const changed = (Object.keys(next) as PracticeSectionKey[]).some(key => prev[key] !== next[key]);
+      return changed ? next : prev;
+    });
+  }, [locale]);
+
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [hasPromptedFeedback, setHasPromptedFeedback] = useState(false);
   const [feedbackNudgeVisible, setFeedbackNudgeVisible] = useState(false);
@@ -129,20 +190,83 @@ export function MobileDashboardPage({ activeTab }: MobileDashboardPageProps) {
     [pathname, router, searchParams]
   );
 
+  const markHandoffSeen = useCallback((section: PracticeSectionKey) => {
+    setHandoffSeen(prev => {
+      if (prev[section]) {
+        return prev;
+      }
+      const next = { ...prev, [section]: true };
+      if (typeof window !== 'undefined') {
+        window.localStorage.setItem(PRACTICE_HANDOFF_STORAGE_KEY, JSON.stringify(next));
+      }
+      return next;
+    });
+  }, []);
+
+  const regenerateDesktopUrl = useCallback(
+    (section: PracticeSectionKey) => {
+      if (typeof window === 'undefined') {
+        return;
+      }
+      setDesktopPracticeUrls(prev => {
+        const nextValue = `${window.location.origin}/${locale}${sectionStartRoutes[section]}`;
+        if (prev[section] === nextValue) {
+          return prev;
+        }
+        return { ...prev, [section]: nextValue };
+      });
+    },
+    [locale]
+  );
+
   const sheetParam = searchParams.get('sheet');
   const stepParam = searchParams.get('step');
 
   const writingSheetOpen = sheetParam === 'writing';
+  const writingHandoffOpen = writingSheetOpen && stepParam === 'handoff';
   const writingStep: 'customize' | 'rules' = stepParam === 'rules' ? 'rules' : 'customize';
   const readingSheetOpen = sheetParam === 'reading';
+  const readingHandoffOpen = readingSheetOpen && stepParam === 'handoff';
   const listeningSheetOpen = sheetParam === 'listening';
+  const listeningHandoffOpen = listeningSheetOpen && stepParam === 'handoff';
   const listeningStep: 'rules' | 'audio-check' = stepParam === 'audio-check' ? 'audio-check' : 'rules';
   const speakingSheetOpen = sheetParam === 'speaking';
+  const speakingHandoffOpen = speakingSheetOpen && stepParam === 'handoff';
   const speakingStep: 'customize' | 'rules' | 'audio-check' | 'mic-check' = stepParam === 'rules' ? 'rules' : stepParam === 'audio-check' ? 'audio-check' : stepParam === 'mic-check' ? 'mic-check' : 'customize';
 
+  useEffect(() => {
+    if (writingHandoffOpen) {
+      markHandoffSeen('writing');
+    }
+  }, [markHandoffSeen, writingHandoffOpen]);
+
+  useEffect(() => {
+    if (readingHandoffOpen) {
+      markHandoffSeen('reading');
+    }
+  }, [markHandoffSeen, readingHandoffOpen]);
+
+  useEffect(() => {
+    if (listeningHandoffOpen) {
+      markHandoffSeen('listening');
+    }
+  }, [markHandoffSeen, listeningHandoffOpen]);
+
+  useEffect(() => {
+    if (speakingHandoffOpen) {
+      markHandoffSeen('speaking');
+    }
+  }, [markHandoffSeen, speakingHandoffOpen]);
+
+  const writingHandoffSeen = handoffSeen.writing;
+  const readingHandoffSeen = handoffSeen.reading;
+  const listeningHandoffSeen = handoffSeen.listening;
+  const speakingHandoffSeen = handoffSeen.speaking;
+
   const openWritingSheet = useCallback(() => {
-    mutateSearch({ sheet: 'writing', step: 'customize' }, 'push');
-  }, [mutateSearch]);
+    const shouldShowHandoff = !writingHandoffSeen;
+    mutateSearch({ sheet: 'writing', step: shouldShowHandoff ? 'handoff' : 'customize' }, 'push');
+  }, [mutateSearch, writingHandoffSeen]);
 
   const closeSheet = useCallback(() => {
     mutateSearch({ sheet: null, step: null }, 'replace');
@@ -156,12 +280,14 @@ export function MobileDashboardPage({ activeTab }: MobileDashboardPageProps) {
   );
 
   const openReadingSheet = useCallback(() => {
-    mutateSearch({ sheet: 'reading', step: 'rules' }, 'push');
-  }, [mutateSearch]);
+    const shouldShowHandoff = !readingHandoffSeen;
+    mutateSearch({ sheet: 'reading', step: shouldShowHandoff ? 'handoff' : 'rules' }, 'push');
+  }, [mutateSearch, readingHandoffSeen]);
 
   const openListeningSheet = useCallback(() => {
-    mutateSearch({ sheet: 'listening', step: 'rules' }, 'push');
-  }, [mutateSearch]);
+    const shouldShowHandoff = !listeningHandoffSeen;
+    mutateSearch({ sheet: 'listening', step: shouldShowHandoff ? 'handoff' : 'rules' }, 'push');
+  }, [mutateSearch, listeningHandoffSeen]);
 
   const setListeningStep = useCallback(
     (step: 'rules' | 'audio-check', history: 'push' | 'replace' = 'replace') => {
@@ -171,8 +297,9 @@ export function MobileDashboardPage({ activeTab }: MobileDashboardPageProps) {
   );
 
   const openSpeakingSheet = useCallback(() => {
-    mutateSearch({ sheet: 'speaking', step: 'customize' }, 'push');
-  }, [mutateSearch]);
+    const shouldShowHandoff = !speakingHandoffSeen;
+    mutateSearch({ sheet: 'speaking', step: shouldShowHandoff ? 'handoff' : 'customize' }, 'push');
+  }, [mutateSearch, speakingHandoffSeen]);
 
   const setSpeakingStep = useCallback(
     (step: 'customize' | 'rules' | 'audio-check' | 'mic-check', history: 'push' | 'replace' = 'replace') => {
@@ -180,6 +307,22 @@ export function MobileDashboardPage({ activeTab }: MobileDashboardPageProps) {
     },
     [mutateSearch]
   );
+
+  const handleWritingHandoffContinue = useCallback(() => {
+    mutateSearch({ sheet: 'writing', step: 'customize' }, 'push');
+  }, [mutateSearch]);
+
+  const handleReadingHandoffContinue = useCallback(() => {
+    mutateSearch({ sheet: 'reading', step: 'rules' }, 'push');
+  }, [mutateSearch]);
+
+  const handleListeningHandoffContinue = useCallback(() => {
+    mutateSearch({ sheet: 'listening', step: 'rules' }, 'push');
+  }, [mutateSearch]);
+
+  const handleSpeakingHandoffContinue = useCallback(() => {
+    mutateSearch({ sheet: 'speaking', step: 'customize' }, 'push');
+  }, [mutateSearch]);
 
   const localePath = useCallback(
     (path: string) => `/${locale}/m/${path}`,
@@ -661,8 +804,19 @@ export function MobileDashboardPage({ activeTab }: MobileDashboardPageProps) {
         </div>
       </nav>
 
+      <SectionHandoffSheet
+        section='writing'
+        open={writingHandoffOpen}
+        desktopUrl={desktopPracticeUrls.writing}
+        onRequestClose={closeSheet}
+        onContinue={handleWritingHandoffContinue}
+        onRetry={() => {
+          regenerateDesktopUrl('writing');
+        }}
+      />
+
       <WritingSheet
-        open={writingSheetOpen}
+        open={writingSheetOpen && !writingHandoffOpen}
         step={writingStep}
         onRequestClose={closeSheet}
         onRequestStep={(nextStep, options) => {
@@ -671,10 +825,32 @@ export function MobileDashboardPage({ activeTab }: MobileDashboardPageProps) {
         }}
       />
 
-      <ReadingRulesSheet open={readingSheetOpen} onRequestClose={closeSheet} />
+      <SectionHandoffSheet
+        section='reading'
+        open={readingHandoffOpen}
+        desktopUrl={desktopPracticeUrls.reading}
+        onRequestClose={closeSheet}
+        onContinue={handleReadingHandoffContinue}
+        onRetry={() => {
+          regenerateDesktopUrl('reading');
+        }}
+      />
+
+      <ReadingRulesSheet open={readingSheetOpen && !readingHandoffOpen} onRequestClose={closeSheet} />
+
+      <SectionHandoffSheet
+        section='listening'
+        open={listeningHandoffOpen}
+        desktopUrl={desktopPracticeUrls.listening}
+        onRequestClose={closeSheet}
+        onContinue={handleListeningHandoffContinue}
+        onRetry={() => {
+          regenerateDesktopUrl('listening');
+        }}
+      />
 
       <ListeningSheet
-        open={listeningSheetOpen}
+        open={listeningSheetOpen && !listeningHandoffOpen}
         step={listeningStep}
         onRequestClose={closeSheet}
         onStepChange={(nextStep, options) => {
@@ -683,8 +859,19 @@ export function MobileDashboardPage({ activeTab }: MobileDashboardPageProps) {
         }}
       />
 
+      <SectionHandoffSheet
+        section='speaking'
+        open={speakingHandoffOpen}
+        desktopUrl={desktopPracticeUrls.speaking}
+        onRequestClose={closeSheet}
+        onContinue={handleSpeakingHandoffContinue}
+        onRetry={() => {
+          regenerateDesktopUrl('speaking');
+        }}
+      />
+
       <SpeakingSheet
-        open={speakingSheetOpen}
+        open={speakingSheetOpen && !speakingHandoffOpen}
         step={speakingStep}
         onRequestClose={closeSheet}
         onStepChange={(nextStep, options) => {

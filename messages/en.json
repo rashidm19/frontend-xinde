@@ -69,6 +69,34 @@
     "showMore": "Show more",
     "refresh": "Refresh"
   },
+  "handoff": {
+    "common": {
+      "title": "Better on a computer"
+    },
+    "writing": {
+      "subtitle": "Recommended for comfortable typing and formatting",
+      "body": "For the best experience, we recommend continuing Writing on your computer. A keyboard makes typing and editing easier — but you can stay on your phone if you prefer."
+    },
+    "reading": {
+      "subtitle": "Recommended for a larger screen and easier navigation",
+      "body": "For the best experience, we recommend continuing Reading on your computer. A wider screen helps with passages and scrolling — but you can stay on your phone if you prefer."
+    },
+    "listening": {
+      "subtitle": "Recommended for stable audio and playback controls",
+      "body": "For the best experience, we recommend continuing Listening on your computer. It’s easier to control audio output there — but you can stay on your phone if you prefer."
+    },
+    "speaking": {
+      "subtitle": "Recommended for the best mic and audio setup",
+      "body": "For the best experience, we recommend continuing Speaking on your computer. It’s easier to use your mic and headphones there — but you can stay on your phone if you prefer."
+    },
+    "actions": {
+      "copy": "Copy link",
+      "copied": "Copied",
+      "share": "Share",
+      "continue": "Continue on phone",
+      "openedOnDesktop": "I’ve opened it on my computer"
+    }
+  },
   "subscription": {
     "availableLabel": "Available with subscription",
     "cancelWarning": "Your access will end on {date}."
