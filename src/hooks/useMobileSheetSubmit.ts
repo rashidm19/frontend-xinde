@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState, useTransition } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, useTransition } from 'react';
 
 interface SubmitTransitionOptions {
   extraDelayMs?: number;
@@ -12,13 +12,14 @@ interface UseMobileSheetSubmitOptions {
   cooldownMs?: number;
   errorMessage?: string;
   fallbackMs?: number;
+  resetKey?: string;
 }
 
 const DEFAULT_ERROR_MESSAGE = 'Something went wrong — try again';
 const DEFAULT_FALLBACK_MS = 5000;
 
 export function useMobileSheetSubmit(options?: UseMobileSheetSubmitOptions) {
-  const { cooldownMs = 340, errorMessage = DEFAULT_ERROR_MESSAGE, fallbackMs = DEFAULT_FALLBACK_MS } = options ?? {};
+  const { cooldownMs = 340, errorMessage = DEFAULT_ERROR_MESSAGE, fallbackMs = DEFAULT_FALLBACK_MS, resetKey } = options ?? {};
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -30,12 +31,15 @@ export function useMobileSheetSubmit(options?: UseMobileSheetSubmitOptions) {
 
   const [isPending, startTransition] = useTransition();
   const pendingRef = useRef(isPending);
+  const lastResetKeyRef = useRef<string | undefined>(resetKey);
 
   useEffect(() => {
     pendingRef.current = isPending;
   }, [isPending]);
 
   useEffect(() => {
+    mountedRef.current = true
+
     return () => {
       mountedRef.current = false;
       if (cooldownRef.current) {
@@ -215,7 +219,17 @@ export function useMobileSheetSubmit(options?: UseMobileSheetSubmitOptions) {
     setIsCoolingDown(false);
     setSubmitError(null);
   }, [clearFallback]);
-  console.log(isSubmitting);
+  useLayoutEffect(() => {
+    if (resetKey === undefined) {
+      lastResetKeyRef.current = resetKey;
+      return;
+    }
+    if (lastResetKeyRef.current === resetKey) {
+      return;
+    }
+    lastResetKeyRef.current = resetKey;
+    resetSubmission();
+  }, [resetKey, resetSubmission]);
   return {
     isSubmitting,
     submitError,

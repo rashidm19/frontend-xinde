@@ -38,7 +38,7 @@ export function ListeningSheet({ open, step, onRequestClose, onStepChange, route
   const [hasPlayed, setHasPlayed] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  const { isSubmitting, submitError, isCoolingDown, submitTransition, submitAsync, resetSubmission, ariaBusy } = useMobileSheetSubmit();
+  const { isSubmitting, submitError, isCoolingDown, submitTransition, submitAsync, resetSubmission, ariaBusy } = useMobileSheetSubmit({ resetKey: routeSignature });
 
   const handleOpenChange = useCallback(
     (nextOpen: boolean) => {
@@ -73,17 +73,6 @@ export function ListeningSheet({ open, step, onRequestClose, onStepChange, route
       audioRef.current.pause();
     }
   }, [step]);
-
-  useEffect(() => {
-    resetSubmission();
-  }, [step, resetSubmission]);
-
-  useEffect(() => {
-    if (!open) {
-      return;
-    }
-    resetSubmission();
-  }, [routeSignature, open, resetSubmission]);
 
   const sheetAnnouncement = useMemo(() => {
     if (step === 'audio-check') {

@@ -50,7 +50,7 @@ export function SpeakingSheet({ open, step, onRequestClose, onStepChange, routeS
   const { t: tAudio } = useCustomTranslations('practice.speaking.audioCheck');
   const { requireSubscription, isCheckingAccess } = useSubscriptionGate();
 
-  const { isSubmitting, submitError, isCoolingDown, submitTransition, submitAsync, resetError, resetSubmission, ariaBusy } = useMobileSheetSubmit();
+  const { isSubmitting, submitError, isCoolingDown, submitTransition, submitAsync, resetError, resetSubmission, ariaBusy } = useMobileSheetSubmit({ resetKey: routeSignature });
 
   const [selectedPart, setSelectedPart] = useState<PracticeSpeakingPartValue | null>(null);
   const [selectedTopic, setSelectedTopic] = useState<string>('random');
@@ -205,17 +205,6 @@ export function SpeakingSheet({ open, step, onRequestClose, onStepChange, routeS
       setMicPlayState('paused');
     }
   }, [step]);
-
-  useEffect(() => {
-    resetSubmission();
-  }, [step, resetSubmission]);
-
-  useEffect(() => {
-    if (!open) {
-      return;
-    }
-    resetSubmission();
-  }, [routeSignature, open, resetSubmission]);
 
   useEffect(() => {
     resetError();

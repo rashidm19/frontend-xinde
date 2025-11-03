@@ -149,7 +149,7 @@ export function WritingSheet({ open, step, onRequestClose, onRequestStep, routeS
   const [selectedType, setSelectedType] = useState<string>('random');
   const [typeSheetOpen, setTypeSheetOpen] = useState(false);
 
-  const { isSubmitting, submitError, isCoolingDown, submitTransition, submitAsync, resetError, resetSubmission, ariaBusy } = useMobileSheetSubmit();
+  const { isSubmitting, submitError, isCoolingDown, submitTransition, submitAsync, resetError, resetSubmission, ariaBusy } = useMobileSheetSubmit({ resetKey: routeSignature });
 
   useEffect(() => {
     if (!open) {
@@ -159,17 +159,6 @@ export function WritingSheet({ open, step, onRequestClose, onRequestStep, routeS
       resetSubmission();
     }
   }, [open, resetSubmission]);
-
-  useEffect(() => {
-    resetSubmission();
-  }, [step, resetSubmission]);
-
-  useEffect(() => {
-    if (!open) {
-      return;
-    }
-    resetSubmission();
-  }, [routeSignature, open, resetSubmission]);
 
   const { data, isLoading, isError } = useQuery<WritingCategoriesResponse>({
     queryKey: ['practice-writing-categories'],

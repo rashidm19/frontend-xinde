@@ -25,7 +25,7 @@ export function ReadingRulesSheet({ open, onRequestClose, routeSignature }: Read
   const router = useRouter();
   const { t, tImgAlts, tCommon, tActions } = useCustomTranslations('practice.reading.rules');
   const { requireSubscription, isCheckingAccess } = useSubscriptionGate();
-  const { isSubmitting, submitError, isCoolingDown, submitAsync, resetError, resetSubmission, ariaBusy } = useMobileSheetSubmit();
+  const { isSubmitting, submitError, isCoolingDown, submitAsync, resetError, resetSubmission, ariaBusy } = useMobileSheetSubmit({ resetKey: routeSignature });
 
   useEffect(() => {
     if (!open) {
@@ -39,13 +39,6 @@ export function ReadingRulesSheet({ open, onRequestClose, routeSignature }: Read
       document.body.style.overflow = previousOverflow;
     };
   }, [open, resetSubmission]);
-
-  useEffect(() => {
-    if (!open) {
-      return;
-    }
-    resetSubmission();
-  }, [routeSignature, open, resetSubmission]);
 
   const handleOpenChange = useCallback(
     (nextOpen: boolean) => {
