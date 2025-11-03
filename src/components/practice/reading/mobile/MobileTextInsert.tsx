@@ -6,6 +6,8 @@ import { AnimatePresence, motion } from "framer-motion";
 import { cn, transformStringToArrayV3 } from "@/lib/utils";
 import { useCustomTranslations } from "@/hooks/useCustomTranslations";
 
+import { HintBadge } from "./HintBadge";
+
 type TextChoice = {
   choice: string;
   answer: string;
@@ -153,6 +155,9 @@ export const MobileTextInsert: React.FC<MobileTextInsertProps> = ({ block, value
 
   return (
     <div className="flex flex-col gap-[20rem]">
+      <HintBadge icon="💬" className="self-start">
+        Tap a word, then tap a blank to insert it.
+      </HintBadge>
       <div
         className="flex items-center gap-[12rem] overflow-x-auto pb-[10rem] [scrollbar-width:none] [-ms-overflow-style:none]"
         role="group"

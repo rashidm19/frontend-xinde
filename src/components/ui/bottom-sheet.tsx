@@ -9,6 +9,7 @@ import { cn } from '@/lib/utils';
 
 type BottomSheetContextValue = {
   close: () => void;
+  id: string;
 };
 
 const BottomSheetContext = React.createContext<BottomSheetContextValue | null>(null);
@@ -27,6 +28,7 @@ type BottomSheetProps = React.ComponentPropsWithoutRef<typeof DialogPrimitive.Ro
 
 export function BottomSheet({ children, onOpenChange, ...props }: BottomSheetProps) {
   const closeButtonRef = React.useRef<HTMLButtonElement | null>(null);
+  const id = React.useId();
 
   const contextValue = React.useMemo(
     () => ({
@@ -37,8 +39,9 @@ export function BottomSheet({ children, onOpenChange, ...props }: BottomSheetPro
           closeButtonRef.current?.click();
         }
       },
+      id,
     }),
-    [onOpenChange]
+    [id, onOpenChange]
   );
 
   return (
@@ -55,17 +58,22 @@ export const BottomSheetTrigger = DialogPrimitive.Trigger;
 
 type BottomSheetOverlayProps = React.ComponentPropsWithoutRef<typeof DialogPrimitive.Overlay>;
 
-const BottomSheetOverlay = React.forwardRef<HTMLDivElement, BottomSheetOverlayProps>(({ className, ...props }, ref) => (
-  <DialogPrimitive.Overlay asChild {...props}>
-    <motion.div
-      ref={ref}
-      className={cn('fixed inset-0 z-[9998] bg-slate-900/50', className)}
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1, transition: { duration: 0.15, ease: 'easeOut' } }}
-      exit={{ opacity: 0, transition: { duration: 0.12, ease: 'easeIn' } }}
-    />
-  </DialogPrimitive.Overlay>
-));
+const BottomSheetOverlay = React.forwardRef<HTMLDivElement, BottomSheetOverlayProps>(({ className, ...props }, ref) => {
+  const { id } = useBottomSheetContext();
+
+  return (
+    <DialogPrimitive.Overlay asChild {...props}>
+      <motion.div
+        ref={ref}
+        data-bottom-sheet-id={id}
+        className={cn('fixed inset-0 z-[9998] bg-slate-900/50', className)}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1, transition: { duration: 0.15, ease: 'easeOut' } }}
+        exit={{ opacity: 0, transition: { duration: 0.12, ease: 'easeIn' } }}
+      />
+    </DialogPrimitive.Overlay>
+  );
+});
 BottomSheetOverlay.displayName = 'BottomSheetOverlay';
 
 type DialogPortalProps = React.ComponentPropsWithoutRef<typeof DialogPrimitive.Portal>;
@@ -77,8 +85,8 @@ interface BottomSheetContentProps extends React.ComponentPropsWithoutRef<typeof 
 }
 
 export const BottomSheetContent = React.forwardRef<HTMLDivElement, BottomSheetContentProps>(
-  ({ className, children, container, forceMount, hideHandle = false, ...props }, forwardedRef) => {
-    const { close } = useBottomSheetContext();
+  ({ className, children, container, forceMount, hideHandle = false, onPointerDownOutside, ...props }, forwardedRef) => {
+    const { close, id } = useBottomSheetContext();
     const contentRef = React.useRef<HTMLDivElement | null>(null);
     const composedRefs = useComposedRefs(contentRef, forwardedRef);
 
@@ -97,12 +105,28 @@ export const BottomSheetContent = React.forwardRef<HTMLDivElement, BottomSheetCo
       [close]
     );
 
+    const handlePointerDownOutside = React.useCallback<NonNullable<BottomSheetContentProps['onPointerDownOutside']>>(
+      event => {
+        const originalEvent = event.detail.originalEvent;
+        const target = (originalEvent?.target as Element | null) ?? null;
+        const nestedSheet = target?.closest<HTMLElement>('[data-bottom-sheet-id]');
+
+        if (nestedSheet && nestedSheet.getAttribute('data-bottom-sheet-id') !== id) {
+          event.preventDefault();
+        }
+
+        onPointerDownOutside?.(event);
+      },
+      [id, onPointerDownOutside]
+    );
+
     return (
       <DialogPrimitive.Portal forceMount={forceMount} container={container}>
         <BottomSheetOverlay />
-        <DialogPrimitive.Content asChild {...props}>
+        <DialogPrimitive.Content asChild onPointerDownOutside={handlePointerDownOutside} {...props}>
           <motion.div
             ref={composedRefs}
+            data-bottom-sheet-id={id}
             className={cn(
               'fixed inset-x-0 bottom-0 z-[9999] mx-auto flex w-full max-w-[672rem] flex-col overflow-hidden rounded-t-[32rem] bg-white/95 pb-[env(safe-area-inset-bottom)] shadow-[0_-4px_24px_rgba(0,0,0,0.1)] backdrop-blur-lg',
               'max-h-[80dvh]',

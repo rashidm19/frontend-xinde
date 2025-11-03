@@ -7,6 +7,7 @@ import { BottomSheet, BottomSheetContent } from '@/components/ui/bottom-sheet';
 import { SubscriptionAccessLabel } from '@/components/SubscriptionAccessLabel';
 import { useCustomTranslations } from '@/hooks/useCustomTranslations';
 import { useSubscriptionGate } from '@/hooks/useSubscriptionGate';
+import { useMobileSheetSubmit } from '@/hooks/useMobileSheetSubmit';
 import axiosInstance from '@/lib/axiosInstance';
 import { cn } from '@/lib/utils';
 import nProgress from 'nprogress';
@@ -15,20 +16,20 @@ import { useRouter } from 'next/navigation';
 interface ReadingRulesSheetProps {
   open: boolean;
   onRequestClose: () => void;
+  routeSignature: string;
 }
 
 const INTERACTIVE_TAP = { scale: 0.97 };
 
-export function ReadingRulesSheet({ open, onRequestClose }: ReadingRulesSheetProps) {
+export function ReadingRulesSheet({ open, onRequestClose, routeSignature }: ReadingRulesSheetProps) {
   const router = useRouter();
   const { t, tImgAlts, tCommon, tActions } = useCustomTranslations('practice.reading.rules');
   const { requireSubscription, isCheckingAccess } = useSubscriptionGate();
-
-  const [isStarting, setIsStarting] = useState(false);
+  const { isSubmitting, submitError, isCoolingDown, submitAsync, resetError, resetSubmission, ariaBusy } = useMobileSheetSubmit({ resetKey: routeSignature });
 
   useEffect(() => {
     if (!open) {
-      setIsStarting(false);
+      resetSubmission();
       return;
     }
 
@@ -37,25 +38,26 @@ export function ReadingRulesSheet({ open, onRequestClose }: ReadingRulesSheetPro
     return () => {
       document.body.style.overflow = previousOverflow;
     };
-  }, [open]);
+  }, [open, resetSubmission]);
 
   const handleOpenChange = useCallback(
     (nextOpen: boolean) => {
       if (!nextOpen) {
         onRequestClose();
+        resetSubmission();
       }
     },
-    [onRequestClose]
+    [onRequestClose, resetSubmission]
   );
 
-  const startPractice = useCallback(async () => {
-    if (isStarting || isCheckingAccess) {
+  const handleStartPractice = useCallback(() => {
+    if (isCheckingAccess || isSubmitting || isCoolingDown) {
       return;
     }
 
-    setIsStarting(true);
+    resetError();
 
-    try {
+    void submitAsync(async () => {
       const canStart = await requireSubscription();
 
       if (!canStart) {
@@ -66,27 +68,32 @@ export function ReadingRulesSheet({ open, onRequestClose }: ReadingRulesSheetPro
         validateStatus: () => true,
       });
 
-      if (response.status >= 200 && response.status < 300) {
-        const payload = response.data;
-        if (Array.isArray(payload.data) && payload.data.length > 0) {
-          const randomIndex = Math.floor(Math.random() * payload.data.length);
-          const randomReadingId = payload.data[randomIndex].reading_id;
-          if (typeof window !== 'undefined') {
-            window.localStorage.setItem('practiceReadingId', String(randomReadingId));
-          }
-          nProgress.start();
-          onRequestClose();
-          router.push('/practice/reading/test');
-        } else {
-          console.error('No available reading tasks');
-        }
+      if (response.status < 200 || response.status >= 300) {
+        throw new Error('Unable to start reading practice');
       }
-    } finally {
-      setIsStarting(false);
-    }
-  }, [isStarting, isCheckingAccess, requireSubscription, onRequestClose, router]);
+
+      const payload = response.data;
+      if (!Array.isArray(payload.data) || payload.data.length === 0) {
+        throw new Error('No available reading tasks');
+      }
+
+      const randomIndex = Math.floor(Math.random() * payload.data.length);
+      const randomReadingId = payload.data[randomIndex].reading_id;
+      if (typeof randomReadingId !== 'number') {
+        throw new Error('Invalid reading task payload');
+      }
+
+      if (typeof window !== 'undefined') {
+        window.localStorage.setItem('practiceReadingId', String(randomReadingId));
+      }
+      nProgress.start();
+      onRequestClose();
+      router.push('/practice/reading/test');
+    });
+  }, [isCheckingAccess, isCoolingDown, isSubmitting, onRequestClose, requireSubscription, resetError, router, submitAsync]);
 
   const sheetTitle = `${tCommon('reading')} • ${tCommon('minCount', { count: 60 })} • 3 passages`;
+  const buttonDisabled = isCheckingAccess || isSubmitting || isCoolingDown;
 
   return (
     <BottomSheet open={open} onOpenChange={handleOpenChange}>
@@ -112,7 +119,7 @@ export function ReadingRulesSheet({ open, onRequestClose }: ReadingRulesSheetPro
             </button>
           </header>
 
-          <div className='flex-1 overflow-y-auto px-[20rem] py-[20rem]'>
+          <motion.div key='content' initial={{ opacity: 0.45 }} animate={{ opacity: 1 }} transition={{ duration: 0.2 }} className='flex-1 overflow-y-auto px-[20rem] py-[20rem]'>
             <div className='flex flex-col gap-[20rem]'>
               <h1 className='text-[22rem] font-semibold leading-[120%] text-slate-900'>{t('title')}</h1>
               <div className='flex flex-col gap-[12rem]'>
@@ -124,18 +131,30 @@ export function ReadingRulesSheet({ open, onRequestClose }: ReadingRulesSheetPro
                 </CollapsibleSection>
               </div>
             </div>
-          </div>
+          </motion.div>
 
           <footer className='sticky bottom-0 z-[1] border-t border-slate-200 bg-white/95 px-[20rem] pb-[calc(20rem+env(safe-area-inset-bottom))] pt-[16rem] shadow-[0_-18rem_36rem_-28rem_rgba(15,23,42,0.18)]'>
-            <div className='space-y-[8rem]'>
+            <div className='space-y-[8rem]' aria-busy={ariaBusy}>
+              <span className='sr-only' aria-live='polite'>
+                {isSubmitting ? 'Continuing…' : ''}
+              </span>
+              {submitError ? <p className='text-center text-[12rem] font-medium text-red-600'>{submitError}</p> : null}
               <motion.button
+                key='reading-rules-cta'
                 type='button'
-                whileTap={!isStarting && !isCheckingAccess ? INTERACTIVE_TAP : undefined}
-                disabled={isStarting || isCheckingAccess}
-                onClick={startPractice}
+                whileTap={!buttonDisabled ? INTERACTIVE_TAP : undefined}
+                disabled={buttonDisabled}
+                onClick={handleStartPractice}
                 className='flex h-[52rem] w-full items-center justify-center rounded-[28rem] bg-d-green text-[16rem] font-semibold transition hover:bg-d-green/90 disabled:cursor-not-allowed disabled:bg-d-gray/60 disabled:text-d-black/60'
               >
-                {isCheckingAccess || isStarting ? '...' : tActions('continue')}
+                {isSubmitting ? (
+                  <span className='flex items-center gap-[8rem]'>
+                    <span className='size-[16rem] animate-spin rounded-full border-[3rem] border-white/40 border-t-white' aria-hidden='true' />
+                    Continuing…
+                  </span>
+                ) : (
+                  tActions('continue')
+                )}
               </motion.button>
               <SubscriptionAccessLabel className='text-center text-[12rem]' />
             </div>

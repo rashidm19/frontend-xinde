@@ -9,6 +9,7 @@ import { BottomSheet, BottomSheetContent } from '@/components/ui/bottom-sheet';
 import { SubscriptionAccessLabel } from '@/components/SubscriptionAccessLabel';
 import { useCustomTranslations } from '@/hooks/useCustomTranslations';
 import { useSubscriptionGate } from '@/hooks/useSubscriptionGate';
+import { useMobileSheetSubmit } from '@/hooks/useMobileSheetSubmit';
 import { cn } from '@/lib/utils';
 import nProgress from 'nprogress';
 import { useRouter } from 'next/navigation';
@@ -20,37 +21,39 @@ interface ListeningSheetProps {
   step: ListeningSheetStep;
   onRequestClose: () => void;
   onStepChange: (step: ListeningSheetStep, options?: { history?: 'push' | 'replace' }) => void;
+  routeSignature: string;
 }
 
 const INTERACTIVE_TAP = { scale: 0.97 };
 const SHEET_MAX_HEIGHT = 'max-h-[90dvh]';
 type UseCustomTranslationsReturn = ReturnType<typeof useCustomTranslations>;
 
-export function ListeningSheet({ open, step, onRequestClose, onStepChange }: ListeningSheetProps) {
+export function ListeningSheet({ open, step, onRequestClose, onStepChange, routeSignature }: ListeningSheetProps) {
   const router = useRouter();
   const { t: tRules, tCommon, tImgAlts, tActions } = useCustomTranslations('practice.listening.rules');
   const { t: tAudio } = useCustomTranslations('practice.listening.audioCheck');
   const { requireSubscription, isCheckingAccess } = useSubscriptionGate();
 
-  const [isStarting, setIsStarting] = useState(false);
   const [audioError, setAudioError] = useState<string | null>(null);
   const [hasPlayed, setHasPlayed] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  const { isSubmitting, submitError, isCoolingDown, submitTransition, submitAsync, resetSubmission, ariaBusy } = useMobileSheetSubmit({ resetKey: routeSignature });
 
   const handleOpenChange = useCallback(
     (nextOpen: boolean) => {
       if (!nextOpen) {
         onRequestClose();
+        resetSubmission();
       }
     },
-    [onRequestClose]
+    [onRequestClose, resetSubmission]
   );
 
   useEffect(() => {
     if (!open) {
-      setIsStarting(false);
       setAudioError(null);
-      setHasPlayed(false);
+      resetSubmission();
       if (audioRef.current) {
         audioRef.current.pause();
         audioRef.current.currentTime = 0;
@@ -63,7 +66,7 @@ export function ListeningSheet({ open, step, onRequestClose, onStepChange }: Lis
     return () => {
       document.body.style.overflow = previousOverflow;
     };
-  }, [open]);
+  }, [open, resetSubmission]);
 
   useEffect(() => {
     if (step !== 'audio-check' && audioRef.current) {
@@ -81,19 +84,20 @@ export function ListeningSheet({ open, step, onRequestClose, onStepChange }: Lis
   const listeningMeta = `${tCommon('listening')} • ${tCommon('minCount', { count: 30 })} • ${tCommon('partsCount', { count: 4 })}`;
 
   const handleContinueFromRules = useCallback(() => {
-    onStepChange('audio-check', { history: 'push' });
-  }, [onStepChange]);
-
-  const startListeningPractice = useCallback(async () => {
-    if (isStarting || isCheckingAccess || !hasPlayed || audioError) {
+    if (isSubmitting || isCoolingDown || isCheckingAccess) {
       return;
     }
 
-    setIsStarting(true);
+    void submitTransition(() => onStepChange('audio-check', { history: 'push' }));
+  }, [isCheckingAccess, isCoolingDown, isSubmitting, onStepChange, submitTransition]);
 
-    try {
+  const handleStartListening = useCallback(() => {
+    if (isCheckingAccess || !hasPlayed || audioError || isSubmitting || isCoolingDown) {
+      return;
+    }
+
+    void submitAsync(async () => {
       const canStart = await requireSubscription();
-
       if (!canStart) {
         return;
       }
@@ -101,12 +105,12 @@ export function ListeningSheet({ open, step, onRequestClose, onStepChange }: Lis
       nProgress.start();
       onRequestClose();
       router.push('/practice/listening/test/');
-    } finally {
-      setIsStarting(false);
-    }
-  }, [audioError, hasPlayed, isCheckingAccess, isStarting, onRequestClose, requireSubscription, router]);
+    });
+  }, [audioError, hasPlayed, isCheckingAccess, isCoolingDown, isSubmitting, onRequestClose, requireSubscription, router, submitAsync]);
 
-  const continueDisabled = step === 'rules' ? isCheckingAccess : isCheckingAccess || isStarting || !hasPlayed || Boolean(audioError);
+  const rulesContinueDisabled = isCheckingAccess;
+  const audioContinueDisabled = isCheckingAccess || !hasPlayed || Boolean(audioError);
+  const buttonDisabled = (step === 'rules' ? rulesContinueDisabled : audioContinueDisabled) || isSubmitting || isCoolingDown;
 
   return (
     <BottomSheet open={open} onOpenChange={handleOpenChange}>
@@ -126,7 +130,7 @@ export function ListeningSheet({ open, step, onRequestClose, onStepChange }: Lis
             iconAlt={tImgAlts('listening') ?? 'Listening'}
           />
 
-          <div className='flex-1 overflow-y-auto px-[20rem] py-[20rem]'>
+          <motion.div key={step} initial={{ opacity: 0.45 }} animate={{ opacity: 1 }} transition={{ duration: 0.2 }} className='flex-1 overflow-y-auto px-[20rem] py-[20rem]'>
             {step === 'rules' ? (
               <div className='flex flex-col gap-[20rem]'>
                 <h1 className='text-[22rem] font-semibold leading-[120%] text-slate-900'>{tRules('title')}</h1>
@@ -144,18 +148,30 @@ export function ListeningSheet({ open, step, onRequestClose, onStepChange }: Lis
             ) : (
               <AudioCheckStepContent tAudio={tAudio} tImgAlts={tImgAlts} audioRef={audioRef} onAudioError={setAudioError} onPlayed={() => setHasPlayed(true)} />
             )}
-          </div>
+          </motion.div>
 
           <footer className='sticky bottom-0 z-[1] border-t border-slate-200 bg-white/95 px-[20rem] pb-[calc(20rem+env(safe-area-inset-bottom))] pt-[16rem] shadow-[0_-18rem_36rem_-28rem_rgba(15,23,42,0.18)]'>
-            <div className='space-y-[8rem]'>
+            <div className='space-y-[8rem]' aria-busy={ariaBusy}>
+              <span className='sr-only' aria-live='polite'>
+                {isSubmitting ? 'Continuing…' : ''}
+              </span>
+              {submitError ? <p className='text-center text-[12rem] font-medium text-red-600'>{submitError}</p> : null}
               <motion.button
+                key={`listening-${step}-cta`}
                 type='button'
-                whileTap={!continueDisabled ? INTERACTIVE_TAP : undefined}
-                disabled={continueDisabled}
-                onClick={step === 'rules' ? handleContinueFromRules : startListeningPractice}
+                whileTap={!buttonDisabled ? INTERACTIVE_TAP : undefined}
+                disabled={buttonDisabled}
+                onClick={step === 'rules' ? handleContinueFromRules : handleStartListening}
                 className='flex h-[52rem] w-full items-center justify-center rounded-[28rem] bg-d-green text-[16rem] font-semibold transition hover:bg-d-green/90 disabled:cursor-not-allowed disabled:bg-d-gray/60 disabled:text-d-black/60'
               >
-                {isCheckingAccess || isStarting ? '...' : tActions('continue')}
+                {isSubmitting ? (
+                  <span className='flex items-center gap-[8rem]'>
+                    <span className='size-[16rem] animate-spin rounded-full border-[3rem] border-white/40 border-t-white' aria-hidden='true' />
+                    Continuing…
+                  </span>
+                ) : (
+                  tActions('continue')
+                )}
               </motion.button>
               <SubscriptionAccessLabel className='text-center text-[12rem]' />
               {audioError ? <p className='text-center text-[12rem] font-medium text-red-600'>{audioError}</p> : null}

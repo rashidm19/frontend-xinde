@@ -13,6 +13,7 @@ import type { PracticeWritingListResponse } from '@/types/PracticeWriting';
 import { cn } from '@/lib/utils';
 import nProgress from 'nprogress';
 import { useRouter } from 'next/navigation';
+import { useMobileSheetSubmit } from '@/hooks/useMobileSheetSubmit';
 
 type WritingSheetStep = 'customize' | 'rules';
 
@@ -21,6 +22,7 @@ interface WritingSheetProps {
   step: WritingSheetStep;
   onRequestClose: () => void;
   onRequestStep: (step: WritingSheetStep, options?: { history?: 'push' | 'replace' }) => void;
+  routeSignature: string;
 }
 
 interface WritingCategoryTag {
@@ -137,7 +139,7 @@ const LoadingSkeleton = () => (
   </div>
 );
 
-export function WritingSheet({ open, step, onRequestClose, onRequestStep }: WritingSheetProps) {
+export function WritingSheet({ open, step, onRequestClose, onRequestStep, routeSignature }: WritingSheetProps) {
   const router = useRouter();
   const { t: tCustomize, tImgAlts, tCommon, tActions } = useCustomTranslations('practice.writing.customize');
   const { t: tRules } = useCustomTranslations('practice.writing.rules');
@@ -146,16 +148,17 @@ export function WritingSheet({ open, step, onRequestClose, onRequestStep }: Writ
   const [selectedPart, setSelectedPart] = useState<1 | 2>(1);
   const [selectedType, setSelectedType] = useState<string>('random');
   const [typeSheetOpen, setTypeSheetOpen] = useState(false);
-  const [isStarting, setIsStarting] = useState(false);
+
+  const { isSubmitting, submitError, isCoolingDown, submitTransition, submitAsync, resetError, resetSubmission, ariaBusy } = useMobileSheetSubmit({ resetKey: routeSignature });
 
   useEffect(() => {
     if (!open) {
       setSelectedPart(1);
       setSelectedType('random');
       setTypeSheetOpen(false);
-      setIsStarting(false);
+      resetSubmission();
     }
-  }, [open]);
+  }, [open, resetSubmission]);
 
   const { data, isLoading, isError } = useQuery<WritingCategoriesResponse>({
     queryKey: ['practice-writing-categories'],
@@ -190,35 +193,42 @@ export function WritingSheet({ open, step, onRequestClose, onRequestStep }: Writ
     return match?.name ?? tCommon('random');
   }, [selectedType, categoriesByPart, tCommon]);
 
-  const continueDisabled = isStarting || isCheckingAccess || isLoading || isError;
+  const baseContinueDisabled = isCheckingAccess || isLoading || isError;
+  const customizeContinueDisabled = baseContinueDisabled;
+  const rulesContinueDisabled = baseContinueDisabled;
   const typeRowDisabled = isLoading || isError;
 
   const writingHeader = `${tCommon('writing')} • ${tCommon('minCount', { count: 60 })} • ${tCommon('partsCount', { count: 2 })}`;
 
-  const handlePartSelect = useCallback((part: 1 | 2) => {
-    setSelectedPart(prev => {
-      if (prev !== part) {
-        setSelectedType('random');
-      }
-      return part;
-    });
-  }, []);
+  const handlePartSelect = useCallback(
+    (part: 1 | 2) => {
+      resetError();
+      setSelectedPart(prev => {
+        if (prev !== part) {
+          setSelectedType('random');
+        }
+        return part;
+      });
+    },
+    [resetError]
+  );
 
-  const handleTypePick = useCallback((value: string) => {
-    setSelectedType(value);
-    setTypeSheetOpen(false);
-  }, []);
+  const handleTypePick = useCallback(
+    (value: string) => {
+      resetError();
+      setSelectedType(value);
+      setTypeSheetOpen(false);
+    },
+    [resetError]
+  );
 
-  const startPractice = useCallback(async () => {
-    if (isStarting || isCheckingAccess || isLoading || isError) {
+  const handleStartPractice = useCallback(() => {
+    if (rulesContinueDisabled || isSubmitting || isCoolingDown) {
       return;
     }
 
-    setIsStarting(true);
-
-    try {
+    void submitAsync(async () => {
       const canStart = await requireSubscription();
-
       if (!canStart) {
         return;
       }
@@ -237,33 +247,48 @@ export function WritingSheet({ open, step, onRequestClose, onRequestStep }: Writ
         validateStatus: () => true,
       });
 
-      if (response.status >= 200 && response.status < 300) {
-        const payload = response.data;
-        if (Array.isArray(payload.data) && payload.data.length > 0) {
-          const randomIndex = Math.floor(Math.random() * payload.data.length);
-          const randomWritingId = payload.data[randomIndex].writing_id;
-          if (typeof window !== 'undefined') {
-            window.localStorage.setItem('practiceWritingId', String(randomWritingId));
-          }
-          nProgress.start();
-          onRequestClose();
-          router.push('/practice/writing/test');
-        } else {
-          console.error('No available writing tasks');
-        }
+      if (response.status < 200 || response.status >= 300) {
+        throw new Error('Failed to start writing practice');
       }
-    } finally {
-      setIsStarting(false);
+
+      const payload = response.data;
+      if (!Array.isArray(payload.data) || payload.data.length === 0) {
+        throw new Error('No available writing tasks');
+      }
+
+      const randomIndex = Math.floor(Math.random() * payload.data.length);
+      const randomWritingId = payload.data[randomIndex]?.writing_id;
+
+      if (typeof randomWritingId !== 'number') {
+        throw new Error('Invalid writing task payload');
+      }
+
+      if (typeof window !== 'undefined') {
+        window.localStorage.setItem('practiceWritingId', String(randomWritingId));
+      }
+
+      nProgress.start();
+      onRequestClose();
+      router.push('/practice/writing/test');
+    });
+  }, [isCoolingDown, isSubmitting, onRequestClose, randomType, requireSubscription, router, rulesContinueDisabled, selectedPart, selectedType, submitAsync]);
+
+  const handleCustomizeContinue = useCallback(() => {
+    if (customizeContinueDisabled || isSubmitting || isCoolingDown) {
+      return;
     }
-  }, [isStarting, isCheckingAccess, isLoading, isError, requireSubscription, selectedType, randomType, selectedPart, onRequestClose, router]);
+
+    void submitTransition(() => onRequestStep('rules', { history: 'push' }));
+  }, [customizeContinueDisabled, isCoolingDown, isSubmitting, onRequestStep, submitTransition]);
 
   const handleOpenChange = useCallback(
     (nextOpen: boolean) => {
       if (!nextOpen) {
         onRequestClose();
+        resetSubmission();
       }
     },
-    [onRequestClose]
+    [onRequestClose, resetSubmission]
   );
 
   useEffect(() => {
@@ -281,6 +306,9 @@ export function WritingSheet({ open, step, onRequestClose, onRequestStep }: Writ
   const stepAnnouncement = step === 'rules' ? tRules('title') : tCustomize('subtitle');
 
   const aboutSectionTitle = 'About the test';
+
+  const customizeButtonDisabled = customizeContinueDisabled || isSubmitting || isCoolingDown;
+  const rulesButtonDisabled = rulesContinueDisabled || isSubmitting || isCoolingDown;
 
   return (
     <>
@@ -317,7 +345,7 @@ export function WritingSheet({ open, step, onRequestClose, onRequestStep }: Writ
               </button>
             </header>
 
-            <div className='flex-1 overflow-y-auto px-[20rem] py-[20rem]'>
+            <motion.div key={step} initial={{ opacity: 0.4 }} animate={{ opacity: 1 }} transition={{ duration: 0.2 }} className='flex-1 overflow-y-auto px-[20rem] py-[20rem]'>
               {step === 'customize' ? (
                 <div className='flex flex-col gap-[24rem]'>
                   <div className='flex flex-col gap-[8rem]'>
@@ -366,6 +394,7 @@ export function WritingSheet({ open, step, onRequestClose, onRequestStep }: Writ
                         disabled={typeRowDisabled}
                         onClick={() => {
                           if (!typeRowDisabled) {
+                            resetError();
                             setTypeSheetOpen(true);
                           }
                         }}
@@ -396,18 +425,30 @@ export function WritingSheet({ open, step, onRequestClose, onRequestStep }: Writ
                   </div>
                 </div>
               )}
-            </div>
+            </motion.div>
 
             <footer className='sticky bottom-0 z-[1] border-t border-slate-200 bg-white/95 px-[20rem] pb-[calc(20rem+env(safe-area-inset-bottom))] pt-[16rem] shadow-[0_-18rem_36rem_-28rem_rgba(15,23,42,0.18)]'>
-              <div className='space-y-[8rem]'>
+              <div className='space-y-[8rem]' aria-busy={ariaBusy}>
+                <span className='sr-only' aria-live='polite'>
+                  {isSubmitting ? 'Continuing…' : ''}
+                </span>
+                {submitError ? <p className='text-center text-[12rem] font-medium text-red-600'>{submitError}</p> : null}
                 <motion.button
+                  key={`writing-${step}-cta`}
                   type='button'
-                  whileTap={!continueDisabled ? INTERACTIVE_TAP : undefined}
-                  disabled={continueDisabled}
-                  onClick={step === 'rules' ? startPractice : () => onRequestStep('rules', { history: 'push' })}
+                  whileTap={step === 'rules' ? (!rulesButtonDisabled ? INTERACTIVE_TAP : undefined) : !customizeButtonDisabled ? INTERACTIVE_TAP : undefined}
+                  disabled={step === 'rules' ? rulesButtonDisabled : customizeButtonDisabled}
+                  onClick={step === 'rules' ? handleStartPractice : handleCustomizeContinue}
                   className='flex h-[52rem] w-full items-center justify-center rounded-[28rem] bg-d-green text-[16rem] font-semibold transition hover:bg-d-green/90 disabled:cursor-not-allowed disabled:bg-d-gray/60 disabled:text-d-black/60'
                 >
-                  {isCheckingAccess || isStarting ? '...' : tActions('continue')}
+                  {isSubmitting ? (
+                    <span className='flex items-center gap-[8rem]'>
+                      <span className='size-[16rem] animate-spin rounded-full border-[3rem] border-white/40 border-t-white' aria-hidden='true' />
+                      Continuing…
+                    </span>
+                  ) : (
+                    tActions('continue')
+                  )}
                 </motion.button>
                 <SubscriptionAccessLabel className='text-center text-[12rem]' />
               </div>
