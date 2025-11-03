@@ -65,8 +65,10 @@ export function SpeakingSheet({ open, step, onRequestClose, onStepChange, routeS
   const [recordingBlob, setRecordingBlob] = useState<Blob | null>(null);
   const [recordingError, setRecordingError] = useState<string | null>(null);
   const [launchError, setLaunchError] = useState<string | null>(null);
+  const [isTopicSelectInteracting, setIsTopicSelectInteracting] = useState(false);
   const micAudioRef = useRef<HTMLAudioElement | null>(null);
   const [micPlayState, setMicPlayState] = useState<'playing' | 'paused'>('paused');
+  const topicSelectInteractionTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const {
     status: recordingStatus,
@@ -124,6 +126,11 @@ export function SpeakingSheet({ open, step, onRequestClose, onStepChange, routeS
       setRecordingBlob(null);
       setRecordingError(null);
       setLaunchError(null);
+      setIsTopicSelectInteracting(false);
+      if (topicSelectInteractionTimeoutRef.current) {
+        clearTimeout(topicSelectInteractionTimeoutRef.current);
+        topicSelectInteractionTimeoutRef.current = null;
+      }
       setMicPlayState('paused');
       clearBlobUrl();
       if (audioRef.current) {
@@ -217,6 +224,15 @@ export function SpeakingSheet({ open, step, onRequestClose, onStepChange, routeS
     }
   }, [recordingStatus]);
 
+  useEffect(() => {
+    return () => {
+      if (topicSelectInteractionTimeoutRef.current) {
+        clearTimeout(topicSelectInteractionTimeoutRef.current);
+        topicSelectInteractionTimeoutRef.current = null;
+      }
+    };
+  }, []);
+
   const handleOpenChange = useCallback(
     (nextOpen: boolean) => {
       if (!nextOpen) {
@@ -248,6 +264,26 @@ export function SpeakingSheet({ open, step, onRequestClose, onStepChange, routeS
     }
     void submitTransition(() => onStepChange('mic-check', { history: 'push' }));
   }, [audioError, hasPlayedSample, isCoolingDown, isSubmitting, onStepChange, submitTransition]);
+
+  const handleTopicSelectOpenChange = useCallback(
+    (nextOpen: boolean) => {
+      if (topicSelectInteractionTimeoutRef.current) {
+        clearTimeout(topicSelectInteractionTimeoutRef.current);
+        topicSelectInteractionTimeoutRef.current = null;
+      }
+
+      if (nextOpen) {
+        setIsTopicSelectInteracting(true);
+        return;
+      }
+
+      topicSelectInteractionTimeoutRef.current = setTimeout(() => {
+        setIsTopicSelectInteracting(false);
+        topicSelectInteractionTimeoutRef.current = null;
+      }, 160);
+    },
+    []
+  );
 
   const handleBack = useCallback(() => {
     if (step === 'mic-check') {
@@ -339,7 +375,7 @@ export function SpeakingSheet({ open, step, onRequestClose, onStepChange, routeS
   const customizeContinueDisabled = categoriesLoading || categoriesError || !selectedPart;
   const rulesContinueDisabled = false;
   const audioContinueDisabled = isCheckingAccess || Boolean(audioError) || !hasPlayedSample;
-  const micContinueDisabled = isCheckingAccess || isLaunching || !hasRecorded || !hasPlayedRecording || Boolean(recordingError);
+  const micContinueDisabled = isCheckingAccess || isLaunching || Boolean(recordingError);
 
   const baseButtonDisabled =
     step === 'customize'
@@ -351,6 +387,7 @@ export function SpeakingSheet({ open, step, onRequestClose, onStepChange, routeS
           : micContinueDisabled;
 
   const buttonDisabled = baseButtonDisabled || isSubmitting || isCoolingDown;
+  const shouldLockPrimaryAction = step === 'customize' && isTopicSelectInteracting;
 
   const sheetAnnouncement = useMemo(() => {
     switch (step) {
@@ -368,6 +405,9 @@ export function SpeakingSheet({ open, step, onRequestClose, onStepChange, routeS
   const headerMeta = `${tCommon('speaking')} • ${tCommon('minCount', { count: 14 })} • ${tCommon('partsCount', { count: 3 })}`;
 
   const handlePrimaryAction = useCallback(() => {
+    if (shouldLockPrimaryAction) {
+      return;
+    }
     if (step === 'customize') {
       handleContinueFromCustomize();
       return;
@@ -381,7 +421,7 @@ export function SpeakingSheet({ open, step, onRequestClose, onStepChange, routeS
       return;
     }
     handleStartSpeaking();
-  }, [handleContinueFromAudioCheck, handleContinueFromCustomize, handleContinueFromRules, handleStartSpeaking, step]);
+  }, [handleContinueFromAudioCheck, handleContinueFromCustomize, handleContinueFromRules, handleStartSpeaking, shouldLockPrimaryAction, step]);
 
   return (
     <BottomSheet open={open} onOpenChange={handleOpenChange}>
@@ -421,6 +461,7 @@ export function SpeakingSheet({ open, step, onRequestClose, onStepChange, routeS
                   setLaunchError(null);
                 }}
                 selectedTopicLabel={selectedTopicLabel}
+                onTopicSelectOpenChange={handleTopicSelectOpenChange}
                 tCommon={tCommon}
                 tForm={tForm}
               />
@@ -482,8 +523,8 @@ export function SpeakingSheet({ open, step, onRequestClose, onStepChange, routeS
               <motion.button
                 key={`speaking-${step}-cta`}
                 type='button'
-                whileTap={!buttonDisabled ? INTERACTIVE_TAP : undefined}
-                disabled={buttonDisabled}
+                whileTap={!(buttonDisabled || shouldLockPrimaryAction) ? INTERACTIVE_TAP : undefined}
+                disabled={buttonDisabled || shouldLockPrimaryAction}
                 onClick={handlePrimaryAction}
                 className='flex h-[52rem] w-full items-center justify-center rounded-[28rem] bg-d-green text-[16rem] font-semibold transition hover:bg-d-green/90 disabled:cursor-not-allowed disabled:bg-d-gray/60 disabled:text-d-black/60'
               >
@@ -556,6 +597,7 @@ interface CustomizeStepProps {
   selectedTopic: string;
   onPartSelect: (part: PracticeSpeakingPartValue) => void;
   onTopicSelect: (value: string) => void;
+  onTopicSelectOpenChange: (open: boolean) => void;
   selectedTopicLabel: string;
   tCommon: ReturnType<typeof useCustomTranslations>['tCommon'];
   tForm: ReturnType<typeof useCustomTranslations>['tForm'];
@@ -569,6 +611,7 @@ const CustomizeStep = ({
   selectedTopic,
   onPartSelect,
   onTopicSelect,
+  onTopicSelectOpenChange,
   selectedTopicLabel,
   tCommon,
   tForm,
@@ -604,7 +647,7 @@ const CustomizeStep = ({
 
     <section className='space-y-[12rem]'>
       <h2 className='text-[15rem] font-semibold leading-[120%] text-slate-900'>Select a topic</h2>
-      <Select value={selectedTopic} onValueChange={onTopicSelect} disabled={!selectedPart || categoriesLoading || categoriesError}>
+      <Select value={selectedTopic} onValueChange={onTopicSelect} disabled={!selectedPart || categoriesLoading || categoriesError} onOpenChange={onTopicSelectOpenChange}>
         <SelectTrigger className='h-[52rem] rounded-[16rem] border border-slate-200 bg-white px-[20rem] text-[15rem] font-semibold text-slate-700'>
           <SelectValue placeholder={tForm('placeholders.random') ?? 'Random'}>{selectedTopicLabel}</SelectValue>
         </SelectTrigger>
