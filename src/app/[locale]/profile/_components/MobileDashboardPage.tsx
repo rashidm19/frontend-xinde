@@ -233,6 +233,7 @@ export function MobileDashboardPage({ activeTab }: MobileDashboardPageProps) {
   const speakingSheetOpen = sheetParam === 'speaking';
   const speakingHandoffOpen = speakingSheetOpen && stepParam === 'handoff';
   const speakingStep: 'customize' | 'rules' | 'audio-check' | 'mic-check' = stepParam === 'rules' ? 'rules' : stepParam === 'audio-check' ? 'audio-check' : stepParam === 'mic-check' ? 'mic-check' : 'customize';
+  const routeSignature = `${sheetParam ?? 'none'}|${stepParam ?? 'none'}`;
 
   useEffect(() => {
     if (writingHandoffOpen) {
@@ -823,6 +824,7 @@ export function MobileDashboardPage({ activeTab }: MobileDashboardPageProps) {
           const history = options?.history ?? 'replace';
           setWritingStep(nextStep, history);
         }}
+        routeSignature={routeSignature}
       />
 
       <SectionHandoffSheet
@@ -836,7 +838,7 @@ export function MobileDashboardPage({ activeTab }: MobileDashboardPageProps) {
         }}
       />
 
-      <ReadingRulesSheet open={readingSheetOpen && !readingHandoffOpen} onRequestClose={closeSheet} />
+      <ReadingRulesSheet open={readingSheetOpen && !readingHandoffOpen} onRequestClose={closeSheet} routeSignature={routeSignature} />
 
       <SectionHandoffSheet
         section='listening'
@@ -857,6 +859,7 @@ export function MobileDashboardPage({ activeTab }: MobileDashboardPageProps) {
           const history = options?.history ?? 'replace';
           setListeningStep(nextStep, history);
         }}
+        routeSignature={routeSignature}
       />
 
       <SectionHandoffSheet
@@ -878,6 +881,7 @@ export function MobileDashboardPage({ activeTab }: MobileDashboardPageProps) {
           const history = options?.history ?? 'replace';
           setSpeakingStep(nextStep, history);
         }}
+        routeSignature={routeSignature}
       />
 
       <FreePracticeTestModal

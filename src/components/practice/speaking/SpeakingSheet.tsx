@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { SubscriptionAccessLabel } from '@/components/SubscriptionAccessLabel';
 import { useCustomTranslations } from '@/hooks/useCustomTranslations';
 import { useSubscriptionGate } from '@/hooks/useSubscriptionGate';
+import { useMobileSheetSubmit } from '@/hooks/useMobileSheetSubmit';
 import { GET_practice_speaking_categories } from '@/api/GET_practice_speaking_categories';
 import { AudioCheckStepContent } from '@/components/practice/listening/ListeningSheet';
 import axiosInstance from '@/lib/axiosInstance';
@@ -28,6 +29,7 @@ interface SpeakingSheetProps {
   step: SpeakingSheetStep;
   onRequestClose: () => void;
   onStepChange: (step: SpeakingSheetStep, options?: { history?: 'push' | 'replace' }) => void;
+  routeSignature: string;
 }
 
 const INTERACTIVE_TAP = { scale: 0.97 };
@@ -42,11 +44,13 @@ const AudioVisualizer = dynamic(
   { ssr: false }
 );
 
-export function SpeakingSheet({ open, step, onRequestClose, onStepChange }: SpeakingSheetProps) {
+export function SpeakingSheet({ open, step, onRequestClose, onStepChange, routeSignature }: SpeakingSheetProps) {
   const router = useRouter();
   const { tImgAlts, tCommon, tActions, tForm } = useCustomTranslations('practice.speaking.customize');
   const { t: tAudio } = useCustomTranslations('practice.speaking.audioCheck');
   const { requireSubscription, isCheckingAccess } = useSubscriptionGate();
+
+  const { isSubmitting, submitError, isCoolingDown, submitTransition, submitAsync, resetError, resetSubmission, ariaBusy } = useMobileSheetSubmit();
 
   const [selectedPart, setSelectedPart] = useState<PracticeSpeakingPartValue | null>(null);
   const [selectedTopic, setSelectedTopic] = useState<string>('random');
@@ -131,6 +135,8 @@ export function SpeakingSheet({ open, step, onRequestClose, onStepChange }: Spea
         micAudioRef.current.currentTime = 0;
       }
       setIsLaunching(false);
+      resetSubmission();
+      resetError();
       return;
     }
 
@@ -139,7 +145,7 @@ export function SpeakingSheet({ open, step, onRequestClose, onStepChange }: Spea
     return () => {
       document.body.style.overflow = previousOverflow;
     };
-  }, [open, clearBlobUrl]);
+  }, [open, clearBlobUrl, resetError, resetSubmission]);
 
   useEffect(() => {
     if (!mediaBlobUrl) {
@@ -201,6 +207,21 @@ export function SpeakingSheet({ open, step, onRequestClose, onStepChange }: Spea
   }, [step]);
 
   useEffect(() => {
+    resetSubmission();
+  }, [step, resetSubmission]);
+
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+    resetSubmission();
+  }, [routeSignature, open, resetSubmission]);
+
+  useEffect(() => {
+    resetError();
+  }, [step, resetError]);
+
+  useEffect(() => {
     if (recordingStatus === 'recording') {
       setRecordingError(null);
       setLaunchError(null);
@@ -211,28 +232,33 @@ export function SpeakingSheet({ open, step, onRequestClose, onStepChange }: Spea
     (nextOpen: boolean) => {
       if (!nextOpen) {
         onRequestClose();
+        resetSubmission();
+        resetError();
       }
     },
-    [onRequestClose]
+    [onRequestClose, resetError, resetSubmission]
   );
 
   const handleContinueFromCustomize = useCallback(() => {
-    if (!selectedPart) {
+    if (!selectedPart || isSubmitting || isCoolingDown) {
       return;
     }
-    onStepChange('rules', { history: 'push' });
-  }, [onStepChange, selectedPart]);
+    void submitTransition(() => onStepChange('rules', { history: 'push' }));
+  }, [isCoolingDown, isSubmitting, onStepChange, selectedPart, submitTransition]);
 
   const handleContinueFromRules = useCallback(() => {
-    onStepChange('audio-check', { history: 'push' });
-  }, [onStepChange]);
-
-  const handleContinueFromAudioCheck = useCallback(() => {
-    if (!hasPlayedSample || audioError) {
+    if (isSubmitting || isCoolingDown) {
       return;
     }
-    onStepChange('mic-check', { history: 'push' });
-  }, [audioError, hasPlayedSample, onStepChange]);
+    void submitTransition(() => onStepChange('audio-check', { history: 'push' }));
+  }, [isCoolingDown, isSubmitting, onStepChange, submitTransition]);
+
+  const handleContinueFromAudioCheck = useCallback(() => {
+    if (!hasPlayedSample || audioError || isSubmitting || isCoolingDown) {
+      return;
+    }
+    void submitTransition(() => onStepChange('mic-check', { history: 'push' }));
+  }, [audioError, hasPlayedSample, isCoolingDown, isSubmitting, onStepChange, submitTransition]);
 
   const handleBack = useCallback(() => {
     if (step === 'mic-check') {
@@ -250,11 +276,12 @@ export function SpeakingSheet({ open, step, onRequestClose, onStepChange }: Spea
     onRequestClose();
   }, [onRequestClose, onStepChange, step]);
 
-  const startSpeakingPractice = useCallback(async () => {
-    if (isLaunching || isCheckingAccess) {
+  const handleStartSpeaking = useCallback(() => {
+    if (isCheckingAccess || isLaunching || isSubmitting || isCoolingDown) {
       return;
     }
 
+    resetError();
     setLaunchError(null);
 
     if (!selectedPart) {
@@ -267,62 +294,74 @@ export function SpeakingSheet({ open, step, onRequestClose, onStepChange }: Spea
       return;
     }
 
-    setIsLaunching(true);
+    void submitAsync(async () => {
+      setIsLaunching(true);
+      try {
+        const canStart = await requireSubscription();
 
-    try {
-      const canStart = await requireSubscription();
-
-      if (!canStart) {
-        return;
-      }
-
-      const resolvedTopic = selectedTopic === 'random' ? resolveRandomTopicId() : selectedTopic;
-
-      const params: Record<string, string> = {
-        part: selectedPart,
-      };
-
-      if (resolvedTopic) {
-        params.tag_id = resolvedTopic;
-      }
-
-      const result = await axiosInstance.get('/practice/speaking', {
-        params,
-        validateStatus: () => true,
-      });
-
-      if (result.status >= 200 && result.status < 300) {
-        const payload = result.data as { data?: Array<{ speaking_id?: number; part?: PracticeSpeakingPartValue }> };
-        if (Array.isArray(payload.data) && payload.data.length > 0) {
-          const randomIndex = Math.floor(Math.random() * payload.data.length);
-          const speakingEntry = payload.data[randomIndex];
-          const speakingId = speakingEntry?.speaking_id;
-
-          if (typeof speakingId === 'number' && typeof window !== 'undefined') {
-            window.localStorage.setItem('practiceSpeakingId', String(speakingId));
-            window.localStorage.setItem('practiceSpeakingPart', selectedPart);
-          }
-
-          nProgress.start();
-          onRequestClose();
-          router.push('/practice/speaking/test');
+        if (!canStart) {
           return;
         }
 
-        setLaunchError("We couldn't find a speaking task right now. Please try again later.");
-        return;
-      }
+        const resolvedTopic = selectedTopic === 'random' ? resolveRandomTopicId() : selectedTopic;
 
-      setLaunchError('Unable to start speaking practice. Please try again.');
-    } finally {
-      setIsLaunching(false);
-    }
-  }, [isLaunching, isCheckingAccess, hasRecorded, hasPlayedRecording, requireSubscription, selectedTopic, resolveRandomTopicId, selectedPart, onRequestClose, router]);
+        const params: Record<string, string> = {
+          part: selectedPart,
+        };
+
+        if (resolvedTopic) {
+          params.tag_id = resolvedTopic;
+        }
+
+        const result = await axiosInstance.get('/practice/speaking', {
+          params,
+          validateStatus: () => true,
+        });
+
+        if (result.status >= 200 && result.status < 300) {
+          const payload = result.data as { data?: Array<{ speaking_id?: number; part?: PracticeSpeakingPartValue }> };
+          if (Array.isArray(payload.data) && payload.data.length > 0) {
+            const randomIndex = Math.floor(Math.random() * payload.data.length);
+            const speakingEntry = payload.data[randomIndex];
+            const speakingId = speakingEntry?.speaking_id;
+
+            if (typeof speakingId === 'number' && typeof window !== 'undefined') {
+              window.localStorage.setItem('practiceSpeakingId', String(speakingId));
+              window.localStorage.setItem('practiceSpeakingPart', selectedPart);
+            }
+
+            nProgress.start();
+            onRequestClose();
+      router.push('/practice/speaking/test');
+            return;
+          }
+
+          setLaunchError("We couldn't find a speaking task right now. Please try again later.");
+          return;
+        }
+
+        setLaunchError('Unable to start speaking practice. Please try again.');
+      } finally {
+        setIsLaunching(false);
+      }
+    });
+  }, [isCheckingAccess, isCoolingDown, isLaunching, isSubmitting, resetError, selectedPart, hasRecorded, hasPlayedRecording, submitAsync, requireSubscription, selectedTopic, resolveRandomTopicId, onRequestClose, router]);
 
   const customizeContinueDisabled = categoriesLoading || categoriesError || !selectedPart;
   const rulesContinueDisabled = false;
   const audioContinueDisabled = isCheckingAccess || Boolean(audioError) || !hasPlayedSample;
   const micContinueDisabled = isCheckingAccess || isLaunching || !hasRecorded || !hasPlayedRecording || Boolean(recordingError);
+
+  const baseButtonDisabled =
+    step === 'customize'
+      ? customizeContinueDisabled
+      : step === 'rules'
+        ? rulesContinueDisabled
+        : step === 'audio-check'
+          ? audioContinueDisabled
+          : micContinueDisabled;
+
+  const buttonDisabled = baseButtonDisabled || isSubmitting || isCoolingDown;
 
   const sheetAnnouncement = useMemo(() => {
     switch (step) {
@@ -338,6 +377,22 @@ export function SpeakingSheet({ open, step, onRequestClose, onStepChange }: Spea
   }, [step, tAudio]);
 
   const headerMeta = `${tCommon('speaking')} • ${tCommon('minCount', { count: 14 })} • ${tCommon('partsCount', { count: 3 })}`;
+
+  const handlePrimaryAction = useCallback(() => {
+    if (step === 'customize') {
+      handleContinueFromCustomize();
+      return;
+    }
+    if (step === 'rules') {
+      handleContinueFromRules();
+      return;
+    }
+    if (step === 'audio-check') {
+      handleContinueFromAudioCheck();
+      return;
+    }
+    handleStartSpeaking();
+  }, [handleContinueFromAudioCheck, handleContinueFromCustomize, handleContinueFromRules, handleStartSpeaking, step]);
 
   return (
     <BottomSheet open={open} onOpenChange={handleOpenChange}>
@@ -357,7 +412,7 @@ export function SpeakingSheet({ open, step, onRequestClose, onStepChange }: Spea
             backLabel={tActions('back')}
           />
 
-          <div className='flex-1 overflow-y-auto px-[20rem] py-[20rem]'>
+          <motion.div key={step} initial={{ opacity: 0.45 }} animate={{ opacity: 1 }} transition={{ duration: 0.2 }} className='flex-1 overflow-y-auto px-[20rem] py-[20rem]'>
             {step === 'customize' ? (
               <CustomizeStep
                 categoriesLoading={categoriesLoading}
@@ -366,11 +421,13 @@ export function SpeakingSheet({ open, step, onRequestClose, onStepChange }: Spea
                 selectedPart={selectedPart}
                 selectedTopic={selectedTopic}
                 onPartSelect={part => {
+                  resetError();
                   setSelectedPart(part);
                   setSelectedTopic('random');
                   setLaunchError(null);
                 }}
                 onTopicSelect={value => {
+                  resetError();
                   setSelectedTopic(value);
                   setLaunchError(null);
                 }}
@@ -405,6 +462,7 @@ export function SpeakingSheet({ open, step, onRequestClose, onStepChange }: Spea
                 startRecording={startRecording}
                 stopRecording={stopRecording}
                 clearRecording={() => {
+                  resetError();
                   clearBlobUrl();
                   setRecordingBlob(null);
                   setHasRecorded(false);
@@ -424,52 +482,30 @@ export function SpeakingSheet({ open, step, onRequestClose, onStepChange }: Spea
                 error={recordingError}
               />
             ) : null}
-          </div>
+          </motion.div>
 
           <footer className='sticky bottom-0 z-[1] border-t border-slate-200 bg-white/95 px-[20rem] pb-[calc(20rem+env(safe-area-inset-bottom))] pt-[16rem] shadow-[0_-18rem_36rem_-28rem_rgba(15,23,42,0.18)]'>
-            <div className='space-y-[8rem]'>
+            <div className='space-y-[8rem]' aria-busy={ariaBusy}>
+              <span className='sr-only' aria-live='polite'>
+                {isSubmitting ? 'Continuing…' : ''}
+              </span>
+              {submitError ? <p className='text-center text-[12rem] font-medium text-red-600'>{submitError}</p> : null}
               <motion.button
+                key={`speaking-${step}-cta`}
                 type='button'
-                whileTap={
-                  step === 'customize'
-                    ? !customizeContinueDisabled
-                      ? INTERACTIVE_TAP
-                      : undefined
-                    : step === 'rules'
-                      ? !rulesContinueDisabled
-                        ? INTERACTIVE_TAP
-                        : undefined
-                      : step === 'audio-check'
-                        ? !audioContinueDisabled
-                          ? INTERACTIVE_TAP
-                          : undefined
-                        : !micContinueDisabled
-                          ? INTERACTIVE_TAP
-                          : undefined
-                }
-                disabled={
-                  step === 'customize'
-                    ? customizeContinueDisabled
-                    : step === 'rules'
-                      ? rulesContinueDisabled
-                      : step === 'audio-check'
-                        ? audioContinueDisabled
-                        : micContinueDisabled
-                }
-                onClick={() => {
-                  if (step === 'customize') {
-                    handleContinueFromCustomize();
-                  } else if (step === 'rules') {
-                    handleContinueFromRules();
-                  } else if (step === 'audio-check') {
-                    handleContinueFromAudioCheck();
-                  } else {
-                    void startSpeakingPractice();
-                  }
-                }}
+                whileTap={!buttonDisabled ? INTERACTIVE_TAP : undefined}
+                disabled={buttonDisabled}
+                onClick={handlePrimaryAction}
                 className='flex h-[52rem] w-full items-center justify-center rounded-[28rem] bg-d-green text-[16rem] font-semibold transition hover:bg-d-green/90 disabled:cursor-not-allowed disabled:bg-d-gray/60 disabled:text-d-black/60'
               >
-                {isCheckingAccess || (step === 'mic-check' && isLaunching) ? '...' : tActions('continue')}
+                {isSubmitting ? (
+                  <span className='flex items-center gap-[8rem]'>
+                    <span className='size-[16rem] animate-spin rounded-full border-[3rem] border-white/40 border-t-white' aria-hidden='true' />
+                    Continuing…
+                  </span>
+                ) : (
+                  tActions('continue')
+                )}
               </motion.button>
               <SubscriptionAccessLabel className='text-center text-[12rem]' />
               {(step === 'audio-check' && audioError) || (step === 'mic-check' && recordingError) ? (
