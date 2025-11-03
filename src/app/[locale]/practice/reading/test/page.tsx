@@ -749,7 +749,8 @@ export default function Page() {
         exitLabel={tActions('exit')}
         progress={progress}
         progressLabel={mobileStrings.progressAccessibility}
-        onExit={handleExit}
+        closeAs={'link'}
+        closeHref='/m/practice'
       />
 
       <main className={cn('min-h-screen overflow-hidden', isMobile ? 'bg-[#FFFDF5]' : 'bg-d-yellow-secondary')}>
