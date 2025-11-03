@@ -10,6 +10,7 @@ import { cn } from '@/lib/utils';
 import type { WritingFeedbackPartKey } from '@/types/WritingFeedback';
 import { EmptyModalState, ModalScrollProgress, ModalShell } from '@/components/modals/UnifiedModalShell';
 import { WritingFeedbackHeader } from '@/components/practice/WritingFeedbackHeader';
+import { MobileHeader } from '@/components/practice/reading/mobile/MobileHeader';
 
 type ModalKey = 'criteria' | 'summary' | 'task' | 'ideal';
 
@@ -118,6 +119,7 @@ export function WritingFeedbackView({ data, activePart, partOptions, onPartChang
   const [topBarElevated, setTopBarElevated] = useState(false);
   const criteriaContentRef = useRef<HTMLDivElement | null>(null);
   const [criteriaScrollProgress, setCriteriaScrollProgress] = useState(0);
+  const noopExit = useCallback(() => {}, []);
 
   const availability = useMemo(
     () => ({
@@ -329,7 +331,11 @@ export function WritingFeedbackView({ data, activePart, partOptions, onPartChang
 
   return (
     <div className='relative flex min-h-[100dvh] flex-col bg-d-blue-secondary'>
-      <WritingFeedbackHeader topBarElevated={topBarElevated} title='Writing Feedback' />
+      <div className='hidden tablet:block'>
+        <WritingFeedbackHeader topBarElevated={topBarElevated} title='Writing Feedback' />
+      </div>
+
+      <MobileHeader variant='writing' title='Writing Feedback' tag='Writing' exitLabel='Exit' progress={0} closeAs='link' closeHref='/profile' onExit={noopExit} />
 
       <div className='flex-1'>
         <div

@@ -44,31 +44,28 @@ export const CloseAction: React.FC<CloseActionProps> = ({ as = 'button', href, o
   }
 
   return (
-    <motion.button
-      type='button'
-      whileTap={{ scale: 0.9 }}
-      onClick={onClick}
-      aria-label={ariaLabel}
-      className={closeActionClasses}
-    >
+    <motion.button type='button' whileTap={{ scale: 0.9 }} onClick={onClick} aria-label={ariaLabel} className={closeActionClasses}>
       <X className='h-[16rem] w-[16rem] text-neutral-600' aria-hidden='true' />
     </motion.button>
   );
 };
 
+export type MobileHeaderVariant = 'reading' | 'writing';
+
 export interface MobileHeaderProps {
   title: string;
   tag?: string | null;
   timerLabel?: string | null;
-  progress: number;
+  progress?: number;
   exitLabel: string;
   progressLabel?: string;
-  onExit: () => void;
+  onExit?: () => void;
   className?: string;
   showProgress?: boolean;
   closeAs?: 'button' | 'link';
   closeHref?: string;
   onClose?: () => void;
+  variant?: MobileHeaderVariant;
 }
 
 export const MobileHeader: React.FC<MobileHeaderProps> = ({
@@ -84,6 +81,7 @@ export const MobileHeader: React.FC<MobileHeaderProps> = ({
   closeAs,
   closeHref,
   onClose,
+  variant = 'reading',
 }) => {
   const handleClose = React.useCallback(() => {
     if (onClose) {
@@ -91,8 +89,16 @@ export const MobileHeader: React.FC<MobileHeaderProps> = ({
       return;
     }
 
-    onExit();
+    if (onExit) {
+      onExit();
+      return;
+    }
   }, [onClose, onExit]);
+
+  const variantClasses: Record<MobileHeaderVariant, string> = {
+    reading: 'border-[#f0e8cc] bg-[#FFFDF5]/95',
+    writing: 'border-[#C8E6F0] bg-[#F5FCFE]/95',
+  };
 
   return (
     <motion.header
@@ -100,7 +106,8 @@ export const MobileHeader: React.FC<MobileHeaderProps> = ({
       role='banner'
       className={cn(
         'tablet:hidden',
-        'sticky top-0 z-50 flex flex-col gap-[12rem] border-b border-[#f0e8cc] bg-[#FFFDF5]/95 px-[18rem] pb-[12rem] pt-[calc(12rem+env(safe-area-inset-top))] backdrop-blur',
+        'sticky top-0 z-50 flex flex-col gap-[12rem] border-b px-[18rem] pb-[12rem] pt-[calc(12rem+env(safe-area-inset-top))] backdrop-blur',
+        variantClasses[variant],
         className
       )}
     >
@@ -123,7 +130,7 @@ export const MobileHeader: React.FC<MobileHeaderProps> = ({
         </div>
       </div>
 
-      {showProgress && (
+      {showProgress && progress && (
         <div className='relative h-[6rem] w-full overflow-hidden rounded-full bg-white/60'>
           <motion.span
             custom={progress}

@@ -16,11 +16,14 @@ import { WritingFeedbackHeader } from '@/components/practice/WritingFeedbackHead
 import { PracticeLeaveGuard } from '@/components/PracticeLeaveGuard';
 import { cn } from '@/lib/utils';
 import { X } from 'lucide-react';
+import { MobileHeader } from '@/components/practice/reading/mobile/MobileHeader';
+import { useMediaQuery } from 'usehooks-ts';
 
 export const dynamic = 'force-dynamic';
 
 export default function Page() {
   const router = useRouter();
+  const isMobile = useMediaQuery('(max-width: 767px)');
   const { t, tCommon, tActions, tForm, tMessages } = useCustomTranslations('practice.writing.test');
   const [isPictureExpanded, setIsPictureExpanded] = React.useState(false);
   const [isWritingFocused, setIsWritingFocused] = React.useState(false);
@@ -32,6 +35,10 @@ export default function Page() {
     queryKey: ['practice-writing'],
     queryFn: () => GET_practice_writing_id(localStorage.getItem('practiceWritingId') as string),
   });
+
+  const handleExit = React.useCallback(() => {
+    router.push('/profile');
+  }, [router]);
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setSubmitError(null);
@@ -112,18 +119,32 @@ export default function Page() {
 
   return (
     <PracticeLeaveGuard>
-      <WritingFeedbackHeader
-        topBarElevated
+      <div className='hidden tablet:block'>
+        <WritingFeedbackHeader
+          topBarElevated
+          title={tCommon('practicePartNumber', { number: data?.picture ? 1 : 2 })}
+          exitLabel={tActions('exit')}
+          onExit={handleExit}
+        />
+      </div>
+
+      <MobileHeader
         title={tCommon('practicePartNumber', { number: data?.picture ? 1 : 2 })}
+        tag={tCommon('writing')}
         exitLabel={tActions('exit')}
-        onExit={() => router.push('/profile')}
+        closeAs={'link'}
+        closeHref='/m/practice'
+        variant='writing'
       />
 
-      <main className='bg-d-blue-secondary'>
-        <div className='container w-full px-[18rem] pb-[36rem] pt-[28rem] tablet:min-h-[calc(100dvh-64rem)] tablet:max-w-[1600rem] tablet:px-[24rem] tablet:pb-[16rem] tablet:pt-[24rem]'>
+      <main className={cn(isMobile ? 'bg-[#F5FCFE]' : 'bg-d-blue-secondary')}>
+        <div
+          className='container w-full px-[18rem] pb-[36rem] pt-[28rem] tablet:min-h-[calc(100dvh-64rem)] tablet:max-w-[1600rem] tablet:px-[24rem] tablet:pb-[16rem] tablet:pt-[24rem]'>
           <div className='flex w-full flex-col gap-[16rem] tablet:gap-[20rem]'>
-            <div className='flex w-full flex-col gap-[20rem] tablet:flex-row tablet:items-start tablet:justify-center tablet:gap-[24rem]'>
-              <h2 className='mt-[-12rem] text-[13rem] font-medium uppercase tracking-[0.08em] text-d-black/45 tablet:hidden'>
+            <div
+              className='flex w-full flex-col gap-[20rem] tablet:flex-row tablet:items-start tablet:justify-center tablet:gap-[24rem]'>
+              <h2
+                className='mt-[-12rem] text-[13rem] font-medium uppercase tracking-[0.08em] text-d-black/45 tablet:hidden'>
                 {tCommon('practicePartNumber', { number: data?.picture ? 1 : 2 })}
               </h2>
 
@@ -175,17 +196,21 @@ export default function Page() {
                   </>
                 ) : (
                   <div className='flex flex-col gap-[22rem]'>
-                    <div className='text-[18rem] font-semibold leading-[26rem] text-d-black/90 tablet:text-[18rem] tablet:leading-tight'>{t('writeAboutTopic')}</div>
-                    <div className='rounded-[18rem] bg-[#f2f6f9] px-[18rem] py-[18rem] text-[16rem] leading-[24rem] text-d-black/80 tablet:my-[12rem] tablet:max-h-[200rem] tablet:overflow-auto tablet:rounded-[12rem] tablet:bg-d-light-gray tablet:px-[18rem] tablet:py-[14rem] tablet:text-[18rem] tablet:leading-[22rem]'>
+                    <div
+                      className='text-[18rem] font-semibold leading-[26rem] text-d-black/90 tablet:text-[18rem] tablet:leading-tight'>{t('writeAboutTopic')}</div>
+                    <div
+                      className='rounded-[18rem] bg-[#f2f6f9] px-[18rem] py-[18rem] text-[16rem] leading-[24rem] text-d-black/80 tablet:my-[12rem] tablet:max-h-[200rem] tablet:overflow-auto tablet:rounded-[12rem] tablet:bg-d-light-gray tablet:px-[18rem] tablet:py-[14rem] tablet:text-[18rem] tablet:leading-[22rem]'>
                       <div className='whitespace-pre-line'>{data?.question}</div>
                     </div>
-                    <div className='whitespace-pre-line rounded-[18rem] border border-[#d6eaf5] bg-white px-[18rem] py-[18rem] text-[15rem] leading-[24rem] text-d-black/70 tablet:flex-1 tablet:overflow-auto tablet:rounded-[12rem] tablet:border tablet:border-d-light-gray tablet:px-[18rem] tablet:py-[14rem] tablet:text-[16rem] tablet:leading-[22rem]'>
+                    <div
+                      className='whitespace-pre-line rounded-[18rem] border border-[#d6eaf5] bg-white px-[18rem] py-[18rem] text-[15rem] leading-[24rem] text-d-black/70 tablet:flex-1 tablet:overflow-auto tablet:rounded-[12rem] tablet:border tablet:border-d-light-gray tablet:px-[18rem] tablet:py-[14rem] tablet:text-[16rem] tablet:leading-[22rem]'>
                       {data.text}
                     </div>
                   </div>
                 )}
 
-                <div className='mt-[28rem] space-y-[6rem] border-t border-[#cde5f1] pt-[16rem] text-[13rem] leading-[19rem] text-d-black/55 tablet:mt-auto tablet:hidden tablet:border-t-0 tablet:pt-[24rem] tablet:text-[14rem] tablet:leading-[20rem] tablet:text-d-black/60'>
+                <div
+                  className='mt-[28rem] space-y-[6rem] border-t border-[#cde5f1] pt-[16rem] text-[13rem] leading-[19rem] text-d-black/55 tablet:mt-auto tablet:hidden tablet:border-t-0 tablet:pt-[24rem] tablet:text-[14rem] tablet:leading-[20rem] tablet:text-d-black/60'>
                   <p>{data?.task}</p>
                 </div>
               </section>
@@ -199,7 +224,8 @@ export default function Page() {
                 )}
               >
                 <div className='flex flex-col gap-[12rem]'>
-                  <div className='flex items-center justify-between gap-[12rem] rounded-[16rem] border border-transparent bg-transparent px-[6rem] py-[4rem] text-[14rem] leading-[22rem] text-d-black/70 tablet:flex-row tablet:items-start tablet:rounded-[12rem] tablet:border-[#c2c2c2] tablet:bg-d-light-gray tablet:px-[18rem] tablet:py-[14rem] tablet:text-[14rem] tablet:leading-[20rem] tablet:text-d-black/80'>
+                  <div
+                    className='flex items-center justify-between gap-[12rem] rounded-[16rem] border border-transparent bg-transparent px-[6rem] py-[4rem] text-[14rem] leading-[22rem] text-d-black/70 tablet:flex-row tablet:items-start tablet:rounded-[12rem] tablet:border-[#c2c2c2] tablet:bg-d-light-gray tablet:px-[18rem] tablet:py-[14rem] tablet:text-[14rem] tablet:leading-[20rem] tablet:text-d-black/80'>
                     <span className='font-medium text-d-black/75 tablet:hidden'>{t('infoBarStartTyping')}</span>
                     <span className='hidden whitespace-pre-line tablet:block'>{data.task}</span>
                     <span
@@ -212,7 +238,8 @@ export default function Page() {
                   </div>
                 </div>
                 <Form {...form}>
-                  <form onSubmit={form.handleSubmit(onSubmit)} className='relative mt-[20rem] flex flex-1 flex-col tablet:mt-[16rem]'>
+                  <form onSubmit={form.handleSubmit(onSubmit)}
+                        className='relative mt-[20rem] flex flex-1 flex-col tablet:mt-[16rem]'>
                     <FormField
                       name='answer'
                       control={form.control}
@@ -252,7 +279,8 @@ export default function Page() {
                           {submitError}
                         </p>
                       ) : null}
-                      <div className='sticky left-0 right-0 z-20 tablet:static' style={{ bottom: 'calc(env(safe-area-inset-bottom, 0px) + 24px)' }}>
+                      <div className='sticky left-0 right-0 z-20 tablet:static'
+                           style={{ bottom: 'calc(env(safe-area-inset-bottom, 0px) + 24px)' }}>
                         <button
                           type='submit'
                           disabled={isSubmitDisabled}
@@ -290,7 +318,8 @@ export default function Page() {
               event.stopPropagation();
             }}
           >
-            <img src={data.picture} alt='illustration' className='h-full max-h-[80vh] w-full rounded-[20rem] object-contain shadow-[0_24rem_72rem_rgba(0,0,0,0.45)]' />
+            <img src={data.picture} alt='illustration'
+                 className='h-full max-h-[80vh] w-full rounded-[20rem] object-contain shadow-[0_24rem_72rem_rgba(0,0,0,0.45)]' />
             <button
               type='button'
               onClick={() => setIsMobileImagePreviewOpen(false)}

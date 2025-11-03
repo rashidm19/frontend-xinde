@@ -340,10 +340,6 @@ export default function Page() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
 
-  const handleExit = useCallback(() => {
-    router.push('/profile');
-  }, [router]);
-
   const submitForm = useCallback(() => {
     void form.handleSubmit(onSubmit)();
   }, [form, onSubmit]);
@@ -438,8 +434,6 @@ export default function Page() {
       lastScrollYRef.current = current;
 
       const threshold = 22;
-      const shouldHide = delta > threshold && current > 160;
-      const shouldShow = delta < -threshold || current < 160;
 
       setShowScrollTop(current > window.innerHeight);
     };
@@ -747,10 +741,9 @@ export default function Page() {
         tag={tCommon('reading')}
         timerLabel={timerLabel}
         exitLabel={tActions('exit')}
-        progress={progress}
-        progressLabel={mobileStrings.progressAccessibility}
         closeAs={'link'}
         closeHref='/m/practice'
+        variant='reading'
       />
 
       <main className={cn('min-h-screen overflow-hidden', isMobile ? 'bg-[#FFFDF5]' : 'bg-d-yellow-secondary')}>
