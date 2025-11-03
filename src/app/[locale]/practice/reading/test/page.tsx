@@ -32,6 +32,7 @@ import { CollapsiblePassage } from '@/components/practice/reading/mobile/Collaps
 import { MobileMatching } from '@/components/practice/reading/mobile/MobileMatching';
 import { MobileTextInsert } from '@/components/practice/reading/mobile/MobileTextInsert';
 import { MobileContextBar } from '@/components/practice/reading/mobile/MobileContextBar';
+import { HintBadge } from '@/components/practice/reading/mobile/HintBadge';
 import { AnimatePresence, motion } from 'framer-motion';
 import { ArrowUp } from 'lucide-react';
 import { format } from 'date-fns';
@@ -855,36 +856,48 @@ export default function Page() {
                           </div>
                           {/* Параграф */}
                           {block.kind === 'paragraph' && (
-                            <ul className='ml-[20rem] flex list-outside list-disc flex-col items-start gap-y-[18rem]'>
-                              {block.questions.map((q: any) => (
-                                <li id={`question-${q.number}`} className='scroll-target text-[16rem] font-normal leading-[30rem] tracking-[-0.2rem] text-d-black'>
-                                  {q.question}{' '}
-                                  <FormField
-                                    control={form.control}
-                                    name={q.number.toString()}
-                                    render={({ field }) => (
-                                      <FormControl>
-                                        <Input
-                                          {...field}
-                                          type='text'
-                                          placeholder={q.number}
-                                          onChange={e => {
-                                            field.onChange(e.target.value.toUpperCase());
-                                            handleQuestionFocus(q.number);
-                                          }}
-                                          onFocus={() => handleQuestionFocus(q.number)}
-                                          className='!inline !h-[32rem] !w-[180rem] !items-center !justify-center !rounded-[8rem] !border-[1.5rem] !border-d-black/60 !p-[10rem] text-center !text-[16rem] !font-normal uppercase !leading-[25rem] !tracking-[-0.2rem] !text-d-black placeholder:text-center placeholder:!text-d-black focus:!border-d-black focus:bg-d-yellow-secondary focus-visible:!border-d-black'
-                                        />
-                                      </FormControl>
-                                    )}
-                                  />
-                                </li>
-                              ))}
-                            </ul>
+                            <>
+                              {isMobile ? (
+                                <HintBadge icon='💬' className='self-start'>
+                                  Type your answer in the field below.
+                                </HintBadge>
+                              ) : null}
+                              <ul className='ml-[20rem] flex list-outside list-disc flex-col items-start gap-y-[18rem]'>
+                                {block.questions.map((q: any) => (
+                                  <li id={`question-${q.number}`} className='scroll-target text-[16rem] font-normal leading-[30rem] tracking-[-0.2rem] text-d-black'>
+                                    {q.question}{' '}
+                                    <FormField
+                                      control={form.control}
+                                      name={q.number.toString()}
+                                      render={({ field }) => (
+                                        <FormControl>
+                                          <Input
+                                            {...field}
+                                            type='text'
+                                            placeholder={q.number}
+                                            onChange={e => {
+                                              field.onChange(e.target.value.toUpperCase());
+                                              handleQuestionFocus(q.number);
+                                            }}
+                                            onFocus={() => handleQuestionFocus(q.number)}
+                                            className='!inline !h-[32rem] !w-[180rem] !items-center !justify-center !rounded-[8rem] !border-[1.5rem] !border-d-black/60 !p-[10rem] text-center !text-[16rem] !font-normal uppercase !leading-[25rem] !tracking-[-0.2rem] !text-d-black placeholder:text-center placeholder:!text-d-black focus:!border-d-black focus:bg-d-yellow-secondary focus-visible:!border-d-black'
+                                          />
+                                        </FormControl>
+                                      )}
+                                    />
+                                  </li>
+                                ))}
+                              </ul>
+                            </>
                           )}
                           {/* Подставьте слова */}
                           {block.kind === 'words' && (
                             <div className='flex flex-col items-start gap-y-[18rem]'>
+                              {isMobile ? (
+                                <HintBadge icon='💬' className='self-start'>
+                                  Type your answer in the field below.
+                                </HintBadge>
+                              ) : null}
                               <div className='text-[16rem] leading-relaxed text-d-black'>
                                 {transformStringToArrayV4(block.hint).map((str: any, index: number) => {
                                   if (str.type === 'input') {
@@ -1096,7 +1109,12 @@ export default function Page() {
                           {/* Таблица с ради-баттонами */}
                           {block.kind === 'table' &&
                             (isMobile ? (
-                              renderMobileTable(block)
+                              <>
+                                <HintBadge icon='💬' className='self-start'>
+                                  Tap a cell to fill your answer.
+                                </HintBadge>
+                                {renderMobileTable(block)}
+                              </>
                             ) : (
                               <div className='grid' style={{ gridTemplateColumns: `repeat(${block.cells[0].length}, minmax(0,1fr))` }}>
                                 {block.cells.map((row: string[], rowIndex: number) =>
@@ -1178,7 +1196,12 @@ export default function Page() {
                           {/* Таблица с ради-баттонами */}
                           {block.kind === 'table2' &&
                             (isMobile ? (
-                              renderMobileTableTwo(block)
+                              <>
+                                <HintBadge icon='💬' className='self-start'>
+                                  Tap a cell to fill your answer.
+                                </HintBadge>
+                                {renderMobileTableTwo(block)}
+                              </>
                             ) : (
                               <div>
                                 <div className='mb-[48rem] flex flex-col items-start gap-y-[16rem] whitespace-normal break-words text-[20rem] font-medium leading-[24rem] tracking-[-0.2rem] text-d-black [hyphens:auto] [overflow-wrap:anywhere] [word-break:break-word]'>
@@ -1279,6 +1302,13 @@ export default function Page() {
                                   <div className='h-[76rem] border-l border-l-d-black px-[8rem] py-[8rem] text-[16rem] font-medium leading-[120%] tracking-[-0.2rem] text-d-black'></div>
                                 </div>
                               </div>
+                            ))}
+                          {/* Matching */}
+                          {block.kind === 'matching' &&
+                            (isMobile ? (
+                              <MobileMatching block={block} value={values} setFieldValue={form.setValue} hintMessage='Match the terms by selecting the correct pair.' />
+                            ) : (
+                              <DndMatching block={block} value={values} setFieldValue={form.setValue} />
                             ))}
                           {/* Драг-н-дроп списки */}
                           {block.kind === 'dragdrop' &&

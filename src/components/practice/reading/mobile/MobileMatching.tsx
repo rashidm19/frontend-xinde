@@ -6,6 +6,8 @@ import { AnimatePresence, motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useCustomTranslations } from "@/hooks/useCustomTranslations";
 
+import { HintBadge } from "./HintBadge";
+
 type MatchingChoice = {
   choice: string;
   answer: string;
@@ -26,6 +28,7 @@ export interface MobileMatchingProps {
   };
   value: Record<string, string | undefined>;
   setFieldValue: (field: string, value: string | undefined) => void;
+  hintMessage?: string;
 }
 
 const fadeVariants = {
@@ -55,7 +58,7 @@ const MULTI_USE_KEYS = [
 
 const resolveReuseFlag = (block: Record<string, unknown>) => MULTI_USE_KEYS.some(key => Boolean(block?.[key]));
 
-export const MobileMatching: React.FC<MobileMatchingProps> = ({ block, value, setFieldValue }) => {
+export const MobileMatching: React.FC<MobileMatchingProps> = ({ block, value, setFieldValue, hintMessage }) => {
   const { t } = useCustomTranslations("practice.reading.test");
   const [selectedChoice, setSelectedChoice] = React.useState<string | null>(null);
   const [animatedSlot, setAnimatedSlot] = React.useState<string | null>(null);
@@ -147,6 +150,9 @@ export const MobileMatching: React.FC<MobileMatchingProps> = ({ block, value, se
 
   return (
     <div className="flex flex-col gap-[20rem]">
+      <HintBadge icon="💬" className="self-start">
+        {hintMessage ?? "Tap a word, then tap a blank to insert it."}
+      </HintBadge>
       <div
         className="flex items-center gap-[12rem] overflow-x-auto pb-[10rem] [scrollbar-width:none] [-ms-overflow-style:none]"
         role="group"
