@@ -544,7 +544,6 @@
             "subtitle": "Pick a question to jump to it",
             "close": "Close map",
             "answered": "Answered",
-            "flagged": "Flagged",
             "open": "Open questions map",
             "questionAria": "Go to question {number}",
             "sectionLabel": "Part {part}: Q{from}–{to}"
@@ -557,8 +556,7 @@
             "hint": "Start audio when you’re ready.",
             "stopWarning": "Changing parts will stop the audio. Continue?"
           },
-          "scrollTop": "Scroll to top",
-          "flag": "Flag"
+          "scrollTop": "Scroll to top"
         }
       }
     },
@@ -587,7 +585,6 @@
             "subtitle": "Pick a question to jump to it",
             "close": "Close map",
             "answered": "Answered",
-            "flagged": "Flagged",
             "open": "Open questions map",
             "questionAria": "Go to question {number}"
           },

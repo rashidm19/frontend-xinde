@@ -5,7 +5,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useQuery } from '@tanstack/react-query';
 import { AnimatePresence, motion } from 'framer-motion';
-import { ArrowUp, Flag } from 'lucide-react';
+import { ArrowUp } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { useMediaQuery } from 'usehooks-ts';
@@ -15,7 +15,6 @@ import { GET_practice_listening_id } from '@/api/GET_practice_listening_id';
 import { PracticeLeaveGuard } from '@/components/PracticeLeaveGuard';
 import { HeaderDuringTest } from '@/components/HeaderDuringTest';
 import { AudioBar, type AudioBarHandle, type AudioBarState, type AudioCuePoint } from '@/components/practice/listening/mobile/AudioBar';
-import { MobileHeader } from '@/components/practice/listening/mobile/MobileHeader';
 import { QuestionCard } from '@/components/practice/listening/mobile/QuestionCard';
 import { CheckboxOptionRow, RadioOptionRow, TextAnswerInput } from '@/components/practice/listening/mobile/AnswerInputs';
 import { UnifiedBottomNav } from '@/components/practice/listening/mobile/UnifiedBottomNav';
@@ -30,8 +29,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useCustomTranslations } from '@/hooks/useCustomTranslations';
 import axiosInstance from '@/lib/axiosInstance';
 import { cn, transformStringToArrayV4 } from '@/lib/utils';
-import type { PracticeListeningResult } from '@/types/PracticeListening';
+import type { ListeningBlock, ListeningCheckboxesBlock, PracticeListeningResult } from '@/types/PracticeListening';
 import { CheckboxSquare } from '@/components/ui/checkboxSquare';
+import { MobileHeader } from '@/components/practice/reading/mobile/MobileHeader';
+import { format } from 'date-fns';
+import { mockStore } from '@/stores/mock';
 
 type FormValues = {
   [key: string]: string | undefined;
@@ -47,24 +49,28 @@ const optionVariants = {
 
 const optionTransition = { type: 'spring', stiffness: 360, damping: 28, mass: 0.45 } as const;
 
-const FLAG_BUTTON_CLASSES = cn(
-  'inline-flex items-center gap-[6rem] rounded-full border border-[#dacfae] bg-white px-[14rem] py-[8rem] text-[12rem] font-semibold uppercase tracking-[0.1em] text-d-black/70',
-  'transition hover:-translate-y-[1rem] hover:bg-d-green/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-d-green/60'
-);
-
 const PROGRESS_PRECISION = 100;
+
+const isCheckboxesBlock = (block: ListeningBlock): block is ListeningCheckboxesBlock => {
+  if (!block || typeof block !== 'object') {
+    return false;
+  }
+
+  const candidate = block as ListeningCheckboxesBlock;
+  return candidate.kind === 'checkboxes' && Array.isArray(candidate.answers);
+};
 
 export default function Page() {
   const router = useRouter();
   const { t, tCommon, tActions } = useCustomTranslations('practice.listening.test');
 
   const isMobile = useMediaQuery('(max-width: 767px)');
+  const { timer } = mockStore();
 
   const [activeTab, setActiveTab] = useState<PartTab>('p1');
   const [isPartSheetOpen, setPartSheetOpen] = useState(false);
   const [isQuestionsMapOpen, setQuestionsMapOpen] = useState(false);
   const [currentQuestion, setCurrentQuestion] = useState<number | null>(null);
-  const [flaggedQuestions, setFlaggedQuestions] = useState<Set<number>>(new Set());
   const [showScrollTop, setShowScrollTop] = useState(false);
 
   const audioBarRef = useRef<AudioBarHandle | null>(null);
@@ -102,13 +108,13 @@ export default function Page() {
       };
 
       const checkboxQuestionBlocks: number[][] = [];
-      (PART_IDS as PartTab[]).forEach(partId => {
+      PART_IDS.forEach(partId => {
         const part = getPartFromData(data, partId);
-        part.blocks
-          .filter(block => block.kind === 'checkboxes')
-          .forEach(block => {
+        part.blocks.forEach(block => {
+          if (isCheckboxesBlock(block)) {
             checkboxQuestionBlocks.push(block.answers.map(answer => answer.number));
-          });
+          }
+        });
       });
 
       checkboxQuestionBlocks.forEach(blockNumbers => {
@@ -226,7 +232,6 @@ export default function Page() {
     questionsMapSubtitle: t('mobile.questionsMap.subtitle'),
     questionsMapClose: t('mobile.questionsMap.close'),
     questionsMapAnswered: t('mobile.questionsMap.answered'),
-    questionsMapFlagged: t('mobile.questionsMap.flagged'),
     questionsMapOpenLabel: t('mobile.questionsMap.open'),
     questionsMapQuestionAria: (number: number) => t('mobile.questionsMap.questionAria', { number }),
     questionsMapSectionLabel: (part: number, from: number, to: number) => t('mobile.questionsMap.sectionLabel', { part, from, to }),
@@ -234,7 +239,6 @@ export default function Page() {
     audioTitle: t('mobile.audio.title'),
     audioHint: t('mobile.audio.hint'),
     scrollTop: t('mobile.scrollTop'),
-    flagLabel: t('mobile.flag'),
     audioStopWarning: t('mobile.audio.stopWarning'),
     instructionDesktop: t('instructionDesktop'),
   };
@@ -299,6 +303,10 @@ export default function Page() {
       }
 
       setActiveTab(nextTab);
+
+      if (!isMobile && options?.scrollTop && typeof window !== 'undefined') {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
     },
     [activeTab, audioState, isMobile, mobileStrings.audioStopWarning]
   );
@@ -341,18 +349,6 @@ export default function Page() {
     },
     [getPartByQuestionNumber, navigateToPart]
   );
-
-  const handleToggleFlag = useCallback((questionNumber: number) => {
-    setFlaggedQuestions(prev => {
-      const next = new Set(prev);
-      if (next.has(questionNumber)) {
-        next.delete(questionNumber);
-      } else {
-        next.add(questionNumber);
-      }
-      return next;
-    });
-  }, []);
 
   const handleCueReach = useCallback((cue: AudioCuePoint) => {
     if (!cue?.questionNumber) {
@@ -429,6 +425,18 @@ export default function Page() {
     scrollPositionsRef.current[activeTab] = window.scrollY;
   }, [activeTab, isMobile]);
 
+  const timerLabel = useMemo(() => {
+    if (timer == null) {
+      return null;
+    }
+
+    try {
+      return format(new Date(timer), 'mm:ss');
+    } catch (error) {
+      return null;
+    }
+  }, [timer]);
+
   const questionsCountString = useCallback(() => {
     if (!activeRange) {
       return '';
@@ -442,18 +450,6 @@ export default function Page() {
   }
 
   const instructionRange = questionsCountString();
-
-  const renderFlagButton = (questionNumber: number) => (
-    <button
-      type='button'
-      onClick={() => handleToggleFlag(questionNumber)}
-      aria-pressed={flaggedQuestions.has(questionNumber)}
-      className={cn(FLAG_BUTTON_CLASSES, flaggedQuestions.has(questionNumber) ? 'bg-[#FEC260]/60 text-d-black' : '')}
-    >
-      <Flag className='size-[14rem]' aria-hidden='true' />
-      {mobileStrings.flagLabel}
-    </button>
-  );
 
   const renderDesktopTestQuestion = (question: any) => {
     const questionId = `question-${question.number}`;
@@ -483,13 +479,10 @@ export default function Page() {
     return (
       <div key={question.number} id={questionId} className='flex flex-col gap-[18rem]'>
         <div className='flex flex-col gap-[12rem]'>
-          <div className='flex items-start justify-between gap-[16rem]'>
-            <div className='flex flex-1 items-start gap-[16rem]'>
-              <div className='mt-[2rem] w-[25rem] shrink-0 text-center text-[18rem] font-semibold text-d-black'>{question.number}</div>
-              <div className='text-[16rem] font-medium leading-[22rem] text-d-black'>{question.question}</div>
-            </div>
+          <div className='flex items-start gap-[16rem]'>
+            <div className='mt-[2rem] w-[25rem] shrink-0 text-center text-[18rem] font-semibold text-d-black'>{question.number}</div>
+            <div className='text-[16rem] font-medium leading-[22rem] text-d-black'>{question.question}</div>
           </div>
-          <div className='hidden gap-[8rem] tablet:flex'>{renderFlagButton(question.number)}</div>
         </div>
 
         {question.picture ? (
@@ -819,7 +812,7 @@ export default function Page() {
       <div
         key={`questions-block-${index}`}
         className={cn(
-          'flex w-full flex-col gap-[32rem] rounded-[18rem] border border-[#e1d6b4] bg-white px-[20rem] py-[24rem] text-d-black shadow-[0_18rem_48rem_rgba(56,56,56,0.12)]',
+          'flex w-full flex-col gap-[32rem] rounded-[18rem] border border-[#cdecd6] bg-white px-[20rem] py-[24rem] text-d-black shadow-[0_18rem_44rem_rgba(56,56,56,0.1)]',
           'tablet:gap-y-[48rem] tablet:rounded-[16rem] tablet:border-none tablet:px-[40rem] tablet:py-[40rem] tablet:shadow-none'
         )}
       >
@@ -841,9 +834,17 @@ export default function Page() {
         <HeaderDuringTest title={tCommon('practice')} tag={tCommon('listening')} audio={data.audio_url} />
       </div>
 
-      <MobileHeader exitLabel={tActions('exit')} closeHref='/m/practice' />
+      <MobileHeader
+        title={tCommon('practice')}
+        tag={tCommon('reading')}
+        timerLabel={timerLabel}
+        closeAs={'link'}
+        exitLabel={tActions('exit')}
+        closeHref='/m/practice'
+        variant='listening'
+      />
 
-      <main className={cn('min-h-screen overflow-hidden', isMobile ? 'bg-[#FFFDF5]' : 'bg-d-light-gray')}>
+      <main className={cn('min-h-screen overflow-hidden', isMobile ? 'bg-[#F7FFF9]' : 'bg-d-light-gray')}>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
             {isMobile ? (
@@ -852,6 +853,7 @@ export default function Page() {
                 onPartPress={() => setPartSheetOpen(true)}
                 timerLabel={null}
                 instructionText={mobileStrings.contextHint}
+                className='[&>div]:border-[#cdecd6] [&>div]:bg-white [&>div]:shadow-[0_18rem_36rem_rgba(56,56,56,0.12)] [&_button]:border-[#cdecd6] [&_button]:bg-[#E9FFF2]'
               />
             ) : null}
 
@@ -974,14 +976,12 @@ export default function Page() {
         onOpenChange={setQuestionsMapOpen}
         sections={questionSections}
         answered={answeredQuestions}
-        flagged={flaggedQuestions}
         currentQuestion={effectiveCurrentQuestion}
         onSelectQuestion={handleSelectQuestion}
         title={mobileStrings.questionsMapTitle}
         subtitle={mobileStrings.questionsMapSubtitle}
         closeLabel={mobileStrings.questionsMapClose}
         answeredLabel={mobileStrings.questionsMapAnswered}
-        flaggedLabel={mobileStrings.questionsMapFlagged}
         questionAriaLabel={mobileStrings.questionsMapQuestionAria}
       />
 

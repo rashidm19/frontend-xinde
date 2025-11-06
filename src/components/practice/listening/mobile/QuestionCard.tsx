@@ -16,7 +16,7 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({ title, subtitle, chi
   return (
     <section
       className={cn(
-        "flex w-full flex-col gap-[24rem] rounded-[18rem] border border-[#e1d6b4] bg-white px-[20rem] py-[24rem] text-d-black shadow-[0_18rem_48rem_rgba(56,56,56,0.12)]",
+        "flex w-full flex-col gap-[24rem] rounded-[18rem] border border-[#cdecd6] bg-white px-[20rem] py-[24rem] text-d-black shadow-[0_18rem_44rem_rgba(56,56,56,0.1)]",
         "tablet:gap-[32rem] tablet:rounded-[16rem] tablet:border-none tablet:px-[40rem] tablet:py-[40rem] tablet:shadow-none",
         className,
       )}

@@ -124,6 +124,23 @@ export const AudioBar = React.forwardRef<AudioBarHandle, AudioBarProps>(
         return;
       }
 
+      node.autoplay = false;
+      node.pause();
+      node.currentTime = 0;
+      lastCueIndexRef.current = -1;
+      hasPlayedRef.current = false;
+      setDuration(0);
+      setCurrentTime(0);
+      setErrorMessage(null);
+      changeState("idle");
+    }, [changeState, src]);
+
+    React.useEffect(() => {
+      const node = audioRef.current;
+      if (!node) {
+        return;
+      }
+
       const handleLoadedMetadata = () => {
         setDuration(node.duration);
         if (state === "idle" || state === "loading") {
@@ -197,7 +214,7 @@ export const AudioBar = React.forwardRef<AudioBarHandle, AudioBarProps>(
     return (
       <div
         className={cn(
-          "flex w-full flex-col gap-[10rem] rounded-[18rem] border border-[#e1d6b4] bg-[#FEFBEA]/60 px-[16rem] py-[14rem] text-d-black shadow-[0_12rem_32rem_rgba(56,56,56,0.16)]",
+          "flex w-full flex-col gap-[10rem] rounded-[18rem] border border-[#cdecd6] bg-[#E9FFF2] px-[16rem] py-[14rem] text-d-black shadow-[0_12rem_30rem_rgba(56,56,56,0.14)]",
           className,
         )}
       >
@@ -207,7 +224,7 @@ export const AudioBar = React.forwardRef<AudioBarHandle, AudioBarProps>(
               type="button"
               onClick={state === "error" ? handleRetry : handlePlayRequest}
               className={cn(
-                "flex size-[44rem] items-center justify-center rounded-full border border-[#dacfae] bg-white text-d-black transition",
+                "flex size-[44rem] items-center justify-center rounded-full border border-[#cdecd6] bg-white text-d-black transition",
                 "hover:bg-d-green/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-d-green/60",
               )}
               aria-label={isReplay ? "Replay audio" : "Play audio"}
@@ -216,7 +233,7 @@ export const AudioBar = React.forwardRef<AudioBarHandle, AudioBarProps>(
             </button>
           ) : (
             <motion.div
-              className="flex size-[44rem] items-center justify-center rounded-full border border-[#dacfae] bg-white"
+              className="flex size-[44rem] items-center justify-center rounded-full border border-[#cdecd6] bg-white"
               animate={{ scale: [1, 0.94, 1] }}
               transition={indicatorTransition}
               aria-hidden="true"
@@ -230,12 +247,12 @@ export const AudioBar = React.forwardRef<AudioBarHandle, AudioBarProps>(
             {showHint ? <span className="text-[12rem] font-medium text-d-black/60">{hint}</span> : null}
             {showLoader ? (
               <motion.span
-                className="h-[8rem] w-full rounded-full bg-[#f3edd3]"
+                className="h-[8rem] w-full rounded-full bg-[#d9f6e4]"
                 layout
                 transition={{ duration: 0.4, repeat: Infinity, repeatType: "mirror" }}
               />
             ) : (
-              <div className="relative h-[8rem] w-full overflow-hidden rounded-full bg-[#f3edd3]">
+              <div className="relative h-[8rem] w-full overflow-hidden rounded-full bg-[#d9f6e4]">
                 <motion.span
                   initial={{ width: 0 }}
                   animate={{ width: `${duration ? Math.min(100, (currentTime / duration) * 100) : 0}%` }}
@@ -256,7 +273,8 @@ export const AudioBar = React.forwardRef<AudioBarHandle, AudioBarProps>(
         <audio
           ref={audioRef}
           src={src}
-          preload="auto"
+          preload="metadata"
+          autoPlay={false}
           onCanPlay={() => {
             if (state === "loading" && !hasPlayedRef.current) {
               changeState("ready");

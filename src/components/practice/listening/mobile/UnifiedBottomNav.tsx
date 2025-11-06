@@ -52,12 +52,12 @@ export const UnifiedBottomNav: React.FC<UnifiedBottomNavProps> = ({
       className={cn(
         "tablet:hidden",
         "fixed inset-x-[12rem] bottom-[12rem] z-50 flex flex-col gap-[14rem]",
-        "rounded-[28rem] border border-[#e1d6b4] bg-white/95 px-[18rem] pt-[20rem] pb-[calc(18rem+env(safe-area-inset-bottom))]",
-        "shadow-[0_22rem_48rem_rgba(56,56,56,0.22)] backdrop-blur",
+        "rounded-[28rem] border border-[#cdecd6] bg-[#F9FFFB]/95 px-[18rem] pt-[20rem] pb-[calc(18rem+env(safe-area-inset-bottom))]",
+        "shadow-[0_22rem_44rem_rgba(56,56,56,0.18)] backdrop-blur",
         className,
       )}
     >
-      <div className="pointer-events-none absolute left-0 right-0 top-0 h-[4px] rounded-t-[28rem] bg-[#f3edd3]">
+      <div className="pointer-events-none absolute left-0 right-0 top-0 h-[4px] rounded-t-[28rem] bg-[#d9f6e4]">
         <motion.span
           initial={{ width: 0 }}
           animate={{ width: `${clampedProgress}%` }}
@@ -73,7 +73,7 @@ export const UnifiedBottomNav: React.FC<UnifiedBottomNavProps> = ({
         <button
           type="button"
           onClick={onOpenMap}
-          className="inline-flex size-[48rem] items-center justify-center rounded-full border border-transparent bg-[#FEFBEA] text-d-black transition hover:bg-d-green/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-d-green/60"
+          className="inline-flex size-[48rem] items-center justify-center rounded-full border border-[#cdecd6] bg-[#E9FFF2] text-d-black transition hover:bg-d-green/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-d-green/60"
           aria-label={mapLabel}
         >
           <Map className="size-[20rem]" aria-hidden="true" />

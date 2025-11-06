@@ -50,7 +50,7 @@ export const CloseAction: React.FC<CloseActionProps> = ({ as = 'button', href, o
   );
 };
 
-export type MobileHeaderVariant = 'reading' | 'writing';
+export type MobileHeaderVariant = 'reading' | 'writing' | "listening" | "speaking";
 
 export interface MobileHeaderProps {
   title: string;
@@ -98,6 +98,8 @@ export const MobileHeader: React.FC<MobileHeaderProps> = ({
   const variantClasses: Record<MobileHeaderVariant, string> = {
     reading: 'border-[#f0e8cc] bg-[#FFFDF5]/95',
     writing: 'border-[#C8E6F0] bg-[#F5FCFE]/95',
+    listening: 'border-[#cdecd6] bg-[#F7FFF9]/95',
+    speaking: 'border-[#f2e3ce] bg-[#FFF9F2]/95',
   };
 
   return (

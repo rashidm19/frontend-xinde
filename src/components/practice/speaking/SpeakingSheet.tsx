@@ -538,10 +538,6 @@ export function SpeakingSheet({ open, step, onRequestClose, onStepChange, routeS
                 )}
               </motion.button>
               <SubscriptionAccessLabel className='text-center text-[12rem]' />
-              {(step === 'audio-check' && audioError) || (step === 'mic-check' && recordingError) ? (
-                <p className='text-center text-[12rem] font-medium text-red-600'>{step === 'audio-check' ? audioError : recordingError}</p>
-              ) : null}
-              {step === 'mic-check' && launchError ? <p className='text-center text-[12rem] font-medium text-red-600'>{launchError}</p> : null}
             </div>
           </footer>
         </div>
