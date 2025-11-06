@@ -124,6 +124,23 @@ export const AudioBar = React.forwardRef<AudioBarHandle, AudioBarProps>(
         return;
       }
 
+      node.autoplay = false;
+      node.pause();
+      node.currentTime = 0;
+      lastCueIndexRef.current = -1;
+      hasPlayedRef.current = false;
+      setDuration(0);
+      setCurrentTime(0);
+      setErrorMessage(null);
+      changeState("idle");
+    }, [changeState, src]);
+
+    React.useEffect(() => {
+      const node = audioRef.current;
+      if (!node) {
+        return;
+      }
+
       const handleLoadedMetadata = () => {
         setDuration(node.duration);
         if (state === "idle" || state === "loading") {
@@ -256,7 +273,8 @@ export const AudioBar = React.forwardRef<AudioBarHandle, AudioBarProps>(
         <audio
           ref={audioRef}
           src={src}
-          preload="auto"
+          preload="metadata"
+          autoPlay={false}
           onCanPlay={() => {
             if (state === "loading" && !hasPlayedRef.current) {
               changeState("ready");

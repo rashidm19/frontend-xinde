@@ -267,7 +267,6 @@ export default function Page() {
     questionsMapSubtitle: t('mobile.questionsMap.subtitle'),
     questionsMapClose: t('mobile.questionsMap.close'),
     questionsMapAnswered: t('mobile.questionsMap.answered'),
-    questionsMapFlagged: t('mobile.questionsMap.flagged'),
     questionsMapOpenLabel: t('mobile.questionsMap.open'),
     questionsMapQuestionAria: (number: number) => t('mobile.questionsMap.questionAria', { number }),
     notesTitle: t('mobile.notes.title'),
@@ -311,7 +310,6 @@ export default function Page() {
       .filter(section => section.questions.length > 0);
   }, [totalQuestions]);
 
-  const flaggedQuestions = useMemo(() => new Set<number>(), []);
   const effectiveCurrentQuestion = currentQuestion ?? activeRange?.start ?? null;
 
   const getPartByQuestionNumber = useCallback(
@@ -368,6 +366,10 @@ export default function Page() {
       }
 
       setActiveTab(nextTab);
+
+      if (!isMobile && options?.scrollTop && typeof window !== 'undefined') {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
     },
     [activeTab, isMobile]
   );
@@ -1382,14 +1384,12 @@ export default function Page() {
         onOpenChange={setQuestionsMapOpen}
         sections={questionSections}
         answered={answeredQuestions}
-        flagged={flaggedQuestions}
         currentQuestion={effectiveCurrentQuestion}
         onSelectQuestion={handleSelectQuestion}
         title={mobileStrings.questionsMapTitle}
         subtitle={mobileStrings.questionsMapSubtitle}
         closeLabel={mobileStrings.questionsMapClose}
         answeredLabel={mobileStrings.questionsMapAnswered}
-        flaggedLabel={mobileStrings.questionsMapFlagged}
         questionAriaLabel={mobileStrings.questionsMapQuestionAria}
       />
 
