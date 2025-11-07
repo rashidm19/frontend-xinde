@@ -282,13 +282,13 @@ export default function Page() {
       }
 
       if (isMobile) {
-        if ((audioState === 'playing' || audioState === 'loading') && audioBarRef.current) {
-          const shouldStop = window.confirm(mobileStrings.audioStopWarning);
-          if (!shouldStop) {
-            return;
-          }
-          audioBarRef.current.stop();
-        }
+        // if ((audioState === 'playing' || audioState === 'loading') && audioBarRef.current) {
+        //   const shouldStop = window.confirm(mobileStrings.audioStopWarning);
+        //   if (!shouldStop) {
+        //     return;
+        //   }
+        //   audioBarRef.current.stop();
+        // }
 
         scrollPositionsRef.current[activeTab] = window.scrollY;
 
