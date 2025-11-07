@@ -21,14 +21,12 @@ export interface QuestionsMapSheetProps {
   onOpenChange: (open: boolean) => void;
   sections: QuestionsMapSection[];
   answered: Set<number>;
-  flagged?: Set<number>;
   currentQuestion?: number | null;
   onSelectQuestion: (questionNumber: number) => void;
   title: string;
   subtitle?: string;
   closeLabel: string;
   answeredLabel: string;
-  flaggedLabel: string;
   questionAriaLabel?: (questionNumber: number) => string;
 }
 
@@ -37,14 +35,12 @@ export const QuestionsMapSheet: React.FC<QuestionsMapSheetProps> = ({
   onOpenChange,
   sections,
   answered,
-  flagged,
   currentQuestion,
   onSelectQuestion,
   title,
   subtitle,
   closeLabel,
   answeredLabel,
-  flaggedLabel,
   questionAriaLabel,
 }) => {
   const handleSelect = React.useCallback(
@@ -54,8 +50,6 @@ export const QuestionsMapSheet: React.FC<QuestionsMapSheetProps> = ({
     },
     [onOpenChange, onSelectQuestion],
   );
-
-  const flaggedSet = React.useMemo(() => flagged ?? new Set<number>(), [flagged]);
 
   return (
     <BottomSheet open={open} onOpenChange={onOpenChange}>
@@ -77,10 +71,6 @@ export const QuestionsMapSheet: React.FC<QuestionsMapSheetProps> = ({
               <span className="size-[8rem] rounded-full bg-d-green" aria-hidden="true" />
               <span>{answeredLabel}</span>
             </span>
-            <span className="inline-flex items-center gap-[4rem]">
-              <span className="size-[8rem] rounded-full bg-[#FEC260]" aria-hidden="true" />
-              <span>{flaggedLabel}</span>
-            </span>
           </div>
         </div>
 
@@ -92,7 +82,6 @@ export const QuestionsMapSheet: React.FC<QuestionsMapSheetProps> = ({
                 <div className="flex flex-wrap gap-[8rem]">
                   {section.questions.map(questionNumber => {
                     const isAnswered = answered.has(questionNumber);
-                    const isFlagged = flaggedSet.has(questionNumber);
                     const isActive = currentQuestion === questionNumber;
                     return (
                       <motion.button
@@ -108,7 +97,6 @@ export const QuestionsMapSheet: React.FC<QuestionsMapSheetProps> = ({
                         aria-label={questionAriaLabel ? questionAriaLabel(questionNumber) : `Question ${questionNumber}`}
                       >
                         {questionNumber}
-                        {isFlagged ? <span className="absolute -right-[4rem] -top-[4rem] size-[10rem] rounded-full bg-[#FEC260]" aria-hidden="true" /> : null}
                       </motion.button>
                     );
                   })}

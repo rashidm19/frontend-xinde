@@ -528,6 +528,36 @@
       },
       "results": {
         "title": "Listening section results"
+      },
+      "test": {
+        "instructionDesktop": "Listen and answer questions",
+        "mobile": {
+          "progressAccessibility": "{percent}% of questions answered",
+          "rangeLabel": "Q{from}–{to}",
+          "partSheet": {
+            "title": "Select part",
+            "subtitle": "Jump to another listening part",
+            "close": "Close"
+          },
+          "questionsMap": {
+            "title": "Questions map",
+            "subtitle": "Pick a question to jump to it",
+            "close": "Close map",
+            "answered": "Answered",
+            "open": "Open questions map",
+            "questionAria": "Go to question {number}",
+            "sectionLabel": "Part {part}: Q{from}–{to}"
+          },
+          "contextBar": {
+            "hint": "Listen and answer questions {range}"
+          },
+          "audio": {
+            "title": "Listening audio",
+            "hint": "Start audio when you’re ready.",
+            "stopWarning": "Changing parts will stop the audio. Continue?"
+          },
+          "scrollTop": "Scroll to top"
+        }
       }
     },
     "reading": {
@@ -555,7 +585,6 @@
             "subtitle": "Pick a question to jump to it",
             "close": "Close map",
             "answered": "Answered",
-            "flagged": "Flagged",
             "open": "Open questions map",
             "questionAria": "Go to question {number}"
           },
