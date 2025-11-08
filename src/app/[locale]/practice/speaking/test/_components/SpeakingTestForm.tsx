@@ -85,6 +85,22 @@ export default function SpeakingTestForm({ data }: FormProps) {
   const reviewAudioRef = useRef<HTMLAudioElement | null>(null);
   const [questionAudioState, setQuestionAudioState] = useState<'idle' | 'playing'>('idle');
 
+  const handleReviewTimeUpdate = useCallback(() => {
+    const audio = reviewAudioRef.current;
+    if (!audio || !audio.duration) return;
+    setPlayProgress(audio.currentTime / audio.duration);
+  }, []);
+
+  const handleReviewEnded = useCallback(() => {
+    const audio = reviewAudioRef.current;
+    if (audio) {
+      audio.pause();
+      audio.currentTime = 0;
+    }
+    setIsPlayingAnswer(false);
+    setPlayProgress(0);
+  }, []);
+
   const question = sortedQuestions[currentIndex];
   const totalQuestions = sortedQuestions.length;
 
@@ -200,6 +216,8 @@ export default function SpeakingTestForm({ data }: FormProps) {
       if (reviewAudioRef.current) {
         reviewAudioRef.current.pause();
         reviewAudioRef.current.currentTime = 0;
+        reviewAudioRef.current.removeEventListener('timeupdate', handleReviewTimeUpdate);
+        reviewAudioRef.current.removeEventListener('ended', handleReviewEnded);
         reviewAudioRef.current = null;
       }
       if (introAudioRef.current) {
@@ -208,7 +226,7 @@ export default function SpeakingTestForm({ data }: FormProps) {
         introAudioRef.current = null;
       }
     };
-  }, []);
+  }, [handleReviewEnded, handleReviewTimeUpdate]);
 
   useEffect(() => {
     if (phase !== 'review') {
@@ -222,6 +240,45 @@ export default function SpeakingTestForm({ data }: FormProps) {
     }
     setRecordUrl(mediaBlobUrl);
   }, [mediaBlobUrl, status]);
+
+  useEffect(() => {
+    if (!recordUrl) {
+      const existing = reviewAudioRef.current;
+      if (existing) {
+        existing.pause();
+        existing.currentTime = 0;
+        existing.removeEventListener('timeupdate', handleReviewTimeUpdate);
+        existing.removeEventListener('ended', handleReviewEnded);
+      }
+      reviewAudioRef.current = null;
+      setIsPlayingAnswer(false);
+      setPlayProgress(0);
+      return;
+    }
+
+    const audio = new Audio(recordUrl);
+    audio.addEventListener('timeupdate', handleReviewTimeUpdate);
+    audio.addEventListener('ended', handleReviewEnded);
+
+    if (reviewAudioRef.current) {
+      reviewAudioRef.current.pause();
+      reviewAudioRef.current.removeEventListener('timeupdate', handleReviewTimeUpdate);
+      reviewAudioRef.current.removeEventListener('ended', handleReviewEnded);
+    }
+
+    reviewAudioRef.current = audio;
+    setIsPlayingAnswer(false);
+    setPlayProgress(0);
+
+    return () => {
+      audio.pause();
+      audio.removeEventListener('timeupdate', handleReviewTimeUpdate);
+      audio.removeEventListener('ended', handleReviewEnded);
+      if (reviewAudioRef.current === audio) {
+        reviewAudioRef.current = null;
+      }
+    };
+  }, [recordUrl, handleReviewEnded, handleReviewTimeUpdate]);
 
   const answeredCount = useMemo(() => Object.keys(submittedQuestions).length, [submittedQuestions]);
 
@@ -501,34 +558,33 @@ export default function SpeakingTestForm({ data }: FormProps) {
   };
 
   const toggleAnswerPlayback = () => {
-    if (!recordUrl) return;
-    if (!reviewAudioRef.current) {
-      const audio = new Audio(recordUrl);
-      reviewAudioRef.current = audio;
-      audio.addEventListener('timeupdate', () => {
-        if (!audio.duration) return;
-        setPlayProgress(audio.currentTime / audio.duration);
-      });
-      audio.addEventListener('ended', () => {
+    const audio = reviewAudioRef.current;
+    if (!audio) return;
+
+    if (isPlayingAnswer) {
+      audio.pause();
+      setIsPlayingAnswer(false);
+      return;
+    }
+
+    emitTelemetry('speaking_play_answer', { question: question?.number });
+    audio.currentTime = 0;
+    setPlayProgress(0);
+    const playPromise = audio.play();
+    if (playPromise) {
+      playPromise.catch(() => {
         setIsPlayingAnswer(false);
         setPlayProgress(0);
       });
     }
-    if (isPlayingAnswer) {
-      reviewAudioRef.current.pause();
-      setIsPlayingAnswer(false);
-    } else {
-      emitTelemetry('speaking_play_answer', { question: question?.number });
-      reviewAudioRef.current.currentTime = 0;
-      reviewAudioRef.current.play();
-      setIsPlayingAnswer(true);
-    }
+    setIsPlayingAnswer(true);
   };
 
   const stopAnswerPlayback = () => {
-    if (reviewAudioRef.current) {
-      reviewAudioRef.current.pause();
-      reviewAudioRef.current.currentTime = 0;
+    const audio = reviewAudioRef.current;
+    if (audio) {
+      audio.pause();
+      audio.currentTime = 0;
     }
     setIsPlayingAnswer(false);
     setPlayProgress(0);
