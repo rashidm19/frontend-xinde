@@ -5,18 +5,16 @@ import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useReactMediaRecorder } from 'react-media-recorder';
 import axiosInstance from '@/lib/axiosInstance';
-import type {
-  PracticeSpeakingAnswer,
-  PracticeSpeakingAttempt,
-  PracticeSpeakingPartResponse,
-  PracticeSpeakingPartValue,
-} from '@/types/PracticeSpeaking';
+import type { PracticeSpeakingAnswer, PracticeSpeakingAttempt, PracticeSpeakingPartResponse, PracticeSpeakingPartValue } from '@/types/PracticeSpeaking';
 import { isPracticeSpeakingPartValue } from '@/types/PracticeSpeaking';
 import { cn } from '@/lib/utils';
+import { MobileHeader } from '@/components/practice/reading/mobile/MobileHeader';
 import { AlertTriangle, CheckCircle, Info, Loader2, Mic, MicOff, Play, RefreshCw, SkipForward, Square, Volume2 } from 'lucide-react';
 
 interface FormProps {
   data: PracticeSpeakingPartResponse;
+  exitLabel?: string;
+  onExit?: () => void;
 }
 
 type RecordingPhase = 'idle' | 'permission' | 'recording' | 'review' | 'uploading' | 'submitted' | 'error';
@@ -40,7 +38,7 @@ const PART_DETAILS: Partial<Record<PracticeSpeakingPartValue, { label: string; t
     label: 'Part 3',
     timeLimit: 60,
   },
-  'all': {
+  all: {
     label: 'All Parts',
     timeLimit: 60,
   },
@@ -54,7 +52,7 @@ const CTA_ORANGE = '#F9A826';
 
 const hasIntroContent = (question?: PracticeSpeakingPartResponse['questions'][number]) => Boolean(question?.intro || question?.intro_url);
 
-export default function SpeakingTestForm({ data }: FormProps) {
+export default function SpeakingTestForm({ data, exitLabel, onExit }: FormProps) {
   const router = useRouter();
 
   const sortedQuestions = useMemo(() => [...data.questions].sort((a, b) => a.number - b.number), [data.questions]);
@@ -104,6 +102,16 @@ export default function SpeakingTestForm({ data }: FormProps) {
   const question = sortedQuestions[currentIndex];
   const totalQuestions = sortedQuestions.length;
 
+  const exitActionLabel = exitLabel ?? 'Exit';
+
+  const handleExit = useCallback(() => {
+    if (onExit) {
+      onExit();
+      return;
+    }
+    router.push('/profile');
+  }, [onExit, router]);
+
   useEffect(() => {
     const storedPart = localStorage.getItem('practiceSpeakingPart');
     if (isPracticeSpeakingPartValue(storedPart)) {
@@ -140,7 +148,7 @@ export default function SpeakingTestForm({ data }: FormProps) {
     },
   });
 
-  const partDetails = partValue ? PART_DETAILS[partValue] ?? null : null;
+  const partDetails = partValue ? (PART_DETAILS[partValue] ?? null) : null;
   const timeLimitSeconds = partDetails?.timeLimit ?? 60;
 
   // const micStatus = useMemo(() => {
@@ -283,6 +291,7 @@ export default function SpeakingTestForm({ data }: FormProps) {
   const answeredCount = useMemo(() => Object.keys(submittedQuestions).length, [submittedQuestions]);
 
   const progressRatio = totalQuestions === 0 ? 0 : answeredCount / totalQuestions;
+  const progressLabel = totalQuestions === 0 ? '0% completed' : `${answeredCount} of ${totalQuestions} answered`;
 
   const handleStartRecording = async () => {
     if (phase === 'uploading' || phase === 'recording' || questionAudioState === 'playing') return;
@@ -590,7 +599,7 @@ export default function SpeakingTestForm({ data }: FormProps) {
     setPlayProgress(0);
   };
 
-  const micIcon = phase === 'recording' ? <Mic className='size-[16rem]' /> : <MicOff className='size-[16rem]' />;
+  const micIcon = phase === 'recording' ? <Mic className='size-[13rem] tablet:size-[16rem]' /> : <MicOff className='size-[13rem] tablet:size-[16rem]' />;
 
   useEffect(() => {
     setRecordBlob(null);
@@ -610,323 +619,336 @@ export default function SpeakingTestForm({ data }: FormProps) {
 
   if (!question) {
     return (
-      <main className='min-h-screen bg-d-red-secondary'>
-        <div className='mx-auto flex min-h-[100dvh] max-w-[720rem] items-center justify-center px-[16rem] py-[72rem]'>
-          <motion.div
-            initial={{ opacity: 0, scale: 0.98 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className='w-full rounded-[28rem] bg-white/95 p-[40rem] text-center shadow-[0_24rem_64rem_-40rem_rgba(60,30,10,0.45)]'
-          >
-            <div className='mb-[16rem] text-[26rem] font-semibold text-d-black'>No questions available right now</div>
-            <p className='mb-[32rem] text-[18rem] text-d-black/70'>Please try again later or choose another practice set.</p>
-            <button
-              type='button'
-              onClick={() => router.push('/practice')}
-              className='mx-auto flex h-[54rem] w-[220rem] items-center justify-center rounded-[32rem] bg-[#F9A826] text-[18rem] font-semibold text-white transition hover:bg-[#f8b645]'
+      <>
+        <MobileHeader title='Practice' tag='Speaking' exitLabel={exitActionLabel} onClose={handleExit} variant='speaking' />
+        <main className='min-h-screen bg-d-red-secondary'>
+          <div className='mx-auto flex min-h-[100dvh] w-full flex-col items-center justify-center px-[16rem] py-[32rem] tablet:max-w-[720rem] tablet:px-[24rem] tablet:py-[72rem]'>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.98 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className='w-full max-w-[520rem] rounded-[22rem] bg-white/95 px-[24rem] py-[28rem] text-center shadow-[0_24rem_64rem_-40rem_rgba(60,30,10,0.45)] tablet:max-w-none tablet:rounded-[28rem] tablet:px-[40rem] tablet:py-[40rem]'
             >
-              Back to profile
-            </button>
-          </motion.div>
-        </div>
-      </main>
+              <div className='mb-[12rem] text-[20rem] font-semibold text-d-black tablet:mb-[16rem] tablet:text-[26rem]'>No questions available right now</div>
+              <p className='mb-[24rem] text-[14rem] text-d-black/70 tablet:mb-[32rem] tablet:text-[18rem]'>Please try again later or choose another practice set.</p>
+              <button
+                type='button'
+                onClick={() => router.push('/practice')}
+                className='mx-auto flex h-[48rem] w-full max-w-[240rem] items-center justify-center rounded-[26rem] bg-[#F9A826] text-[15rem] font-semibold text-white transition hover:bg-[#f8b645] tablet:h-[54rem] tablet:max-w-[220rem] tablet:rounded-[32rem] tablet:text-[18rem]'
+              >
+                Back to profile
+              </button>
+            </motion.div>
+          </div>
+        </main>
+      </>
     );
   }
 
   return (
-    <main className='min-h-screen bg-d-red-secondary'>
-      <div className='mx-auto flex min-h-[100dvh] max-w-[1120rem] items-center justify-center px-[16rem] py-[64rem]'>
-        <motion.div
-          initial={{ opacity: 0, scale: 0.97 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.4, ease: 'easeOut' }}
-          className='relative w-full max-w-[640rem] rounded-[24rem] border border-white/40 bg-white/95 px-[24rem] py-[24rem] shadow-[0_26rem_60rem_-42rem_rgba(80,44,14,0.55)] backdrop-blur-sm tablet:px-[28rem] tablet:py-[28rem]'
-        >
-          <header className='mb-[20rem] flex flex-col gap-[12rem]'>
-            <div className='flex flex-wrap items-center gap-[6rem] text-[12rem] font-medium tracking-[0.08em] text-d-black/60'>
-              <span>{partDetails?.label ?? 'Speaking Practice'}</span>
-              <span className='text-d-black/30'>•</span>
-              <span>{`Question ${currentIndex + 1} of ${totalQuestions}`}</span>
-              <span className='text-d-black/30'>•</span>
-              <span className='capitalize'>{contentStage === 'intro' ? 'Intro' : 'Question'}</span>
-            </div>
-            {partDetails?.blurb && (
-              <div className='rounded-[12rem] border border-[#F6D7B0]/80 bg-[#FFF7EE] px-[14rem] py-[10rem] text-[13rem] text-d-black/75'>{partDetails.blurb}</div>
-            )}
-            <div className='flex h-[4rem] w-full overflow-hidden rounded-full bg-[rgba(246,215,176,0.45)]'>
-              <div className='h-full rounded-full transition-all' style={{ width: `${Math.min(1, progressRatio) * 100}%`, backgroundColor: CTA_ORANGE }} />
-            </div>
-          </header>
-
-          <section className='mb-[24rem] flex flex-col gap-[16rem]'>
-            <motion.div
-              layout
-              whileHover={{ y: -3, boxShadow: '0 14rem 36rem -28rem rgba(120,64,12,0.35)' }}
-              className='rounded-[20rem] border border-[#F6D7B0] bg-white px-[18rem] py-[18rem] shadow-[0_14rem_36rem_-30rem_rgba(80,44,14,0.4)] transition tablet:px-[20rem] tablet:py-[20rem]'
-            >
-              <div className='mb-[10rem] flex items-center justify-between gap-[10rem]'>
-                <div className='flex flex-col gap-[4rem]'>
-                  <span className='text-[11rem] font-medium uppercase tracking-[0.12em] text-[#AB7633]'>Question {question.number}</span>
-                  {partValue === '3' && (
-                    <span className='w-fit rounded-full bg-[#FFF4E6] px-[10rem] py-[4rem] text-[11rem] font-semibold uppercase tracking-[0.14em] text-[#AB7633]'>
-                      Follow-up
-                    </span>
-                  )}
-                  <h2 className='text-[18rem] font-semibold leading-[1.45] text-d-black'>{question.question}</h2>
-                </div>
-                {question.question_url && (
-                  <button
-                    type='button'
-                    onClick={handlePlayQuestionAudio}
-                    className='flex size-[36rem] items-center justify-center rounded-full border border-[#F6D7B0] bg-white text-[#AB7633] transition hover:bg-[#FFF0DA] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F9A826]'
-                    aria-label='Play question audio'
-                  >
-                    <Volume2 className={cn('size-[16rem] transition', questionAudioState === 'playing' && 'animate-pulse')} />
-                  </button>
-                )}
+    <>
+      <MobileHeader title='Practice' tag='Speaking' exitLabel={exitActionLabel} onClose={handleExit} variant='speaking' />
+      <main className='min-h-screen bg-d-red-secondary'>
+        <div className='mx-auto flex min-h-[100dvh] w-full flex-col items-center justify-start gap-[24rem] px-[16rem] py-[28rem] tablet:max-w-[1120rem] tablet:flex-row tablet:items-center tablet:justify-center tablet:gap-0 tablet:px-[16rem] tablet:py-[64rem]'>
+          <motion.div
+            initial={{ opacity: 0, scale: 0.97 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.4, ease: 'easeOut' }}
+            className='relative w-full max-w-[560rem] rounded-[20rem] border border-white/60 bg-white px-[18rem] py-[22rem] shadow-[0_18rem_48rem_-38rem_rgba(80,44,14,0.45)] backdrop-blur-sm tablet:max-w-[640rem] tablet:rounded-[24rem] tablet:border-white/40 tablet:bg-white/95 tablet:px-[24rem] tablet:py-[24rem] tablet:shadow-[0_26rem_60rem_-42rem_rgba(80,44,14,0.55)]'
+          >
+            <header className='mb-[18rem] flex flex-col gap-[10rem] tablet:mb-[20rem] tablet:gap-[12rem]'>
+              <div className='flex flex-wrap items-center justify-center gap-[8rem] text-center text-[11rem] font-medium tracking-[0.08em] text-d-black/60 tablet:justify-start tablet:gap-[6rem] tablet:text-[12rem]'>
+                <span>{partDetails?.label ?? 'Speaking Practice'}</span>
+                <span className='text-d-black/30'>•</span>
+                <span>{`Question ${currentIndex + 1} of ${totalQuestions}`}</span>
+                <span className='text-d-black/30'>•</span>
+                <span className='capitalize'>{contentStage === 'intro' ? 'Intro' : 'Question'}</span>
               </div>
-            </motion.div>
-
-            <motion.div layout className='flex flex-col gap-[14rem] rounded-[20rem] border border-[#F6D7B0]/70 bg-white px-[18rem] py-[18rem] tablet:px-[20rem]'>
-              <div className='flex items-center justify-between gap-[14rem]'>
-                <div className='flex items-center gap-[10rem]'>
-                  <div
-                    className={cn(
-                      'flex size-[36rem] items-center justify-center rounded-full border-2',
-                      phase === 'recording' ? 'border-[#F9A826]/80 bg-[#FFF2D9]' : 'border-[#F6D7B0] bg-white'
-                    )}
-                  >
-                    {micIcon}
-                  </div>
-                  <div>
-                    {/*<div className='text-[14rem] font-semibold' style={{ color: micStatus.tone }}>*/}
-                    {/*  {micStatus.label}*/}
-                    {/*</div>*/}
-                    <div className='text-[12.5rem] text-d-black/60'>Up to {timeLimitSeconds} seconds</div>
-                  </div>
+              {partDetails?.blurb && (
+                <div className='rounded-[14rem] border border-[#F6D7B0]/80 bg-[#FFF7EE] px-[14rem] py-[10rem] text-[12rem] text-d-black/75 tablet:text-[13rem]'>
+                  {partDetails.blurb}
                 </div>
-                <div className='flex items-center gap-[6rem] text-[12.5rem] text-d-black/60'>
-                  {
-                    phase === 'recording' ? (
-                      <span>{formatDuration(Date.now() - (recordStartRef.current ?? Date.now()))}</span>
-                    ) : (
-                      recordDurationMs > 0 && <span>{formatDuration(recordDurationMs)}</span>
-                    )
-                    //   : (
-                    //   <span>{contentStage === 'intro' ? 'Listen to examiner feedback' : 'Ready when you are'}</span>
-                    // )
-                  }
-                </div>
+              )}
+              <div className='flex h-[5rem] w-full overflow-hidden rounded-full bg-[rgba(246,215,176,0.45)] tablet:h-[4rem]'>
+                <div className='h-full rounded-full transition-all' style={{ width: `${Math.min(1, progressRatio) * 100}%`, backgroundColor: CTA_ORANGE }} />
               </div>
-              <div className='h-[4rem] w-full overflow-hidden rounded-full bg-[#F6D7B0]/50'>
-                <div
-                  className={cn('h-full rounded-full transition-all', phase === 'recording' ? 'bg-[#F9A826]' : 'bg-[#F6D7B0]')}
-                  style={{ width: `${phase === 'recording' ? recordingProgress * 100 : phase === 'review' || phase === 'submitted' ? 100 : 2}%` }}
-                />
-              </div>
-              <div className='text-[12.5rem] text-d-black/60'>Status updates automatically as you record.</div>
-            </motion.div>
-          </section>
+            </header>
 
-          <section className='mb-[18rem]'>
-            <AnimatePresence mode='wait'>
+            <section className='mb-[20rem] flex flex-col gap-[14rem] tablet:mb-[24rem] tablet:gap-[16rem]'>
               <motion.div
-                key={phase}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -12 }}
-                transition={{ duration: 0.2 }}
-                className='flex flex-wrap items-center justify-between gap-[10rem] rounded-[18rem] bg-[#FFF7EE] px-[18rem] py-[18rem] tablet:px-[20rem]'
+                layout
+                whileHover={{ y: -3, boxShadow: '0 14rem 36rem -28rem rgba(120,64,12,0.35)' }}
+                className='rounded-[18rem] border border-[#F6D7B0] bg-white px-[16rem] py-[16rem] shadow-[0_12rem_30rem_-28rem_rgba(80,44,14,0.35)] transition tablet:rounded-[20rem] tablet:px-[20rem] tablet:py-[20rem] tablet:shadow-[0_14rem_36rem_-30rem_rgba(80,44,14,0.4)]'
               >
-                {phase === 'idle' && (
-                  <>
-                    <div className='text-[13.5rem] text-d-black/70'>
-                      {contentStage === 'intro' && hasIntroContent(question)
-                        ? 'Listen to examiner feedback before answering.'
-                        : 'Take a moment to think, then start recording when ready.'}
+                <div className='mb-[10rem] flex flex-row items-start gap-[12rem] tablet:items-center tablet:justify-between tablet:gap-[10rem]'>
+                  <div className='flex flex-col gap-[4rem]'>
+                    <span className='text-[10rem] font-medium uppercase tracking-[0.12em] text-[#AB7633] tablet:text-[11rem]'>Question {question.number}</span>
+                    {partValue === '3' && (
+                      <span className='w-fit rounded-full bg-[#FFF4E6] px-[10rem] py-[4rem] text-[10rem] font-semibold uppercase tracking-[0.14em] text-[#AB7633] tablet:text-[11rem]'>
+                        Follow-up
+                      </span>
+                    )}
+                    <h2 className='text-[16rem] font-semibold leading-[1.45] text-d-black tablet:text-[18rem]'>{question.question}</h2>
+                  </div>
+                  {question.question_url && (
+                    <button
+                      type='button'
+                      onClick={handlePlayQuestionAudio}
+                      className='flex size-[32rem] items-center justify-center rounded-full border border-[#F6D7B0] bg-white text-[#AB7633] transition hover:bg-[#FFF0DA] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F9A826] tablet:size-[36rem]'
+                      aria-label='Play question audio'
+                    >
+                      <Volume2 className={cn('size-[14rem] transition tablet:size-[16rem]', questionAudioState === 'playing' && 'animate-pulse')} />
+                    </button>
+                  )}
+                </div>
+              </motion.div>
+
+              <motion.div
+                layout
+                className='flex flex-col gap-[12rem] rounded-[18rem] border border-[#F6D7B0]/70 bg-white px-[16rem] py-[16rem] tablet:gap-[14rem] tablet:rounded-[20rem] tablet:px-[18rem] tablet:py-[18rem]'
+              >
+                <div className='flex flex-col gap-[12rem] tablet:flex-row tablet:items-center tablet:justify-between tablet:gap-[14rem]'>
+                  <div className='flex items-center gap-[10rem]'>
+                    <div
+                      className={cn(
+                        'flex size-[32rem] items-center justify-center rounded-full border-2 tablet:size-[36rem]',
+                        phase === 'recording' ? 'border-[#F9A826]/80 bg-[#FFF2D9]' : 'border-[#F6D7B0] bg-white'
+                      )}
+                    >
+                      {micIcon}
                     </div>
-                    <div className='flex items-center gap-[10rem]'>
-                      {contentStage === 'intro' && hasIntroContent(question) ? (
+                    <div>
+                      {/*<div className='text-[14rem] font-semibold' style={{ color: micStatus.tone }}>*/}
+                      {/*  {micStatus.label}*/}
+                      {/*</div>*/}
+                      <div className='text-[11.5rem] text-d-black/60 tablet:text-[12.5rem]'>Up to {timeLimitSeconds} seconds</div>
+                    </div>
+                  </div>
+                  <div className='flex items-center gap-[6rem] text-[12rem] text-d-black/60 tablet:text-[12.5rem]'>
+                    {
+                      phase === 'recording' ? (
+                        <span>{formatDuration(Date.now() - (recordStartRef.current ?? Date.now()))}</span>
+                      ) : (
+                        recordDurationMs > 0 && <span>{formatDuration(recordDurationMs)}</span>
+                      )
+                      //   : (
+                      //   <span>{contentStage === 'intro' ? 'Listen to examiner feedback' : 'Ready when you are'}</span>
+                      // )
+                    }
+                  </div>
+                </div>
+                <div className='h-[5rem] w-full overflow-hidden rounded-full bg-[#F6D7B0]/50 tablet:h-[4rem]'>
+                  <div
+                    className={cn('h-full rounded-full transition-all', phase === 'recording' ? 'bg-[#F9A826]' : 'bg-[#F6D7B0]')}
+                    style={{ width: `${phase === 'recording' ? recordingProgress * 100 : phase === 'review' || phase === 'submitted' ? 100 : 2}%` }}
+                  />
+                </div>
+                <div className='text-[11.5rem] text-d-black/60 tablet:text-[12.5rem]'>Status updates automatically as you record.</div>
+              </motion.div>
+            </section>
+
+            <section className='mb-[18rem]'>
+              <AnimatePresence mode='wait'>
+                <motion.div
+                  key={phase}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -12 }}
+                  transition={{ duration: 0.2 }}
+                  className='flex flex-col gap-[14rem] rounded-[18rem] bg-[#FFF7EE] px-[16rem] py-[16rem] tablet:flex-row tablet:flex-wrap tablet:items-center tablet:justify-between tablet:gap-[10rem] tablet:px-[20rem] tablet:py-[18rem]'
+                >
+                  {phase === 'idle' && (
+                    <>
+                      <div className='text-[12.5rem] text-d-black/70 tablet:text-[13.5rem]'>
+                        {contentStage === 'intro' && hasIntroContent(question)
+                          ? 'Listen to examiner feedback before answering.'
+                          : 'Take a moment to think, then start recording when ready.'}
+                      </div>
+                      <div className='flex w-full flex-col gap-[10rem] tablet:w-auto tablet:flex-row tablet:items-center'>
+                        {contentStage === 'intro' && hasIntroContent(question) ? (
+                          <button
+                            type='button'
+                            onClick={() => handlePlayIntro(true)}
+                            className='flex h-[48rem] w-full items-center justify-center rounded-[24rem] border border-[#F6D7B0] bg-white px-[18rem] py-[12rem] text-[13rem] font-semibold text-[#AB7633] transition hover:bg-[#FFF0DA] tablet:h-[52rem] tablet:w-auto tablet:min-w-[150rem] tablet:px-[24rem] tablet:text-[13.5rem]'
+                          >
+                            Next
+                          </button>
+                        ) : (
+                          <>
+                            <button
+                              type='button'
+                              onClick={handleStartRecording}
+                              disabled={questionAudioState === 'playing'}
+                              className='flex h-[52rem] w-full items-center justify-center rounded-[28rem] bg-[#F9A826] px-[22rem] py-[12rem] text-[14rem] font-semibold text-white transition hover:bg-[#f8b645] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F9A826] disabled:cursor-not-allowed disabled:bg-[#f7c76b] disabled:text-white/70 tablet:w-auto tablet:min-w-[160rem] tablet:px-[26rem] tablet:text-[14.5rem]'
+                            >
+                              Start recording
+                            </button>
+                            <button
+                              type='button'
+                              disabled
+                              className='flex h-[48rem] w-full items-center justify-center rounded-[26rem] border border-[#F6D7B0] px-[20rem] py-[12rem] text-[13rem] font-medium text-d-black/40 tablet:h-[52rem] tablet:w-auto tablet:min-w-[140rem] tablet:px-[22rem] tablet:text-[13.5rem]'
+                            >
+                              Skip question
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    </>
+                  )}
+
+                  {phase === 'permission' && (
+                    <>
+                      <div className='text-[12.5rem] text-d-black/70 tablet:text-[13.5rem]'>
+                        Microphone access is needed. Allow access in your browser settings and retry.
+                      </div>
+                      <button
+                        type='button'
+                        onClick={retryPermission}
+                        className='flex h-[48rem] w-full items-center justify-center rounded-[24rem] border border-[#F6D7B0] bg-white px-[18rem] py-[12rem] text-[13rem] font-semibold text-[#AB7633] transition hover:bg-[#FFF0DA] tablet:h-[52rem] tablet:w-auto tablet:min-w-[150rem] tablet:px-[24rem] tablet:text-[13.5rem]'
+                      >
+                        Retry permission
+                      </button>
+                    </>
+                  )}
+
+                  {phase === 'recording' && (
+                    <>
+                      <div className='text-[12.5rem] text-d-black/70 tablet:text-[13.5rem]'>Speak clearly. The recording will stop automatically at the time limit.</div>
+                      <div className='flex w-full flex-col gap-[10rem] tablet:w-auto tablet:flex-row tablet:items-center'>
                         <button
                           type='button'
-                          onClick={() => handlePlayIntro(true)}
-                          className='flex min-w-[150rem] items-center justify-center rounded-[24rem] border border-[#F6D7B0] bg-white px-[24rem] py-[12rem] text-[13.5rem] font-semibold text-[#AB7633] transition hover:bg-[#FFF0DA]'
+                          onClick={handleStopRecording}
+                          className='flex h-[52rem] w-full items-center justify-center rounded-[28rem] bg-[#F9A826] px-[20rem] py-[12rem] text-[13rem] font-semibold text-white transition hover:bg-[#f8b645] tablet:h-[48rem] tablet:w-auto tablet:min-w-[110rem] tablet:px-[22rem] tablet:text-[13.5rem]'
+                        >
+                          <Square className='mr-[6rem] size-[14rem]' /> Stop
+                        </button>
+                        <button
+                          type='button'
+                          onClick={handleCancelRecording}
+                          className='flex h-[48rem] w-full items-center justify-center rounded-[26rem] border border-[#F6D7B0] px-[20rem] py-[12rem] text-[13rem] font-medium text-d-black/70 transition hover:bg-[#FFF0DA] tablet:w-auto tablet:min-w-[110rem] tablet:px-[22rem] tablet:text-[13.5rem]'
+                        >
+                          <RefreshCw className='mr-[8rem] size-[16rem]' /> Cancel
+                        </button>
+                      </div>
+                    </>
+                  )}
+
+                  {phase === 'review' && recordUrl && (
+                    <>
+                      <div className='flex flex-col gap-[10rem] text-[12.5rem] text-d-black/75 tablet:text-[13.5rem]'>
+                        <span>Review your answer before submitting.</span>
+                        <div className='flex w-full flex-col gap-[10rem] tablet:flex-row tablet:items-center'>
+                          <div className='relative h-[6rem] w-full overflow-hidden rounded-full bg-[#F6D7B0]/50 tablet:w-[150rem]'>
+                            <div className='absolute inset-y-0 left-0 rounded-full bg-[#F9A826]' style={{ width: `${playProgress * 100}%` }} />
+                          </div>
+                          <button
+                            type='button'
+                            onClick={toggleAnswerPlayback}
+                            className='hover.bg-[#FFF0DA] flex h-[44rem] w-full items-center justify-center gap-[8rem] rounded-[22rem] border border-[#F6D7B0] px-[16rem] py-[8rem] text-[13rem] font-medium text-[#AB7633] transition tablet:w-auto'
+                          >
+                            <Play className='size-[14rem]' /> Play your answer
+                          </button>
+                        </div>
+                      </div>
+                      <div className='flex w-full flex-col gap-[10rem] tablet:w-auto tablet:flex-row tablet:items-center'>
+                        <button
+                          type='button'
+                          onClick={handleSubmitRecording}
+                          className='flex h-[52rem] w-full items-center justify-center rounded-[28rem] bg-[#F9A826] px-[22rem] py-[12rem] text-[14rem] font-semibold text-white transition hover:bg-[#f8b645] tablet:w-auto tablet:min-w-[140rem] tablet:px-[26rem] tablet:text-[14.5rem]'
                         >
                           Next
                         </button>
-                      ) : (
-                        <>
-                          <button
-                            type='button'
-                            onClick={handleStartRecording}
-                            disabled={questionAudioState === 'playing'}
-                            className='flex min-w-[160rem] items-center justify-center rounded-[26rem] bg-[#F9A826] px-[26rem] py-[12rem] text-[14.5rem] font-semibold text-white transition hover:bg-[#f8b645] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F9A826] disabled:cursor-not-allowed disabled:bg-[#f7c76b] disabled:text-white/70'
-                          >
-                            Start recording
-                          </button>
-                          <button
-                            type='button'
-                            disabled
-                            className='flex min-w-[140rem] items-center justify-center rounded-[26rem] border border-[#F6D7B0] px-[22rem] py-[12rem] text-[13.5rem] font-medium text-d-black/40'
-                          >
-                            Skip question
-                          </button>
-                        </>
-                      )}
-                    </div>
-                  </>
-                )}
-
-                {phase === 'permission' && (
-                  <>
-                    <div className='text-[13.5rem] text-d-black/70'>Microphone access is needed. Allow access in your browser settings and retry.</div>
-                    <button
-                      type='button'
-                      onClick={retryPermission}
-                      className='flex min-w-[150rem] items-center justify-center rounded-[24rem] border border-[#F6D7B0] bg-white px-[24rem] py-[12rem] text-[13.5rem] font-semibold text-[#AB7633] transition hover:bg-[#FFF0DA]'
-                    >
-                      Retry permission
-                    </button>
-                  </>
-                )}
-
-                {phase === 'recording' && (
-                  <>
-                    <div className='text-[13.5rem] text-d-black/70'>Speak clearly. The recording will stop automatically at the time limit.</div>
-                    <div className='flex items-center gap-[10rem]'>
-                      <button
-                        type='button'
-                        onClick={handleStopRecording}
-                        className='flex min-w-[110rem] items-center justify-center rounded-[26rem] bg-[#F9A826] px-[22rem] py-[12rem] text-[13.5rem] font-semibold text-white transition hover:bg-[#f8b645]'
-                      >
-                        <Square className='mr-[6rem] size-[14rem]' /> Stop
-                      </button>
-                      <button
-                        type='button'
-                        onClick={handleCancelRecording}
-                        className='flex min-w-[110rem] items-center justify-center rounded-[26rem] border border-[#F6D7B0] px-[22rem] py-[12rem] text-[13.5rem] font-medium text-d-black/70 transition hover:bg-[#FFF0DA]'
-                      >
-                        <RefreshCw className='mr-[8rem] size-[16rem]' /> Cancel
-                      </button>
-                    </div>
-                  </>
-                )}
-
-                {phase === 'review' && recordUrl && (
-                  <>
-                    <div className='flex flex-col gap-[10rem] text-[13.5rem] text-d-black/75'>
-                      <span>Review your answer before submitting.</span>
-                      <div className='flex items-center gap-[10rem]'>
-                        <div className='relative h-[6rem] w-[150rem] overflow-hidden rounded-full bg-[#F6D7B0]/50'>
-                          <div className='absolute inset-y-0 left-0 rounded-full bg-[#F9A826]' style={{ width: `${playProgress * 100}%` }} />
-                        </div>
                         <button
                           type='button'
-                          onClick={toggleAnswerPlayback}
-                          className='hover.bg-[#FFF0DA] flex items-center gap-[8rem] rounded-[22rem] border border-[#F6D7B0] px-[16rem] py-[8rem] text-[13rem] font-medium text-[#AB7633] transition'
+                          onClick={handleRetryRecording}
+                          className='flex h-[48rem] w-full items-center justify-center rounded-[26rem] border border-[#F6D7B0] px-[20rem] py-[12rem] text-[13rem] font-medium text-d-black/70 transition hover:bg-[#FFF0DA] tablet:w-auto tablet:min-w-[110rem] tablet:px-[22rem] tablet:text-[13.5rem]'
                         >
-                          <Play className='size-[14rem]' /> Play your answer
+                          Retry
                         </button>
                       </div>
-                    </div>
-                    <div className='flex items-center gap-[10rem]'>
-                      <button
-                        type='button'
-                        onClick={handleSubmitRecording}
-                        className='flex min-w-[140rem] items-center justify-center rounded-[26rem] bg-[#F9A826] px-[26rem] py-[12rem] text-[14.5rem] font-semibold text-white transition hover:bg-[#f8b645]'
-                      >
-                        Next
-                      </button>
-                      <button
-                        type='button'
-                        onClick={handleRetryRecording}
-                        className='flex min-w-[110rem] items-center justify-center rounded-[26rem] border border-[#F6D7B0] px-[22rem] py-[12rem] text-[13.5rem] font-medium text-d-black/70 transition hover:bg-[#FFF0DA]'
-                      >
-                        Retry
-                      </button>
-                    </div>
-                  </>
-                )}
+                    </>
+                  )}
 
-                {phase === 'uploading' && (
-                  <div className='flex w-full items-center justify-between gap-[12rem]'>
-                    <div className='flex items-center gap-[12rem] text-[15rem] text-d-black/70'>
-                      <Loader2 className='size-[18rem] animate-spin text-[#F9A826]' /> Submitting your answer…
+                  {phase === 'uploading' && (
+                    <div className='flex w-full items-center justify-center gap-[10rem] text-[13.5rem] text-d-black/70 tablet:justify-between tablet:text-[15rem]'>
+                      <div className='flex items-center gap-[12rem]'>
+                        <Loader2 className='size-[18rem] animate-spin text-[#F9A826]' /> Submitting your answer…
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
 
-                {phase === 'submitted' && (
-                  <>
-                    <div className='flex items-center gap-[12rem] text-[15rem] text-[#0F9D58]'>
-                      <Mic className='size-[18rem]' /> Answer submitted
-                    </div>
-                    <button
-                      type='button'
-                      onClick={handleNextQuestion}
-                      className='flex min-w-[170rem] items-center justify-center rounded-[28rem] bg-[#F9A826] px-[28rem] py-[14rem] text-[16rem] font-semibold text-white transition hover:bg-[#f8b645] disabled:cursor-not-allowed disabled:bg-[#f6ba55]'
-                      disabled={isLastQuestion() && isFinishingAttempt && !feedbackAttemptId}
-                    >
-                      {isLastQuestion() ? (feedbackAttemptId ? 'View feedback' : isFinishingAttempt ? 'Preparing feedback…' : 'Back to profile') : 'Next question'}
-                      {!isLastQuestion() && <SkipForward className='ml-[8rem] size-[16rem]' />}
-                    </button>
-                  </>
-                )}
-
-                {phase === 'error' && (
-                  <>
-                    <div className='text-[15rem] text-[#C2402C]'>{errorMessage ?? 'We could not submit your answer.'}</div>
-                    <div className='flex items-center gap-[12rem]'>
+                  {phase === 'submitted' && (
+                    <>
+                      <div className='flex items-center justify-center gap-[12rem] text-[14rem] text-[#0F9D58] tablet:justify-start tablet:text-[15rem]'>
+                        <Mic className='size-[16rem] tablet:size-[18rem]' /> Answer submitted
+                      </div>
                       <button
                         type='button'
-                        onClick={handleRetrySubmit}
-                        className='flex min-w-[120rem] items-center justify-center rounded-[28rem] bg-[#F9A826] px-[28rem] py-[14rem] text-[16rem] font-semibold text-white transition hover:bg-[#f8b645]'
+                        onClick={handleNextQuestion}
+                        className='flex h-[54rem] w-full items-center justify-center rounded-[28rem] bg-[#F9A826] px-[24rem] py-[14rem] text-[15rem] font-semibold text-white transition hover:bg-[#f8b645] disabled:cursor-not-allowed disabled:bg-[#f6ba55] tablet:w-auto tablet:min-w-[170rem] tablet:px-[28rem] tablet:text-[16rem]'
+                        disabled={isLastQuestion() && isFinishingAttempt && !feedbackAttemptId}
                       >
-                        Retry
+                        {isLastQuestion() ? (feedbackAttemptId ? 'View feedback' : isFinishingAttempt ? 'Preparing feedback…' : 'Back to profile') : 'Next question'}
+                        {!isLastQuestion() && <SkipForward className='ml-[8rem] size-[16rem]' />}
                       </button>
-                      <button
-                        type='button'
-                        onClick={handleRetryRecording}
-                        className='flex min-w-[120rem] items-center justify-center rounded-[28rem] border border-[#F6D7B0] px-[24rem] py-[14rem] text-[15rem] font-medium text-d-black/70 transition hover:bg-[#FFF0DA]'
-                      >
-                        Re-record
-                      </button>
-                    </div>
-                  </>
-                )}
-              </motion.div>
+                    </>
+                  )}
+
+                  {phase === 'error' && (
+                    <>
+                      <div className='text-[13.5rem] text-[#C2402C] tablet:text-[15rem]'>{errorMessage ?? 'We could not submit your answer.'}</div>
+                      <div className='flex w-full flex-col gap-[10rem] tablet:w-auto tablet:flex-row tablet:items-center tablet:gap-[12rem]'>
+                        <button
+                          type='button'
+                          onClick={handleRetrySubmit}
+                          className='flex h-[52rem] w-full items-center justify-center rounded-[28rem] bg-[#F9A826] px-[22rem] py-[12rem] text-[14.5rem] font-semibold text-white transition hover:bg-[#f8b645] tablet:w-auto tablet:min-w-[120rem] tablet:px-[28rem] tablet:py-[14rem] tablet:text-[16rem]'
+                        >
+                          Retry
+                        </button>
+                        <button
+                          type='button'
+                          onClick={handleRetryRecording}
+                          className='flex h-[48rem] w-full items-center justify-center rounded-[26rem] border border-[#F6D7B0] px-[20rem] py-[12rem] text-[13.5rem] font-medium text-d-black/70 transition hover:bg-[#FFF0DA] tablet:w-auto tablet:min-w-[120rem] tablet:px-[24rem] tablet:py-[14rem] tablet:text-[15rem]'
+                        >
+                          Re-record
+                        </button>
+                      </div>
+                    </>
+                  )}
+                </motion.div>
+              </AnimatePresence>
+            </section>
+
+            <footer className='flex flex-col gap-[12rem] tablet:gap-[16rem]'>
+              <div className='text-center text-[12rem] text-d-black/50 tablet:text-left tablet:text-[13rem]'>Your feedback will be generated after submission.</div>
+            </footer>
+
+            <AnimatePresence>
+              {toast && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 20 }}
+                  className={cn(
+                    'pointer-events-auto absolute bottom-[16rem] left-1/2 z-20 flex w-[calc(100%-32rem)] max-w-[360rem] -translate-x-1/2 items-center gap-[12rem] rounded-[16rem] px-[20rem] py-[12rem] text-[13.5rem] shadow-[0_14rem_40rem_-28rem_rgba(80,44,14,0.5)] backdrop-blur-sm tablet:bottom-[24rem] tablet:w-auto tablet:max-w-none tablet:py-[14rem] tablet:text-[14rem]',
+                    toast.tone === 'success' && 'bg-[#EAF7ED] text-[#1B6F41]',
+                    toast.tone === 'warning' && 'bg-[#FFF4E6] text-[#BA6A24]',
+                    toast.tone === 'error' && 'bg-[#FFE8E2] text-[#B5402B]',
+                    toast.tone === 'info' && 'bg-[#FFF7EE] text-[#9A6A2E]'
+                  )}
+                  role='status'
+                >
+                  {toast.tone === 'success' && <CheckCircle className='size-[16rem]' />}
+                  {toast.tone === 'warning' && <AlertTriangle className='size-[16rem]' />}
+                  {toast.tone === 'error' && <AlertTriangle className='size-[16rem]' />}
+                  {toast.tone === 'info' && <Info className='size-[16rem]' />}
+                  <span>{toast.text}</span>
+                </motion.div>
+              )}
             </AnimatePresence>
-          </section>
-
-          <footer className='flex flex-col gap-[16rem]'>
-            <div className='text-[13rem] text-d-black/50'>Your feedback will be generated after submission.</div>
-          </footer>
-
-          <AnimatePresence>
-            {toast && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 20 }}
-                className={cn(
-                  'pointer-events-auto absolute bottom-[24rem] left-1/2 z-20 flex w-[auto] -translate-x-1/2 items-center gap-[12rem] rounded-[16rem] px-[20rem] py-[14rem] text-[14rem] shadow-[0_14rem_40rem_-28rem_rgba(80,44,14,0.5)] backdrop-blur-sm',
-                  toast.tone === 'success' && 'bg-[#EAF7ED] text-[#1B6F41]',
-                  toast.tone === 'warning' && 'bg-[#FFF4E6] text-[#BA6A24]',
-                  toast.tone === 'error' && 'bg-[#FFE8E2] text-[#B5402B]',
-                  toast.tone === 'info' && 'bg-[#FFF7EE] text-[#9A6A2E]'
-                )}
-                role='status'
-              >
-                {toast.tone === 'success' && <CheckCircle className='size-[16rem]' />}
-                {toast.tone === 'warning' && <AlertTriangle className='size-[16rem]' />}
-                {toast.tone === 'error' && <AlertTriangle className='size-[16rem]' />}
-                {toast.tone === 'info' && <Info className='size-[16rem]' />}
-                <span>{toast.text}</span>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </motion.div>
-      </div>
-    </main>
+          </motion.div>
+        </div>
+      </main>
+    </>
   );
 }
 
