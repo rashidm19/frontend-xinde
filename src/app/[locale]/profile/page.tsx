@@ -20,7 +20,7 @@ import type { SubmitFeedbackPayload } from '@/api/feedback';
 import type { FeedbackModalSubmitPayload, FeedbackModalSubmitResult } from '@/components/feedback/types';
 import { FreePracticeTestModal } from '@/components/modals/FreePracticeTestModal';
 import { useSubscription } from '@/hooks/useSubscription';
-import { useMediaQuery } from 'usehooks-ts';
+import { useIsClient } from 'usehooks-ts';
 import { cn } from '@/lib/utils';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { ProfileEditFormModal } from '@/app/[locale]/profile/settings/_components/ProfileEditFormModal';
@@ -59,24 +59,61 @@ export default function Page() {
     refetch: refetchFeedbackStatus,
   } = useFeedbackStatus({ enabled: feedbackEnabled });
 
-  const isDesktop = useMediaQuery('(min-width: 1440px)');
-  const isTabletUp = useMediaQuery('(min-width: 768px)');
-  const isMobile = !isTabletUp;
+  const isClient = useIsClient();
+  const [isTabletUp, setIsTabletUp] = useState<boolean | null>(null);
+  const [isDesktop, setIsDesktop] = useState(false);
 
   useEffect(() => {
-    if (isMobile) {
-      router.replace(`/${locale}/m/stats`);
+    if (!isClient) {
+      return;
     }
-  }, [isMobile, router, locale]);
 
-  if (isMobile) {
-    return null;
-  }
+    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
+      setIsTabletUp(true);
+      setIsDesktop(true);
+      return;
+    }
+
+    const tabletQuery = window.matchMedia('(min-width: 768px)');
+    const desktopQuery = window.matchMedia('(min-width: 1440px)');
+
+    const updateMatches = () => {
+      setIsTabletUp(tabletQuery.matches);
+      setIsDesktop(desktopQuery.matches);
+    };
+
+    updateMatches();
+
+    const handleTabletChange = (event: MediaQueryListEvent) => {
+      setIsTabletUp(event.matches);
+    };
+
+    const handleDesktopChange = (event: MediaQueryListEvent) => {
+      setIsDesktop(event.matches);
+    };
+
+    tabletQuery.addEventListener('change', handleTabletChange);
+    desktopQuery.addEventListener('change', handleDesktopChange);
+
+    return () => {
+      tabletQuery.removeEventListener('change', handleTabletChange);
+      desktopQuery.removeEventListener('change', handleDesktopChange);
+    };
+  }, [isClient]);
+
+  useEffect(() => {
+    if (!isClient || isTabletUp === null || isTabletUp) {
+      return;
+    }
+
+    router.replace(`/${locale}/m/stats`);
+  }, [isClient, isTabletUp, router, locale]);
 
   const shouldPromptFeedback = useMemo(
     () => !isLoading && !feedbackStatusLoading && !feedbackAlreadySubmitted && !hasPromptedFeedback && !feedbackStatusError && !freeTestModalOpen,
     [isLoading, feedbackStatusLoading, feedbackAlreadySubmitted, hasPromptedFeedback, feedbackStatusError, freeTestModalOpen]
   );
+
 
   useEffect(() => {
     if (!shouldPromptFeedback) {
@@ -208,6 +245,13 @@ export default function Page() {
   const openLanguageModal = useCallback(() => {
     setLanguageModalOpen(true);
   }, []);
+
+  const shouldShowPlaceholder = !isClient || isTabletUp === null;
+  const isMobileView = isTabletUp === false;
+
+  if (shouldShowPlaceholder || isMobileView) {
+    return <div className='min-h-screen bg-white' />;
+  }
 
   return (
     <>
