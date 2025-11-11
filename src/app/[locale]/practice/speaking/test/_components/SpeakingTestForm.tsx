@@ -24,6 +24,14 @@ type ToastMessage = {
   text: string;
 };
 
+type AudioSource = 'intro' | 'question' | 'answer';
+
+const AUDIO_SOURCE_LABEL: Record<AudioSource, string> = {
+  intro: 'Playing intro…',
+  question: 'Playing question…',
+  answer: 'Playing your answer…',
+};
+
 const PART_DETAILS: Partial<Record<PracticeSpeakingPartValue, { label: string; timeLimit: number; blurb?: string }>> = {
   '1': {
     label: 'Part 1',
@@ -50,6 +58,23 @@ const PART_DETAILS: Partial<Record<PracticeSpeakingPartValue, { label: string; t
 
 const CTA_ORANGE = '#F9A826';
 
+const AUDIO_MIME_TYPE_PREFERENCE = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4;codecs=mp4a.40.2', 'audio/mp4', 'audio/mpeg'];
+const DEFAULT_AUDIO_BLOB_TYPE = 'audio/webm';
+
+const MIME_EXTENSION_MAP: Record<string, string> = {
+  'audio/webm': 'webm',
+  'audio/mp4': 'm4a',
+  'audio/mpeg': 'mp3',
+};
+
+const normaliseBlobMimeType = (mimeType: string | null) => {
+  if (!mimeType) return DEFAULT_AUDIO_BLOB_TYPE;
+  const [base] = mimeType.split(';');
+  return base || DEFAULT_AUDIO_BLOB_TYPE;
+};
+
+const getExtensionForMimeType = (mimeType: string) => MIME_EXTENSION_MAP[mimeType] ?? 'webm';
+
 const hasIntroContent = (question?: PracticeSpeakingPartResponse['questions'][number]) => Boolean(question?.intro || question?.intro_url);
 
 export default function SpeakingTestForm({ data, exitLabel, onExit }: FormProps) {
@@ -71,7 +96,11 @@ export default function SpeakingTestForm({ data, exitLabel, onExit }: FormProps)
   const [partValue, setPartValue] = useState<PracticeSpeakingPartValue | null>(null);
   const [feedbackAttemptId, setFeedbackAttemptId] = useState<number | null>(null);
   const [isFinishingAttempt, setIsFinishingAttempt] = useState(false);
+  const [isSubmitButtonBusy, setIsSubmitButtonBusy] = useState(false);
+  const [currentAudioSource, setCurrentAudioSource] = useState<AudioSource | null>(null);
+  const [audioPlaybackState, setAudioPlaybackState] = useState<Record<number, { introPlayed: boolean; questionPlayed: boolean }>>({});
   const [introAudioState, setIntroAudioState] = useState<'idle' | 'playing'>('idle');
+  const [audioMimeType, setAudioMimeType] = useState<string | null>(null);
 
   const practiceAttemptIdRef = useRef<string | null>(null);
   const recordStartRef = useRef<number | null>(null);
@@ -81,7 +110,31 @@ export default function SpeakingTestForm({ data, exitLabel, onExit }: FormProps)
   const introAudioRef = useRef<HTMLAudioElement | null>(null);
   const questionAudioRef = useRef<HTMLAudioElement | null>(null);
   const reviewAudioRef = useRef<HTMLAudioElement | null>(null);
+  const introAudioCleanupRef = useRef<(() => void) | null>(null);
+  const questionAudioCleanupRef = useRef<(() => void) | null>(null);
+  const reviewAudioCleanupRef = useRef<(() => void) | null>(null);
   const [questionAudioState, setQuestionAudioState] = useState<'idle' | 'playing'>('idle');
+  const fallbackRecordUrlRef = useRef<string | null>(null);
+
+  const resolvedBlobMimeType = useMemo(() => normaliseBlobMimeType(audioMimeType), [audioMimeType]);
+  const audioFileExtension = useMemo(() => getExtensionForMimeType(resolvedBlobMimeType), [resolvedBlobMimeType]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || !('MediaRecorder' in window)) {
+      setAudioMimeType(null);
+      return;
+    }
+
+    const supported = AUDIO_MIME_TYPE_PREFERENCE.find(type => {
+      try {
+        return window.MediaRecorder.isTypeSupported(type);
+      } catch {
+        return false;
+      }
+    });
+
+    setAudioMimeType(supported ?? null);
+  }, []);
 
   const handleReviewTimeUpdate = useCallback(() => {
     const audio = reviewAudioRef.current;
@@ -101,6 +154,7 @@ export default function SpeakingTestForm({ data, exitLabel, onExit }: FormProps)
 
   const question = sortedQuestions[currentIndex];
   const totalQuestions = sortedQuestions.length;
+  const isFinalQuestion = currentIndex === totalQuestions - 1;
 
   const exitActionLabel = exitLabel ?? 'Exit';
 
@@ -131,17 +185,132 @@ export default function SpeakingTestForm({ data, exitLabel, onExit }: FormProps)
     emitTelemetry('speaking_view_opened', { totalQuestions });
   }, [totalQuestions]);
 
+  const markIntroPlayed = useCallback((questionNumber: number) => {
+    setAudioPlaybackState(prev => {
+      const existing = prev[questionNumber] ?? { introPlayed: false, questionPlayed: false };
+      if (existing.introPlayed) {
+        return prev;
+      }
+      return {
+        ...prev,
+        [questionNumber]: { ...existing, introPlayed: true },
+      };
+    });
+  }, []);
+
+  const markQuestionPlayed = useCallback((questionNumber: number) => {
+    setAudioPlaybackState(prev => {
+      const existing = prev[questionNumber] ?? { introPlayed: false, questionPlayed: false };
+      if (existing.questionPlayed) {
+        return prev;
+      }
+      return {
+        ...prev,
+        [questionNumber]: { ...existing, questionPlayed: true },
+      };
+    });
+  }, []);
+
+  const attachAudioStatusHandlers = useCallback(
+    (
+      audio: HTMLAudioElement,
+      source: AudioSource,
+      options?: {
+        questionNumber?: number;
+        onEnded?: () => void;
+        onPause?: () => void;
+        onPlay?: () => void;
+        onError?: () => void;
+      }
+    ) => {
+      const { questionNumber, onEnded, onPause, onPlay, onError } = options ?? {};
+
+      const handlePlay = () => {
+        setCurrentAudioSource(source);
+        onPlay?.();
+      };
+
+      const handleEnded = () => {
+        if (typeof questionNumber === 'number') {
+          if (source === 'intro') {
+            markIntroPlayed(questionNumber);
+          }
+          if (source === 'question') {
+            markQuestionPlayed(questionNumber);
+          }
+        }
+        onEnded?.();
+        setCurrentAudioSource(prev => (prev === source ? null : prev));
+      };
+
+      const handlePause = () => {
+        if (audio.ended) {
+          return;
+        }
+        onPause?.();
+        setCurrentAudioSource(prev => (prev === source ? null : prev));
+      };
+
+      const handleError = () => {
+        onError?.();
+        setCurrentAudioSource(prev => (prev === source ? null : prev));
+      };
+
+      audio.addEventListener('play', handlePlay);
+      audio.addEventListener('pause', handlePause);
+      audio.addEventListener('ended', handleEnded);
+      audio.addEventListener('error', handleError);
+
+      return () => {
+        audio.removeEventListener('play', handlePlay);
+        audio.removeEventListener('pause', handlePause);
+        audio.removeEventListener('ended', handleEnded);
+        audio.removeEventListener('error', handleError);
+      };
+    },
+    [markIntroPlayed, markQuestionPlayed]
+  );
+
+  useEffect(() => {
+    const currentQuestion = sortedQuestions[currentIndex];
+    if (!currentQuestion) return;
+    setAudioPlaybackState(prev => {
+      if (prev[currentQuestion.number]) {
+        return prev;
+      }
+      return {
+        ...prev,
+        [currentQuestion.number]: {
+          introPlayed: !hasIntroContent(currentQuestion),
+          questionPlayed: false,
+        },
+      };
+    });
+  }, [currentIndex, sortedQuestions]);
+
   const { status, startRecording, stopRecording, mediaBlobUrl, clearBlobUrl, error } = useReactMediaRecorder({
     video: false,
     audio: true,
-    blobPropertyBag: { type: 'audio/webm' },
+    mediaRecorderOptions: audioMimeType ? { mimeType: audioMimeType } : undefined,
+    blobPropertyBag: { type: resolvedBlobMimeType },
     onStop: (_blobUrl, blob) => {
       if (didCancelRef.current) {
         didCancelRef.current = false;
         return;
       }
-      setRecordBlob(blob);
-      setRecordUrl(_blobUrl);
+      const finalBlob = blob.type ? blob : new Blob([blob], { type: resolvedBlobMimeType });
+      const finalUrl = _blobUrl ?? URL.createObjectURL(finalBlob);
+      if (!_blobUrl) {
+        if (fallbackRecordUrlRef.current) {
+          URL.revokeObjectURL(fallbackRecordUrlRef.current);
+        }
+        fallbackRecordUrlRef.current = finalUrl;
+      } else if (fallbackRecordUrlRef.current) {
+        URL.revokeObjectURL(fallbackRecordUrlRef.current);
+        fallbackRecordUrlRef.current = null;
+      }
+      setRecordBlob(finalBlob);
+      setRecordUrl(finalUrl);
       setRecordDurationMs(Date.now() - (recordStartRef.current ?? Date.now()));
       setRecordElapsedMs(Date.now() - (recordStartRef.current ?? Date.now()));
       setPhase('review');
@@ -213,6 +382,12 @@ export default function SpeakingTestForm({ data, exitLabel, onExit }: FormProps)
   useEffect(() => {
     return () => {
       stopInterval();
+      introAudioCleanupRef.current?.();
+      introAudioCleanupRef.current = null;
+      questionAudioCleanupRef.current?.();
+      questionAudioCleanupRef.current = null;
+      reviewAudioCleanupRef.current?.();
+      reviewAudioCleanupRef.current = null;
       if (toastTimerRef.current) {
         window.clearTimeout(toastTimerRef.current);
       }
@@ -225,13 +400,16 @@ export default function SpeakingTestForm({ data, exitLabel, onExit }: FormProps)
         reviewAudioRef.current.pause();
         reviewAudioRef.current.currentTime = 0;
         reviewAudioRef.current.removeEventListener('timeupdate', handleReviewTimeUpdate);
-        reviewAudioRef.current.removeEventListener('ended', handleReviewEnded);
         reviewAudioRef.current = null;
       }
       if (introAudioRef.current) {
         introAudioRef.current.pause();
         introAudioRef.current.currentTime = 0;
         introAudioRef.current = null;
+      }
+      if (fallbackRecordUrlRef.current) {
+        URL.revokeObjectURL(fallbackRecordUrlRef.current);
+        fallbackRecordUrlRef.current = null;
       }
     };
   }, [handleReviewEnded, handleReviewTimeUpdate]);
@@ -251,50 +429,72 @@ export default function SpeakingTestForm({ data, exitLabel, onExit }: FormProps)
 
   useEffect(() => {
     if (!recordUrl) {
+      reviewAudioCleanupRef.current?.();
+      reviewAudioCleanupRef.current = null;
       const existing = reviewAudioRef.current;
       if (existing) {
         existing.pause();
         existing.currentTime = 0;
         existing.removeEventListener('timeupdate', handleReviewTimeUpdate);
-        existing.removeEventListener('ended', handleReviewEnded);
       }
       reviewAudioRef.current = null;
       setIsPlayingAnswer(false);
       setPlayProgress(0);
+      setCurrentAudioSource(prev => (prev === 'answer' ? null : prev));
+      if (fallbackRecordUrlRef.current) {
+        URL.revokeObjectURL(fallbackRecordUrlRef.current);
+        fallbackRecordUrlRef.current = null;
+      }
       return;
     }
 
     const audio = new Audio(recordUrl);
     audio.addEventListener('timeupdate', handleReviewTimeUpdate);
-    audio.addEventListener('ended', handleReviewEnded);
 
+    reviewAudioCleanupRef.current?.();
     if (reviewAudioRef.current) {
       reviewAudioRef.current.pause();
       reviewAudioRef.current.removeEventListener('timeupdate', handleReviewTimeUpdate);
-      reviewAudioRef.current.removeEventListener('ended', handleReviewEnded);
+      setCurrentAudioSource(prev => (prev === 'answer' ? null : prev));
     }
+
+    const lifecycleCleanup = attachAudioStatusHandlers(audio, 'answer', {
+      onPlay: () => setIsPlayingAnswer(true),
+      onPause: () => setIsPlayingAnswer(false),
+      onEnded: () => {
+        handleReviewEnded();
+      },
+      onError: () => setIsPlayingAnswer(false),
+    });
+
+    reviewAudioCleanupRef.current = () => {
+      lifecycleCleanup();
+      audio.removeEventListener('timeupdate', handleReviewTimeUpdate);
+    };
 
     reviewAudioRef.current = audio;
     setIsPlayingAnswer(false);
     setPlayProgress(0);
 
     return () => {
+      reviewAudioCleanupRef.current?.();
+      reviewAudioCleanupRef.current = null;
       audio.pause();
-      audio.removeEventListener('timeupdate', handleReviewTimeUpdate);
-      audio.removeEventListener('ended', handleReviewEnded);
+      setCurrentAudioSource(prev => (prev === 'answer' ? null : prev));
       if (reviewAudioRef.current === audio) {
         reviewAudioRef.current = null;
       }
     };
-  }, [recordUrl, handleReviewEnded, handleReviewTimeUpdate]);
+  }, [recordUrl, handleReviewEnded, handleReviewTimeUpdate, attachAudioStatusHandlers]);
 
   const answeredCount = useMemo(() => Object.keys(submittedQuestions).length, [submittedQuestions]);
 
   const progressRatio = totalQuestions === 0 ? 0 : answeredCount / totalQuestions;
-  const progressLabel = totalQuestions === 0 ? '0% completed' : `${answeredCount} of ${totalQuestions} answered`;
+  const isPrimaryActionAudioLocked = Boolean(currentAudioSource);
+  const audioSourceLabel = currentAudioSource ? AUDIO_SOURCE_LABEL[currentAudioSource] : null;
 
   const handleStartRecording = async () => {
-    if (phase === 'uploading' || phase === 'recording' || questionAudioState === 'playing') return;
+    if (phase === 'uploading' || phase === 'recording' || currentAudioSource) return;
     if (contentStage === 'intro') {
       handlePlayIntro(true);
       return;
@@ -340,6 +540,10 @@ export default function SpeakingTestForm({ data, exitLabel, onExit }: FormProps)
     setRecordDurationMs(0);
     setRecordElapsedMs(0);
     clearBlobUrl();
+    if (fallbackRecordUrlRef.current) {
+      URL.revokeObjectURL(fallbackRecordUrlRef.current);
+      fallbackRecordUrlRef.current = null;
+    }
     setPhase('idle');
     if (status === 'recording') {
       stopRecording();
@@ -353,61 +557,88 @@ export default function SpeakingTestForm({ data, exitLabel, onExit }: FormProps)
     setRecordDurationMs(0);
     setRecordElapsedMs(0);
     clearBlobUrl();
+    if (fallbackRecordUrlRef.current) {
+      URL.revokeObjectURL(fallbackRecordUrlRef.current);
+      fallbackRecordUrlRef.current = null;
+    }
     setPhase('idle');
+    setIsSubmitButtonBusy(false);
     setContentStage(hasIntroContent(question) ? 'intro' : 'question');
   };
 
   const handleSubmitRecording = async () => {
-    if (!recordBlob || !question) return;
+    if (!recordBlob || !question || isSubmitButtonBusy || phase === 'uploading') return;
     const practiceId = practiceAttemptIdRef.current;
     if (!practiceId) {
       pushToast({ tone: 'error', text: 'Practice session was not initialized. Please refresh the page.' });
       return;
     }
 
+    const submittingTest = isFinalQuestion;
+    setIsSubmitButtonBusy(true);
     setPhase('uploading');
     setErrorMessage(null);
+    if (submittingTest) {
+      emitTelemetry('speaking_submit_test_click', { question: question.number });
+    }
     emitTelemetry('speaking_submit_click', { question: question.number });
 
     const formData = new FormData();
     formData.append('practice_id', practiceId);
     formData.append('question', String(question.number));
-    formData.append('audio', recordBlob, `record_${question.number}.webm`);
+    formData.append('audio', recordBlob, `record_${question.number}.${audioFileExtension}`);
 
     try {
       await axiosInstance.post<PracticeSpeakingAnswer>('/practice/send/speaking', formData);
       emitTelemetry('speaking_submit_success', { question: question.number });
       setSubmittedQuestions(prev => ({ ...prev, [question.number]: true }));
-      if (isLastQuestion()) {
-        pushToast({ tone: 'success', text: 'Answer submitted successfully.' });
-        setPhase('submitted');
-        await finishAttempt(practiceId);
-      } else {
-        const nextIndex = Math.min(currentIndex + 1, totalQuestions - 1);
-        const nextQuestion = sortedQuestions[nextIndex];
-        setPhase('idle');
-        setRecordBlob(null);
-        setRecordUrl(null);
-        setRecordDurationMs(0);
-        setRecordElapsedMs(0);
-        setPlayProgress(0);
-        clearBlobUrl();
-        setCurrentIndex(nextIndex);
-        setContentStage(hasIntroContent(nextQuestion) ? 'intro' : 'question');
-        if (hasIntroContent(nextQuestion)) {
-          handlePlayIntro(true, nextQuestion);
+
+      if (submittingTest) {
+        const finishData = await finishAttempt(practiceId);
+        if (!finishData?.id) {
+          throw new Error('missing_feedback_id');
         }
+        emitTelemetry('speaking_submit_test_success', { question: question.number, attemptId: finishData.id });
+        router.replace(`/practice/speaking/feedback/${finishData.id}`);
+        return;
+      }
+
+      const nextIndex = Math.min(currentIndex + 1, totalQuestions - 1);
+      const nextQuestion = sortedQuestions[nextIndex];
+      setPhase('idle');
+      setRecordBlob(null);
+      setRecordUrl(null);
+      setRecordDurationMs(0);
+      setRecordElapsedMs(0);
+      setPlayProgress(0);
+      clearBlobUrl();
+      setCurrentIndex(nextIndex);
+      setContentStage(hasIntroContent(nextQuestion) ? 'intro' : 'question');
+      if (hasIntroContent(nextQuestion)) {
+        handlePlayIntro(true, nextQuestion);
       }
     } catch (error) {
       console.error(error);
       setPhase('error');
-      setErrorMessage('Something went wrong while submitting your answer. Please try again.');
+      const message = submittingTest
+        ? 'We could not complete your test submission. Please try again.'
+        : 'Something went wrong while submitting your answer. Please try again.';
+      setErrorMessage(message);
       emitTelemetry('speaking_submit_error', { question: question.number });
+      if (submittingTest) {
+        emitTelemetry('speaking_submit_test_error', {
+          question: question.number,
+          reason: error instanceof Error ? error.message : 'unknown_error',
+        });
+      }
+    } finally {
+      setIsSubmitButtonBusy(false);
     }
   };
 
   const handleRetrySubmit = () => {
     if (phase !== 'error') return;
+    setIsSubmitButtonBusy(false);
     handleSubmitRecording();
   };
 
@@ -430,16 +661,13 @@ export default function SpeakingTestForm({ data, exitLabel, onExit }: FormProps)
       }
       if (finishData?.id) {
         setFeedbackAttemptId(finishData.id);
-        pushToast({ tone: 'info', text: 'Feedback is ready. You can review it now.' });
-      } else {
-        pushToast({ tone: 'warning', text: 'Could not load feedback. You can return to profile.' });
       }
+      return finishData;
     } catch (error) {
-      console.error(error);
-      setErrorMessage('Answer saved locally. Reconnect to submit again.');
-      pushToast({ tone: 'warning', text: 'Connection lost. Please retry submitting from a stable connection.' });
+      throw error instanceof Error ? error : new Error('finish_attempt_failed');
+    } finally {
+      setIsFinishingAttempt(false);
     }
-    setIsFinishingAttempt(false);
   };
 
   const isLastQuestion = () => currentIndex === totalQuestions - 1;
@@ -508,23 +736,32 @@ export default function SpeakingTestForm({ data, exitLabel, onExit }: FormProps)
 
     if (!introAudioRef.current || introAudioRef.current.src !== introUrl) {
       introAudioRef.current?.pause();
-      introAudioRef.current = new Audio(introUrl);
-      introAudioRef.current.addEventListener('ended', () => {
-        setIntroAudioState('idle');
-        setContentStage('question');
-        autoPlayQuestionAudio(q);
+      introAudioCleanupRef.current?.();
+      const audio = new Audio(introUrl);
+      introAudioCleanupRef.current = attachAudioStatusHandlers(audio, 'intro', {
+        questionNumber: q?.number,
+        onPlay: () => setIntroAudioState('playing'),
+        onPause: () => setIntroAudioState('idle'),
+        onEnded: () => {
+          setIntroAudioState('idle');
+          setContentStage('question');
+          autoPlayQuestionAudio(q);
+        },
+        onError: () => setIntroAudioState('idle'),
       });
+      introAudioRef.current = audio;
     }
 
     if (introAudioState === 'playing' && !forcePlay) {
       introAudioRef.current.pause();
-      setIntroAudioState('idle');
       return;
     }
 
     introAudioRef.current.currentTime = 0;
-    introAudioRef.current.play().catch(() => null);
-    setIntroAudioState('playing');
+    introAudioRef.current.play().catch(() => {
+      setIntroAudioState('idle');
+      setCurrentAudioSource(prev => (prev === 'intro' ? null : prev));
+    });
   };
 
   useEffect(() => {
@@ -543,23 +780,34 @@ export default function SpeakingTestForm({ data, exitLabel, onExit }: FormProps)
 
     if (!questionAudioRef.current || questionAudioRef.current.src !== q.question_url) {
       questionAudioRef.current?.pause();
-      questionAudioRef.current = new Audio(q.question_url);
-      questionAudioRef.current.addEventListener('ended', () => setQuestionAudioState('idle'));
+      questionAudioCleanupRef.current?.();
+      const audio = new Audio(q.question_url);
+      questionAudioCleanupRef.current = attachAudioStatusHandlers(audio, 'question', {
+        questionNumber: q.number,
+        onPlay: () => setQuestionAudioState('playing'),
+        onPause: () => setQuestionAudioState('idle'),
+        onEnded: () => setQuestionAudioState('idle'),
+        onError: () => setQuestionAudioState('idle'),
+      });
+      questionAudioRef.current = audio;
     }
 
     questionAudioRef.current.currentTime = 0;
-    questionAudioRef.current.play().catch(() => null);
-    setQuestionAudioState('playing');
+    questionAudioRef.current.play().catch(() => {
+      setQuestionAudioState('idle');
+      setCurrentAudioSource(prev => (prev === 'question' ? null : prev));
+    });
   };
 
   const handlePlayQuestionAudio = () => {
     if (!question?.question_url) {
       return;
     }
-
-    if (questionAudioState === 'playing') {
-      questionAudioRef.current?.pause();
-      setQuestionAudioState('idle');
+    const playbackState = audioPlaybackState[question.number] ?? { introPlayed: !hasIntroContent(question), questionPlayed: false };
+    if (!playbackState.introPlayed || !playbackState.questionPlayed) {
+      return;
+    }
+    if (currentAudioSource) {
       return;
     }
 
@@ -573,17 +821,35 @@ export default function SpeakingTestForm({ data, exitLabel, onExit }: FormProps)
     if (isPlayingAnswer) {
       audio.pause();
       setIsPlayingAnswer(false);
+      setCurrentAudioSource(prev => (prev === 'answer' ? null : prev));
       return;
     }
 
     emitTelemetry('speaking_play_answer', { question: question?.number });
-    audio.currentTime = 0;
+    try {
+      audio.currentTime = 0;
+    } catch (error) {
+      console.error('Answer playback failed to seek', error);
+      stopAnswerPlayback();
+      pushToast({ tone: 'error', text: 'Playback is not supported on this device. Please re-record your answer.' });
+      return;
+    }
     setPlayProgress(0);
-    const playPromise = audio.play();
+    setCurrentAudioSource('answer');
+    let playPromise: Promise<void> | undefined;
+    try {
+      playPromise = audio.play();
+    } catch (error) {
+      console.error('Answer playback failed to start', error);
+      stopAnswerPlayback();
+      pushToast({ tone: 'error', text: 'Playback is not supported on this device. Please re-record your answer.' });
+      return;
+    }
     if (playPromise) {
-      playPromise.catch(() => {
-        setIsPlayingAnswer(false);
-        setPlayProgress(0);
+      playPromise.catch(error => {
+        console.error('Answer playback failed', error);
+        stopAnswerPlayback();
+        pushToast({ tone: 'error', text: 'Playback is not supported on this device. Please re-record your answer.' });
       });
     }
     setIsPlayingAnswer(true);
@@ -593,10 +859,15 @@ export default function SpeakingTestForm({ data, exitLabel, onExit }: FormProps)
     const audio = reviewAudioRef.current;
     if (audio) {
       audio.pause();
-      audio.currentTime = 0;
+      try {
+        audio.currentTime = 0;
+      } catch (error) {
+        console.error('Answer playback reset failed', error);
+      }
     }
     setIsPlayingAnswer(false);
     setPlayProgress(0);
+    setCurrentAudioSource(prev => (prev === 'answer' ? null : prev));
   };
 
   const micIcon = phase === 'recording' ? <Mic className='size-[13rem] tablet:size-[16rem]' /> : <MicOff className='size-[13rem] tablet:size-[16rem]' />;
@@ -608,21 +879,33 @@ export default function SpeakingTestForm({ data, exitLabel, onExit }: FormProps)
     setRecordElapsedMs(0);
     setPlayProgress(0);
     stopAnswerPlayback();
+    reviewAudioCleanupRef.current?.();
+    reviewAudioCleanupRef.current = null;
+    questionAudioCleanupRef.current?.();
+    questionAudioCleanupRef.current = null;
     questionAudioRef.current?.pause();
     questionAudioRef.current = null;
     setQuestionAudioState('idle');
+    introAudioCleanupRef.current?.();
+    introAudioCleanupRef.current = null;
     introAudioRef.current?.pause();
     introAudioRef.current = null;
     setIntroAudioState('idle');
+    setCurrentAudioSource(null);
+    if (fallbackRecordUrlRef.current) {
+      URL.revokeObjectURL(fallbackRecordUrlRef.current);
+      fallbackRecordUrlRef.current = null;
+    }
     setContentStage(hasIntroContent(sortedQuestions[currentIndex]) ? 'intro' : 'question');
   }, [currentIndex]);
 
   if (!question) {
     return (
       <>
-        <MobileHeader title='Practice' tag='Speaking' exitLabel={exitActionLabel} onClose={handleExit} variant='speaking' />
-        <main className='min-h-screen bg-d-red-secondary'>
-          <div className='mx-auto flex min-h-[100dvh] w-full flex-col items-center justify-center px-[16rem] py-[32rem] tablet:max-w-[720rem] tablet:px-[24rem] tablet:py-[72rem]'>
+        <div className='min-h-[100dvh] bg-d-red-secondary'>
+          <MobileHeader title='Practice' tag='Speaking' exitLabel={exitActionLabel} onClose={handleExit} variant='speaking' />
+
+          <main className='mx-auto flex w-full flex-col items-center justify-center px-[16rem] py-[32rem] tablet:max-w-[720rem] tablet:px-[24rem] tablet:py-[72rem]'>
             <motion.div
               initial={{ opacity: 0, scale: 0.98 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -638,17 +921,30 @@ export default function SpeakingTestForm({ data, exitLabel, onExit }: FormProps)
                 Back to profile
               </button>
             </motion.div>
-          </div>
-        </main>
+          </main>
+        </div>
       </>
     );
   }
 
+  const questionPlaybackState = audioPlaybackState[question.number] ?? {
+    introPlayed: !hasIntroContent(question),
+    questionPlayed: false,
+  };
+  const canReplayQuestionAudio = questionPlaybackState.introPlayed && questionPlaybackState.questionPlayed && !currentAudioSource;
+  const isReviewPrimaryBusy = isSubmitButtonBusy || isPrimaryActionAudioLocked;
+  const reviewPrimaryLabel = isSubmitButtonBusy
+    ? isFinalQuestion
+      ? 'Submitting test…'
+      : 'Submitting…'
+    : (audioSourceLabel ?? (isFinalQuestion ? 'Submit test' : 'Next'));
+
   return (
     <>
-      <MobileHeader title='Practice' tag='Speaking' exitLabel={exitActionLabel} onClose={handleExit} variant='speaking' />
-      <main className='min-h-screen bg-d-red-secondary'>
-        <div className='mx-auto flex min-h-[100dvh] w-full flex-col items-center justify-start gap-[24rem] px-[16rem] py-[28rem] tablet:max-w-[1120rem] tablet:flex-row tablet:items-center tablet:justify-center tablet:gap-0 tablet:px-[16rem] tablet:py-[64rem]'>
+      <div className='min-h-[100dvh] bg-d-red-secondary'>
+        <MobileHeader title='Practice' tag='Speaking' exitLabel={exitActionLabel} onClose={handleExit} variant='speaking' />
+
+        <main className='mx-auto flex w-full flex-col items-center justify-start gap-[24rem] px-[16rem] py-[28rem] tablet:max-w-[1120rem] tablet:flex-row tablet:items-center tablet:justify-center tablet:gap-0 tablet:px-[16rem] tablet:py-[64rem]'>
           <motion.div
             initial={{ opacity: 0, scale: 0.97 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -693,8 +989,9 @@ export default function SpeakingTestForm({ data, exitLabel, onExit }: FormProps)
                     <button
                       type='button'
                       onClick={handlePlayQuestionAudio}
-                      className='flex size-[32rem] items-center justify-center rounded-full border border-[#F6D7B0] bg-white text-[#AB7633] transition hover:bg-[#FFF0DA] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F9A826] tablet:size-[36rem]'
-                      aria-label='Play question audio'
+                      disabled={!canReplayQuestionAudio}
+                      className='flex size-[32rem] min-w-[32rem] items-center justify-center rounded-full border border-[#F6D7B0] bg-white text-[#AB7633] transition hover:bg-[#FFF0DA] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F9A826] tablet:size-[36rem] tablet:min-w-[36rem]'
+                      aria-label='Replay question audio'
                     >
                       <Volume2 className={cn('size-[14rem] transition tablet:size-[16rem]', questionAudioState === 'playing' && 'animate-pulse')} />
                     </button>
@@ -768,28 +1065,26 @@ export default function SpeakingTestForm({ data, exitLabel, onExit }: FormProps)
                           <button
                             type='button'
                             onClick={() => handlePlayIntro(true)}
+                            disabled={isPrimaryActionAudioLocked}
+                            aria-disabled={isPrimaryActionAudioLocked}
+                            aria-busy={isPrimaryActionAudioLocked}
+                            aria-live='polite'
                             className='flex h-[48rem] w-full items-center justify-center rounded-[24rem] border border-[#F6D7B0] bg-white px-[18rem] py-[12rem] text-[13rem] font-semibold text-[#AB7633] transition hover:bg-[#FFF0DA] tablet:h-[52rem] tablet:w-auto tablet:min-w-[150rem] tablet:px-[24rem] tablet:text-[13.5rem]'
                           >
-                            Next
+                            {audioSourceLabel ?? 'Next'}
                           </button>
                         ) : (
-                          <>
-                            <button
-                              type='button'
-                              onClick={handleStartRecording}
-                              disabled={questionAudioState === 'playing'}
-                              className='flex h-[52rem] w-full items-center justify-center rounded-[28rem] bg-[#F9A826] px-[22rem] py-[12rem] text-[14rem] font-semibold text-white transition hover:bg-[#f8b645] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F9A826] disabled:cursor-not-allowed disabled:bg-[#f7c76b] disabled:text-white/70 tablet:w-auto tablet:min-w-[160rem] tablet:px-[26rem] tablet:text-[14.5rem]'
-                            >
-                              Start recording
-                            </button>
-                            <button
-                              type='button'
-                              disabled
-                              className='flex h-[48rem] w-full items-center justify-center rounded-[26rem] border border-[#F6D7B0] px-[20rem] py-[12rem] text-[13rem] font-medium text-d-black/40 tablet:h-[52rem] tablet:w-auto tablet:min-w-[140rem] tablet:px-[22rem] tablet:text-[13.5rem]'
-                            >
-                              Skip question
-                            </button>
-                          </>
+                          <button
+                            type='button'
+                            onClick={handleStartRecording}
+                            disabled={isPrimaryActionAudioLocked}
+                            aria-disabled={isPrimaryActionAudioLocked}
+                            aria-busy={isPrimaryActionAudioLocked}
+                            aria-live='polite'
+                            className='flex h-[52rem] w-full items-center justify-center rounded-[28rem] bg-[#F9A826] px-[22rem] py-[12rem] text-[14rem] font-semibold text-white transition hover:bg-[#f8b645] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F9A826] disabled:cursor-not-allowed disabled:bg-[#f7c76b] disabled:text-white/70 tablet:w-auto tablet:min-w-[160rem] tablet:px-[26rem] tablet:text-[14.5rem]'
+                          >
+                            {audioSourceLabel ?? 'Start recording'}
+                          </button>
                         )}
                       </div>
                     </>
@@ -853,9 +1148,14 @@ export default function SpeakingTestForm({ data, exitLabel, onExit }: FormProps)
                         <button
                           type='button'
                           onClick={handleSubmitRecording}
-                          className='flex h-[52rem] w-full items-center justify-center rounded-[28rem] bg-[#F9A826] px-[22rem] py-[12rem] text-[14rem] font-semibold text-white transition hover:bg-[#f8b645] tablet:w-auto tablet:min-w-[140rem] tablet:px-[26rem] tablet:text-[14.5rem]'
+                          disabled={isReviewPrimaryBusy}
+                          aria-disabled={isReviewPrimaryBusy}
+                          aria-busy={isReviewPrimaryBusy}
+                          aria-live='polite'
+                          className='flex h-[52rem] w-full items-center justify-center gap-[8rem] rounded-[28rem] bg-[#F9A826] px-[22rem] py-[12rem] text-[14rem] font-semibold text-white transition hover:bg-[#f8b645] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F9A826] disabled:cursor-not-allowed disabled:bg-[#f7c76b] disabled:text-white/70 tablet:w-auto tablet:min-w-[140rem] tablet:px-[26rem] tablet:text-[14.5rem]'
                         >
-                          Next
+                          {isSubmitButtonBusy && <Loader2 className='size-[16rem] animate-spin' aria-hidden='true' />}
+                          {reviewPrimaryLabel}
                         </button>
                         <button
                           type='button'
@@ -869,10 +1169,19 @@ export default function SpeakingTestForm({ data, exitLabel, onExit }: FormProps)
                   )}
 
                   {phase === 'uploading' && (
-                    <div className='flex w-full items-center justify-center gap-[10rem] text-[13.5rem] text-d-black/70 tablet:justify-between tablet:text-[15rem]'>
-                      <div className='flex items-center gap-[12rem]'>
-                        <Loader2 className='size-[18rem] animate-spin text-[#F9A826]' /> Submitting your answer…
+                    <div className='flex w-full flex-col items-center justify-center gap-[12rem] text-[13.5rem] text-d-black/70 tablet:flex-row tablet:justify-between tablet:text-[15rem]'>
+                      <div className='flex items-center gap-[12rem]' role='status' aria-live='polite'>
+                        <Loader2 className='size-[18rem] animate-spin text-[#F9A826]' aria-hidden='true' /> Submitting your answer…
                       </div>
+                      <button
+                        type='button'
+                        disabled
+                        aria-disabled='true'
+                        aria-busy='true'
+                        className='flex h-[52rem] w-full items-center justify-center gap-[8rem] rounded-[28rem] bg-[#F9A826] px-[22rem] py-[12rem] text-[14rem] font-semibold text-white tablet:w-auto tablet:min-w-[150rem] tablet:px-[26rem] tablet:text-[14.5rem]'
+                      >
+                        <Loader2 className='size-[16rem] animate-spin' aria-hidden='true' /> {isFinalQuestion ? 'Submitting test…' : 'Submitting…'}
+                      </button>
                     </div>
                   )}
 
@@ -946,8 +1255,8 @@ export default function SpeakingTestForm({ data, exitLabel, onExit }: FormProps)
               )}
             </AnimatePresence>
           </motion.div>
-        </div>
-      </main>
+        </main>
+      </div>
     </>
   );
 }
