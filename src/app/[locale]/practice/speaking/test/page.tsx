@@ -27,9 +27,11 @@ export default function Page() {
 
   return (
     <PracticeLeaveGuard>
-      <WritingFeedbackHeader title={'Practice Speaking'} exitLabel={tActions('exit')} onExit={() => router.push('/profile')} />
+      <div className='hidden tablet:block'>
+        <WritingFeedbackHeader title={'Practice Speaking'} exitLabel={tActions('exit')} onExit={() => router.push('/profile')} />
+      </div>
 
-      {status === 'success' && <SpeakingTestForm data={data} />}
+      {status === 'success' && <SpeakingTestForm data={data} exitLabel={tActions('exit')} onExit={() => router.push('/profile')} />}
     </PracticeLeaveGuard>
   );
 }
