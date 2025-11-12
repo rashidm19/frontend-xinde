@@ -31,7 +31,7 @@ import { Header } from '@/components/Header';
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { SubscriptionDetailsModal } from '@/components/SubscriptionDetailsModal';
-import { ChangeLangModal } from '@/app/[locale]/profile/settings/_components/ChangeLangModal';
+import { ChangeLangModal } from '@/app/[locale]/(protected)/profile/settings/_components/ChangeLangModal';
 import { BottomSheet } from '@/components/ui/bottom-sheet';
 import { logout } from '@/lib/logout';
 import nProgress from 'nprogress';

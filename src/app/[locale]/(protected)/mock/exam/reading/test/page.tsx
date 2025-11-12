@@ -16,8 +16,8 @@ import { transformStringToArrayV2, transformStringToArrayV4 } from '@/lib/utils'
 import type { PracticeReadingPart } from '@/types/PracticeReading';
 
 import { useRouter } from 'next/navigation';
-import { DndMatching } from '@/app/[locale]/practice/reading/test/components/DndMatching';
-import { DndText } from '@/app/[locale]/practice/reading/test/components/DndText';
+import { DndMatching } from '@/app/[locale]/(protected)/practice/reading/test/components/DndMatching';
+import { DndText } from '@/app/[locale]/(protected)/practice/reading/test/components/DndText';
 import { mockStore } from '@/stores/mock';
 import nProgress from 'nprogress';
 import { useMediaQuery } from 'usehooks-ts';

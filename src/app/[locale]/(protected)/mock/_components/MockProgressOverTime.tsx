@@ -1,4 +1,4 @@
-import { HorseshoeProgressBar } from '@/app/[locale]/profile/_components/HorseshoeProgressBar';
+import { HorseshoeProgressBar } from '@/app/[locale]/(protected)/profile/_components/HorseshoeProgressBar';
 import React from 'react';
 
 interface Props {

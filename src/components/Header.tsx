@@ -6,16 +6,32 @@ import { PromoPromptModal } from './PromoPromptModal';
 import React from 'react';
 import { useRouter } from 'next/navigation';
 import nProgress from 'nprogress';
+import dynamic from 'next/dynamic';
 import { useCustomTranslations } from '@/hooks/useCustomTranslations';
 import { useSubscription } from '@/hooks/useSubscription';
-import { ChangeLangModal } from '@/app/[locale]/profile/settings/_components/ChangeLangModal';
-import { ProfileEditFormModal } from '@/app/[locale]/profile/settings/_components/ProfileEditFormModal';
 import { logout } from '@/lib/logout';
 import { SubscriptionDetailsModal } from '@/components/SubscriptionDetailsModal';
 import { PricesModal } from '@/components/PricesModal';
 import { cn } from '@/lib/utils';
 import { useMediaQuery } from 'usehooks-ts';
 import { useLocale } from 'next-intl';
+
+// Lazy-load protected modals so public routes don't eagerly bundle authenticated-only UI.
+const ChangeLangModal = dynamic(
+  () =>
+    import('@/app/[locale]/(protected)/profile/settings/_components/ChangeLangModal').then(
+      module => module.ChangeLangModal
+    ),
+  { ssr: false, loading: () => null }
+);
+
+const ProfileEditFormModal = dynamic(
+  () =>
+    import('@/app/[locale]/(protected)/profile/settings/_components/ProfileEditFormModal').then(
+      module => module.ProfileEditFormModal
+    ),
+  { ssr: false, loading: () => null }
+);
 
 interface Props {
   name?: string;
