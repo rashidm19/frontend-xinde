@@ -3,6 +3,8 @@ import { devtools } from 'zustand/middleware';
 import axios from 'axios';
 
 import { cancelSubscription, fetchBillingBalance, fetchCurrentSubscription, resumeSubscription } from '@/api/subscriptions';
+import { BALANCE_QUERY_KEY, SUBSCRIPTION_QUERY_KEY } from '@/lib/queryKeys';
+import { queryClient } from '@/lib/queryClient';
 import { IBillingBalance, IClientSubscription } from '@/types/Billing';
 
 type SubscriptionFetchStatus = 'idle' | 'loading' | 'success' | 'error';
@@ -210,35 +212,41 @@ export const useSubscriptionStore = create<SubscriptionStore>()(
         await Promise.all([get().fetchSubscription(true), get().fetchBalance(true)]);
       },
       ensureAccess: async (requirement: AccessRequirement = 'practice') => {
-        try {
-          const [subscription, balance] = await Promise.all([
-            get().fetchSubscription(true),
-            get().fetchBalance(true),
-          ]);
+        const subscriptionFromCache = queryClient.getQueryData<IClientSubscription | null>(SUBSCRIPTION_QUERY_KEY);
+        const balanceFromCache = queryClient.getQueryData<IBillingBalance | null>(BALANCE_QUERY_KEY);
 
-          const hasActiveSubscription = computeHasActiveSubscription(subscription);
-          const balanceFlags = computeBalanceFlags(balance);
-          set({ hasActiveSubscription, ...balanceFlags });
+        const subscription = subscriptionFromCache ?? null;
+        const balance = balanceFromCache ?? null;
 
-          let hasAccess = false;
+        const hasActiveSubscription = computeHasActiveSubscription(subscription);
+        const balanceFlags = computeBalanceFlags(balance);
 
-          if (requirement === 'mock') {
-            hasAccess = balanceFlags.hasMockCredits;
-          } else if (requirement === 'subscription') {
-            hasAccess = hasActiveSubscription;
-          } else {
-            hasAccess = hasActiveSubscription || balanceFlags.hasPracticeCredits;
-          }
+        set({
+          subscription,
+          hasActiveSubscription,
+          status: 'success',
+          error: null,
+          balance,
+          balanceStatus: 'success',
+          balanceError: null,
+          ...balanceFlags,
+        });
 
-          if (!hasAccess) {
-            set({ isPaywallOpen: true });
-          }
+        let hasAccess = false;
 
-          return hasAccess;
-        } catch (error) {
-          set({ isPaywallOpen: true });
-          return false;
+        if (requirement === 'mock') {
+          hasAccess = balanceFlags.hasMockCredits;
+        } else if (requirement === 'subscription') {
+          hasAccess = hasActiveSubscription;
+        } else {
+          hasAccess = hasActiveSubscription || balanceFlags.hasPracticeCredits;
         }
+
+        if (!hasAccess) {
+          set({ isPaywallOpen: true });
+        }
+
+        return hasAccess;
       },
       openPaywall: () => set({ isPaywallOpen: true }),
       closePaywall: () => set({ isPaywallOpen: false }),
