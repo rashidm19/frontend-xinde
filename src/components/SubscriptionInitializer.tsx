@@ -1,52 +1,29 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
-import { usePathname } from 'next/navigation';
+import { useEffect } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 
+import type { IBillingBalance, IClientSubscription } from '@/types/Billing';
 import { useSubscriptionStore } from '@/stores/subscriptionStore';
+import { BALANCE_QUERY_KEY, SUBSCRIPTION_QUERY_KEY } from '@/lib/queryKeys';
 
 export const SubscriptionInitializer = () => {
-  const fetchSubscription = useSubscriptionStore(state => state.fetchSubscription);
-  const fetchBalance = useSubscriptionStore(state => state.fetchBalance);
-  const pathname = usePathname();
-  const isFirstPathCheck = useRef(true);
+  const queryClient = useQueryClient();
+  const setSubscription = useSubscriptionStore(state => state.setSubscription);
+  const setBalance = useSubscriptionStore(state => state.setBalance);
 
   useEffect(() => {
-    Promise.all([fetchSubscription(), fetchBalance()]).catch(() => {
-      // errors are handled within the store
-    });
-  }, [fetchBalance, fetchSubscription]);
+    const subscription = queryClient.getQueryData<IClientSubscription | null>(SUBSCRIPTION_QUERY_KEY);
+    const balance = queryClient.getQueryData<IBillingBalance | null>(BALANCE_QUERY_KEY);
 
-  useEffect(() => {
-    if (isFirstPathCheck.current) {
-      isFirstPathCheck.current = false;
-      return;
+    if (subscription !== undefined) {
+      setSubscription(subscription ?? null);
     }
 
-    Promise.all([fetchSubscription(true), fetchBalance(true)]).catch(() => {
-      // errors are handled within the store
-    });
-  }, [fetchBalance, fetchSubscription, pathname]);
-
-  useEffect(() => {
-    if (typeof document === 'undefined') {
-      return;
+    if (balance !== undefined) {
+      setBalance(balance ?? null);
     }
-
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
-        Promise.all([fetchSubscription(true), fetchBalance(true)]).catch(() => {
-          // errors are handled within the store
-        });
-      }
-    };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-    };
-  }, [fetchBalance, fetchSubscription]);
+  }, [queryClient, setBalance, setSubscription]);
 
   return null;
 };
