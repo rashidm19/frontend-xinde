@@ -17,6 +17,18 @@ const EMPTY_BALANCE: IBillingBalance = {
   practice_balance: 0,
 };
 
+const buildAuthHeader = (authorizationHeader: string | null, tokenFromCookie: string | undefined) => {
+  if (authorizationHeader && authorizationHeader.trim().length > 0) {
+    return authorizationHeader;
+  }
+
+  if (tokenFromCookie && tokenFromCookie.trim().length > 0) {
+    return `Bearer ${tokenFromCookie}`;
+  }
+
+  return null;
+};
+
 const unwrapData = <T>(payload: unknown): T | null => {
   if (payload === null || payload === undefined) {
     return null;
@@ -51,7 +63,9 @@ export const getBalance = async (): Promise<IBillingBalance> => {
   const forwardedForHeader = incomingHeaders.get('x-forwarded-for');
   const tokenFromCookie = cookieStore.get(TOKEN_COOKIE_NAME)?.value;
 
-  if (!cookieHeader && !tokenFromCookie && !authorizationHeader) {
+  const authHeader = buildAuthHeader(authorizationHeader, tokenFromCookie);
+
+  if (!authHeader && !cookieHeader && !tokenFromCookie) {
     return EMPTY_BALANCE;
   }
 
@@ -63,8 +77,8 @@ export const getBalance = async (): Promise<IBillingBalance> => {
     requestHeaders.set('Cookie', `${TOKEN_COOKIE_NAME}=${tokenFromCookie}`);
   }
 
-  if (authorizationHeader) {
-    requestHeaders.set('Authorization', authorizationHeader);
+  if (authHeader) {
+    requestHeaders.set('Authorization', authHeader);
   }
 
   if (userAgentHeader) {

@@ -18,19 +18,13 @@ import { useMediaQuery } from 'usehooks-ts';
 import { useLocale } from 'next-intl';
 
 // Lazy-load protected modals so public routes don't eagerly bundle authenticated-only UI.
-const ChangeLangModal = dynamic(
-  () =>
-    import('@/app/[locale]/(protected)/profile/settings/_components/ChangeLangModal').then(
-      module => module.ChangeLangModal
-    ),
-  { ssr: false, loading: () => null }
-);
+const ChangeLangModal = dynamic(() => import('@/app/[locale]/(protected)/profile/settings/_components/ChangeLangModal').then(module => module.ChangeLangModal), {
+  ssr: false,
+  loading: () => null,
+});
 
 const ProfileEditFormModal = dynamic(
-  () =>
-    import('@/app/[locale]/(protected)/profile/settings/_components/ProfileEditFormModal').then(
-      module => module.ProfileEditFormModal
-    ),
+  () => import('@/app/[locale]/(protected)/profile/settings/_components/ProfileEditFormModal').then(module => module.ProfileEditFormModal),
   { ssr: false, loading: () => null }
 );
 
@@ -62,7 +56,6 @@ export const Header = ({ name, email, avatar, title: _title, onOpenSubscription,
   const [isPromoModalOpen, setPromoModalOpen] = React.useState(false);
   const [selectedPlanId, setSelectedPlanId] = React.useState<string | null>(null);
   const [planDiscounts, setPlanDiscounts] = React.useState<Record<string, { amount: number; currency: string }>>({});
-  const [promoMessage, setPromoMessage] = React.useState<string | null>(null);
   const [promoError, setPromoError] = React.useState<string | null>(null);
   const isMobile = useMediaQuery('(max-width: 767px)');
 
@@ -113,7 +106,6 @@ export const Header = ({ name, email, avatar, title: _title, onOpenSubscription,
     setSelectedPlanId(planId);
     setPromoModalOpen(true);
     setPricesModalOpen(false);
-    setPromoMessage(null);
     setPromoError(null);
   };
 
@@ -131,18 +123,9 @@ export const Header = ({ name, email, avatar, title: _title, onOpenSubscription,
     setSelectedPlanId(null);
   };
 
-  const handleSuccessMessage = (message: string | null) => {
-    setPromoMessage(message);
-
-    if (message) {
-      setPricesModalOpen(true);
-    }
-  };
-
   const closeUserMenu = () => setUserMenuOpen(false);
 
   const handleUpgradeClick = React.useCallback(() => {
-    setPromoMessage(null);
     setPromoError(null);
 
     if (isMobile) {
@@ -151,7 +134,7 @@ export const Header = ({ name, email, avatar, title: _title, onOpenSubscription,
     }
 
     setPricesModalOpen(true);
-  }, [isMobile, locale, router, setPricesModalOpen, setPromoError, setPromoMessage]);
+  }, [isMobile, locale, router, setPricesModalOpen, setPromoError]);
 
   const triggerSubscriptionModal = React.useCallback(() => {
     if (onOpenSubscription) {
@@ -214,8 +197,7 @@ export const Header = ({ name, email, avatar, title: _title, onOpenSubscription,
   const displayEmail = trimmedEmail;
   const accountInitials = displayName.slice(0, 2).toUpperCase();
   const planName = subscription?.plan?.name ?? subscription?.subscription_plan?.name ?? null;
-  const isSubscriptionReady =
-    subscription !== undefined || balanceStatus === 'success' || balanceStatus === 'error';
+  const isSubscriptionReady = subscription !== undefined || balanceStatus === 'success' || balanceStatus === 'error';
 
   const toggleUserMenu = () => {
     if (isAccountInfoLoading) {
@@ -516,7 +498,7 @@ export const Header = ({ name, email, avatar, title: _title, onOpenSubscription,
       {!isMobile ? (
         <Dialog open={isPricesModalOpen} onOpenChange={handlePricesModalOpenChange}>
           <DialogContent className='fixed left-[50%] top-[50%] flex h-auto w-[1280rem] -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center backdrop-brightness-90'>
-            <PricesModal onSelectPlan={handlePlanSelect} promoMessage={promoMessage} promoError={promoError} planDiscounts={planDiscounts} />
+            <PricesModal onSelectPlan={handlePlanSelect} promoError={promoError} planDiscounts={planDiscounts} />
           </DialogContent>
         </Dialog>
       ) : null}
@@ -530,7 +512,6 @@ export const Header = ({ name, email, avatar, title: _title, onOpenSubscription,
           setPricesModalOpen(true);
         }}
         onDiscountUpdate={(planId, info) => setPlanDiscounts(prev => ({ ...prev, [planId]: info }))}
-        onSuccessMessage={handleSuccessMessage}
         onErrorMessage={setPromoError}
       />
     </header>

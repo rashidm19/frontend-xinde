@@ -12,6 +12,7 @@ import { useCustomTranslations } from '@/hooks/useCustomTranslations';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useMediaQuery } from 'usehooks-ts';
 import { BottomSheetHeader } from '@/components/mobile/MobilePageHeader';
+import { refreshSubscriptionAndBalance } from '@/stores/subscriptionStore';
 
 interface Props {
   open: boolean;
@@ -40,7 +41,7 @@ export const SubscriptionDetailsModal = ({ open, onOpenChange }: Props) => {
 
 const useSubscriptionDetailsViewModel = () => {
   const { t } = useCustomTranslations('subscriptionModal');
-  const { subscription, status, error, balance, balanceStatus, balanceError, refreshSubscriptionAndBalance, hasActiveSubscription } = useSubscription();
+  const { subscription, status, error, balance, balanceStatus, balanceError, hasActiveSubscription } = useSubscription();
 
   const isLoading = status === 'loading' || balanceStatus === 'loading';
   const planName = subscription?.plan?.name ?? subscription?.subscription_plan?.name ?? null;

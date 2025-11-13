@@ -1,47 +1,77 @@
-import { useEffect } from 'react';
+import { useCallback, useMemo } from 'react';
+import { useQueryClient, type QueryState } from '@tanstack/react-query';
 
-import { useSubscriptionStore } from '@/stores/subscriptionStore';
+import type { IBillingBalance, IClientSubscription } from '@/types/Billing';
+import { BALANCE_QUERY_KEY, SUBSCRIPTION_QUERY_KEY } from '@/lib/queryKeys';
+import { computeBalanceFlags, computeHasActiveSubscription } from '@/lib/subscription/derive';
+import { useCachedQueryData } from '@/hooks/useCachedQueryData';
+import { closeSubscriptionPaywall, openSubscriptionPaywall } from '@/stores/subscriptionStore';
 
-export const useSubscription = (autoFetch = true) => {
-  const subscription = useSubscriptionStore(state => state.subscription);
-  const status = useSubscriptionStore(state => state.status);
-  const error = useSubscriptionStore(state => state.error);
-  const hasActiveSubscription = useSubscriptionStore(state => state.hasActiveSubscription);
-  const fetchSubscription = useSubscriptionStore(state => state.fetchSubscription);
-  const balance = useSubscriptionStore(state => state.balance);
-  const balanceStatus = useSubscriptionStore(state => state.balanceStatus);
-  const balanceError = useSubscriptionStore(state => state.balanceError);
-  const hasPracticeCredits = useSubscriptionStore(state => state.hasPracticeCredits);
-  const hasMockCredits = useSubscriptionStore(state => state.hasMockCredits);
-  const ensureAccess = useSubscriptionStore(state => state.ensureAccess);
-  const openPaywall = useSubscriptionStore(state => state.openPaywall);
-  const closePaywall = useSubscriptionStore(state => state.closePaywall);
-  const fetchBalance = useSubscriptionStore(state => state.fetchBalance);
-  const refreshSubscriptionAndBalance = useSubscriptionStore(state => state.refreshSubscriptionAndBalance);
+type SubscriptionStatus = 'idle' | 'loading' | 'success' | 'error';
 
-  useEffect(() => {
-    if (!autoFetch) {
-      return;
-    }
+const deriveStatus = (state?: QueryState<unknown, unknown>): SubscriptionStatus => {
+  if (!state) {
+    return 'idle';
+  }
 
-    if (status === 'idle') {
-      fetchSubscription().catch(() => {
-        // errors are stored in zustand; components can decide how to handle them
-      });
-    }
-  }, [autoFetch, fetchSubscription, status]);
+  if (state.status === 'success') {
+    return 'success';
+  }
 
-  useEffect(() => {
-    if (!autoFetch) {
-      return;
-    }
+  if (state.status === 'error') {
+    return 'error';
+  }
 
-    if (balanceStatus === 'idle') {
-      fetchBalance().catch(() => {
-        // errors are stored in zustand; components can decide how to handle them
-      });
-    }
-  }, [autoFetch, balanceStatus, fetchBalance]);
+  if (state.fetchStatus === 'fetching' || state.fetchStatus === 'paused') {
+    return 'loading';
+  }
+
+  return 'idle';
+};
+
+const deriveError = (state?: QueryState<unknown, unknown>): string | null => {
+  if (!state || !state.error) {
+    return null;
+  }
+
+  if (state.error instanceof Error) {
+    return state.error.message;
+  }
+
+  if (typeof state.error === 'string') {
+    return state.error;
+  }
+
+  return 'Unknown error';
+};
+
+export const useSubscription = () => {
+  const queryClient = useQueryClient();
+
+  const subscriptionData = useCachedQueryData<IClientSubscription | null>(SUBSCRIPTION_QUERY_KEY);
+  const balanceData = useCachedQueryData<IBillingBalance | null>(BALANCE_QUERY_KEY);
+
+  const subscription = subscriptionData ?? null;
+  const balance = balanceData ?? null;
+
+  const subscriptionState = queryClient.getQueryState<IClientSubscription | null>(SUBSCRIPTION_QUERY_KEY);
+  const balanceState = queryClient.getQueryState<IBillingBalance | null>(BALANCE_QUERY_KEY);
+
+  const status = deriveStatus(subscriptionState);
+  const error = deriveError(subscriptionState);
+  const balanceStatus = deriveStatus(balanceState);
+  const balanceError = deriveError(balanceState);
+
+  const hasActiveSubscription = useMemo(() => computeHasActiveSubscription(subscription), [subscription]);
+  const { hasPracticeCredits, hasMockCredits } = useMemo(() => computeBalanceFlags(balance), [balance]);
+
+  const openPaywall = useCallback(() => {
+    openSubscriptionPaywall();
+  }, []);
+
+  const closePaywall = useCallback(() => {
+    closeSubscriptionPaywall();
+  }, []);
 
   return {
     subscription,
@@ -53,10 +83,6 @@ export const useSubscription = (autoFetch = true) => {
     balanceError,
     hasPracticeCredits,
     hasMockCredits,
-    fetchSubscription,
-    fetchBalance,
-    refreshSubscriptionAndBalance,
-    ensureAccess,
     openPaywall,
     closePaywall,
   };

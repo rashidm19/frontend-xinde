@@ -11,6 +11,18 @@ const AUTHORIZATION_HEADER = 'authorization';
 const TOKEN_COOKIE_NAME = 'token';
 const REQUEST_TIMEOUT_MS = 3000;
 
+const buildAuthHeader = (authorizationHeader: string | null, tokenFromCookie: string | undefined) => {
+  if (authorizationHeader && authorizationHeader.trim().length > 0) {
+    return authorizationHeader;
+  }
+
+  if (tokenFromCookie && tokenFromCookie.trim().length > 0) {
+    return `Bearer ${tokenFromCookie}`;
+  }
+
+  return null;
+};
+
 const unwrapData = <T>(payload: unknown): T | null => {
   if (payload === null || payload === undefined) {
     return null;
@@ -50,7 +62,9 @@ export const getSubscription = async (): Promise<IClientSubscription | null> => 
   const forwardedForHeader = incomingHeaders.get('x-forwarded-for');
   const tokenFromCookie = cookieStore.get(TOKEN_COOKIE_NAME)?.value;
 
-  if (!cookieHeader && !tokenFromCookie && !authorizationHeader) {
+  const authHeader = buildAuthHeader(authorizationHeader, tokenFromCookie);
+
+  if (!authHeader && !cookieHeader && !tokenFromCookie) {
     return null;
   }
 
@@ -62,8 +76,8 @@ export const getSubscription = async (): Promise<IClientSubscription | null> => 
     requestHeaders.set('Cookie', `${TOKEN_COOKIE_NAME}=${tokenFromCookie}`);
   }
 
-  if (authorizationHeader) {
-    requestHeaders.set('Authorization', authorizationHeader);
+  if (authHeader) {
+    requestHeaders.set('Authorization', authHeader);
   }
 
   if (userAgentHeader) {

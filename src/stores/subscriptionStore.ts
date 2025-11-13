@@ -1,3 +1,4 @@
+
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import axios from 'axios';
@@ -5,7 +6,8 @@ import axios from 'axios';
 import { cancelSubscription, fetchBillingBalance, fetchCurrentSubscription, resumeSubscription } from '@/api/subscriptions';
 import { BALANCE_QUERY_KEY, SUBSCRIPTION_QUERY_KEY } from '@/lib/queryKeys';
 import { queryClient } from '@/lib/queryClient';
-import { IBillingBalance, IClientSubscription } from '@/types/Billing';
+import type { IBillingBalance, IClientSubscription } from '@/types/Billing';
+import { computeBalanceFlags, computeHasActiveSubscription, EMPTY_BALANCE } from '@/lib/subscription/derive';
 
 type SubscriptionFetchStatus = 'idle' | 'loading' | 'success' | 'error';
 type AccessRequirement = 'subscription' | 'practice' | 'mock';
@@ -21,9 +23,7 @@ interface SubscriptionStore {
   hasPracticeCredits: boolean;
   hasMockCredits: boolean;
   isPaywallOpen: boolean;
-  fetchSubscription: (force?: boolean) => Promise<IClientSubscription | null>;
   setSubscription: (subscription: IClientSubscription | null) => void;
-  fetchBalance: (force?: boolean) => Promise<IBillingBalance | null>;
   setBalance: (balance: IBillingBalance | null) => void;
   cancelCurrentSubscription: () => Promise<IClientSubscription | null>;
   resumeCurrentSubscription: () => Promise<IClientSubscription | null>;
@@ -34,42 +34,6 @@ interface SubscriptionStore {
   setPaywallOpen: (open: boolean) => void;
   reset: () => void;
 }
-
-const computeHasActiveSubscription = (subscription: IClientSubscription | null): boolean => {
-  if (!subscription) {
-    return false;
-  }
-
-  const status = typeof subscription.status === 'string' ? subscription.status.toLowerCase() : '';
-  const activeStatuses = new Set(['active', 'trialing', 'pending_cancel']);
-
-  if (!activeStatuses.has(status)) {
-    return false;
-  }
-
-  if (!subscription.current_period_end) {
-    return false;
-  }
-
-  const periodEnd = new Date(subscription.current_period_end);
-
-  if (Number.isNaN(periodEnd.getTime())) {
-    return false;
-  }
-
-  return periodEnd.getTime() >= Date.now();
-};
-
-const computeBalanceFlags = (balance: IBillingBalance | null) => ({
-  hasPracticeCredits: (balance?.practice_balance ?? 0) > 0,
-  hasMockCredits: (balance?.mock_balance ?? 0) > 0,
-});
-
-const EMPTY_BALANCE: IBillingBalance = {
-  tenge_balance: 0,
-  mock_balance: 0,
-  practice_balance: 0,
-};
 
 const parseError = (error: unknown): string => {
   if (axios.isAxiosError(error)) {
@@ -97,41 +61,6 @@ export const useSubscriptionStore = create<SubscriptionStore>()(
       hasPracticeCredits: false,
       hasMockCredits: false,
       isPaywallOpen: false,
-      fetchSubscription: async (force = false) => {
-        const { status } = get();
-
-        if (!force && (status === 'loading' || status === 'success')) {
-          return get().subscription;
-        }
-
-        if (typeof window !== 'undefined') {
-          const token = localStorage.getItem('token');
-          if (!token) {
-            set({ subscription: null, hasActiveSubscription: false, status: 'success', error: null });
-            return null;
-          }
-        }
-
-        set({ status: 'loading', error: null });
-
-        try {
-          const subscription = await fetchCurrentSubscription();
-          const hasActiveSubscription = computeHasActiveSubscription(subscription);
-          set({ subscription, hasActiveSubscription, status: 'success', error: null });
-          return subscription;
-        } catch (error) {
-          if (axios.isAxiosError(error)) {
-            const statusCode = error.response?.status;
-            if (statusCode === 401 || statusCode === 404) {
-              set({ subscription: null, hasActiveSubscription: false, status: 'success', error: null });
-              return null;
-            }
-          }
-
-          set({ status: 'error', error: parseError(error), subscription: null, hasActiveSubscription: false });
-          throw error;
-        }
-      },
       setSubscription: subscription => {
         set({
           subscription,
@@ -139,44 +68,6 @@ export const useSubscriptionStore = create<SubscriptionStore>()(
           status: 'success',
           error: null,
         });
-      },
-      fetchBalance: async (force = false) => {
-        const balanceStatus = get().balanceStatus;
-
-        if (!force && (balanceStatus === 'loading' || balanceStatus === 'success')) {
-          return get().balance;
-        }
-
-        if (typeof window !== 'undefined') {
-          const token = localStorage.getItem('token');
-          if (!token) {
-            const flags = computeBalanceFlags(EMPTY_BALANCE);
-            set({ balance: EMPTY_BALANCE, balanceStatus: 'success', balanceError: null, ...flags });
-            return EMPTY_BALANCE;
-          }
-        }
-
-        set({ balanceStatus: 'loading', balanceError: null });
-
-        try {
-          const balance = await fetchBillingBalance();
-          const flags = computeBalanceFlags(balance);
-          set({ balance, balanceStatus: 'success', balanceError: null, ...flags });
-          return balance;
-        } catch (error) {
-          if (axios.isAxiosError(error)) {
-            const statusCode = error.response?.status;
-            if (statusCode === 401 || statusCode === 404) {
-              const flags = computeBalanceFlags(null);
-              set({ balance: null, balanceStatus: 'success', balanceError: null, ...flags });
-              return null;
-            }
-          }
-
-          const flags = computeBalanceFlags(null);
-          set({ balanceStatus: 'error', balanceError: parseError(error), balance: null, ...flags });
-          throw error;
-        }
       },
       setBalance: balance => {
         const flags = computeBalanceFlags(balance);
@@ -186,9 +77,14 @@ export const useSubscriptionStore = create<SubscriptionStore>()(
         set({ status: 'loading', error: null });
         try {
           const subscription = await cancelSubscription();
-          const hasActiveSubscription = computeHasActiveSubscription(subscription);
-          set({ subscription, hasActiveSubscription, status: 'success', error: null });
-          await get().fetchBalance(true);
+          queryClient.setQueryData(SUBSCRIPTION_QUERY_KEY, subscription ?? null);
+          set({
+            subscription,
+            hasActiveSubscription: computeHasActiveSubscription(subscription),
+            status: 'success',
+            error: null,
+          });
+          await get().refreshSubscriptionAndBalance();
           return subscription;
         } catch (error) {
           set({ status: 'error', error: parseError(error) });
@@ -199,9 +95,14 @@ export const useSubscriptionStore = create<SubscriptionStore>()(
         set({ status: 'loading', error: null });
         try {
           const subscription = await resumeSubscription();
-          const hasActiveSubscription = computeHasActiveSubscription(subscription);
-          set({ subscription, hasActiveSubscription, status: 'success', error: null });
-          await get().fetchBalance(true);
+          queryClient.setQueryData(SUBSCRIPTION_QUERY_KEY, subscription ?? null);
+          set({
+            subscription,
+            hasActiveSubscription: computeHasActiveSubscription(subscription),
+            status: 'success',
+            error: null,
+          });
+          await get().refreshSubscriptionAndBalance();
           return subscription;
         } catch (error) {
           set({ status: 'error', error: parseError(error) });
@@ -209,7 +110,97 @@ export const useSubscriptionStore = create<SubscriptionStore>()(
         }
       },
       refreshSubscriptionAndBalance: async () => {
-        await Promise.all([get().fetchSubscription(true), get().fetchBalance(true)]);
+        set({
+          status: 'loading',
+          error: null,
+          balanceStatus: 'loading',
+          balanceError: null,
+        });
+
+        await Promise.all([
+          queryClient.invalidateQueries({ queryKey: SUBSCRIPTION_QUERY_KEY, exact: true, refetchType: 'none' }),
+          queryClient.invalidateQueries({ queryKey: BALANCE_QUERY_KEY, exact: true, refetchType: 'none' }),
+        ]);
+
+        const [subscriptionResult, balanceResult] = await Promise.allSettled([
+          queryClient.fetchQuery({
+            queryKey: SUBSCRIPTION_QUERY_KEY,
+            queryFn: fetchCurrentSubscription,
+          }),
+          queryClient.fetchQuery({
+            queryKey: BALANCE_QUERY_KEY,
+            queryFn: fetchBillingBalance,
+          }),
+        ]);
+
+        let subscription: IClientSubscription | null = null;
+        let subscriptionStatus: SubscriptionFetchStatus = 'success';
+        let subscriptionError: string | null = null;
+        let firstError: unknown = null;
+
+        if (subscriptionResult.status === 'fulfilled') {
+          subscription = subscriptionResult.value;
+          queryClient.setQueryData(SUBSCRIPTION_QUERY_KEY, subscription ?? null);
+        } else {
+          const reason = subscriptionResult.reason;
+          if (axios.isAxiosError(reason)) {
+            const statusCode = reason.response?.status;
+            if (statusCode === 401 || statusCode === 404) {
+              subscription = null;
+            } else {
+              subscriptionStatus = 'error';
+              subscriptionError = parseError(reason);
+              firstError = firstError ?? reason;
+            }
+          } else {
+            subscriptionStatus = 'error';
+            subscriptionError = parseError(reason);
+            firstError = firstError ?? reason;
+          }
+        }
+
+        let balance: IBillingBalance | null = null;
+        let balanceStatus: SubscriptionFetchStatus = 'success';
+        let balanceError: string | null = null;
+
+        if (balanceResult.status === 'fulfilled') {
+          balance = balanceResult.value ?? EMPTY_BALANCE;
+          queryClient.setQueryData(BALANCE_QUERY_KEY, balance);
+        } else {
+          const reason = balanceResult.reason;
+          if (axios.isAxiosError(reason)) {
+            const statusCode = reason.response?.status;
+            if (statusCode === 401 || statusCode === 404) {
+              balance = EMPTY_BALANCE;
+            } else {
+              balanceStatus = 'error';
+              balanceError = parseError(reason);
+              firstError = firstError ?? reason;
+            }
+          } else {
+            balanceStatus = 'error';
+            balanceError = parseError(reason);
+            firstError = firstError ?? reason;
+          }
+        }
+
+        const hasActiveSubscription = computeHasActiveSubscription(subscription);
+        const balanceFlags = computeBalanceFlags(balance);
+
+        set({
+          subscription,
+          status: subscriptionStatus,
+          error: subscriptionError,
+          hasActiveSubscription,
+          balance,
+          balanceStatus,
+          balanceError,
+          ...balanceFlags,
+        });
+
+        if (firstError) {
+          throw firstError;
+        }
       },
       ensureAccess: async (requirement: AccessRequirement = 'practice') => {
         const subscriptionFromCache = queryClient.getQueryData<IClientSubscription | null>(SUBSCRIPTION_QUERY_KEY);
@@ -271,14 +262,6 @@ export const useSubscriptionStore = create<SubscriptionStore>()(
     }
   )
 );
-
-export const fetchSubscriptionOnce = () => useSubscriptionStore.getState().fetchSubscription();
-
-export const refreshSubscription = () => useSubscriptionStore.getState().fetchSubscription(true);
-
-export const fetchBalanceOnce = () => useSubscriptionStore.getState().fetchBalance();
-
-export const refreshBalance = () => useSubscriptionStore.getState().fetchBalance(true);
 
 export const refreshSubscriptionAndBalance = () => useSubscriptionStore.getState().refreshSubscriptionAndBalance();
 
