@@ -15,7 +15,7 @@ import { AuthLoginError, postAuthLogin } from '@/api/POST_auth_login';
 import { GoogleLoginError, postAuthLoginGoogle } from '@/api/POST_auth_login_google';
 import { AuthAlert, AuthButton, AuthInput, AuthLayout, CaptchaGate, FormCard, OAuthButtons, PasswordInput } from '@/components/auth';
 import { ONBOARDING_STORAGE_KEY } from '@/components/onboarding';
-import { useCaptcha, type CaptchaExecutionResult } from '@/hooks/useCaptcha';
+import { type CaptchaExecutionResult, useCaptcha } from '@/hooks/useCaptcha';
 import { fetchProfileOnce, resetProfile } from '@/stores/profileStore';
 import { persistAuthToken } from '@/lib/auth/session';
 
@@ -100,15 +100,7 @@ export default function LoginPage({ params }: PageProps) {
       console.error('Failed to load profile after login', error);
     }
 
-    window.setTimeout(
-      () => {
-        router.push(nextRoute);
-        window.setTimeout(() => {
-          NProgress.done();
-        }, 400);
-      },
-      prefersReducedMotion ? 100 : 220
-    );
+    router.push(nextRoute);
   };
 
   const handleGoogleCredential = async (credential: string) => {
@@ -357,9 +349,7 @@ export default function LoginPage({ params }: PageProps) {
                 {serverMessage?.type === 'error' ? <AuthAlert key={serverMessage.text} variant='error' description={serverMessage.text} /> : null}
               </AnimatePresence>
               <AnimatePresence>{googleError ? <AuthAlert key={googleError} variant='error' description={googleError} /> : null}</AnimatePresence>
-              <AnimatePresence>
-                {captchaMessage ? <AuthAlert key={captchaMessage} variant='error' description={captchaMessage} /> : null}
-              </AnimatePresence>
+              <AnimatePresence>{captchaMessage ? <AuthAlert key={captchaMessage} variant='error' description={captchaMessage} /> : null}</AnimatePresence>
             </motion.div>
           )}
 

@@ -26,8 +26,7 @@ import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { ProfileEditFormModal } from '@/app/[locale]/(protected)/profile/settings/_components/ProfileEditFormModal';
 import { ChangeLangModal } from '@/app/[locale]/(protected)/profile/settings/_components/ChangeLangModal';
 import { SubscriptionDetailsModal } from '@/components/SubscriptionDetailsModal';
-import nProgress from 'nprogress';
-import { logout } from '@/lib/logout';
+import { useLogout } from '@/hooks/useLogout';
 
 const sectionStartRoutes: Record<PracticeSectionKey, string> = {
   writing: '/practice/writing/customize',
@@ -43,6 +42,7 @@ export default function Page() {
   const locale = useLocale();
   const { profile, status } = useProfile();
   const isLoading = !profile && (status === 'idle' || status === 'loading');
+  const { logout: performLogout } = useLogout();
 
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [hasPromptedFeedback, setHasPromptedFeedback] = useState(false);
@@ -229,10 +229,8 @@ export default function Page() {
   }, [router]);
 
   const handleLogout = useCallback(() => {
-    logout();
-    nProgress.start();
-    router.push('/');
-  }, [router]);
+    void performLogout();
+  }, [performLogout]);
 
   const openSubscriptionModal = useCallback(() => {
     setSubscriptionModalOpen(true);

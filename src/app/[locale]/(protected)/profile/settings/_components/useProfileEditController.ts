@@ -4,20 +4,17 @@ import { useCallback, useEffect, useState } from 'react';
 
 import { postUser } from '@/api/POST_user';
 import { deleteProfile, ProfileUpdateRequest, ProfileUpdateResponse } from '@/api/profile';
-import { ProfileEditFormValues } from './profileEditSchema';
+import { profileEditFormSchema, ProfileEditFormValues } from './profileEditSchema';
 import { SubmitHandler, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { profileEditFormSchema } from './profileEditSchema';
 import { useCustomTranslations } from '@/hooks/useCustomTranslations';
 import { useProfile } from '@/hooks/useProfile';
 import { regionSchema } from '@/types/types';
 import { useMutation } from '@tanstack/react-query';
 import { refreshProfile } from '@/stores/profileStore';
 import { openConfirmationModal } from '@/stores/confirmationModalStore';
-import { logout } from '@/lib/logout';
-import { useRouter } from 'next/navigation';
-import nProgress from 'nprogress';
 import { useSubscription } from '@/hooks/useSubscription';
+import { useLogout } from '@/hooks/useLogout';
 
 const DEFAULT_REGION = 'kz';
 
@@ -35,11 +32,11 @@ interface UseProfileEditControllerOptions {
 }
 
 export const useProfileEditController = ({ onClose }: UseProfileEditControllerOptions = {}) => {
-  const router = useRouter();
   const { tActions } = useCustomTranslations();
   const { t: tProfileSettings } = useCustomTranslations('profileSettings.profileEditForm');
   const { profile, status, setProfile: setProfileInStore } = useProfile();
   const { hasActiveSubscription } = useSubscription();
+  const { logout: performLogout } = useLogout();
 
   const [isChangingPassword, setIsChangingPassword] = useState(false);
 
@@ -112,10 +109,8 @@ export const useProfileEditController = ({ onClose }: UseProfileEditControllerOp
   const deleteAccountMutation = useMutation<void, Error>({
     mutationFn: deleteProfile,
     onSuccess: () => {
-      logout();
       closeAndNavigate();
-      nProgress.start();
-      router.push('/');
+      void performLogout();
     },
     onError: error => {
       console.error(error);
@@ -154,11 +149,9 @@ export const useProfileEditController = ({ onClose }: UseProfileEditControllerOp
   }, [deleteAccountMutation, tActions, tProfileSettings]);
 
   const handleLogout = useCallback(() => {
-    logout();
     closeAndNavigate();
-    nProgress.start();
-    router.push('/');
-  }, [closeAndNavigate, router]);
+    void performLogout();
+  }, [closeAndNavigate, performLogout]);
 
   const isProfileLoading = status === 'idle' || status === 'loading';
 

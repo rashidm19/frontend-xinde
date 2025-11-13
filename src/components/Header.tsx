@@ -5,17 +5,16 @@ import Link from 'next/link';
 import { PromoPromptModal } from './PromoPromptModal';
 import React from 'react';
 import { useRouter } from 'next/navigation';
-import nProgress from 'nprogress';
 import dynamic from 'next/dynamic';
 import { useCustomTranslations } from '@/hooks/useCustomTranslations';
 import { useSubscription } from '@/hooks/useSubscription';
-import { logout } from '@/lib/logout';
 import { SubscriptionDetailsModal } from '@/components/SubscriptionDetailsModal';
 import { PricesModal } from '@/components/PricesModal';
 import { Skeleton, SkeletonAvatar, SkeletonButton, SkeletonText } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import { useMediaQuery } from 'usehooks-ts';
 import { useLocale } from 'next-intl';
+import { useLogout } from '@/hooks/useLogout';
 
 // Lazy-load protected modals so public routes don't eagerly bundle authenticated-only UI.
 const ChangeLangModal = dynamic(() => import('@/app/[locale]/(protected)/profile/settings/_components/ChangeLangModal').then(module => module.ChangeLangModal), {
@@ -44,6 +43,7 @@ export const Header = ({ name, email, avatar, title: _title, onOpenSubscription,
   const { t, tImgAlts, tActions } = useCustomTranslations('header');
   const { hasActiveSubscription, subscription, balanceStatus } = useSubscription();
   const locale = useLocale();
+  const { logout: performLogout } = useLogout();
 
   const [isUserMenuOpen, setUserMenuOpen] = React.useState(false);
   const [isSettingsModalOpen, setSettingsModalOpen] = React.useState(false);
@@ -171,10 +171,8 @@ export const Header = ({ name, email, avatar, title: _title, onOpenSubscription,
       return;
     }
 
-    logout();
-    nProgress.start();
-    router.push('/');
-  }, [onLogout, router]);
+    void performLogout();
+  }, [onLogout, performLogout]);
 
   const openSettingsModal = () => {
     closeUserMenu();

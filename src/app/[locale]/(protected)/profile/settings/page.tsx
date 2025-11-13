@@ -1,20 +1,18 @@
 'use client';
 
 // import { ProfileEditForm } from './_components/ProfileEditForm';
-import nProgress from 'nprogress';
-import { useRouter } from 'next/navigation';
 import { useCustomTranslations } from '@/hooks/useCustomTranslations';
 import { useProfile } from '@/hooks/useProfile';
 import { ProfileAvatarManager } from './_components/ProfileAvatarManager';
 import { useSubscription } from '@/hooks/useSubscription';
-import { logout } from '@/lib/logout';
+import { useLogout } from '@/hooks/useLogout';
 
 export default function ProfileSettings() {
-  const router = useRouter();
   const { tCommon, tActions } = useCustomTranslations();
 
   const { profile, status } = useProfile();
   const { hasActiveSubscription } = useSubscription();
+  const { logout } = useLogout();
 
   if (!profile && (status === 'idle' || status === 'loading')) {
     return <></>;
@@ -43,9 +41,7 @@ export default function ProfileSettings() {
                 type='button'
                 className='flex h-[50rem] items-center justify-center rounded-full bg-d-light-gray px-[32rem] hover:bg-d-green/40'
                 onClick={() => {
-                  logout();
-                  nProgress.start();
-                  router.push('/');
+                  void logout();
                 }}
               >
                 <span className='text-[14rem] font-medium leading-none'>{tActions('logout')}</span>

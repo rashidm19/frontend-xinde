@@ -33,8 +33,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { SubscriptionDetailsModal } from '@/components/SubscriptionDetailsModal';
 import { ChangeLangModal } from '@/app/[locale]/(protected)/profile/settings/_components/ChangeLangModal';
 import { BottomSheet } from '@/components/ui/bottom-sheet';
-import { logout } from '@/lib/logout';
-import nProgress from 'nprogress';
+import { useLogout } from '@/hooks/useLogout';
 import { trackScreenView } from '@/lib/analytics';
 import { WritingSheet } from '@/components/practice/writing/WritingSheet';
 import { ReadingRulesSheet } from '@/components/practice/reading/ReadingRulesSheet';
@@ -77,6 +76,7 @@ interface MobileDashboardPageProps {
 export function MobileDashboardPage({ activeTab }: MobileDashboardPageProps) {
   const router = useRouter();
   const pathname = usePathname();
+  const { logout: performLogout } = useLogout();
   const searchParams = useSearchParams();
   const locale = useLocale();
   const isMobile = useMediaQuery('(max-width: 767px)');
@@ -522,10 +522,8 @@ export function MobileDashboardPage({ activeTab }: MobileDashboardPageProps) {
   );
 
   const handleLogout = useCallback(() => {
-    logout();
-    nProgress.start();
-    router.push('/');
-  }, [router]);
+    void performLogout();
+  }, [performLogout]);
 
   const openSubscriptionModal = useCallback(() => {
     setSubscriptionModalOpen(true);
