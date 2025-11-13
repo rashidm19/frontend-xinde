@@ -1,6 +1,7 @@
 import { cookies, headers } from 'next/headers';
 
 import { API_URL } from '@/lib/config';
+import { UpstreamServiceError } from '@/lib/api/errors';
 import { userSchema, type User } from '@/types/types';
 
 const AUTH_ME_ENDPOINT = '/api/me';
@@ -71,15 +72,23 @@ export const getMe = async (): Promise<User | null> => {
       signal: controller.signal,
     });
 
-    if (!response.ok) {
+    if (response.status === 401 || response.status === 403) {
       return null;
+    }
+
+    if (!response.ok) {
+      throw UpstreamServiceError.fromStatus(response.status, 'Failed to fetch current user');
     }
 
     const payload = await response.json();
     return userSchema.parse(payload);
   } catch (error) {
+    if (error instanceof UpstreamServiceError) {
+      throw error;
+    }
+
     console.error('Failed to fetch current user', error);
-    return null;
+    throw UpstreamServiceError.fromStatus(503, 'Auth service unavailable');
   } finally {
     clearTimeout(timeoutId);
   }

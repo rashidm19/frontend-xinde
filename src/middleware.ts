@@ -34,7 +34,12 @@ export function middleware(request: NextRequest) {
   const response = NextResponse.redirect(redirectURL);
 
   if (!request.cookies.get('NEXT_LOCALE')) {
-    response.cookies.set('NEXT_LOCALE', locale, { path: '/' });
+    response.cookies.set('NEXT_LOCALE', locale, {
+      path: '/',
+      sameSite: 'lax',
+      secure: process.env.NODE_ENV === 'production',
+      maxAge: 60 * 60 * 24 * 180,
+    });
   }
 
   return response;

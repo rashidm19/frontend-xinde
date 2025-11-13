@@ -3,6 +3,7 @@
 import { cookies, headers } from 'next/headers';
 
 import { API_URL } from '@/lib/config';
+import { UpstreamServiceError } from '@/lib/api/errors';
 import type { IBillingBalance } from '@/types/Billing';
 
 const BALANCE_ENDPOINT = '/billing/balance';
@@ -94,6 +95,10 @@ export const getBalance = async (): Promise<IBillingBalance> => {
     }
 
     if (!response.ok) {
+      if (response.status >= 500) {
+        throw UpstreamServiceError.fromStatus(response.status, 'Failed to fetch balance');
+      }
+
       return EMPTY_BALANCE;
     }
 
@@ -105,8 +110,12 @@ export const getBalance = async (): Promise<IBillingBalance> => {
 
     return normalizeBalance(balance);
   } catch (error) {
+    if (error instanceof UpstreamServiceError) {
+      throw error;
+    }
+
     console.error('Failed to fetch balance', error);
-    return EMPTY_BALANCE;
+    throw UpstreamServiceError.fromStatus(503, 'Balance service unavailable');
   } finally {
     clearTimeout(timeoutId);
   }

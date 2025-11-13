@@ -3,6 +3,7 @@
 import { cookies, headers } from 'next/headers';
 
 import { API_URL } from '@/lib/config';
+import { UpstreamServiceError } from '@/lib/api/errors';
 import type { IClientSubscription, ISubscriptionPlan } from '@/types/Billing';
 
 const SUBSCRIPTION_ENDPOINT = '/billing/subscriptions/current';
@@ -93,6 +94,10 @@ export const getSubscription = async (): Promise<IClientSubscription | null> => 
     }
 
     if (!response.ok) {
+      if (response.status >= 500) {
+        throw UpstreamServiceError.fromStatus(response.status, 'Failed to fetch subscription');
+      }
+
       return null;
     }
 
@@ -104,8 +109,12 @@ export const getSubscription = async (): Promise<IClientSubscription | null> => 
 
     return normalizeSubscription(subscription ?? null);
   } catch (error) {
+    if (error instanceof UpstreamServiceError) {
+      throw error;
+    }
+
     console.error('Failed to fetch subscription', error);
-    return null;
+    throw UpstreamServiceError.fromStatus(503, 'Subscription service unavailable');
   } finally {
     clearTimeout(timeoutId);
   }

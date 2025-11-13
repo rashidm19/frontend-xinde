@@ -2,7 +2,14 @@ import axios, { type AxiosAdapter, type AxiosResponse, type InternalAxiosRequest
 
 import { API_URL } from '@/lib/config';
 
-const inFlightRequests = new Map<string, Promise<AxiosResponse>>();
+const INFLIGHT_TTL_MS = 15_000;
+
+type InFlightEntry = {
+  promise: Promise<AxiosResponse>;
+  timeoutId: ReturnType<typeof setTimeout>;
+};
+
+const inFlightRequests = new Map<string, InFlightEntry>();
 
 const isFormData = (value: unknown): value is FormData => typeof FormData !== 'undefined' && value instanceof FormData;
 
@@ -46,7 +53,21 @@ const serializeData = (data: unknown): string => {
   }
 
   if (isFormData(data)) {
-    return '[form-data]';
+    const parts: string[] = [];
+
+    data.forEach((value, key) => {
+      const descriptor = typeof value === 'string'
+        ? 'string'
+        : value instanceof Blob
+          ? value.type || 'blob'
+          : typeof value;
+
+      parts.push(`${key}:${descriptor}`);
+    });
+
+    parts.sort();
+
+    return `form-data:${parts.join('|')}`;
   }
 
   if (isURLSearchParams(data)) {
@@ -120,28 +141,45 @@ const baseAdapter = resolveAdapter(http.defaults.adapter) ?? resolveAdapter(axio
 
 if (baseAdapter) {
   http.defaults.adapter = config => {
+    const meta = (config as InternalAxiosRequestConfig & { meta?: { noDedup?: boolean } }).meta;
+    if (meta?.noDedup) {
+      return baseAdapter(config);
+    }
+
     const key = buildRequestKey(config);
 
     if (!key) {
       return baseAdapter(config);
     }
 
-    const inFlight = inFlightRequests.get(key);
-    if (inFlight) {
-      return inFlight;
+    const existingEntry = inFlightRequests.get(key);
+    if (existingEntry) {
+      return existingEntry.promise;
     }
+
+    const timeoutId = setTimeout(() => {
+      inFlightRequests.delete(key);
+    }, INFLIGHT_TTL_MS);
+
+    const finalize = () => {
+      const entry = inFlightRequests.get(key);
+      if (entry) {
+        clearTimeout(entry.timeoutId);
+        inFlightRequests.delete(key);
+      }
+    };
 
     const requestPromise = baseAdapter(config)
       .then(response => {
-        inFlightRequests.delete(key);
+        finalize();
         return response;
       })
       .catch(error => {
-        inFlightRequests.delete(key);
+        finalize();
         throw error;
       });
 
-    inFlightRequests.set(key, requestPromise);
+    inFlightRequests.set(key, { promise: requestPromise, timeoutId });
 
     return requestPromise;
   };
