@@ -5,17 +5,27 @@ import Link from 'next/link';
 import { PromoPromptModal } from './PromoPromptModal';
 import React from 'react';
 import { useRouter } from 'next/navigation';
-import nProgress from 'nprogress';
+import dynamic from 'next/dynamic';
 import { useCustomTranslations } from '@/hooks/useCustomTranslations';
 import { useSubscription } from '@/hooks/useSubscription';
-import { ChangeLangModal } from '@/app/[locale]/profile/settings/_components/ChangeLangModal';
-import { ProfileEditFormModal } from '@/app/[locale]/profile/settings/_components/ProfileEditFormModal';
-import { logout } from '@/lib/logout';
 import { SubscriptionDetailsModal } from '@/components/SubscriptionDetailsModal';
 import { PricesModal } from '@/components/PricesModal';
+import { Skeleton, SkeletonAvatar, SkeletonButton, SkeletonText } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import { useMediaQuery } from 'usehooks-ts';
 import { useLocale } from 'next-intl';
+import { useLogout } from '@/hooks/useLogout';
+
+// Lazy-load protected modals so public routes don't eagerly bundle authenticated-only UI.
+const ChangeLangModal = dynamic(() => import('@/app/[locale]/(protected)/profile/settings/_components/ChangeLangModal').then(module => module.ChangeLangModal), {
+  ssr: false,
+  loading: () => null,
+});
+
+const ProfileEditFormModal = dynamic(
+  () => import('@/app/[locale]/(protected)/profile/settings/_components/ProfileEditFormModal').then(module => module.ProfileEditFormModal),
+  { ssr: false, loading: () => null }
+);
 
 interface Props {
   name?: string;
@@ -33,6 +43,7 @@ export const Header = ({ name, email, avatar, title: _title, onOpenSubscription,
   const { t, tImgAlts, tActions } = useCustomTranslations('header');
   const { hasActiveSubscription, subscription, balanceStatus } = useSubscription();
   const locale = useLocale();
+  const { logout: performLogout } = useLogout();
 
   const [isUserMenuOpen, setUserMenuOpen] = React.useState(false);
   const [isSettingsModalOpen, setSettingsModalOpen] = React.useState(false);
@@ -45,7 +56,6 @@ export const Header = ({ name, email, avatar, title: _title, onOpenSubscription,
   const [isPromoModalOpen, setPromoModalOpen] = React.useState(false);
   const [selectedPlanId, setSelectedPlanId] = React.useState<string | null>(null);
   const [planDiscounts, setPlanDiscounts] = React.useState<Record<string, { amount: number; currency: string }>>({});
-  const [promoMessage, setPromoMessage] = React.useState<string | null>(null);
   const [promoError, setPromoError] = React.useState<string | null>(null);
   const isMobile = useMediaQuery('(max-width: 767px)');
 
@@ -96,7 +106,6 @@ export const Header = ({ name, email, avatar, title: _title, onOpenSubscription,
     setSelectedPlanId(planId);
     setPromoModalOpen(true);
     setPricesModalOpen(false);
-    setPromoMessage(null);
     setPromoError(null);
   };
 
@@ -114,18 +123,9 @@ export const Header = ({ name, email, avatar, title: _title, onOpenSubscription,
     setSelectedPlanId(null);
   };
 
-  const handleSuccessMessage = (message: string | null) => {
-    setPromoMessage(message);
-
-    if (message) {
-      setPricesModalOpen(true);
-    }
-  };
-
   const closeUserMenu = () => setUserMenuOpen(false);
 
   const handleUpgradeClick = React.useCallback(() => {
-    setPromoMessage(null);
     setPromoError(null);
 
     if (isMobile) {
@@ -134,7 +134,7 @@ export const Header = ({ name, email, avatar, title: _title, onOpenSubscription,
     }
 
     setPricesModalOpen(true);
-  }, [isMobile, locale, router, setPricesModalOpen, setPromoError, setPromoMessage]);
+  }, [isMobile, locale, router, setPricesModalOpen, setPromoError]);
 
   const triggerSubscriptionModal = React.useCallback(() => {
     if (onOpenSubscription) {
@@ -171,10 +171,8 @@ export const Header = ({ name, email, avatar, title: _title, onOpenSubscription,
       return;
     }
 
-    logout();
-    nProgress.start();
-    router.push('/');
-  }, [onLogout, router]);
+    void performLogout();
+  }, [onLogout, performLogout]);
 
   const openSettingsModal = () => {
     closeUserMenu();
@@ -190,10 +188,22 @@ export const Header = ({ name, email, avatar, title: _title, onOpenSubscription,
     closeUserMenu();
     triggerLogout();
   };
-  const displayName = name?.trim() || t('accountMenu.user');
-  const displayEmail = email?.trim() || null;
+  const trimmedName = name?.trim() ?? null;
+  const trimmedEmail = email?.trim() ?? null;
+  const isAccountInfoLoading = name === undefined && email === undefined;
+  const displayName = trimmedName ?? t('accountMenu.user');
+  const displayEmail = trimmedEmail;
+  const accountInitials = displayName.slice(0, 2).toUpperCase();
   const planName = subscription?.plan?.name ?? subscription?.subscription_plan?.name ?? null;
-  const isBalanceReady = balanceStatus === 'success' || balanceStatus === 'error';
+  const isSubscriptionReady = subscription !== undefined || balanceStatus === 'success' || balanceStatus === 'error';
+
+  const toggleUserMenu = () => {
+    if (isAccountInfoLoading) {
+      return;
+    }
+
+    setUserMenuOpen(prev => !prev);
+  };
 
   const upgradeTrigger = (
     <button
@@ -215,7 +225,9 @@ export const Header = ({ name, email, avatar, title: _title, onOpenSubscription,
       <span>{t('chips.subscription')}</span>
       {planName ? <span className='ml-[8rem] text-[12rem] font-medium text-d-black/70'>• {planName}</span> : null}
     </button>
-  ) : !isBalanceReady ? null : (
+  ) : !isSubscriptionReady ? (
+    <SkeletonButton />
+  ) : (
     upgradeTrigger
   );
 
@@ -223,7 +235,7 @@ export const Header = ({ name, email, avatar, title: _title, onOpenSubscription,
     'sticky top-0 z-40 border-b border-d-light-gray/60 bg-white/90 backdrop-blur-md transition-shadow duration-200',
     hasScrolled ? 'shadow-[0_10rem_24rem_-20rem_rgba(56,56,56,0.45)]' : ''
   );
-  const showUpgradeChip = !hasActiveSubscription;
+  const showUpgradeChip = isSubscriptionReady && !hasActiveSubscription;
 
   return (
     <header className={headerClass}>
@@ -233,7 +245,11 @@ export const Header = ({ name, email, avatar, title: _title, onOpenSubscription,
           <span className='font-poppins text-[18rem] font-semibold text-d-black'>Studybox</span>
         </Link>
         <span className='flex-1' />
-        {showUpgradeChip ? (
+        {!isSubscriptionReady ? (
+          <div className='mx-[12rem]'>
+            <SkeletonButton />
+          </div>
+        ) : showUpgradeChip ? (
           <Link
             href='/pricing'
             className='mx-[12rem] rounded-[16rem] border border-d-violet/50 px-[12rem] py-[6rem] text-[12rem] font-semibold text-d-violet transition-colors hover:border-d-violet'
@@ -262,14 +278,22 @@ export const Header = ({ name, email, avatar, title: _title, onOpenSubscription,
             type='button'
             className='relative flex size-[42rem] items-center justify-center rounded-full border border-d-gray/60 bg-white'
             aria-label={t('accountMenu.open')}
+            disabled={isAccountInfoLoading}
+            aria-disabled={isAccountInfoLoading}
           >
-            <Avatar className='size-[36rem] border border-transparent bg-d-light-gray'>
-              <AvatarImage src={avatar} />
-              <AvatarFallback className='text-[14rem]'>{displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
-            </Avatar>
-            {hasActiveSubscription ? (
-              <span className='absolute right-[4rem] top-[4rem] size-[8rem] rounded-full bg-d-green shadow-[0_0_0_2rem_#fff]' aria-hidden />
-            ) : null}
+            {isAccountInfoLoading ? (
+              <SkeletonAvatar className='size-[36rem]' />
+            ) : (
+              <>
+                <Avatar className='size-[36rem] border border-transparent bg-d-light-gray'>
+                  <AvatarImage src={avatar} />
+                  <AvatarFallback className='text-[14rem]'>{accountInitials}</AvatarFallback>
+                </Avatar>
+                {hasActiveSubscription ? (
+                  <span className='absolute right-[4rem] top-[4rem] size-[8rem] rounded-full bg-d-green shadow-[0_0_0_2rem_#fff]' aria-hidden />
+                ) : null}
+              </>
+            )}
           </button>
         </div>
       </nav>
@@ -323,24 +347,39 @@ export const Header = ({ name, email, avatar, title: _title, onOpenSubscription,
             <button
               type='button'
               className='flex h-[93rem] items-center gap-x-[12rem] px-[16rem] transition-colors'
-              onClick={() => setUserMenuOpen(prev => !prev)}
+              onClick={toggleUserMenu}
               aria-haspopup='menu'
               aria-expanded={isUserMenuOpen}
               aria-label={t('accountMenu.open')}
+              disabled={isAccountInfoLoading}
+              aria-disabled={isAccountInfoLoading}
             >
-              <Avatar className='size-[46rem] border border-d-gray bg-d-gray'>
-                <AvatarImage src={avatar} />
-                <AvatarFallback className='text-[14rem]'>{displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
-              </Avatar>
-              <div className='flex flex-col items-start gap-y-[2rem]'>
-                <span className='text-[14rem] font-semibold leading-none text-d-black'>{displayName}</span>
-                {displayEmail ? <span className='text-[12rem] leading-none text-d-black/60'>{displayEmail}</span> : null}
-              </div>
-              <img
-                src='/images/icon_chevron--down.svg'
-                alt={tImgAlts('chevronDown')}
-                className={`size-[14rem] transition-transform ${isUserMenuOpen ? 'rotate-180' : ''}`}
-              />
+              {isAccountInfoLoading ? (
+                <>
+                  <SkeletonAvatar className='h-[46rem] w-[46rem]' />
+                  <div className='flex flex-col items-start gap-y-[4rem]'>
+                    <SkeletonText className='h-[14rem] w-[120rem]' />
+                    <SkeletonText className='h-[12rem] w-[160rem]' />
+                  </div>
+                  <Skeleton className='h-[14rem] w-[14rem] rounded-full' />
+                </>
+              ) : (
+                <>
+                  <Avatar className='size-[46rem] border border-d-gray bg-d-gray'>
+                    <AvatarImage src={avatar} />
+                    <AvatarFallback className='text-[14rem]'>{accountInitials}</AvatarFallback>
+                  </Avatar>
+                  <div className='flex flex-col items-start gap-y-[2rem]'>
+                    <span className='text-[14rem] font-semibold leading-none text-d-black'>{displayName}</span>
+                    {displayEmail ? <span className='text-[12rem] leading-none text-d-black/60'>{displayEmail}</span> : null}
+                  </div>
+                  <img
+                    src='/images/icon_chevron--down.svg'
+                    alt={tImgAlts('chevronDown')}
+                    className={`size-[14rem] transition-transform ${isUserMenuOpen ? 'rotate-180' : ''}`}
+                  />
+                </>
+              )}
             </button>
 
             {isUserMenuOpen ? (
@@ -348,66 +387,82 @@ export const Header = ({ name, email, avatar, title: _title, onOpenSubscription,
                 className='absolute right-0 top-full z-10 mt-[12rem] w-[280rem] rounded-[16rem] border border-d-light-gray/60 bg-white p-[16rem] shadow-[0_20rem_40rem_rgba(0,0,0,0.08)]'
                 role='menu'
               >
-                <div className='mb-[12rem] border-b border-d-light-gray/60 pb-[12rem]'>
-                  <div className='text-[16rem] font-semibold leading-tight text-d-black'>{displayName}</div>
-                  {displayEmail ? <div className='mt-[4rem] text-[12rem] leading-tight text-d-black/60'>{displayEmail}</div> : null}
-                </div>
+                {isAccountInfoLoading ? (
+                  <div className='space-y-[12rem]'>
+                    <div className='space-y-[6rem] border-b border-d-light-gray/60 pb-[12rem]'>
+                      <SkeletonText className='h-[16rem] w-[140rem]' />
+                      <SkeletonText className='h-[12rem] w-[180rem]' />
+                    </div>
+                    <div className='space-y-[10rem]'>
+                      <SkeletonButton className='w-full' />
+                      <SkeletonButton className='w-full' />
+                      <SkeletonButton className='w-full' />
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <div className='mb-[12rem] border-b border-d-light-gray/60 pb-[12rem]'>
+                      <div className='text-[16rem] font-semibold leading-tight text-d-black'>{displayName}</div>
+                      {displayEmail ? <div className='mt-[4rem] text-[12rem] leading-tight text-d-black/60'>{displayEmail}</div> : null}
+                    </div>
 
-                {!hasActiveSubscription && (
-                  <div className='mb-[12rem] border-b border-d-light-gray/60 pb-[12rem]'>
+                    {isSubscriptionReady && !hasActiveSubscription ? (
+                      <div className='mb-[12rem] border-b border-d-light-gray/60 pb-[12rem]'>
+                        <button
+                          type='button'
+                          onClick={() => {
+                            closeUserMenu();
+                            handleUpgradeClick();
+                          }}
+                          className='inline-flex w-full items-center justify-center gap-x-[4rem] rounded-[40rem] bg-d-green px-[20rem] py-[12rem] text-left text-black transition-colors duration-200 hover:bg-d-green'
+                        >
+                          <span className='text-[13rem] font-semibold leading-tight'>{tActions('upgradePlan')}</span>
+                          <img src='/images/icon_stars--black.svg' alt={tImgAlts('star')} className='size-[14rem]' />
+                        </button>
+                      </div>
+                    ) : null}
+
                     <button
                       type='button'
                       onClick={() => {
                         closeUserMenu();
-                        handleUpgradeClick();
+                        triggerSubscriptionModal();
                       }}
-                      className='inline-flex w-full items-center justify-center gap-x-[4rem] rounded-[40rem] bg-d-green px-[20rem] py-[12rem] text-left text-black transition-colors duration-200 hover:bg-d-green'
+                      className='mb-[4rem] flex w-full items-center justify-between rounded-[12rem] px-[12rem] py-[12rem] text-left text-[14rem] font-medium text-d-black hover:bg-d-light-gray/40'
+                      role='menuitem'
                     >
-                      <span className='text-[13rem] font-semibold leading-tight'>{tActions('upgradePlan')}</span>
-                      <img src='/images/icon_stars--black.svg' alt={tImgAlts('star')} className='size-[14rem]' />
+                      {t('accountMenu.subscription')}
+                      <img src='/images/icon_stars--black.svg' alt={tImgAlts('star')} className='size-[16rem]' />
                     </button>
-                  </div>
+                    <button
+                      type='button'
+                      onClick={openSettingsModal}
+                      className='flex w-full items-center justify-between rounded-[12rem] px-[12rem] py-[12rem] text-left text-[14rem] font-medium text-d-black hover:bg-d-light-gray/40'
+                      role='menuitem'
+                    >
+                      {t('accountMenu.settings')}
+                      <img src='/images/icon_gear.svg' alt={tImgAlts('settings')} className='size-[16rem]' />
+                    </button>
+                    <button
+                      type='button'
+                      onClick={openLanguageModal}
+                      className='mt-[4rem] flex w-full items-center justify-between rounded-[12rem] px-[12rem] py-[12rem] text-left text-[14rem] font-medium text-d-black hover:bg-d-light-gray/40'
+                      role='menuitem'
+                    >
+                      {t('accountMenu.language')}
+                      <img src='/images/icon_globe.svg' alt={tImgAlts('globe')} className='size-[16rem]' />
+                    </button>
+                    <button
+                      type='button'
+                      onClick={handleLogout}
+                      className='mt-[4rem] flex w-full items-center justify-between rounded-[12rem] px-[12rem] py-[12rem] text-left text-[14rem] font-medium text-d-black hover:bg-d-light-gray/40'
+                      role='menuitem'
+                    >
+                      {t('accountMenu.logout')}
+                      <img src='/images/icon_door.svg' alt={tImgAlts('logout')} className='size-[16rem]' />
+                    </button>
+                  </>
                 )}
-
-                <button
-                  type='button'
-                  onClick={() => {
-                    closeUserMenu();
-                    triggerSubscriptionModal();
-                  }}
-                  className='mb-[4rem] flex w-full items-center justify-between rounded-[12rem] px-[12rem] py-[12rem] text-left text-[14rem] font-medium text-d-black hover:bg-d-light-gray/40'
-                  role='menuitem'
-                >
-                  {t('accountMenu.subscription')}
-                  <img src='/images/icon_stars--black.svg' alt={tImgAlts('star')} className='size-[16rem]' />
-                </button>
-                <button
-                  type='button'
-                  onClick={openSettingsModal}
-                  className='flex w-full items-center justify-between rounded-[12rem] px-[12rem] py-[12rem] text-left text-[14rem] font-medium text-d-black hover:bg-d-light-gray/40'
-                  role='menuitem'
-                >
-                  {t('accountMenu.settings')}
-                  <img src='/images/icon_gear.svg' alt={tImgAlts('settings')} className='size-[16rem]' />
-                </button>
-                <button
-                  type='button'
-                  onClick={openLanguageModal}
-                  className='mt-[4rem] flex w-full items-center justify-between rounded-[12rem] px-[12rem] py-[12rem] text-left text-[14rem] font-medium text-d-black hover:bg-d-light-gray/40'
-                  role='menuitem'
-                >
-                  {t('accountMenu.language')}
-                  <img src='/images/icon_globe.svg' alt={tImgAlts('globe')} className='size-[16rem]' />
-                </button>
-                <button
-                  type='button'
-                  onClick={handleLogout}
-                  className='mt-[4rem] flex w-full items-center justify-between rounded-[12rem] px-[12rem] py-[12rem] text-left text-[14rem] font-medium text-d-black hover:bg-d-light-gray/40'
-                  role='menuitem'
-                >
-                  {t('accountMenu.logout')}
-                  <img src='/images/icon_door.svg' alt={tImgAlts('logout')} className='size-[16rem]' />
-                </button>
               </div>
             ) : null}
           </div>
@@ -441,7 +496,7 @@ export const Header = ({ name, email, avatar, title: _title, onOpenSubscription,
       {!isMobile ? (
         <Dialog open={isPricesModalOpen} onOpenChange={handlePricesModalOpenChange}>
           <DialogContent className='fixed left-[50%] top-[50%] flex h-auto w-[1280rem] -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center backdrop-brightness-90'>
-            <PricesModal onSelectPlan={handlePlanSelect} promoMessage={promoMessage} promoError={promoError} planDiscounts={planDiscounts} />
+            <PricesModal onSelectPlan={handlePlanSelect} promoError={promoError} planDiscounts={planDiscounts} />
           </DialogContent>
         </Dialog>
       ) : null}
@@ -455,7 +510,6 @@ export const Header = ({ name, email, avatar, title: _title, onOpenSubscription,
           setPricesModalOpen(true);
         }}
         onDiscountUpdate={(planId, info) => setPlanDiscounts(prev => ({ ...prev, [planId]: info }))}
-        onSuccessMessage={handleSuccessMessage}
         onErrorMessage={setPromoError}
       />
     </header>

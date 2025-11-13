@@ -56,7 +56,7 @@ export const useProfileStore = create<ProfileStore>()(
           }
 
           set({ error: parseErrorMessage(error), status: 'error' });
-          console.log(error);
+
           throw error;
         }
       },
