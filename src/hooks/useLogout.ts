@@ -16,7 +16,7 @@ export const useLogout = () => {
 
     try {
       await performLogout();
-      router.push(`/${locale}`);
+      router.push(`/${locale}/login`);
     } catch (error) {
       console.error('[useLogout] Failed to logout', error);
     } finally {

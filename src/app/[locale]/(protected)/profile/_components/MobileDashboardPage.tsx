@@ -355,12 +355,6 @@ export function MobileDashboardPage({ activeTab }: MobileDashboardPageProps) {
   }, [activeTab]);
 
   useEffect(() => {
-    if (!isMobile) {
-      router.replace(`/${locale}/profile`);
-    }
-  }, [isMobile, router, locale]);
-
-  useEffect(() => {
     trackScreenView(activeTab);
   }, [activeTab]);
 
