@@ -17,6 +17,7 @@ import { AuthAlert, AuthButton, AuthInput, AuthLayout, CaptchaGate, FormCard, OA
 import { ONBOARDING_STORAGE_KEY } from '@/components/onboarding';
 import { useCaptcha, type CaptchaExecutionResult } from '@/hooks/useCaptcha';
 import { fetchProfileOnce, resetProfile } from '@/stores/profileStore';
+import { persistAuthToken } from '@/lib/auth/session';
 
 const loginSchema = z.object({
   email: z.string().trim().min(1, 'Email is required').email('Enter a valid email'),
@@ -148,6 +149,7 @@ export default function LoginPage({ params }: PageProps) {
           : {}),
       });
       localStorage.setItem('token', result.token);
+      await persistAuthToken(result.token);
       resetProfile();
       captcha.handleBackendResult(true);
       navigateAfterAuth();
@@ -228,6 +230,7 @@ export default function LoginPage({ params }: PageProps) {
           : {}),
       });
       localStorage.setItem('token', result.token);
+      await persistAuthToken(result.token);
       resetProfile();
       captcha.handleBackendResult(true);
       navigateAfterAuth();

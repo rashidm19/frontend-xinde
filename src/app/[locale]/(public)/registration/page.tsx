@@ -19,6 +19,7 @@ import { REGIONS, type RegionValue } from "@/lib/regions";
 import { cn } from "@/lib/utils";
 import { useCaptcha, type CaptchaExecutionResult } from "@/hooks/useCaptcha";
 import { resetProfile } from "@/stores/profileStore";
+import { persistAuthToken } from "@/lib/auth/session";
 
 const registerSchema = z
   .object({
@@ -149,6 +150,7 @@ export default function RegistrationPage({ params }: PageProps) {
           : {}),
       });
       localStorage.setItem("token", result.token);
+      await persistAuthToken(result.token);
       resetProfile();
       captcha.handleBackendResult(true);
       navigateToProfile();

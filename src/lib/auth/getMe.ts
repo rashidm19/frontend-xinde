@@ -2,9 +2,9 @@ import { cookies, headers } from 'next/headers';
 
 import { API_URL } from '@/lib/config';
 import { UpstreamServiceError } from '@/lib/api/errors';
-import { userSchema, type User } from '@/types/types';
+import { type User, userSchema } from '@/types/types';
 
-const AUTH_ME_ENDPOINT = '/api/me';
+const AUTH_ME_ENDPOINT = '/auth/profile';
 const AUTHORIZATION_HEADER = 'authorization';
 const TOKEN_COOKIE_NAME = 'token';
 const REQUEST_TIMEOUT_MS = 3000;
