@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import nProgress from 'nprogress';
 
 import { logout as performLogout } from '@/lib/logout';
+import { clearModalSeenFlags } from '@/utils/modalSessionLatch';
 
 export const useLogout = () => {
   const router = useRouter();
@@ -15,6 +16,7 @@ export const useLogout = () => {
     nProgress.start();
 
     try {
+      clearModalSeenFlags();
       await performLogout();
       router.push(`/${locale}/login`);
     } catch (error) {

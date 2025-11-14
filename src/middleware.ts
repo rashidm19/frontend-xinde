@@ -60,11 +60,42 @@ function maybeRedirectMobileProfile(request: NextRequest) {
   return NextResponse.redirect(redirectUrl);
 }
 
+function maybeRedirectDesktopMobileRoutes(request: NextRequest) {
+  if (isMobileUserAgent(request.headers.get('user-agent'))) {
+    return null;
+  }
+
+  const pathname = request.nextUrl.pathname;
+  const match = pathname.match(/^\/([^/]+)\/m(\/.+)$/i);
+
+  if (!match) {
+    return null;
+  }
+
+  const localeCandidate = match[1].toLowerCase();
+
+  if (!SUPPORTED_LOCALES.includes(localeCandidate as (typeof SUPPORTED_LOCALES)[number])) {
+    return null;
+  }
+
+  const locale = localeCandidate as (typeof SUPPORTED_LOCALES)[number];
+
+  const redirectUrl = request.nextUrl.clone();
+  redirectUrl.pathname = `/${locale}${PROFILE_PATH}`;
+
+  return NextResponse.redirect(redirectUrl);
+}
+
 export function middleware(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
 
   if (request.method !== 'GET' && request.method !== 'HEAD') {
     return NextResponse.next();
+  }
+
+  const desktopRedirectResponse = maybeRedirectDesktopMobileRoutes(request);
+  if (desktopRedirectResponse) {
+    return desktopRedirectResponse;
   }
 
   const mobileRedirectResponse = maybeRedirectMobileProfile(request);
