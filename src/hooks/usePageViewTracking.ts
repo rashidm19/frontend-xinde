@@ -15,13 +15,13 @@ const buildPath = (pathname: string, searchParams: ReadonlyURLSearchParams | nul
   return `${pathname}?${params}`;
 };
 
-export const usePageViewTracking = () => {
+export const usePageViewTracking = (enabled = true) => {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const lastTrackedPathRef = useRef<string | null>(null);
 
   useEffect(() => {
-    if (typeof window === 'undefined') {
+    if (typeof window === 'undefined' || !enabled) {
       return;
     }
 
@@ -57,5 +57,5 @@ export const usePageViewTracking = () => {
     return () => {
       window.removeEventListener(TELEMETRY_READY_EVENT, trackIfReady);
     };
-  }, [pathname, searchParams]);
+  }, [enabled, pathname, searchParams]);
 };

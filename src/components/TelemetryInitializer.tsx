@@ -6,8 +6,9 @@ import { usePageViewTracking } from '@/hooks/usePageViewTracking';
 import { bootstrapTelemetry } from '@/lib/telemetry';
 import type { TelemetryConfig } from '@/lib/telemetry/types';
 import { useProfileStore } from '@/stores/profileStore';
+import { API_URL, IS_PROD_ENV } from '@/lib/config';
 
-const CONFIG_ENDPOINT = '/api/config';
+const CONFIG_ENDPOINT = new URL('/api/config', API_URL).toString();
 
 const normalizeConfig = (input: unknown): TelemetryConfig => {
   const candidate = (input && typeof input === 'object' ? input : {}) as Partial<TelemetryConfig>;
@@ -32,14 +33,20 @@ export const TelemetryInitializer = () => {
   const profile = useProfileStore(state => state.profile);
   const [config, setConfig] = useState<TelemetryConfig>(FALLBACK_CONFIG);
 
-  usePageViewTracking();
+  usePageViewTracking(IS_PROD_ENV);
 
   useEffect(() => {
     let cancelled = false;
 
+    if (!IS_PROD_ENV) {
+      return () => {
+        cancelled = true;
+      };
+    }
+
     const fetchConfig = async () => {
       try {
-        const response = await fetch(CONFIG_ENDPOINT, { credentials: 'include' });
+        const response = await fetch(CONFIG_ENDPOINT);
 
         if (!response.ok) {
           throw new Error(`Telemetry config request failed: ${response.status}`);
@@ -52,7 +59,7 @@ export const TelemetryInitializer = () => {
           setConfig(normalized);
         }
       } catch (error) {
-        if (process.env.NODE_ENV !== 'production') {
+        if (process.env.VERCEL_ENV !== 'production') {
           console.debug('[telemetry] failed to load runtime config', error);
         }
 
@@ -70,6 +77,13 @@ export const TelemetryInitializer = () => {
   }, []);
 
   useEffect(() => {
+    if (!IS_PROD_ENV) {
+      if (process.env.VERCEL_ENV !== 'production' && (config.analyticsEnabled || config.otelEnabled)) {
+        console.warn('[telemetry] Ignoring enabled telemetry flags because the build is not production.');
+      }
+      return;
+    }
+
     const userId = profile?.id;
 
     void bootstrapTelemetry({ config, user: userId ? { id: userId } : undefined });

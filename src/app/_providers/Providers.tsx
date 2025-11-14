@@ -1,8 +1,8 @@
 'use client';
 
-import { HydrationBoundary, QueryClientProvider, type DehydratedState } from '@tanstack/react-query';
+import { type DehydratedState, HydrationBoundary, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
-import { useEffect, type ReactNode } from 'react';
+import { type ReactNode, useEffect } from 'react';
 
 import { GlobalConfirmationModal } from '@/components/GlobalConfirmationModal';
 import { GlobalSubscriptionPaywall } from '@/components/GlobalSubscriptionPaywall';
@@ -11,6 +11,7 @@ import { TelemetryInitializer } from '@/components/TelemetryInitializer';
 import { SubscriptionPaymentStatusModal } from '@/components/SubscriptionPaymentStatusModal';
 import { UiModalManager } from '@/components/modals/UiModalManager';
 import { queryClient } from '@/lib/queryClient';
+import { IS_PROD_ENV } from '@/lib/config';
 
 type ProvidersProps = {
   children: ReactNode;
@@ -19,7 +20,7 @@ type ProvidersProps = {
 
 export default function Providers({ children, dehydratedState }: ProvidersProps) {
   useEffect(() => {
-    if (process.env.NODE_ENV === 'production') {
+    if (IS_PROD_ENV) {
       return;
     }
 
@@ -51,7 +52,7 @@ export default function Providers({ children, dehydratedState }: ProvidersProps)
         <SubscriptionPaymentStatusModal />
         <UiModalManager />
 
-        {process.env.NEXT_PUBLIC_ENVIRONMENT === 'dev' && (
+        {!IS_PROD_ENV && (
           <div className='text-[14rem]'>
             <ReactQueryDevtools initialIsOpen={false} />
           </div>
