@@ -1,4 +1,4 @@
-const buildStorageKey = (key: string, version: number) => `modal_seen::${key}::${version}`;
+const buildStorageKey = (key: string, version: number | string) => `modal_seen::${key}::${version}`;
 
 const getSessionStorage = (): Storage | null => {
   if (typeof window === 'undefined') {
@@ -13,7 +13,7 @@ const getSessionStorage = (): Storage | null => {
   }
 };
 
-export const hasSeenModal = (key: string, version: number): boolean => {
+export const hasSeenModal = (key: string, version: number | string): boolean => {
   const storage = getSessionStorage();
   if (!storage) {
     return false;
@@ -23,7 +23,7 @@ export const hasSeenModal = (key: string, version: number): boolean => {
   return storage.getItem(storageKey) === '1';
 };
 
-export const markModalAsSeen = (key: string, version: number): void => {
+export const markModalAsSeen = (key: string, version: number | string): void => {
   const storage = getSessionStorage();
   if (!storage) {
     return;

@@ -13,7 +13,6 @@ import { useProfile } from '@/hooks/useProfile';
 import { useQuery } from '@tanstack/react-query';
 import { PracticeSectionKey } from '@/types/Stats';
 import { useRouter } from 'next/navigation';
-import { FreePracticeUpsellModal } from '@/components/modals/FreePracticeUpsellModal';
 import { useIsClient } from 'usehooks-ts';
 import { cn } from '@/lib/utils';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
@@ -34,8 +33,6 @@ export default function Page() {
   const { profile, status } = useProfile();
   const isLoading = !profile && (status === 'idle' || status === 'loading');
   const { logout: performLogout } = useLogout();
-
-  const [showUpsell, setShowUpsell] = useState(true);
 
   const isClient = useIsClient();
   const [isDesktop, setIsDesktop] = useState(false);
@@ -111,12 +108,6 @@ export default function Page() {
 
   const openLanguageModal = useCallback(() => {
     setLanguageModalOpen(true);
-  }, []);
-
-  const handleOpenUpsellSubscriptionModal = useCallback(() => {
-    if (process.env.NODE_ENV !== 'production') {
-      console.log('[FreePracticeUpsellModal] View subscription plans clicked');
-    }
   }, []);
 
   return (
@@ -202,7 +193,6 @@ export default function Page() {
           </div>
         )}
       </main>
-      <FreePracticeUpsellModal isOpen={showUpsell} onClose={() => setShowUpsell(false)} onOpenSubscriptionModal={handleOpenUpsellSubscriptionModal} />
       <Dialog open={profileSettingsOpen} onOpenChange={setProfileSettingsOpen}>
         <DialogContent className='fixed left-[50%] top-[50%] flex h-auto w-[min(672rem,90vw)] -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center backdrop-brightness-90'>
           <ProfileEditFormModal />

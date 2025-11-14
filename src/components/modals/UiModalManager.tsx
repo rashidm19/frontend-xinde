@@ -1,9 +1,12 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useRef } from 'react';
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 
 import { usePathname, useRouter } from 'next/navigation';
 import { useQueryClient } from '@tanstack/react-query';
+import { motion, useReducedMotion } from 'framer-motion';
+import * as DialogPrimitive from '@radix-ui/react-dialog';
+import { useMediaQuery } from 'usehooks-ts';
 
 import { type FreePracticeTestModalPayload, isModalNotAvailableError, isModalNotTrackedError, postModalEvent } from '@/api/uiModals';
 import { ACTIVE_MODALS_QUERY_KEY, useActiveModals } from '@/hooks/useActiveModals';
@@ -14,8 +17,28 @@ import type { FeedbackModalSubmitPayload, FeedbackModalSubmitResult } from '@/co
 import { type UiModalInstance, useUiModalStore } from '@/stores/uiModalStore';
 import type { SubmitFeedbackPayload } from '@/api/feedback';
 import { hasSeenModal, markModalAsSeen } from '@/utils/modalSessionLatch';
+import { BottomSheet, BottomSheetContent } from '@/components/ui/bottom-sheet';
+import { FreePracticeUpsellModal } from '@/components/modals/FreePracticeUpsellModal';
+import { useSubscription } from '@/hooks/useSubscription';
+import { useProfile } from '@/hooks/useProfile';
 
 const DEFAULT_START_ROUTE = '/practice/writing/customize';
+
+const isProfilePath = (pathname: string | null): boolean => {
+  if (!pathname) {
+    return false;
+  }
+
+  return pathname.toLowerCase().includes('/profile');
+};
+
+const isPracticePath = (pathname: string | null): boolean => {
+  if (!pathname) {
+    return false;
+  }
+
+  return pathname.toLowerCase().includes('/practice/');
+};
 
 const shouldEnableForPath = (pathname: string | null): boolean => {
   if (!pathname) {
@@ -23,7 +46,12 @@ const shouldEnableForPath = (pathname: string | null): boolean => {
   }
 
   const normalized = pathname.toLowerCase();
-  return normalized.includes('/profile') || normalized.includes('/m/stats') || normalized.includes('/m/profile');
+  return (
+    normalized.includes('/profile') ||
+    normalized.includes('/dashboard') ||
+    normalized.includes('/m/stats') ||
+    normalized.includes('/m/profile')
+  );
 };
 
 export function UiModalManager() {
@@ -32,11 +60,71 @@ export function UiModalManager() {
   const { data: activeModals, refetch } = useActiveModals({ enabled });
   const queryClient = useQueryClient();
   const currentModal = useUiModalStore(state => state.current);
+  const queueLength = useUiModalStore(state => state.queue.length);
   const setFromServer = useUiModalStore(state => state.setFromServer);
   const removeModal = useUiModalStore(state => state.removeModal);
   const clear = useUiModalStore(state => state.clear);
 
   const viewedModalIdsRef = useRef<Set<string>>(new Set());
+  const [showUpsell, setShowUpsell] = useState(false);
+  const [pendingUpsell, setPendingUpsell] = useState(false);
+
+  const previousPathnameRef = useRef<string | null>(null);
+  const returnedFromPracticeRef = useRef(false);
+
+  const { hasActiveSubscription, status: subscriptionStatus, openPaywall } = useSubscription();
+  const isSubscriptionReady = subscriptionStatus === 'success' || subscriptionStatus === 'error';
+
+  const { profile, status: profileStatus } = useProfile();
+  const profileReady = profileStatus === 'success';
+  const gotFreeWelcomeTest = profile?.gotFreeWelcomeTest ?? false;
+  const practiceBalance = profile?.practice_balance ?? null;
+  const hasConsumedFreePractice = gotFreeWelcomeTest && practiceBalance === 0;
+
+  const UPSELL_MODAL_KEY = 'FREE_PRACTICE_UPSELL';
+  const UPSELL_MODAL_VERSION = '1';
+
+  useEffect(() => {
+    const previousPath = previousPathnameRef.current;
+    if (previousPath !== pathname) {
+      if (previousPath && isPracticePath(previousPath) && isProfilePath(pathname)) {
+        returnedFromPracticeRef.current = true;
+      } else if (!isProfilePath(pathname)) {
+        returnedFromPracticeRef.current = false;
+      }
+
+      previousPathnameRef.current = pathname;
+    }
+  }, [pathname]);
+
+  useEffect(() => {
+    if (!returnedFromPracticeRef.current) {
+      return;
+    }
+
+    if (!enabled) {
+      return;
+    }
+
+    if (!isProfilePath(pathname)) {
+      return;
+    }
+
+    if (!profileReady) {
+      return;
+    }
+
+    if (!hasConsumedFreePractice) {
+      return;
+    }
+
+    if (!isSubscriptionReady || hasActiveSubscription) {
+      return;
+    }
+
+    setPendingUpsell(true);
+    returnedFromPracticeRef.current = false;
+  }, [enabled, pathname, profileReady, hasConsumedFreePractice, isSubscriptionReady, hasActiveSubscription]);
 
   useEffect(() => {
     if (!enabled) {
@@ -50,6 +138,36 @@ export function UiModalManager() {
       setFromServer(activeModals);
     }
   }, [activeModals, clear, enabled, queryClient, setFromServer]);
+
+  useEffect(() => {
+    if (showUpsell) {
+      if (!enabled) {
+        setShowUpsell(false);
+      }
+      return;
+    }
+
+    if (!pendingUpsell) {
+      return;
+    }
+
+    if (!enabled || currentModal || queueLength > 0) {
+      return;
+    }
+
+    if (!isSubscriptionReady || hasActiveSubscription) {
+      return;
+    }
+
+    if (hasSeenModal(UPSELL_MODAL_KEY, UPSELL_MODAL_VERSION)) {
+      setPendingUpsell(false);
+      return;
+    }
+
+    setShowUpsell(true);
+    markModalAsSeen(UPSELL_MODAL_KEY, UPSELL_MODAL_VERSION);
+    setPendingUpsell(false);
+  }, [pendingUpsell, showUpsell, enabled, currentModal, queueLength, isSubscriptionReady, hasActiveSubscription]);
 
   useEffect(() => {
     if (!enabled) {
@@ -137,6 +255,17 @@ export function UiModalManager() {
     [enabled, refetch, removeModal]
   );
 
+  const handleUpsellDismiss = useCallback(() => {
+    setShowUpsell(false);
+    setPendingUpsell(false);
+  }, []);
+
+  const handleUpsellPrimary = useCallback(() => {
+    openPaywall();
+    setShowUpsell(false);
+    setPendingUpsell(false);
+  }, [openPaywall]);
+
   const renderedModal = useMemo(() => {
     if (!currentModal) {
       return null;
@@ -155,8 +284,96 @@ export function UiModalManager() {
     return null;
   }, [completeModal, currentModal, dismissModal]);
 
-  return renderedModal;
+  if (renderedModal) {
+    return renderedModal;
+  }
+
+  return showUpsell ? <ManagedFreePracticeUpsellModal onPrimary={handleUpsellPrimary} onDismiss={handleUpsellDismiss} /> : null;
 }
+
+interface ManagedFreePracticeUpsellModalProps {
+  onPrimary: () => void;
+  onDismiss: () => void;
+}
+
+const ManagedFreePracticeUpsellModal = ({ onPrimary, onDismiss }: ManagedFreePracticeUpsellModalProps) => {
+  const isMobile = useMediaQuery('(max-width: 767px)');
+  const prefersReducedMotion = useReducedMotion() || false;
+  const headingId = useId();
+  const descriptionId = useId();
+
+  const handleOpenChange = useCallback(
+    (nextOpen: boolean) => {
+      if (!nextOpen) {
+        onDismiss();
+      }
+    },
+    [onDismiss]
+  );
+
+  if (isMobile) {
+    return (
+      <BottomSheet open onOpenChange={handleOpenChange}>
+        <BottomSheetContent aria-labelledby={headingId} aria-describedby={descriptionId} className='px-[8rem]'>
+          <FreePracticeUpsellModal
+            headingId={headingId}
+            descriptionId={descriptionId}
+            prefersReducedMotion={prefersReducedMotion}
+            onPrimaryAction={onPrimary}
+            onSecondaryAction={onDismiss}
+            variant='mobile'
+          />
+        </BottomSheetContent>
+      </BottomSheet>
+    );
+  }
+
+  return (
+    <DialogPrimitive.Root open onOpenChange={handleOpenChange}>
+      <DialogPrimitive.Portal forceMount>
+        <DialogPrimitive.Overlay asChild>
+          <motion.div
+            initial={{ opacity: prefersReducedMotion ? 1 : 0 }}
+            animate={{ opacity: 1 }}
+            className='fixed inset-0 z-[2000] bg-slate-950/55 backdrop-blur-[6rem]'
+          />
+        </DialogPrimitive.Overlay>
+        <DialogPrimitive.Content
+          asChild
+          role='dialog'
+          aria-modal='true'
+          aria-labelledby={headingId}
+          aria-describedby={descriptionId}
+          onEscapeKeyDown={event => {
+            event.preventDefault();
+            onDismiss();
+          }}
+          onPointerDownOutside={event => {
+            event.preventDefault();
+            onDismiss();
+          }}
+        >
+          <div className='fixed inset-0 z-[2001] flex items-center justify-center px-[20rem] py-[36rem] tablet:px-[28rem]'>
+            <motion.div
+              initial={{ opacity: prefersReducedMotion ? 1 : 0, scale: prefersReducedMotion ? 1 : 0.96 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className='relative w-full'
+            >
+              <FreePracticeUpsellModal
+                headingId={headingId}
+                descriptionId={descriptionId}
+                prefersReducedMotion={prefersReducedMotion}
+                onPrimaryAction={onPrimary}
+                onSecondaryAction={onDismiss}
+                variant='desktop'
+              />
+            </motion.div>
+          </div>
+        </DialogPrimitive.Content>
+      </DialogPrimitive.Portal>
+    </DialogPrimitive.Root>
+  );
+};
 
 interface ManagedFreePracticeTestModalProps {
   modal: UiModalInstance<'FREE_PRACTICE_TEST_MODAL'>;
