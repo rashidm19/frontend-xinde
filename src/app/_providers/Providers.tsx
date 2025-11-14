@@ -7,6 +7,7 @@ import { useEffect, type ReactNode } from 'react';
 import { GlobalConfirmationModal } from '@/components/GlobalConfirmationModal';
 import { GlobalSubscriptionPaywall } from '@/components/GlobalSubscriptionPaywall';
 import { SubscriptionInitializer } from '@/components/SubscriptionInitializer';
+import { TelemetryInitializer } from '@/components/TelemetryInitializer';
 import { SubscriptionPaymentStatusModal } from '@/components/SubscriptionPaymentStatusModal';
 import { queryClient } from '@/lib/queryClient';
 
@@ -40,6 +41,7 @@ export default function Providers({ children, dehydratedState }: ProvidersProps)
   return (
     <QueryClientProvider client={queryClient}>
       <HydrationBoundary state={dehydratedState}>
+        <TelemetryInitializer />
         <SubscriptionInitializer />
         {children}
 
