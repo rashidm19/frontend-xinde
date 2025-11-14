@@ -13,12 +13,12 @@ import { useProfile } from '@/hooks/useProfile';
 import { useQuery } from '@tanstack/react-query';
 import { PracticeSectionKey } from '@/types/Stats';
 import { useRouter } from 'next/navigation';
-import { useLocale } from 'next-intl';
 import { FeedbackModal } from '@/components/feedback/FeedbackModal';
 import { useFeedbackStatus } from '@/hooks/useFeedbackStatus';
 import type { SubmitFeedbackPayload } from '@/api/feedback';
 import type { FeedbackModalSubmitPayload, FeedbackModalSubmitResult } from '@/components/feedback/types';
 import { FreePracticeTestModal } from '@/components/modals/FreePracticeTestModal';
+import { FreePracticeUpsellModal } from '@/components/modals/FreePracticeUpsellModal';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useIsClient } from 'usehooks-ts';
 import { cn } from '@/lib/utils';
@@ -39,7 +39,6 @@ const FEEDBACK_NUDGE_STORAGE_KEY = 'studybox.feedback.nudge.dismissedAt';
 
 export default function Page() {
   const router = useRouter();
-  const locale = useLocale();
   const { profile, status } = useProfile();
   const isLoading = !profile && (status === 'idle' || status === 'loading');
   const { logout: performLogout } = useLogout();
@@ -48,6 +47,7 @@ export default function Page() {
   const [hasPromptedFeedback, setHasPromptedFeedback] = useState(false);
   const [freeTestModalOpen, setFreeTestModalOpen] = useState(false);
   const [hasAutoOpenedFreeTestModal, setHasAutoOpenedFreeTestModal] = useState(false);
+  const [showUpsell, setShowUpsell] = useState(true);
 
   const feedbackEnabled = useMemo(() => status !== 'idle', [status]);
 
@@ -95,7 +95,6 @@ export default function Page() {
     () => !isLoading && !feedbackStatusLoading && !feedbackAlreadySubmitted && !hasPromptedFeedback && !feedbackStatusError && !freeTestModalOpen,
     [isLoading, feedbackStatusLoading, feedbackAlreadySubmitted, hasPromptedFeedback, feedbackStatusError, freeTestModalOpen]
   );
-
 
   useEffect(() => {
     if (!shouldPromptFeedback) {
@@ -226,6 +225,12 @@ export default function Page() {
     setLanguageModalOpen(true);
   }, []);
 
+  const handleOpenUpsellSubscriptionModal = useCallback(() => {
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('[FreePracticeUpsellModal] View subscription plans clicked');
+    }
+  }, []);
+
   return (
     <>
       <Header
@@ -318,6 +323,7 @@ export default function Page() {
         }}
         hasFreeTest={(profile?.practice_balance ?? 0) > 0}
       />
+      <FreePracticeUpsellModal isOpen={showUpsell} onClose={() => setShowUpsell(false)} onOpenSubscriptionModal={handleOpenUpsellSubscriptionModal} />
       <FeedbackModal
         open={feedbackOpen}
         onClose={handleFeedbackClose}
