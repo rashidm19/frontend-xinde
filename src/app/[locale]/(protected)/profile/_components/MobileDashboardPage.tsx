@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import type { MouseEvent } from 'react';
 
 import { AnimatePresence, motion } from 'framer-motion';
@@ -13,7 +13,6 @@ import type { LucideIcon } from 'lucide-react';
 import { BarChart3, History as HistoryIcon, PenSquare, UserRound } from 'lucide-react';
 
 import { BestResults } from './BestResults';
-import { FeedbackNudgeBanner } from './FeedbackNudgeBanner';
 import { IeltsGoal } from './IeltsGoal';
 import { PracticeBySections } from './PracticeList';
 import { PracticeHistory } from './PracticeHistory';
@@ -21,11 +20,6 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { PracticeSectionKey } from '@/types/Stats';
 import { getPracticeHistory } from '@/api/GET_stats_practice_history';
 import { useProfile } from '@/hooks/useProfile';
-import { useFeedbackStatus } from '@/hooks/useFeedbackStatus';
-import type { SubmitFeedbackPayload } from '@/api/feedback';
-import type { FeedbackModalSubmitPayload, FeedbackModalSubmitResult } from '@/components/feedback/types';
-import { FeedbackModal } from '@/components/feedback/FeedbackModal';
-import { FreePracticeTestModal } from '@/components/modals/FreePracticeTestModal';
 import { useSubscription } from '@/hooks/useSubscription';
 import { Header } from '@/components/Header';
 import { cn } from '@/lib/utils';
@@ -57,8 +51,6 @@ const MOBILE_TABS: Array<{ key: MobileTabKey; label: string; icon: LucideIcon; p
   { key: 'profile', label: 'Profile', icon: UserRound, path: 'profile' },
 ];
 
-const FEEDBACK_NUDGE_STORAGE_KEY = 'studybox.feedback.nudge.dismissedAt';
-const FEEDBACK_NUDGE_COOLDOWN_MS = 1000 * 60 * 60 * 24 * 3; // 3 days
 const LAST_TAB_STORAGE_KEY = 'studybox.mobile-dashboard.last-tab';
 const PRACTICE_HANDOFF_STORAGE_KEY = 'studybox.practice.handoff.seen';
 
@@ -88,14 +80,6 @@ export function MobileDashboardPage({ activeTab }: MobileDashboardPageProps) {
 
   const { profile, status: profileStatus } = useProfile();
   const isLoadingProfile = !profile && (profileStatus === 'idle' || profileStatus === 'loading');
-
-  const {
-    isLoading: feedbackStatusLoading,
-    hasSubmitted: feedbackAlreadySubmitted,
-    error: feedbackStatusError,
-    submitFeedback,
-    refetch: refetchFeedbackStatus,
-  } = useFeedbackStatus({ enabled: profileStatus !== 'idle' });
 
   const { data: practiceHistory, isLoading: practiceHistoryLoading } = useQuery({
     queryKey: ['practiceHistory'],
@@ -158,11 +142,6 @@ export function MobileDashboardPage({ activeTab }: MobileDashboardPageProps) {
     });
   }, [locale]);
 
-  const [feedbackOpen, setFeedbackOpen] = useState(false);
-  const [hasPromptedFeedback, setHasPromptedFeedback] = useState(false);
-  const [feedbackNudgeVisible, setFeedbackNudgeVisible] = useState(false);
-  const [freeTestModalOpen, setFreeTestModalOpen] = useState(false);
-  const [hasAutoOpenedFreeTestModal, setHasAutoOpenedFreeTestModal] = useState(false);
   const [languageModalOpen, setLanguageModalOpen] = useState(false);
   const [subscriptionModalOpen, setSubscriptionModalOpen] = useState(false);
   const [transitionDirection, setTransitionDirection] = useState<0 | 1 | -1>(0);
@@ -358,110 +337,6 @@ export function MobileDashboardPage({ activeTab }: MobileDashboardPageProps) {
     trackScreenView(activeTab);
   }, [activeTab]);
 
-  const shouldPromptFeedback = useMemo(
-    () =>
-      !isLoadingProfile &&
-      !feedbackStatusLoading &&
-      !feedbackAlreadySubmitted &&
-      !hasPromptedFeedback &&
-      !feedbackStatusError &&
-      !freeTestModalOpen,
-    [feedbackAlreadySubmitted, feedbackStatusError, feedbackStatusLoading, freeTestModalOpen, hasPromptedFeedback, isLoadingProfile]
-  );
-
-  useEffect(() => {
-    if (!shouldPromptFeedback) {
-      return;
-    }
-
-    if (typeof window === 'undefined') {
-      return;
-    }
-
-    const raw = window.localStorage.getItem(FEEDBACK_NUDGE_STORAGE_KEY);
-    const dismissedAt = raw ? Number(raw) : 0;
-    const now = Date.now();
-
-    if (Number.isFinite(dismissedAt) && now - dismissedAt < FEEDBACK_NUDGE_COOLDOWN_MS) {
-      return;
-    }
-
-    setHasPromptedFeedback(true);
-    setFeedbackNudgeVisible(true);
-  }, [shouldPromptFeedback]);
-
-  useEffect(() => {
-    if (freeTestModalOpen && feedbackOpen) {
-      setFeedbackOpen(false);
-    }
-  }, [freeTestModalOpen, feedbackOpen]);
-
-  useEffect(() => {
-    if (!feedbackOpen) {
-      return;
-    }
-    setFeedbackNudgeVisible(false);
-  }, [feedbackOpen]);
-
-  useEffect(() => {
-    if (!feedbackOpen) {
-      return;
-    }
-
-    if (typeof window !== 'undefined') {
-      window.localStorage.setItem(FEEDBACK_NUDGE_STORAGE_KEY, Date.now().toString());
-    }
-  }, [feedbackOpen]);
-
-  useEffect(() => {
-    if (hasAutoOpenedFreeTestModal || isLoadingProfile || !profile || subscriptionStatus !== 'success') {
-      return;
-    }
-
-    if (profile.practice_balance === 1 && !hasActiveSubscription) {
-      if (typeof window !== 'undefined') {
-        const storageKey = 'studybox.free-test.welcome-shown';
-        const alreadyShown = window.sessionStorage.getItem(storageKey);
-        if (!alreadyShown) {
-          window.sessionStorage.setItem(storageKey, '1');
-          setFreeTestModalOpen(true);
-        }
-      } else {
-        setFreeTestModalOpen(true);
-      }
-
-      setHasAutoOpenedFreeTestModal(true);
-    }
-  }, [hasAutoOpenedFreeTestModal, hasActiveSubscription, isLoadingProfile, profile, subscriptionStatus]);
-
-  const handleFreeTestStart = useCallback(() => {
-    router.push(sectionStartRoutes.writing);
-  }, [router]);
-
-  const handleFeedbackClose = useCallback(() => {
-    setFeedbackOpen(false);
-    if (typeof window !== 'undefined') {
-      window.localStorage.setItem(FEEDBACK_NUDGE_STORAGE_KEY, Date.now().toString());
-    }
-    setFeedbackNudgeVisible(false);
-  }, []);
-
-  const handleFeedbackNudgeOpen = useCallback(() => {
-    if (typeof window !== 'undefined') {
-      window.localStorage.setItem(FEEDBACK_NUDGE_STORAGE_KEY, Date.now().toString());
-    }
-    setFeedbackNudgeVisible(false);
-    setFeedbackOpen(true);
-    setHasPromptedFeedback(true);
-  }, []);
-
-  const handleFeedbackNudgeDismiss = useCallback(() => {
-    setFeedbackNudgeVisible(false);
-    if (typeof window !== 'undefined') {
-      window.localStorage.setItem(FEEDBACK_NUDGE_STORAGE_KEY, Date.now().toString());
-    }
-  }, []);
-
   const handleStartSection = useCallback(
     (section: PracticeSectionKey) => {
       router.push(sectionStartRoutes[section]);
@@ -537,7 +412,7 @@ export function MobileDashboardPage({ activeTab }: MobileDashboardPageProps) {
     openPaywall();
   }, [openPaywall]);
 
-  const basePaddingBottom = feedbackNudgeVisible ? '200rem' : '140rem';
+  const basePaddingBottom = '140rem';
 
   const statsContent = isLoadingProfile ? (
     <div className='flex flex-col gap-[16rem]'>
@@ -688,44 +563,6 @@ export function MobileDashboardPage({ activeTab }: MobileDashboardPageProps) {
     }
   };
 
-  const handleFeedbackSubmit = useCallback(
-    async ({ rating, highlights, otherText, comment }: FeedbackModalSubmitPayload): Promise<FeedbackModalSubmitResult> => {
-      if (rating === null) {
-        return { ok: false, error: 'Please rate your experience before submitting.' };
-      }
-
-      const trimmedOther = otherText.trim();
-      const trimmedComment = comment.trim();
-
-      if (highlights.includes('other') && trimmedOther.length === 0) {
-        return { ok: false, error: 'Please add a short note for “Other”.' };
-      }
-
-      const payload: SubmitFeedbackPayload = {
-        rating,
-        highlights,
-      };
-
-      if (highlights.includes('other')) {
-        payload.otherHighlight = trimmedOther;
-      }
-
-      if (trimmedComment.length > 0) {
-        payload.comment = trimmedComment.slice(0, 2000);
-      }
-
-      const result = await submitFeedback(payload);
-
-      if (result.ok) {
-        setHasPromptedFeedback(true);
-        void refetchFeedbackStatus();
-      }
-
-      return result;
-    },
-    [refetchFeedbackStatus, submitFeedback]
-  );
-
   if (!hasMounted) {
     return null;
   }
@@ -763,8 +600,6 @@ export function MobileDashboardPage({ activeTab }: MobileDashboardPageProps) {
           </div>
         </motion.main>
       </AnimatePresence>
-
-      <AnimatePresence>{feedbackNudgeVisible ? <FeedbackNudgeBanner onOpen={handleFeedbackNudgeOpen} onDismiss={handleFeedbackNudgeDismiss} /> : null}</AnimatePresence>
 
       <nav className='fixed bottom-0 left-0 right-0 z-40 border-t border-d-light-gray/60 bg-white/95 backdrop-blur-md'>
         <div className='mx-auto flex max-w-[520rem] items-center justify-between gap-[8rem] px-[16rem] py-[12rem]' style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 12rem)' }}>
@@ -874,26 +709,6 @@ export function MobileDashboardPage({ activeTab }: MobileDashboardPageProps) {
           setSpeakingStep(nextStep, history);
         }}
         routeSignature={routeSignature}
-      />
-
-      <FreePracticeTestModal
-        open={freeTestModalOpen}
-        onOpenChange={setFreeTestModalOpen}
-        onStart={handleFreeTestStart}
-        onDismiss={() => {
-          setFreeTestModalOpen(false);
-        }}
-        hasFreeTest={(profile?.practice_balance ?? 0) > 0}
-      />
-
-      <FeedbackModal
-        open={feedbackOpen}
-        onClose={handleFeedbackClose}
-        onSubmit={handleFeedbackSubmit}
-        onSuccess={() => {
-          setHasPromptedFeedback(true);
-          void refetchFeedbackStatus();
-        }}
       />
 
       <BottomSheet open={languageModalOpen} onOpenChange={setLanguageModalOpen}>

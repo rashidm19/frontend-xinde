@@ -9,6 +9,7 @@ import { GlobalSubscriptionPaywall } from '@/components/GlobalSubscriptionPaywal
 import { SubscriptionInitializer } from '@/components/SubscriptionInitializer';
 import { TelemetryInitializer } from '@/components/TelemetryInitializer';
 import { SubscriptionPaymentStatusModal } from '@/components/SubscriptionPaymentStatusModal';
+import { UiModalManager } from '@/components/modals/UiModalManager';
 import { queryClient } from '@/lib/queryClient';
 
 type ProvidersProps = {
@@ -48,6 +49,7 @@ export default function Providers({ children, dehydratedState }: ProvidersProps)
         <GlobalConfirmationModal />
         <GlobalSubscriptionPaywall />
         <SubscriptionPaymentStatusModal />
+        <UiModalManager />
 
         {process.env.NEXT_PUBLIC_ENVIRONMENT === 'dev' && (
           <div className='text-[14rem]'>

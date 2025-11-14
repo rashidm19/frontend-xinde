@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import { BestResults } from './_components/BestResults';
 import { Header } from '@/components/Header';
@@ -13,13 +13,7 @@ import { useProfile } from '@/hooks/useProfile';
 import { useQuery } from '@tanstack/react-query';
 import { PracticeSectionKey } from '@/types/Stats';
 import { useRouter } from 'next/navigation';
-import { FeedbackModal } from '@/components/feedback/FeedbackModal';
-import { useFeedbackStatus } from '@/hooks/useFeedbackStatus';
-import type { SubmitFeedbackPayload } from '@/api/feedback';
-import type { FeedbackModalSubmitPayload, FeedbackModalSubmitResult } from '@/components/feedback/types';
-import { FreePracticeTestModal } from '@/components/modals/FreePracticeTestModal';
 import { FreePracticeUpsellModal } from '@/components/modals/FreePracticeUpsellModal';
-import { useSubscription } from '@/hooks/useSubscription';
 import { useIsClient } from 'usehooks-ts';
 import { cn } from '@/lib/utils';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
@@ -35,29 +29,13 @@ const sectionStartRoutes: Record<PracticeSectionKey, string> = {
   speaking: '/practice/speaking/customize',
 };
 
-const FEEDBACK_NUDGE_STORAGE_KEY = 'studybox.feedback.nudge.dismissedAt';
-
 export default function Page() {
   const router = useRouter();
   const { profile, status } = useProfile();
   const isLoading = !profile && (status === 'idle' || status === 'loading');
   const { logout: performLogout } = useLogout();
 
-  const [feedbackOpen, setFeedbackOpen] = useState(false);
-  const [hasPromptedFeedback, setHasPromptedFeedback] = useState(false);
-  const [freeTestModalOpen, setFreeTestModalOpen] = useState(false);
-  const [hasAutoOpenedFreeTestModal, setHasAutoOpenedFreeTestModal] = useState(false);
   const [showUpsell, setShowUpsell] = useState(true);
-
-  const feedbackEnabled = useMemo(() => status !== 'idle', [status]);
-
-  const {
-    isLoading: feedbackStatusLoading,
-    hasSubmitted: feedbackAlreadySubmitted,
-    error: feedbackStatusError,
-    submitFeedback,
-    refetch: refetchFeedbackStatus,
-  } = useFeedbackStatus({ enabled: feedbackEnabled });
 
   const isClient = useIsClient();
   const [isDesktop, setIsDesktop] = useState(false);
@@ -91,77 +69,12 @@ export default function Page() {
     };
   }, [isClient]);
 
-  const shouldPromptFeedback = useMemo(
-    () => !isLoading && !feedbackStatusLoading && !feedbackAlreadySubmitted && !hasPromptedFeedback && !feedbackStatusError && !freeTestModalOpen,
-    [isLoading, feedbackStatusLoading, feedbackAlreadySubmitted, hasPromptedFeedback, feedbackStatusError, freeTestModalOpen]
-  );
-
-  useEffect(() => {
-    if (!shouldPromptFeedback) {
-      return;
-    }
-
-    setFeedbackOpen(true);
-    setHasPromptedFeedback(true);
-  }, [shouldPromptFeedback]);
-
-  const handleFeedbackClose = useCallback(() => {
-    setFeedbackOpen(false);
-    if (typeof window !== 'undefined') {
-      window.localStorage.setItem(FEEDBACK_NUDGE_STORAGE_KEY, Date.now().toString());
-    }
-  }, []);
-
-  useEffect(() => {
-    if (freeTestModalOpen && feedbackOpen) {
-      setFeedbackOpen(false);
-    }
-  }, [freeTestModalOpen, feedbackOpen]);
-
-  const handleFeedbackSubmit = useCallback(
-    async ({ rating, highlights, otherText, comment }: FeedbackModalSubmitPayload): Promise<FeedbackModalSubmitResult> => {
-      if (rating === null) {
-        return { ok: false, error: 'Please rate your experience before submitting.' };
-      }
-
-      const trimmedOther = otherText.trim();
-      const trimmedComment = comment.trim();
-
-      if (highlights.includes('other') && trimmedOther.length === 0) {
-        return { ok: false, error: 'Please add a short note for “Other”.' };
-      }
-
-      const payload: SubmitFeedbackPayload = {
-        rating,
-        highlights,
-      };
-
-      if (highlights.includes('other')) {
-        payload.otherHighlight = trimmedOther;
-      }
-
-      if (trimmedComment.length > 0) {
-        payload.comment = trimmedComment.slice(0, 2000);
-      }
-
-      const result = await submitFeedback(payload);
-
-      if (result.ok) {
-        setHasPromptedFeedback(true);
-        void refetchFeedbackStatus();
-      }
-
-      return result;
-    },
-    [submitFeedback, refetchFeedbackStatus]
-  );
 
   const { data: practiceHistory, isLoading: practiceHistoryLoading } = useQuery({
     queryKey: ['practiceHistory'],
     queryFn: getPracticeHistory,
   });
 
-  const { hasActiveSubscription, status: subscriptionStatus } = useSubscription();
   const [profileSettingsOpen, setProfileSettingsOpen] = useState(false);
   const [languageModalOpen, setLanguageModalOpen] = useState(false);
   const [subscriptionModalOpen, setSubscriptionModalOpen] = useState(false);
@@ -183,31 +96,6 @@ export default function Page() {
     router.push(`/practice/${section}/results/${id}`);
     return;
   };
-
-  useEffect(() => {
-    if (hasAutoOpenedFreeTestModal || isLoading || !profile || subscriptionStatus !== 'success') {
-      return;
-    }
-
-    if (profile.practice_balance === 1 && !hasActiveSubscription) {
-      if (typeof window !== 'undefined') {
-        const storageKey = 'studybox.free-test.welcome-shown';
-        const alreadyShown = window.sessionStorage.getItem(storageKey);
-        if (!alreadyShown) {
-          window.sessionStorage.setItem(storageKey, '1');
-          setFreeTestModalOpen(true);
-        }
-      } else {
-        setFreeTestModalOpen(true);
-      }
-
-      setHasAutoOpenedFreeTestModal(true);
-    }
-  }, [hasAutoOpenedFreeTestModal, hasActiveSubscription, isLoading, profile, subscriptionStatus]);
-
-  const handleFreeTestStart = useCallback(async () => {
-    router.push(sectionStartRoutes.writing);
-  }, [router]);
 
   const handleLogout = useCallback(() => {
     void performLogout();
@@ -314,25 +202,7 @@ export default function Page() {
           </div>
         )}
       </main>
-      <FreePracticeTestModal
-        open={freeTestModalOpen}
-        onOpenChange={setFreeTestModalOpen}
-        onStart={handleFreeTestStart}
-        onDismiss={() => {
-          setFreeTestModalOpen(false);
-        }}
-        hasFreeTest={(profile?.practice_balance ?? 0) > 0}
-      />
       <FreePracticeUpsellModal isOpen={showUpsell} onClose={() => setShowUpsell(false)} onOpenSubscriptionModal={handleOpenUpsellSubscriptionModal} />
-      <FeedbackModal
-        open={feedbackOpen}
-        onClose={handleFeedbackClose}
-        onSubmit={handleFeedbackSubmit}
-        onSuccess={() => {
-          setHasPromptedFeedback(true);
-          void refetchFeedbackStatus();
-        }}
-      />
       <Dialog open={profileSettingsOpen} onOpenChange={setProfileSettingsOpen}>
         <DialogContent className='fixed left-[50%] top-[50%] flex h-auto w-[min(672rem,90vw)] -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center backdrop-brightness-90'>
           <ProfileEditFormModal />
