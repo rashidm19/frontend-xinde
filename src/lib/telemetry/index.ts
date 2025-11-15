@@ -1,18 +1,13 @@
 'use client';
 
-import { context, propagation, trace, SpanKind, SpanStatusCode } from '@opentelemetry/api';
 import type { Tracer } from '@opentelemetry/api';
+import { context, propagation, SpanKind, SpanStatusCode, trace } from '@opentelemetry/api';
 
-import {
-  ANON_ID_STORAGE_KEY,
-  ATTRIBUTION_STORAGE_KEY,
-  TELEMETRY_GLOBAL_KEY,
-  TELEMETRY_READY_EVENT,
-} from './constants';
+import { ANON_ID_STORAGE_KEY, ATTRIBUTION_STORAGE_KEY, TELEMETRY_GLOBAL_KEY, TELEMETRY_READY_EVENT } from './constants';
 import { scrubProperties } from './scrub';
 import type { BootstrapTelemetryParams, TelemetryConfig, TelemetryTrackProperties, TelemetryUser } from './types';
 import type { WebTracerProvider } from '@opentelemetry/sdk-trace-web';
-import { IS_PROD_ENV } from '@/lib/config';
+import { IS_NOT_PROD_ENV, IS_PROD_ENV } from '@/lib/config';
 
 type PosthogClient = typeof import('posthog-js').default;
 
@@ -46,7 +41,7 @@ const getState = (): TelemetryState => {
   if (!globalScope[TELEMETRY_GLOBAL_KEY]) {
     globalScope[TELEMETRY_GLOBAL_KEY] = {
       analyticsReady: false,
-      analyticsNoop: !IS_PROD_ENV,
+      analyticsNoop: IS_NOT_PROD_ENV,
       fetchPatched: false,
     } satisfies TelemetryState;
   }
@@ -81,15 +76,13 @@ const getAttributionId = (): string | null => {
       return fromStorage;
     }
   } catch (error) {
-    if (process.env.VERCEL_ENV !== 'production') {
+    if (IS_NOT_PROD_ENV) {
       console.debug('[telemetry] failed to read attribution id from storage', error);
     }
   }
 
   if (typeof document !== 'undefined') {
-    const cookie = document.cookie
-      .split('; ')
-      .find(part => part.startsWith(`${ATTRIBUTION_STORAGE_KEY}=`));
+    const cookie = document.cookie.split('; ').find(part => part.startsWith(`${ATTRIBUTION_STORAGE_KEY}=`));
 
     if (cookie) {
       const [, value] = cookie.split('=');
@@ -130,7 +123,7 @@ export const resolveDistinctId = (userId?: string | number | null): string => {
     window.localStorage.setItem(ANON_ID_STORAGE_KEY, anon);
     return `anon:${anon}`;
   } catch (error) {
-    if (process.env.VERCEL_ENV !== 'production') {
+    if (IS_NOT_PROD_ENV) {
       console.debug('[telemetry] failed to access anon id storage', error);
     }
 
@@ -155,14 +148,14 @@ const trackIdentity = (user: TelemetryUser | null | undefined) => {
     state.posthog.identify(resolved);
     state.distinctId = resolved;
   } catch (error) {
-    if (process.env.VERCEL_ENV !== 'production') {
+    if (IS_NOT_PROD_ENV) {
       console.debug('[telemetry] failed to identify user', error);
     }
   }
 };
 
 const patchFetch = () => {
-  if (!IS_PROD_ENV) {
+  if (IS_NOT_PROD_ENV) {
     return;
   }
 
@@ -200,34 +193,30 @@ const patchFetch = () => {
       return originalFetch(tracedRequest);
     }
 
-    return tracer.startActiveSpan(
-      `fetch:${tracedRequest.method.toUpperCase()} ${tracedRequest.url}`,
-      { kind: SpanKind.CLIENT },
-      async span => {
-        try {
-          propagation.inject(trace.setSpan(context.active(), span), headers, headerSetter);
+    return tracer.startActiveSpan(`fetch:${tracedRequest.method.toUpperCase()} ${tracedRequest.url}`, { kind: SpanKind.CLIENT }, async span => {
+      try {
+        propagation.inject(trace.setSpan(context.active(), span), headers, headerSetter);
 
-          const spanContext = span.spanContext();
-          if (isValidTraceId(spanContext.traceId)) {
-            state.lastTraceId = spanContext.traceId;
-          }
-
-          const response = await originalFetch(new Request(tracedRequest, { headers }));
-
-          span.setAttribute('http.method', tracedRequest.method);
-          span.setAttribute('http.url', tracedRequest.url);
-          span.setAttribute('http.status_code', response.status);
-
-          return response;
-        } catch (error) {
-          span.recordException(error as Error);
-          span.setStatus({ code: SpanStatusCode.ERROR });
-          throw error;
-        } finally {
-          span.end();
+        const spanContext = span.spanContext();
+        if (isValidTraceId(spanContext.traceId)) {
+          state.lastTraceId = spanContext.traceId;
         }
+
+        const response = await originalFetch(new Request(tracedRequest, { headers }));
+
+        span.setAttribute('http.method', tracedRequest.method);
+        span.setAttribute('http.url', tracedRequest.url);
+        span.setAttribute('http.status_code', response.status);
+
+        return response;
+      } catch (error) {
+        span.recordException(error as Error);
+        span.setStatus({ code: SpanStatusCode.ERROR });
+        throw error;
+      } finally {
+        span.end();
       }
-    );
+    });
   }) as typeof window.fetch;
 
   state.fetchPatched = true;
@@ -243,7 +232,7 @@ const registerTelemetryReady = () => {
 };
 
 const initPosthog = async (config: TelemetryConfig, user: TelemetryUser | null | undefined) => {
-  if (!IS_PROD_ENV) {
+  if (IS_NOT_PROD_ENV) {
     const state = getState();
     state.analyticsNoop = true;
     state.analyticsReady = false;
@@ -254,7 +243,7 @@ const initPosthog = async (config: TelemetryConfig, user: TelemetryUser | null |
     const state = getState();
     state.analyticsNoop = true;
     state.analyticsReady = false;
-    if (process.env.VERCEL_ENV !== 'production' && (config.analyticsEnabled || config.otelEnabled)) {
+    if (IS_NOT_PROD_ENV && (config.analyticsEnabled || config.otelEnabled)) {
       console.warn('[telemetry] Received telemetry config for non-production environment. Telemetry disabled.');
     }
     return;
@@ -300,7 +289,7 @@ const initPosthog = async (config: TelemetryConfig, user: TelemetryUser | null |
         try {
           client.register({ environment: config.environment ?? 'unknown' });
         } catch (error) {
-          if (process.env.VERCEL_ENV !== 'production') {
+          if (IS_NOT_PROD_ENV) {
             console.debug('[telemetry] failed to register base properties', error);
           }
         }
@@ -313,7 +302,7 @@ const initPosthog = async (config: TelemetryConfig, user: TelemetryUser | null |
   } catch (error) {
     state.analyticsNoop = true;
 
-    if (process.env.VERCEL_ENV !== 'production') {
+    if (IS_NOT_PROD_ENV) {
       console.debug('[telemetry] failed to initialize PostHog', error);
     }
   }
@@ -334,7 +323,7 @@ const normalizeTraceExporterUrl = (url: string | undefined) => {
 };
 
 const initTracer = async (config: TelemetryConfig) => {
-  if (!IS_PROD_ENV) {
+  if (IS_NOT_PROD_ENV) {
     return;
   }
 
@@ -390,7 +379,7 @@ const initTracer = async (config: TelemetryConfig) => {
 
     patchFetch();
   } catch (error) {
-    if (process.env.VERCEL_ENV !== 'production') {
+    if (IS_NOT_PROD_ENV) {
       console.debug('[telemetry] failed to initialize tracer', error);
     }
   }
@@ -404,11 +393,11 @@ export const bootstrapTelemetry = async ({ config, user }: BootstrapTelemetryPar
   const state = getState();
   state.config = config;
 
-  if (!IS_PROD_ENV) {
+  if (IS_NOT_PROD_ENV) {
     state.analyticsNoop = true;
     state.analyticsReady = false;
 
-    if (process.env.VERCEL_ENV !== 'production' && (config.analyticsEnabled || config.otelEnabled)) {
+    if (IS_NOT_PROD_ENV && (config.analyticsEnabled || config.otelEnabled)) {
       console.warn('[telemetry] Telemetry flags enabled but build is non-production. Skipping initialization.');
     }
 
@@ -419,7 +408,7 @@ export const bootstrapTelemetry = async ({ config, user }: BootstrapTelemetryPar
     state.analyticsNoop = true;
     state.analyticsReady = false;
 
-    if (process.env.VERCEL_ENV !== 'production' && (config.analyticsEnabled || config.otelEnabled)) {
+    if (IS_NOT_PROD_ENV && (config.analyticsEnabled || config.otelEnabled)) {
       console.warn('[telemetry] Telemetry config environment is not production. Skipping initialization.');
     }
 
@@ -431,7 +420,7 @@ export const bootstrapTelemetry = async ({ config, user }: BootstrapTelemetryPar
       await state.bootstrapPromise;
       trackIdentity(user ?? null);
     } catch (error) {
-      if (process.env.VERCEL_ENV !== 'production') {
+      if (IS_NOT_PROD_ENV) {
         console.debug('[telemetry] bootstrap retry failed', error);
       }
     }
@@ -456,7 +445,7 @@ export const track = (event: string, props: TelemetryTrackProperties = {}) => {
     return;
   }
 
-  if (!IS_PROD_ENV) {
+  if (IS_NOT_PROD_ENV) {
     return;
   }
 
@@ -478,7 +467,7 @@ export const track = (event: string, props: TelemetryTrackProperties = {}) => {
 
     state.posthog.capture(event, payload);
   } catch (error) {
-    if (process.env.VERCEL_ENV !== 'production') {
+    if (IS_NOT_PROD_ENV) {
       console.debug('[telemetry] failed to capture event', error);
     }
   }
@@ -486,7 +475,7 @@ export const track = (event: string, props: TelemetryTrackProperties = {}) => {
 
 export const telemetryReady = () => {
   const state = getState();
-  if (!IS_PROD_ENV) {
+  if (IS_NOT_PROD_ENV) {
     return false;
   }
 

@@ -36,13 +36,7 @@ const INTERACTIVE_TAP = { scale: 0.97 };
 const SHEET_MAX_HEIGHT = 'max-h-[90dvh]';
 const PART_OPTIONS: PracticeSpeakingPartValue[] = ['1', '2', '3', 'all'];
 
-const AudioVisualizer = dynamic(
-  async () => {
-    const module = await import('react-audio-visualize');
-    return module.AudioVisualizer;
-  },
-  { ssr: false }
-);
+const AudioVisualizer = dynamic(() => import('./AudioVisualizerClient'), { ssr: false });
 
 export function SpeakingSheet({ open, step, onRequestClose, onStepChange, routeSignature }: SpeakingSheetProps) {
   const router = useRouter();

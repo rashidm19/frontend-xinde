@@ -5,9 +5,10 @@ import { queryClient } from './queryClient';
 import { resetProfile } from '@/stores/profileStore';
 import { resetSubscriptionStore } from '@/stores/subscriptionStore';
 import { clearAuthToken } from '@/lib/auth/session';
+import { IS_NOT_PROD_BUILD } from '@/lib/config';
 
 export const logout = async () => {
-  if (process.env.NODE_ENV !== 'production') {
+  if (IS_NOT_PROD_BUILD) {
     console.debug('[logout] invoked');
   }
 

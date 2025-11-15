@@ -11,7 +11,7 @@ import { TelemetryInitializer } from '@/components/TelemetryInitializer';
 import { SubscriptionPaymentStatusModal } from '@/components/SubscriptionPaymentStatusModal';
 import { UiModalManager } from '@/components/modals/UiModalManager';
 import { queryClient } from '@/lib/queryClient';
-import { IS_PROD_ENV } from '@/lib/config';
+import { IS_NOT_PROD_BUILD, IS_PROD_ENV } from '@/lib/config';
 
 type ProvidersProps = {
   children: ReactNode;
@@ -52,7 +52,7 @@ export default function Providers({ children, dehydratedState }: ProvidersProps)
         <SubscriptionPaymentStatusModal />
         <UiModalManager />
 
-        {!IS_PROD_ENV && (
+        {IS_NOT_PROD_BUILD && (
           <div className='text-[14rem]'>
             <ReactQueryDevtools initialIsOpen={false} />
           </div>

@@ -5,6 +5,7 @@ import React from 'react';
 import { HTMLMotionProps, motion, useReducedMotion } from 'framer-motion';
 
 import { cn } from '@/lib/utils';
+import { GOOGLE_CLIENT_ID } from '@/lib/config';
 
 declare global {
   interface Window {
@@ -43,7 +44,7 @@ export const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({ onCredenti
   const buttonHostRef = React.useRef<HTMLDivElement>(null);
   const renderedButtonRef = React.useRef<HTMLElement | null>(null);
 
-  const clientId = React.useMemo(() => process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ?? '779961326168-e6m0pths1k2a5p96ngebm2d93fqvdf5n.apps.googleusercontent.com', []);
+  const clientId = React.useMemo(() => GOOGLE_CLIENT_ID, []);
 
   React.useEffect(() => {
     if (!clientId) {

@@ -1,5 +1,6 @@
 // Locale-only middleware ensuring routes are prefixed without performing network requests.
 import { NextRequest, NextResponse } from 'next/server';
+import { IS_PROD_BUILD } from '@/lib/config';
 
 const SUPPORTED_LOCALES = ['en', 'ru', 'zh'] as const;
 const DEFAULT_LOCALE = 'en';
@@ -118,7 +119,7 @@ export function middleware(request: NextRequest) {
     response.cookies.set('NEXT_LOCALE', locale, {
       path: '/',
       sameSite: 'lax',
-      secure: process.env.NODE_ENV === 'production',
+      secure: IS_PROD_BUILD,
       maxAge: 60 * 60 * 24 * 180,
     });
   }
@@ -127,7 +128,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: [
-    '/((?!_next/|api/|trpc/|_vercel|favicon.ico|robots.txt|sitemap.xml|.*\.(?:png|jpg|jpeg|gif|svg|webp|ico|css|js|map|txt|woff2?|ttf|otf)$).*)',
-  ],
+  matcher: ['/((?!_next/|api/|trpc/|_vercel|favicon.ico|robots.txt|sitemap.xml|.*.(?:png|jpg|jpeg|gif|svg|webp|ico|css|js|map|txt|woff2?|ttf|otf|mp3)$).*)'],
 };
