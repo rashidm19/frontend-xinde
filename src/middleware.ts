@@ -128,5 +128,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/((?!_next/|api/|trpc/|_vercel|favicon.ico|robots.txt|sitemap.xml|.*.(?:png|jpg|jpeg|gif|svg|webp|ico|css|js|map|txt|woff2?|ttf|otf)$).*)'],
+  matcher: ['/((?!_next/|api/|trpc/|_vercel|favicon.ico|robots.txt|sitemap.xml|.*.(?:png|jpg|jpeg|gif|svg|webp|ico|css|js|map|txt|woff2?|ttf|otf|mp3)$).*)'],
 };
