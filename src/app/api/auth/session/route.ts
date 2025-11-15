@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { IS_PROD_BUILD } from '@/lib/config';
 
 const TOKEN_COOKIE_NAME = 'token';
 const TOKEN_MAX_AGE_SECONDS = 60 * 60 * 24 * 30; // 30 days
@@ -23,7 +24,7 @@ export async function POST(request: NextRequest) {
     name: TOKEN_COOKIE_NAME,
     value: token,
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
+    secure: IS_PROD_BUILD,
     sameSite: 'lax',
     path: '/',
     maxAge: TOKEN_MAX_AGE_SECONDS,
@@ -39,7 +40,7 @@ export async function DELETE() {
     name: TOKEN_COOKIE_NAME,
     value: '',
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
+    secure: IS_PROD_BUILD,
     sameSite: 'lax',
     path: '/',
     maxAge: 0,

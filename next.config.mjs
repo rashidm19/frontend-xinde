@@ -6,9 +6,6 @@ const withNextIntl = createNextIntlPlugin();
 const DEFAULT_LOCALE = 'en';
 
 const nextConfig = {
-  env: {
-    ENVIROMENT: process.env.ENVIROMENT,
-  },
   async redirects() {
     return [
       {

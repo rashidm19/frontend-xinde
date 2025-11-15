@@ -6,7 +6,7 @@ import { usePageViewTracking } from '@/hooks/usePageViewTracking';
 import { bootstrapTelemetry } from '@/lib/telemetry';
 import type { TelemetryConfig } from '@/lib/telemetry/types';
 import { useProfileStore } from '@/stores/profileStore';
-import { API_URL, IS_PROD_ENV } from '@/lib/config';
+import { API_URL, IS_NOT_PROD_ENV, IS_PROD_ENV } from '@/lib/config';
 
 const CONFIG_ENDPOINT = new URL('/api/config', API_URL).toString();
 
@@ -38,7 +38,7 @@ export const TelemetryInitializer = () => {
   useEffect(() => {
     let cancelled = false;
 
-    if (!IS_PROD_ENV) {
+    if (IS_NOT_PROD_ENV) {
       return () => {
         cancelled = true;
       };
@@ -59,7 +59,7 @@ export const TelemetryInitializer = () => {
           setConfig(normalized);
         }
       } catch (error) {
-        if (process.env.VERCEL_ENV !== 'production') {
+        if (IS_NOT_PROD_ENV) {
           console.debug('[telemetry] failed to load runtime config', error);
         }
 
@@ -77,8 +77,8 @@ export const TelemetryInitializer = () => {
   }, []);
 
   useEffect(() => {
-    if (!IS_PROD_ENV) {
-      if (process.env.VERCEL_ENV !== 'production' && (config.analyticsEnabled || config.otelEnabled)) {
+    if (IS_NOT_PROD_ENV) {
+      if (IS_NOT_PROD_ENV && (config.analyticsEnabled || config.otelEnabled)) {
         console.warn('[telemetry] Ignoring enabled telemetry flags because the build is not production.');
       }
       return;

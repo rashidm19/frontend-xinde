@@ -2,8 +2,9 @@
 
 import type { ComponentProps } from 'react';
 import { useEffect, useState } from 'react';
+import { IS_NOT_PROD_BUILD } from '@/lib/config';
 
-type AudioVisualizerType = typeof import('react-audio-visualize')['AudioVisualizer'];
+type AudioVisualizerType = (typeof import('react-audio-visualize'))['AudioVisualizer'];
 type AudioVisualizerProps = ComponentProps<AudioVisualizerType>;
 
 const AudioVisualizerClient = (props: AudioVisualizerProps) => {
@@ -19,7 +20,7 @@ const AudioVisualizerClient = (props: AudioVisualizerProps) => {
         }
       })
       .catch(error => {
-        if (process.env.NODE_ENV !== 'production') {
+        if (IS_NOT_PROD_BUILD) {
           console.error('Failed to load audio visualizer', error);
         }
       });
