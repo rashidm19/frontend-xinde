@@ -56,19 +56,20 @@ export const HorseshoeProgressBar: React.FC<ProgressBarProps> = ({
   const progressAngle = startAngle + (endAngle - startAngle) * (value / maxValue);
   const progressPath = arc(startAngle, progressAngle);
 
-  const gradientId = `progressGradient-${Math.random().toString(36).substr(2, 9)}`;
+  const gradientId = React.useId();
+  const gradientDefinitionId = `progressGradient-${gradientId}`;
 
   return (
     <div className={cn('relative inline-flex items-center justify-center', containerClassName)} style={{ width, height }}>
       <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`}>
         <defs>
-          <linearGradient id={gradientId} x1='0%' y1='0%' x2='100%' y2='0%'>
+          <linearGradient id={gradientDefinitionId} x1='0%' y1='0%' x2='100%' y2='0%'>
             <stop offset='0%' stopColor={progressGradient.startColor} />
             <stop offset='100%' stopColor={progressGradient.endColor} />
           </linearGradient>
         </defs>
         <path d={backgroundPath} fill='none' stroke={circleColor} strokeWidth={strokeWidth} strokeLinecap='round' />
-        <path d={progressPath} fill='none' stroke={`url(#${gradientId})`} strokeWidth={strokeWidth} strokeLinecap='round' />
+        <path d={progressPath} fill='none' stroke={`url(#${gradientDefinitionId})`} strokeWidth={strokeWidth} strokeLinecap='round' />
       </svg>
       <div className='absolute text-center' style={{ color: textColor }}>
         {value > 0 ? (
