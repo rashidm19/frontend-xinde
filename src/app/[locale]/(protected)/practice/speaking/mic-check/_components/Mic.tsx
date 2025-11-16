@@ -4,7 +4,6 @@ import React, { useEffect, useRef, useState } from 'react';
 
 import { AudioVisualizer } from 'react-audio-visualize';
 import { useReactMediaRecorder } from 'react-media-recorder';
-import axiosInstance from '@/lib/axiosInstance';
 
 export default function Mic() {
   const visualizerRef = useRef<HTMLCanvasElement>(null);
@@ -17,22 +16,23 @@ export default function Mic() {
 
   useEffect(() => {
     const fetchAudioFile = async () => {
-      const { data } = await axiosInstance.get(mediaBlobUrl as string, {
-        responseType: 'blob',
-      });
-      setAudioBlob(data);
+      if (!mediaBlobUrl) return;
+
+      const response = await fetch(mediaBlobUrl);
+      const blob = await response.blob();
+      setAudioBlob(blob);
     };
 
     if (mediaBlobUrl !== undefined && status === 'stopped') {
       fetchAudioFile();
     }
-  }, [mediaBlobUrl]);
+  }, [mediaBlobUrl, status]);
 
   return (
-    <>
+    <div  className='my-[32rem]'>
       {/* // * Recording process */}
       {(status === 'idle' || status === 'recording' || status === 'acquiring_media' || status === 'stopping') && (
-        <div className='flex items-center justify-start gap-x-[24rem]'>
+        <div className='flex items-center justify-center gap-x-[24rem]'>
           <button
             type='button'
             onClick={() => {
@@ -53,10 +53,10 @@ export default function Mic() {
           </div>
         </div>
       )}
-      {/* // * Seclection */}
+      {/* // * Selection */}
       {audioBlob && mediaBlobUrl && (
         <>
-          <div className='flex flex-col gap-y-[24rem]'>
+          <div className='flex flex-col items-center gap-y-[24rem]'>
             <audio
               controls
               ref={audioRef}
@@ -93,12 +93,13 @@ export default function Mic() {
                 currentTime={currentTimestamp || 0}
               />
             </div>
+
+            <button type='button' onClick={clearBlobUrl} className='text-center text-[15rem] font-semibold text-d-black'>
+              Try to record again
+            </button>
           </div>
-          <button type='button' onClick={clearBlobUrl} className='mb-[-40rem] text-center text-[15rem] font-semibold text-d-black'>
-            Try to record again
-          </button>
         </>
       )}
-    </>
+    </div>
   );
 }
