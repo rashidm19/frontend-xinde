@@ -9,8 +9,6 @@
 .pnp.js
 .yarn/install-state.gz
 
-./CLAUDE.md
-
 # testing
 /coverage
 
@@ -39,3 +37,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+docs/ignored/*
+
+.env
