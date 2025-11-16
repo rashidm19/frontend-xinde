@@ -58,7 +58,7 @@ export const IeltsGoal = ({ grade }: Props) => {
   };
 
   return (
-    <section className='relative flex flex-col items-center rounded-[16rem] bg-white p-[20rem] text-center tablet:items-start tablet:p-[24rem] tablet:text-left'>
+    <section className='relative flex flex-col items-center rounded-[16rem] bg-white p-[20rem] text-center tablet:p-[24rem] tablet:text-left'>
       <h3 className='mb-[32rem] text-[20rem] font-medium leading-tight'>{t('title')}</h3>
 
       <HorseshoeProgressBar
