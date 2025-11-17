@@ -116,7 +116,7 @@ export const MobileHeader: React.FC<MobileHeaderProps> = ({
       <div className='flex items-center justify-between gap-[16rem]'>
         <div className='flex items-center gap-[10rem]'>
           <img src='/images/logo.svg' alt='Studybox' className='size-[28rem]' />
-          <div className='flex flex-col leading-none'>
+          <div className='flex flex-col gap-[3rem] leading-none'>
             <span className='font-poppins text-[16rem] font-semibold text-d-black'>{title}</span>
             {tag ? <span className='text-[12rem] font-medium uppercase tracking-[0.08em] text-d-black/60'>{tag}</span> : null}
           </div>

@@ -1,16 +1,16 @@
-"use client";
+'use client';
 
-import Link from "next/link";
-import dynamic from "next/dynamic";
-import { useCustomTranslations } from "@/hooks/useCustomTranslations";
-import { PracticeWritingCard } from "@/components/practice/PracticeWritingCard";
-import { SubscriptionAccessLabel } from "@/components/SubscriptionAccessLabel";
-import { useSubscriptionGate } from "@/hooks/useSubscriptionGate";
+import Link from 'next/link';
+import dynamic from 'next/dynamic';
+import { useCustomTranslations } from '@/hooks/useCustomTranslations';
+import { PracticeWritingCard } from '@/components/practice/PracticeWritingCard';
+import { SubscriptionAccessLabel } from '@/components/SubscriptionAccessLabel';
+import { useSubscriptionGate } from '@/hooks/useSubscriptionGate';
 
-const Mic = dynamic(() => import("./mic-check/_components/Mic").then(mod => mod.default), { ssr: false });
+const Mic = dynamic(() => import('./mic-check/_components/Mic').then(mod => mod.default), { ssr: false });
 
 export function SpeakingMicCheckClient() {
-  const { tImgAlts, tCommon, tActions } = useCustomTranslations("practice.speaking.micCheck");
+  const { tImgAlts, tCommon, tActions } = useCustomTranslations('practice.speaking.micCheck');
   const { requireSubscription, isCheckingAccess } = useSubscriptionGate();
 
   return (
@@ -46,9 +46,7 @@ export function SpeakingMicCheckClient() {
             <p className='mt-[12rem] text-[14rem] leading-[1.65] text-d-black/80'>Turn on the microphone through the browser</p>
           </div>
 
-          <div className='my-[32rem] flex items-center justify-center'>
-            <Mic />
-          </div>
+          <Mic />
 
           <Link
             href='/practice/speaking/test'
