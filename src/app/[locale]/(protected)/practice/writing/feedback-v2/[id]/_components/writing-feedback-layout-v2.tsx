@@ -3,6 +3,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { motion, useReducedMotion } from 'framer-motion';
+import { ChevronRight, Menu, X } from 'lucide-react';
+
+import { cn } from '@/lib/utils';
 
 import type { CriterionKey, WritingFeedbackV2Normalized } from '@/lib/writing-feedback-v2';
 import { WritingFeedbackHeader } from '@/components/practice/WritingFeedbackHeader';
@@ -12,9 +15,11 @@ import { BackToTopButton } from './back-to-top-button';
 import { CriterionTabs } from './criterion-tabs';
 import { FeedbackSummaryGrid } from './feedback-summary-grid';
 import { HighlightedText } from './highlighted-text';
+import { OverallBandCard } from './overall-band-card';
 import { StickySectionNav } from './sticky-section-nav';
 import { UserResponseCard } from './user-response-card';
 import { WritingTaskModal } from './writing-task-modal';
+import { BottomSheet, BottomSheetClose, BottomSheetContent } from '@/components/ui/bottom-sheet';
 
 const SECTION_CONFIG = [
   { id: 'response', label: 'Response & highlights' },
@@ -42,6 +47,7 @@ export function WritingFeedbackLayoutV2({ data }: WritingFeedbackLayoutV2Props) 
   const [showBackToTop, setShowBackToTop] = useState(false);
   const [headerVisible, setHeaderVisible] = useState(true);
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
+  const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
   const shouldReduceMotion = useReducedMotion();
   const visibilityMapRef = useRef<Map<SectionId, number>>(new Map());
   const activeSectionRef = useRef<SectionId>('response');
@@ -88,7 +94,7 @@ export function WritingFeedbackLayoutV2({ data }: WritingFeedbackLayoutV2Props) 
     if (typeof window === 'undefined') {
       return 132;
     }
-    return window.innerWidth < 768 ? 112 : 164;
+    return window.innerWidth < 768 ? 96 : 164;
   }, []);
 
   useEffect(() => {
@@ -167,6 +173,20 @@ export function WritingFeedbackLayoutV2({ data }: WritingFeedbackLayoutV2Props) 
     scrollToSection('details');
   }, [scrollToSection]);
 
+  const handleMobileNavSelect = useCallback((id: SectionId) => {
+    setIsMobileNavOpen(false);
+    window.setTimeout(() => {
+      scrollToSection(id);
+    }, 180);
+  }, [scrollToSection]);
+
+  const handleMobileViewTask = useCallback(() => {
+    setIsMobileNavOpen(false);
+    window.setTimeout(() => {
+      handleViewTask();
+    }, 200);
+  }, [handleViewTask]);
+
   const highlightedUserAnswer = useMemo(() => {
     if (!data.rewrite?.hasHighlights || !data.userAnswer.trim()) {
       return null;
@@ -191,14 +211,27 @@ export function WritingFeedbackLayoutV2({ data }: WritingFeedbackLayoutV2Props) 
       <div ref={headerSentinelRef} aria-hidden='true' className='h-[1px]' />
 
       <main className='bg-[#EAF7FF]'>
-        <div className='container w-full px-[18rem] pb-[60rem] pt-[28rem] tablet:max-w-[1600rem] tablet:px-[40rem] tablet:pb-[64rem] tablet:pt-[32rem]'>
-          <div className='flex flex-col gap-[32rem]'>
+        <div className='container w-full px-[16rem] pb-[88rem] pt-[24rem] tablet:max-w-[1600rem] tablet:px-[40rem] tablet:pb-[64rem] tablet:pt-[32rem] tablet:pb-[60rem] tablet:pt-[28rem]'>
+          <div className='flex flex-col gap-[18rem] tablet:gap-[32rem]'>
             <motion.section
               initial={{ opacity: shouldReduceMotion ? 1 : 0, y: shouldReduceMotion ? 0 : 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: shouldReduceMotion ? 0 : 0.32, ease: 'easeOut' }}
             >
-              <section ref={responseRef} id='response-section' data-section-key='response' className='scroll-mt-[180rem]'>
+              <div className='tablet:hidden'>
+                <OverallBandCard
+                  score={data.overallBand}
+                  summary={data.bandSummary ?? ''}
+                  pillLabel={data.partTitle}
+                  className='w-full'
+                />
+              </div>
+              <section
+                ref={responseRef}
+                id='response-section'
+                data-section-key='response'
+                className='mt-[16rem] scroll-mt-[150rem] tablet:mt-0 tablet:scroll-mt-[180rem]'
+              >
                 <UserResponseCard
                   title={`Your response — ${data.partTitle}`}
                   words={data.wordCount}
@@ -217,20 +250,20 @@ export function WritingFeedbackLayoutV2({ data }: WritingFeedbackLayoutV2Props) 
               </section>
             </motion.section>
 
-            <section ref={summaryRef} id='summary-section' data-section-key='summary' className='space-y-[28rem] scroll-mt-[180rem]'>
+            <section ref={summaryRef} id='summary-section' data-section-key='summary' className='space-y-[20rem] scroll-mt-[150rem] tablet:space-y-[28rem] tablet:scroll-mt-[180rem]'>
               <FeedbackSummaryGrid criteria={data.criteria} onSelect={handleSummarySelect} />
               {data.generalFeedback?.feedback ? (
-                <div className='rounded-[28rem] border border-white/70 bg-white px-[28rem] py-[24rem] text-[15rem] leading-[1.7] text-slate-700 shadow-[0_32rem_96rem_-80rem_rgba(18,37,68,0.24)]'>
-                  <p className='text-[13rem] font-semibold uppercase tracking-[0.18em] text-slate-400'>Overall impression</p>
-                  <p className='mt-[10rem]'>{data.generalFeedback.feedback}</p>
+                <div className='rounded-[20rem] border border-white/70 bg-white px-[18rem] py-[18rem] text-[14rem] leading-[1.7] text-slate-700 shadow-[0_26rem_88rem_-72rem_rgba(18,37,68,0.24)] tablet:rounded-[28rem] tablet:px-[28rem] tablet:py-[24rem] tablet:text-[15rem]'>
+                  <p className='text-[12.5rem] font-semibold uppercase tracking-[0.18em] text-slate-400 tablet:text-[13rem]'>Overall impression</p>
+                  <p className='mt-[8rem] whitespace-pre-line tablet:mt-[10rem]'>{data.generalFeedback.feedback}</p>
                 </div>
               ) : null}
             </section>
 
-            <section ref={detailsRef} id='detailed-feedback-section' data-section-key='details' className='space-y-[20rem] scroll-mt-[180rem]'>
-              <header className='space-y-[8rem]'>
-                <h2 className='text-[24rem] font-semibold text-slate-900 tablet:text-[28rem]'>Detailed feedback by band</h2>
-                <p className='text-[14rem] text-slate-600'>Explore each criterion to see breakdowns, targeted recommendations, and sub-scores.</p>
+            <section ref={detailsRef} id='detailed-feedback-section' data-section-key='details' className='space-y-[18rem] scroll-mt-[150rem] tablet:space-y-[20rem] tablet:scroll-mt-[180rem]'>
+              <header className='space-y-[6rem] tablet:space-y-[8rem]'>
+                <h2 className='text-[19rem] font-semibold text-slate-900 tablet:text-[28rem]'>Detailed feedback by band</h2>
+                <p className='text-[13.5rem] text-slate-600 tablet:text-[14rem]'>Explore each criterion to see breakdowns, targeted recommendations, and sub-scores.</p>
               </header>
               <CriterionTabs criteria={data.criteria} activeKey={activeCriterion} onChange={setActiveCriterion} />
             </section>
@@ -244,7 +277,68 @@ export function WritingFeedbackLayoutV2({ data }: WritingFeedbackLayoutV2Props) 
         active={activeSectionId}
         onSelect={key => scrollToSection(key as SectionId)}
         onViewTask={handleViewTask}
+        className='hidden tablet:block'
       />
+
+      <button
+        type='button'
+        aria-label='Open navigation menu'
+        aria-haspopup='dialog'
+        onClick={() => setIsMobileNavOpen(true)}
+        className={cn(
+          'fixed bottom-[32rem] right-[24rem] z-[45] flex size-[54rem] items-center justify-center rounded-full border border-white/80 bg-white text-slate-700 shadow-[0_24rem_48rem_-32rem_rgba(15,23,42,0.35)] transition hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 focus-visible:ring-offset-2 tablet:hidden',
+          isMobileNavOpen && 'pointer-events-none opacity-0'
+        )}
+      >
+        <Menu className='size-[22rem]' aria-hidden='true' />
+        <span className='sr-only'>Open navigation menu</span>
+      </button>
+
+      <BottomSheet open={isMobileNavOpen} onOpenChange={setIsMobileNavOpen}>
+        <BottomSheetContent className='px-[18rem] pb-[28rem]' aria-label='Writing feedback navigation'>
+          <header className='flex items-center justify-between gap-[12rem] px-[2rem] pb-[16rem]'>
+            <div className='space-y-[4rem]'>
+              <p className='text-[12rem] font-semibold uppercase tracking-[0.24em] text-slate-400'>Navigate</p>
+              <h2 className='text-[18rem] font-semibold text-slate-900 leading-[1.4]'>Go to section</h2>
+            </div>
+            <BottomSheetClose
+              className='inline-flex size-[36rem] items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 transition hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500'
+              aria-label='Close navigation menu'
+            >
+              <X className='size-[18rem]' aria-hidden='true' />
+            </BottomSheetClose>
+          </header>
+
+          <div className='flex flex-col gap-[10rem]'>
+            {SECTION_CONFIG.map(section => {
+              const isActive = activeSectionId === section.id;
+              return (
+                <button
+                  key={section.id}
+                  type='button'
+                  onClick={() => handleMobileNavSelect(section.id)}
+                  className={cn(
+                    'flex w-full items-center justify-between rounded-[18rem] border border-slate-200 px-[16rem] py-[14rem] text-left text-[15rem] font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 focus-visible:ring-offset-2',
+                    isActive && 'border-slate-900 bg-slate-900 text-white shadow-[0_18rem_44rem_-28rem_rgba(15,23,42,0.45)] hover:bg-slate-900'
+                  )}
+                >
+                  <span>{section.label}</span>
+                  <ChevronRight className={cn('size-[18rem]', isActive ? 'text-white/80' : 'text-slate-400')} aria-hidden='true' />
+                </button>
+              );
+            })}
+
+            <button
+              type='button'
+              onClick={handleMobileViewTask}
+              className='flex w-full items-center justify-between rounded-[18rem] border border-sky-200 bg-sky-50 px-[16rem] py-[14rem] text-left text-[15rem] font-semibold text-sky-700 shadow-[0_16rem_40rem_-28rem_rgba(29,78,216,0.35)] transition hover:border-sky-300 hover:bg-sky-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 focus-visible:ring-offset-2'
+            >
+              <span>View task</span>
+              <ChevronRight className='size-[18rem] text-sky-500' aria-hidden='true' />
+            </button>
+          </div>
+        </BottomSheetContent>
+      </BottomSheet>
 
       <BackToTopButton visible={showBackToTop} onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} />
 

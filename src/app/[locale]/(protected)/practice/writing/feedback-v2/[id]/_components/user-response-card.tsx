@@ -68,13 +68,15 @@ export function UserResponseCard({
       setTabsElevated(false);
       return;
     }
+    if (typeof window !== 'undefined' && window.innerWidth < 768) {
+      setShowGradient(false);
+      setTabsElevated(false);
+      return;
+    }
     const needsGradient = node.scrollHeight - node.clientHeight > node.scrollTop + 12;
     setShowGradient(needsGradient);
     setTabsElevated(node.scrollTop > 8);
   }, []);
-
-  const currentModeLabel = activeMode === 'original' ? 'Original' : 'Improved';
-  const highlightsLabel = highlightsEnabled ? 'On' : 'Off';
 
   const metaItems = useMemo(() => {
     const items = [`${words} words`];
@@ -83,13 +85,16 @@ export function UserResponseCard({
     }
 
     return items;
-  }, [words, statusMessage, currentModeLabel, highlightsLabel]);
+  }, [words, statusMessage]);
 
-  const legend = useMemo(
-    () =>
-      activeMode === 'original' ? { dotClass: 'bg-rose-400', text: 'Highlights show mistakes' } : { dotClass: 'bg-emerald-400', text: 'Highlights show AI improvements' },
-    [activeMode]
-  );
+  const legend = useMemo(() => {
+    if (!highlightsEnabled) {
+      return { dotClass: 'bg-slate-300', text: 'Highlights are currently hidden' };
+    }
+    return activeMode === 'original'
+      ? { dotClass: 'bg-rose-400', text: 'Highlights show mistakes' }
+      : { dotClass: 'bg-emerald-400', text: 'Highlights show AI improvements' };
+  }, [activeMode, highlightsEnabled]);
 
   const handleViewTask = useCallback(() => {
     onViewTask?.();
@@ -129,68 +134,116 @@ export function UserResponseCard({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, ease: 'easeOut' }}
       className={cn(
-        'flex w-full flex-col rounded-[28rem] bg-white shadow-[0_32rem_92rem_-72rem_rgba(18,37,68,0.35)]',
-        variant === 'default' ? 'border border-white/60 p-[32rem]' : 'border border-white/50 p-[24rem]',
+        'flex w-full flex-col bg-white shadow-[0_32rem_92rem_-72rem_rgba(18,37,68,0.35)]',
+        variant === 'default'
+          ? 'rounded-[20rem] border border-white/60 p-[16rem] tablet:rounded-[28rem] tablet:p-[32rem]'
+          : 'rounded-[18rem] border border-white/50 p-[16rem] tablet:rounded-[24rem] tablet:p-[24rem]',
         className
       )}
     >
-      <header className='flex min-w-0 flex-1 flex-col gap-[16rem]'>
-        <div className='flex flex-wrap items-center justify-between gap-[12rem]'>
-          <div className='flex min-w-0 flex-wrap items-center gap-[12rem]'>
-            <h2 className={cn('text-[20rem] font-semibold text-slate-900', variant === 'default' ? 'tablet:text-[22rem]' : 'tablet:text-[20rem]')}>{title}</h2>
-            {subtitle ? <span className='rounded-[16rem] bg-d-blue-secondary px-[12rem] py-[6rem] text-[12rem] font-semibold text-slate-500'>{subtitle}</span> : null}
+      <header className='flex min-w-0 flex-1 flex-col gap-[16rem] tablet:gap-[18rem]'>
+        <div className='flex flex-col gap-[12rem] tablet:flex-row tablet:flex-wrap tablet:items-center tablet:justify-between'>
+          <div className='flex min-w-0 flex-col gap-[6rem] tablet:flex-row tablet:flex-wrap tablet:items-center tablet:gap-[12rem]'>
+            <h2 className={cn('font-semibold text-slate-900', variant === 'default' ? 'text-[18rem] tablet:text-[22rem]' : 'text-[18rem] tablet:text-[20rem]')}>
+              {title}
+            </h2>
+            {subtitle ? (
+              <span className='rounded-[14rem] bg-d-blue-secondary px-[10rem] py-[4rem] text-[11rem] font-semibold text-slate-500 tablet:rounded-[16rem] tablet:px-[12rem] tablet:py-[6rem] tablet:text-[12rem]'>
+                {subtitle}
+              </span>
+            ) : null}
           </div>
           <button
             type='button'
             onClick={handleViewTask}
             title='View the original IELTS task'
-            className='inline-flex items-center gap-[10rem] rounded-[999rem] border border-sky-200 bg-sky-50 px-[16rem] py-[9rem] text-[13rem] font-semibold text-sky-700 shadow-[0_12rem_28rem_-20rem_rgba(29,78,216,0.35)] transition hover:border-sky-300 hover:bg-sky-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 focus-visible:ring-offset-2'
+            className='inline-flex items-center gap-[8rem] rounded-[999rem] border border-sky-200 bg-sky-50 px-[14rem] py-[8rem] text-[12rem] font-semibold text-sky-700 shadow-[0_12rem_28rem_-20rem_rgba(29,78,216,0.35)] transition hover:border-sky-300 hover:bg-sky-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 focus-visible:ring-offset-2 tablet:gap-[10rem] tablet:px-[16rem] tablet:py-[9rem] tablet:text-[13rem]'
           >
-            <FileText className='size-[16rem] text-sky-600' aria-hidden='true' />
+            <FileText className='size-[15rem] text-sky-600 tablet:size-[16rem]' aria-hidden='true' />
             View task
           </button>
         </div>
 
         {bandScore !== null && bandScore !== undefined ? (
-          <div className='md:mt-0 md:min-w-[220rem] md:w-auto md:self-start w-full'>
+          <div className='hidden w-full tablet:mt-0 tablet:block tablet:self-start'>
             <OverallBandCard score={bandScore} summary={bandSummary ?? ''} pillLabel={bandLabel} className='w-full' />
           </div>
         ) : null}
 
-        <div className='flex w-full flex-wrap items-center justify-between gap-[12rem]'>
-          <div className='md:text-[13rem] flex flex-wrap items-center gap-x-[10rem] gap-y-[6rem] text-[12rem] text-slate-500'>
+        <div className='flex flex-col gap-[10rem] tablet:flex-row tablet:items-center tablet:justify-between tablet:gap-[12rem]'>
+          <p className='text-[12rem] text-slate-500 tablet:text-[13rem]'>
             {metaItems.map((item, index) => (
-              <span key={`${item}-${index}`} className='flex items-center gap-[10rem]'>
+              <span key={`${item}-${index}`} className='inline-flex items-center'>
                 {index > 0 ? (
-                  <span aria-hidden='true' className='text-slate-300'>
+                  <span aria-hidden='true' className='mx-[6rem] text-slate-300'>
                     •
                   </span>
                 ) : null}
                 <span>{item}</span>
               </span>
             ))}
-          </div>
+          </p>
 
           {tabs.length > 1 ? (
-            <div className='flex items-center gap-[10rem]'>
-              <div className='flex flex-wrap items-center justify-end gap-[10rem] text-[12rem] text-slate-500'>
+            <div className='hidden items-center gap-[10rem] tablet:flex'>
+              <div className='flex items-center gap-[10rem] text-[12rem] text-slate-500'>
                 <span className={cn('size-[10rem] rounded-full', legend.dotClass)} aria-hidden='true' />
                 <span>{legend.text}</span>
-                <span aria-hidden='true' className='text-slate-300'>
-                  •
-                </span>
               </div>
 
-              <span className='text-[12rem] font-medium text-slate-500'>Mode</span>
-              <div
-                role='group'
-                aria-label='Response mode'
-                className={cn(
-                  'inline-flex items-center gap-[4rem] rounded-[999rem] border border-slate-200 bg-white/95 px-[6rem] py-[4rem] text-[12rem] font-semibold transition-shadow duration-200',
-                  tabsElevated ? 'shadow-[0_16rem_36rem_-24rem_rgba(18,37,68,0.28)]' : 'shadow-none'
-                )}
-              >
-                {tabs.map(tab => {
+              <span aria-hidden='true' className='text-[12rem] text-slate-300'>
+                •
+              </span>
+
+              <div className='flex items-center gap-[10rem]'>
+                <span className='text-[12rem] font-medium text-slate-500'>Mode</span>
+                <div
+                  role='group'
+                  aria-label='Response mode'
+                  className={cn(
+                    'inline-flex items-center gap-[4rem] rounded-[999rem] border border-slate-200 bg-white/95 px-[6rem] py-[4rem] text-[12rem] font-semibold transition-shadow duration-200',
+                    tabsElevated ? 'shadow-[0_16rem_36rem_-24rem_rgba(18,37,68,0.28)]' : 'shadow-none'
+                  )}
+                >
+                  {tabs.map(tab => {
+                    const isActive = activeMode === tab.key;
+                    return (
+                      <button
+                        key={tab.key}
+                        type='button'
+                        aria-pressed={isActive}
+                        onClick={() => setActiveMode(tab.key)}
+                        className={cn(
+                          'rounded-[999rem] px-[14rem] py-[6rem] text-[12rem] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 focus-visible:ring-offset-2',
+                          isActive
+                            ? 'bg-slate-900 text-white shadow-[0_12rem_26rem_-22rem_rgba(15,23,42,0.36)]'
+                            : 'border border-transparent text-slate-600 hover:border-slate-300 hover:bg-white'
+                        )}
+                      >
+                        {tab.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          ) : null}
+        </div>
+      </header>
+
+      {tabs.length > 1 ? (
+        <div className='sticky top-[86rem] z-[5] mt-[12rem] tablet:hidden'>
+          <div className='flex flex-col gap-[8rem] px-[4rem]'>
+            <div className='flex items-center justify-between px-[2rem] text-[12rem] font-medium text-slate-500'>
+              <span>Mode</span>
+              <span className='flex items-center gap-[6rem] text-slate-400'>
+                <span className={cn('size-[8rem] rounded-full', legend.dotClass)} aria-hidden='true' />
+                {legend.text}
+              </span>
+            </div>
+            <div className='flex w-full justify-center'>
+              <div className='relative flex w-full max-w-[420rem] items-center rounded-[999rem] bg-slate-100/90 p-[4rem] shadow-[0_8rem_24rem_-18rem_rgba(18,37,68,0.2)]'>
+                {tabs.map((tab, tabIndex) => {
                   const isActive = activeMode === tab.key;
                   return (
                     <button
@@ -199,28 +252,34 @@ export function UserResponseCard({
                       aria-pressed={isActive}
                       onClick={() => setActiveMode(tab.key)}
                       className={cn(
-                        'rounded-[999rem] px-[14rem] py-[6rem] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 focus-visible:ring-offset-2',
-                        isActive
-                          ? 'bg-slate-900 text-white shadow-[0_12rem_26rem_-22rem_rgba(15,23,42,0.36)]'
-                          : 'border border-transparent text-slate-600 hover:border-slate-300 hover:bg-white'
+                        'relative z-[1] flex h-[36rem] w-1/2 items-center justify-center rounded-[999rem] px-[12rem] text-[12.5rem] font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 focus-visible:ring-offset-2',
+                        isActive ? 'text-slate-900' : 'text-slate-500'
                       )}
                     >
-                      {tab.label}
+                      {isActive ? (
+                        <motion.span
+                          layoutId='mobile-mode-thumb'
+                          className='absolute inset-[4rem] rounded-[999rem] bg-white shadow-[0_10rem_30rem_-18rem_rgba(18,37,68,0.15)]'
+                          transition={{ type: 'spring', stiffness: 320, damping: 30 }}
+                        />
+                      ) : null}
+                      <span className='relative z-[1]'>{tab.label}</span>
                     </button>
                   );
                 })}
               </div>
             </div>
-          ) : null}
+          </div>
         </div>
-      </header>
+      ) : null}
 
-      <div className='relative mt-[18rem] flex-1 rounded-[20rem] border border-slate-100 bg-[#F8FBFF] px-[20rem] py-[18rem] text-[15rem] leading-[1.7] text-slate-700'>
+      <div className='relative mt-[14rem] flex-1 break-words rounded-[18rem] border border-slate-100 bg-[#F8FBFF] px-[16rem] py-[14rem] text-[14rem] leading-relaxed text-slate-700 tablet:mt-[18rem] tablet:rounded-[20rem] tablet:px-[20rem] tablet:py-[18rem] tablet:text-[15rem] tablet:leading-[1.7]'>
         <div
           ref={contentRef}
           role='textbox'
           aria-label={activeMode === 'original' ? 'Original response' : 'Improved response'}
-          className='max-h-[460rem] overflow-y-auto pr-[6rem] text-left scrollbar-thin scrollbar-track-transparent scrollbar-thumb-slate-200/70'
+          data-response-scroll-container='true'
+          className='mx-auto max-w-[600rem] text-left tablet:max-h-[460rem] tablet:max-w-none tablet:overflow-y-auto tablet:pr-[6rem]'
         >
           <AnimatePresence mode='wait'>
             <motion.div
@@ -229,7 +288,7 @@ export function UserResponseCard({
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -6 }}
               transition={{ duration: 0.18, ease: 'easeOut' }}
-              className='whitespace-pre-wrap'
+              className='whitespace-pre-wrap leading-relaxed tablet:leading-[1.7]'
             >
               {activeMode === 'original'
                 ? (originalContent ?? (answer?.trim() ? answer : 'Your answer will appear here once submitted.'))
@@ -242,13 +301,15 @@ export function UserResponseCard({
         <div
           aria-hidden='true'
           className={cn(
-            'pointer-events-none absolute inset-x-[20rem] bottom-[18rem] h-[56rem] rounded-b-[18rem] bg-gradient-to-t from-[#F8FBFF] via-[#F8FBFF]/80 to-transparent transition-opacity duration-200',
+            'pointer-events-none absolute inset-x-[16rem] bottom-[14rem] hidden h-[48rem] rounded-b-[16rem] bg-gradient-to-t from-[#F8FBFF] via-[#F8FBFF]/80 to-transparent transition-opacity duration-200 tablet:inset-x-[20rem] tablet:bottom-[18rem] tablet:block tablet:h-[56rem] tablet:rounded-b-[18rem]',
             showGradient ? 'opacity-100' : 'opacity-0'
           )}
         />
       </div>
 
-      {activeMode === 'improved' && improvedHelpText ? <p className='mt-[16rem] text-[13rem] text-slate-500'>{improvedHelpText}</p> : null}
+      {activeMode === 'improved' && improvedHelpText ? (
+        <p className='mt-[14rem] text-[12.5rem] text-slate-500 tablet:mt-[16rem] tablet:text-[13rem]'>{improvedHelpText}</p>
+      ) : null}
     </motion.section>
   );
 }

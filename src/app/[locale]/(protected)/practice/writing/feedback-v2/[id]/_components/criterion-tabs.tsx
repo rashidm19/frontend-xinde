@@ -58,9 +58,14 @@ export function CriterionTabs({ criteria, activeKey, onChange }: CriterionTabsPr
   const shouldReduceMotion = useReducedMotion();
 
   return (
-    <section className='space-y-[24rem]'>
-      <div className='sticky top-[120rem] z-[10] rounded-[26rem] border border-white/70 bg-white px-[10rem] py-[10rem] shadow-[0_26rem_88rem_-72rem_rgba(18,37,68,0.24)]'>
-        <div className='flex flex-wrap gap-[12rem]'>
+    <section className='space-y-[18rem] tablet:space-y-[24rem]'>
+      <div className='sticky top-[74rem] z-[10] rounded-[20rem] border border-white/70 bg-white px-[6rem] py-[6rem] shadow-[0_18rem_66rem_-54rem_rgba(18,37,68,0.24)] tablet:top-[120rem] tablet:rounded-[26rem] tablet:px-[10rem] tablet:py-[10rem] tablet:shadow-[0_26rem_88rem_-72rem_rgba(18,37,68,0.24)]'>
+        <div className='scrollable-tabs -mx-[4rem] flex flex-nowrap gap-[8rem] overflow-x-auto px-[4rem] pb-[6rem] [scrollbar-width:none] [-ms-overflow-style:none] tablet:mx-0 tablet:flex-wrap tablet:gap-[12rem] tablet:overflow-visible tablet:px-0 tablet:pb-0'>
+          <style jsx>{`
+            .scrollable-tabs::-webkit-scrollbar {
+              display: none;
+            }
+          `}</style>
           {criteria.map(item => {
             const accent = ACCENTS[item.key];
             const isActive = item.key === activeKey;
@@ -69,7 +74,7 @@ export function CriterionTabs({ criteria, activeKey, onChange }: CriterionTabsPr
                 key={item.key}
                 type='button'
                 onClick={() => onChange(item.key)}
-                className='relative overflow-hidden rounded-[20rem] px-[20rem] py-[12rem] text-[13rem] font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 focus-visible:ring-offset-2'
+                className='relative flex-shrink-0 overflow-hidden rounded-[18rem] px-[16rem] py-[10rem] text-[12rem] font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 focus-visible:ring-offset-2 tablet:flex-shrink tablet:rounded-[20rem] tablet:px-[20rem] tablet:py-[12rem] tablet:text-[13rem]'
               >
                 {isActive ? (
                   <motion.span
