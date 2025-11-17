@@ -243,7 +243,7 @@ export function UserResponseCard({
             </div>
             <div className='flex w-full justify-center'>
               <div className='relative flex w-full max-w-[420rem] items-center rounded-[999rem] bg-slate-100/90 p-[4rem] shadow-[0_8rem_24rem_-18rem_rgba(18,37,68,0.2)]'>
-                {tabs.map((tab, tabIndex) => {
+                {tabs.map(tab => {
                   const isActive = activeMode === tab.key;
                   return (
                     <button

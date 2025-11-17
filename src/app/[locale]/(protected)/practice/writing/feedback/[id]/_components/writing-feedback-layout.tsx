@@ -33,11 +33,11 @@ const SECTION_ORDER = SECTION_CONFIG.map(section => section.id) as SectionId[];
 
 const isDivElement = (node: HTMLDivElement | null): node is HTMLDivElement => node !== null;
 
-interface WritingFeedbackLayoutV2Props {
+interface WritingFeedbackLayoutProps {
   data: WritingFeedbackV2Normalized;
 }
 
-export function WritingFeedbackLayoutV2({ data }: WritingFeedbackLayoutV2Props) {
+export function WritingFeedbackLayout({ data }: WritingFeedbackLayoutProps) {
   const responseRef = useRef<HTMLDivElement | null>(null);
   const summaryRef = useRef<HTMLDivElement | null>(null);
   const detailsRef = useRef<HTMLDivElement | null>(null);
@@ -211,7 +211,7 @@ export function WritingFeedbackLayoutV2({ data }: WritingFeedbackLayoutV2Props) 
       <div ref={headerSentinelRef} aria-hidden='true' className='h-[1px]' />
 
       <main className='bg-[#EAF7FF]'>
-        <div className='container w-full px-[16rem] pb-[88rem] pt-[24rem] tablet:max-w-[1600rem] tablet:px-[40rem] tablet:pb-[64rem] tablet:pt-[32rem] tablet:pb-[60rem] tablet:pt-[28rem]'>
+        <div className='container w-full px-[16rem] pb-[88rem] pt-[24rem] tablet:max-w-[1600rem] tablet:px-[40rem] tablet:pb-[64rem] tablet:pt-[32rem] '>
           <div className='flex flex-col gap-[18rem] tablet:gap-[32rem]'>
             <motion.section
               initial={{ opacity: shouldReduceMotion ? 1 : 0, y: shouldReduceMotion ? 0 : 20 }}
