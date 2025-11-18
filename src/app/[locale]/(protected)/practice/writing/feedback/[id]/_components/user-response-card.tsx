@@ -279,7 +279,7 @@ export function UserResponseCard({
           role='textbox'
           aria-label={activeMode === 'original' ? 'Original response' : 'Improved response'}
           data-response-scroll-container='true'
-          className='mx-auto max-w-[600rem] text-left tablet:max-h-[460rem] tablet:max-w-none tablet:overflow-y-auto tablet:pr-[6rem]'
+          className='mx-auto max-w-[600rem] text-left tablet:max-w-none tablet:pr-[6rem]'
         >
           <AnimatePresence mode='wait'>
             <motion.div
