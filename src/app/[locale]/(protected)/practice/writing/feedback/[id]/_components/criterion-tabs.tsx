@@ -26,12 +26,12 @@ const ACCENTS: Record<CriterionKey, { badge: string; badgeText: string; focusBg:
   },
   coherence: {
     badge: 'bg-[#E6EDFF]',
-    badgeText: 'text-[#3B5BDB]',
+    badgeText: 'text-sky-700',
     focusBg: 'bg-[#F0F4FF]',
-    focusText: 'text-[#3B5BDB]',
+    focusText: 'text-sky-700',
     tabBg: 'bg-[#E6EDFF]',
-    tabText: 'text-[#3B5BDB]',
-    tabActiveText: 'text-[#3B5BDB]',
+    tabText: 'text-sky-700',
+    tabActiveText: 'text-sky-700',
   },
   lexical: {
     badge: 'bg-[#E0FBF7]',

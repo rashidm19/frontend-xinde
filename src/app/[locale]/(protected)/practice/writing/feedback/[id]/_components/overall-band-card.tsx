@@ -12,8 +12,7 @@ interface OverallBandCardProps {
 }
 
 const GRADIENTS = [
-  { threshold: 7.5, className: 'from-[#ECFFF6] via-[#E6F5FF] to-[#E8EFFF]' },
-  { threshold: 6.5, className: 'from-[#FFF8EC] via-[#FFF2E4] to-[#FFEADD]' },
+  { threshold: 5, className: 'from-[#ECFFF6] via-[#E6F5FF] to-[#E8EFFF]' },
   { threshold: 0, className: 'from-[#FFF1F1] via-[#FFE9EE] to-[#FFE0E9]' },
 ];
 
@@ -69,7 +68,7 @@ export function OverallBandCard({ score, summary, pillLabel, className }: Overal
           </div>
           <div className='h-[6rem] w-full rounded-[999rem] bg-white/75'>
             <motion.div
-              className='h-full rounded-[999rem] bg-[#2D4AA8]'
+              className='h-full rounded-[999rem] bg-sky-700'
               initial={{ width: 0 }}
               animate={{ width: `${progress}%` }}
               transition={{ duration: shouldReduceMotion ? 0 : 0.38, ease: 'easeOut' }}
