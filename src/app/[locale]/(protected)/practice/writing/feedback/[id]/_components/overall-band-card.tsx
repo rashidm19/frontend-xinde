@@ -12,8 +12,7 @@ interface OverallBandCardProps {
 }
 
 const GRADIENTS = [
-  { threshold: 7.5, className: 'from-[#ECFFF6] via-[#E6F5FF] to-[#E8EFFF]' },
-  { threshold: 6.5, className: 'from-[#FFF8EC] via-[#FFF2E4] to-[#FFEADD]' },
+  { threshold: 5, className: 'from-[#ECFFF6] via-[#E6F5FF] to-[#E8EFFF]' },
   { threshold: 0, className: 'from-[#FFF1F1] via-[#FFE9EE] to-[#FFE0E9]' },
 ];
 

@@ -206,7 +206,7 @@ export function WritingFeedbackLayout({ data }: WritingFeedbackLayoutProps) {
       <div className='hidden tablet:block'>
         <WritingFeedbackHeader title='Writing Feedback' exitHref='/profile' />
       </div>
-      <MobileHeader title='Writing Feedback' tag='Writing' exitLabel='Exit' closeAs='link' closeHref='/profile' variant='writing' />
+      <MobileHeader title='Writing Practice' tag='Feedback' exitLabel='Exit' closeAs='link' closeHref='/profile' variant='writing' />
 
       <div ref={headerSentinelRef} aria-hidden='true' className='h-[1px]' />
 
