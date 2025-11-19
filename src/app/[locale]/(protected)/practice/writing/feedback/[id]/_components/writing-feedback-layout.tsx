@@ -318,8 +318,8 @@ export function WritingFeedbackLayout({ data }: WritingFeedbackLayoutProps) {
                   type='button'
                   onClick={() => handleMobileNavSelect(section.id)}
                   className={cn(
-                    'flex w-full items-center justify-between rounded-[18rem] border border-slate-200 px-[16rem] py-[14rem] text-left text-[15rem] font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 focus-visible:ring-offset-2',
-                    isActive && 'border-slate-900 bg-slate-900 text-white shadow-[0_18rem_44rem_-28rem_rgba(15,23,42,0.45)] hover:bg-slate-900'
+                    'flex w-full items-center justify-between rounded-[18rem] border border-slate-200 px-[16rem] py-[14rem] text-left text-[15rem] font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2',
+                    isActive && 'border-sky-700 bg-sky-700 text-white shadow-[0_18rem_44rem_-28rem_rgba(45,78,168,0.4)] hover:bg-[#2743B2]'
                   )}
                 >
                   <span>{section.label}</span>

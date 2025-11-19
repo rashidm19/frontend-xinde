@@ -202,7 +202,7 @@ export function UserResponseCard({
                   aria-label='Response mode'
                   className={cn(
                     'inline-flex items-center gap-[4rem] rounded-[999rem] border border-slate-200 bg-white/95 px-[6rem] py-[4rem] text-[12rem] font-semibold transition-shadow duration-200',
-                    tabsElevated ? 'shadow-[0_16rem_36rem_-24rem_rgba(18,37,68,0.28)]' : 'shadow-none'
+                    tabsElevated ? 'shadow-[0_16rem_36rem_-24rem_rgba(42,73,170,0.28)]' : 'shadow-none'
                   )}
                 >
                   {tabs.map(tab => {
@@ -214,9 +214,9 @@ export function UserResponseCard({
                         aria-pressed={isActive}
                         onClick={() => setActiveMode(tab.key)}
                         className={cn(
-                          'rounded-[999rem] px-[14rem] py-[6rem] text-[12rem] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 focus-visible:ring-offset-2',
+                          'rounded-[999rem] px-[14rem] py-[6rem] text-[12rem] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2',
                           isActive
-                            ? 'bg-slate-900 text-white shadow-[0_12rem_26rem_-22rem_rgba(15,23,42,0.36)]'
+                            ? 'bg-sky-700 text-white shadow-[0_12rem_26rem_-22rem_rgba(45,78,168,0.32)]'
                             : 'border border-transparent text-slate-600 hover:border-slate-300 hover:bg-white'
                         )}
                       >
@@ -242,7 +242,7 @@ export function UserResponseCard({
               </span>
             </div>
             <div className='flex w-full justify-center'>
-              <div className='relative flex w-full max-w-[420rem] items-center rounded-[999rem] bg-slate-100/90 p-[4rem] shadow-[0_8rem_24rem_-18rem_rgba(18,37,68,0.2)]'>
+              <div className='relative flex w-full max-w-[420rem] items-center rounded-[999rem] bg-slate-100/90 p-[4rem] shadow-[0_8rem_24rem_-18rem_rgba(42,73,170,0.2)]'>
                 {tabs.map(tab => {
                   const isActive = activeMode === tab.key;
                   return (
@@ -252,8 +252,8 @@ export function UserResponseCard({
                       aria-pressed={isActive}
                       onClick={() => setActiveMode(tab.key)}
                       className={cn(
-                        'relative z-[1] flex h-[36rem] w-1/2 items-center justify-center rounded-[999rem] px-[12rem] text-[12.5rem] font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 focus-visible:ring-offset-2',
-                        isActive ? 'text-slate-900' : 'text-slate-500'
+                        'relative z-[1] flex h-[36rem] w-1/2 items-center justify-center rounded-[999rem] px-[12rem] text-[12.5rem] font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2',
+                        isActive ? 'text-sky-700' : 'text-slate-500'
                       )}
                     >
                       {isActive ? (

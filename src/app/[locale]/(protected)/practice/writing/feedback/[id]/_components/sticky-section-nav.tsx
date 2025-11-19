@@ -45,9 +45,9 @@ export function StickySectionNav({ visible, sections, active, onSelect, onViewTa
                 aria-current={isActive ? 'page' : undefined}
                 onClick={() => onSelect(section.key)}
                 className={cn(
-                  'whitespace-nowrap rounded-[14rem] px-[14rem] py-[6rem] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 focus-visible:ring-offset-2 tablet:rounded-[16rem] tablet:px-[16rem] tablet:py-[8rem]',
+                  'whitespace-nowrap rounded-[14rem] px-[14rem] py-[6rem] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2 tablet:rounded-[16rem] tablet:px-[16rem] tablet:py-[8rem]',
                   isActive
-                    ? 'bg-slate-900 text-white shadow-[0_12rem_28rem_-22rem_rgba(15,23,42,0.34)]'
+                    ? 'bg-sky-700 text-white shadow-[0_12rem_28rem_-22rem_rgba(45,78,168,0.34)]'
                     : 'border border-transparent text-slate-600/85 hover:border-slate-300 hover:bg-white/90'
                 )}
               >

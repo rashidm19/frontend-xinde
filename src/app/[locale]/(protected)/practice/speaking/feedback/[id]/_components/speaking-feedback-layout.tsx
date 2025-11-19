@@ -381,7 +381,7 @@ export function SpeakingFeedbackLayout({ data }: SpeakingFeedbackLayoutProps) {
                   onClick={() => handleMobileNavSelect(section.id)}
                   className={cn(
                     'flex w-full items-center justify-between rounded-[18rem] border border-slate-200 px-[16rem] py-[14rem] text-left text-[15rem] font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 focus-visible:ring-offset-2',
-                    isActive && 'border-slate-900 bg-slate-900 text-white shadow-[0_18rem_44rem_-28rem_rgba(15,23,42,0.45)] hover:bg-slate-900'
+                    isActive && 'border-sky-700 bg-sky-700 text-white shadow-[0_18rem_44rem_-28rem_rgba(15,23,42,0.45)] hover:bg-sky-700'
                   )}
                 >
                   <span>{section.label}</span>
@@ -467,7 +467,7 @@ function SpeakingResponseContent({ questions }: { questions: SpeakingResponseQue
             className='space-y-[12rem] rounded-[20rem] border border-slate-100 bg-white px-[16rem] py-[16rem] tablet:rounded-[24rem] tablet:px-[20rem] tablet:py-[18rem]'
           >
             <div className='flex items-start gap-[12rem]'>
-              <span className='mt-[2rem] inline-flex size-[22rem] flex-shrink-0 items-center justify-center rounded-full bg-slate-900 text-[11.5rem] font-semibold text-white tablet:mt-0 tablet:size-[26rem] tablet:text-[12rem]'>
+              <span className='mt-[2rem] inline-flex size-[22rem] flex-shrink-0 items-center justify-center rounded-full bg-sky-700 text-[11.5rem] font-semibold text-white tablet:mt-0 tablet:size-[26rem] tablet:text-[12rem]'>
                 {index + 1}
               </span>
               <p className='text-[15rem] font-medium leading-[1.5] text-slate-800 tablet:text-[15.5rem]'>{question.question}</p>

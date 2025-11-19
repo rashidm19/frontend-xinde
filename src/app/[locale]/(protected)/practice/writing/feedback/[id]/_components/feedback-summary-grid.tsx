@@ -11,7 +11,7 @@ interface FeedbackSummaryGridProps {
 
 const CRITERION_BADGES: Record<NormalizedCriterionData['key'], { bg: string; text: string; border: string }> = {
   task: { bg: 'bg-[#FFE5F1]', text: 'text-[#B91C6F]', border: 'border-[#FECFE0]' },
-  coherence: { bg: 'bg-[#E6EDFF]', text: 'text-[#3B5BDB]', border: 'border-[#D4E0FF]' },
+  coherence: { bg: 'bg-[#E6EDFF]', text: 'text-sky-700', border: 'border-[#D4E0FF]' },
   lexical: { bg: 'bg-[#E0FBF7]', text: 'text-[#0F766E]', border: 'border-[#C6F7EE]' },
   grammar: { bg: 'bg-[#FFF2DE]', text: 'text-[#B45309]', border: 'border-[#FFE2B8]' },
 };
