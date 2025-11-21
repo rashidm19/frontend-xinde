@@ -8,13 +8,14 @@ import { cn } from '@/lib/utils';
 interface BackToTopButtonProps {
   visible: boolean;
   onClick: () => void;
-  variant?: 'writing' | 'reading';
+  variant?: 'writing' | 'reading' | 'listening';
   display?: 'tablet-only' | 'all';
 }
 
-const VARIANT_CLASSES: Record<'writing' | 'reading', string> = {
+const VARIANT_CLASSES: Record<'writing' | 'reading' | 'listening', string> = {
   writing: 'bg-sky-700 hover:bg-[#2743B2] text-white shadow-[0_18rem_40rem_-28rem_rgba(45,78,168,0.4)] focus-visible:ring-sky-500',
   reading: 'bg-[#4C7A3A] hover:bg-[#3C612E] text-white shadow-[0_18rem_42rem_-28rem_rgba(76,122,58,0.35)] focus-visible:ring-[#2F5E25]',
+  listening: 'bg-[#2F8F68] hover:bg-[#247052] text-white shadow-[0_18rem_42rem_-28rem_rgba(47,143,104,0.35)] focus-visible:ring-[#1E5A45]',
 };
 
 export function BackToTopButton({ visible, onClick, variant = 'writing', display = 'tablet-only' }: BackToTopButtonProps) {

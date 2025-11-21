@@ -1,14 +1,29 @@
 'use client';
 
-import { type ReactNode, useCallback, useMemo, useRef, useState } from 'react';
+import Link from 'next/link';
+import { type MouseEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { motion, useReducedMotion } from 'framer-motion';
-import { ArrowLeft, BookOpenText, CircleHelp, Clock3, Headphones, LogOut, Sparkles, Table } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { CircleHelp, Table } from 'lucide-react';
+import { useMediaQuery } from 'usehooks-ts';
 
-import type { AnswerSheetQuestion, BandMappingEntry, ReviewListHandle } from '@/components/answer-sheets';
-import { AnswersGrid, BandMappingModal, DEFAULT_BAND_MAPPING, LegendTooltip, MistakesReviewModal, ResultOverview, ReviewList } from '@/components/answer-sheets';
+import type { BandMappingEntry } from '@/components/answer-sheets';
+import { DEFAULT_BAND_MAPPING } from '@/components/answer-sheets';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import type { PracticeListeningResult, PracticeListeningResultQuestion } from '@/types/PracticeListening';
+import { BackToTopButton } from '@/app/[locale]/(protected)/practice/writing/feedback/[id]/_components/back-to-top-button';
+
+import { AnswerTilesGrid } from './answers-overview-grid';
+import { FilterPillsBar } from './filter-bar';
+import { ListeningBandMappingModal } from './listening-band-mapping-modal';
+import { ListeningCtaCard } from './listening-cta-card';
+import { ListeningDetailedReview, type ListeningDetailedReviewHandle } from './detailed-review';
+import { ListeningFiltersSheet } from './listening-filters-sheet';
+import { ListeningMistakesModal } from './listening-mistakes-modal';
+import { ListeningSummaryCard } from './listening-summary-card';
+import type { ListeningFilterKey, NormalizedListeningQuestion } from './question-types';
+import { WritingFeedbackHeader } from '@/components/practice/WritingFeedbackHeader';
+import { MobileHeader } from '@/components/practice/reading/mobile/MobileHeader';
 
 interface ListeningMeta {
   testName?: string | null;
@@ -24,19 +39,34 @@ interface ListeningAnswerSheetProps {
   onRetry?: () => void;
 }
 
+const MOBILE_FILTER_LABELS: Record<ListeningFilterKey, string> = {
+  all: 'All',
+  correct: 'Correct',
+  incorrect: 'Incorrect',
+  unanswered: 'Unanswered',
+};
+
 export function ListeningAnswerSheet({ data, locale, meta, bandMapping, onRetry }: ListeningAnswerSheetProps) {
-  const router = useRouter();
   const shouldReduceMotion = useReducedMotion() ?? false;
-  const [reviewModalOpen, setReviewModalOpen] = useState(false);
+  const isMobile = useMediaQuery('(max-width: 767px)');
+
+  const [activeFilter, setActiveFilter] = useState<ListeningFilterKey>('all');
+  const [activeMobileTab, setActiveMobileTab] = useState<'overview' | 'detailed'>('overview');
+  const [mistakesOpen, setMistakesOpen] = useState(false);
   const [bandModalOpen, setBandModalOpen] = useState(false);
-  const reviewListRef = useRef<ReviewListHandle>(null);
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [pendingFocus, setPendingFocus] = useState<number | null>(null);
+  const [showScrollTop, setShowScrollTop] = useState(false);
+  const mobileTabIndex = activeMobileTab === 'overview' ? 0 : 1;
+
+  const detailedRef = useRef<ListeningDetailedReviewHandle>(null);
 
   const total = data.questions.length;
 
-  const normalizedQuestions = useMemo<AnswerSheetQuestion[]>(() => {
+  const normalizedQuestions = useMemo<NormalizedListeningQuestion[]>(() => {
     return data.questions.map((question, index) => {
-      const hasAnswer = typeof question.answer === 'string' && question.answer.trim().length > 0;
-      const status = hasAnswer ? (question.correct ? 'correct' : 'incorrect') : 'unanswered';
+      const answer = typeof question.answer === 'string' && question.answer.trim().length > 0 ? question.answer.trim() : null;
+      const status: NormalizedListeningQuestion['status'] = answer ? (question.correct ? 'correct' : 'incorrect') : 'unanswered';
 
       const extras = question as PracticeListeningResultQuestion & {
         section?: number | string | null;
@@ -44,267 +74,389 @@ export function ListeningAnswerSheet({ data, locale, meta, bandMapping, onRetry 
       };
 
       const sectionLabel = typeof extras.section === 'number' ? `Section ${extras.section}` : typeof extras.section === 'string' ? extras.section : null;
-
       const timestampSeconds = typeof extras.timestamp_sec === 'number' ? extras.timestamp_sec : null;
 
       return {
         number: index + 1,
         status,
-        answer: hasAnswer ? (question.answer ?? null) : null,
+        answer,
         correctAnswer: question.correct_answer ?? null,
         sectionLabel,
         timestampSeconds,
         detailHint: null,
-      } satisfies AnswerSheetQuestion;
+      } satisfies NormalizedListeningQuestion;
     });
   }, [data.questions]);
+
+  const filterCounts = useMemo(() => {
+    return {
+      all: normalizedQuestions.length,
+      correct: normalizedQuestions.filter(question => question.status === 'correct').length,
+      incorrect: normalizedQuestions.filter(question => question.status === 'incorrect').length,
+      unanswered: normalizedQuestions.filter(question => question.status === 'unanswered').length,
+    } satisfies Record<ListeningFilterKey, number>;
+  }, [normalizedQuestions]);
 
   const correctCount = useMemo(() => {
     if (typeof data.correct_answers_count === 'number') {
       return data.correct_answers_count;
     }
-    return normalizedQuestions.filter(question => question.status === 'correct').length;
-  }, [data.correct_answers_count, normalizedQuestions]);
+    return filterCounts.correct;
+  }, [data.correct_answers_count, filterCounts.correct]);
 
-  const hasAnyAnswers = useMemo(() => normalizedQuestions.some(question => question.status !== 'unanswered'), [normalizedQuestions]);
+  const hasAnyAnswers = filterCounts.correct + filterCounts.incorrect > 0;
 
   const mistakeQuestions = useMemo(() => normalizedQuestions.filter(question => question.status !== 'correct'), [normalizedQuestions]);
 
   const effectiveBandMapping = useMemo(() => (bandMapping?.length ? bandMapping : DEFAULT_BAND_MAPPING), [bandMapping]);
 
-  const metaItems = useMemo(() => {
-    const items: { icon: ReactNode; label: string }[] = [];
-    const title = data.title ?? meta?.testName ?? null;
-    if (title) {
-      items.push({
-        icon: <BookOpenText className='size-[16rem]' aria-hidden='true' />,
-        label: title,
-      });
+  const activeFilterLabel = useMemo(() => MOBILE_FILTER_LABELS[activeFilter], [activeFilter]);
+
+  useEffect(() => {
+    if (!isMobile) {
+      setActiveMobileTab('overview');
     }
+  }, [isMobile]);
 
-    if (typeof meta?.elapsedMinutes === 'number' && !Number.isNaN(meta.elapsedMinutes)) {
-      items.push({
-        icon: <Clock3 className='size-[16rem]' aria-hidden='true' />,
-        label: `${meta.elapsedMinutes} min`,
-      });
-    }
-
-    return items;
-  }, [data.title, meta?.elapsedMinutes, meta?.testName]);
-
-  const metaDescription = useMemo(() => {
-    const completedAt = meta?.takenAt ?? data.completed_at;
-    if (!completedAt) {
-      return null;
-    }
-
-    const parsed = new Date(completedAt);
-    if (Number.isNaN(parsed.getTime())) {
-      return null;
-    }
-
-    return `Completed ${parsed.toLocaleString()}`;
-  }, [data.completed_at, meta?.takenAt]);
-
-  const handleBack = useCallback(() => {
-    router.back();
-  }, [router]);
-
-  const handleExit = useCallback(() => {
-    router.push(`/${locale}/profile`);
-  }, [locale, router]);
-
-  const handleRetry = useCallback(() => {
-    if (onRetry) {
-      onRetry();
+  useEffect(() => {
+    if (pendingFocus === null) {
       return;
     }
-    router.push(`/${locale}/practice/listening/rules`);
-  }, [locale, onRetry, router]);
 
-  const handleQuestionSelect = useCallback((questionNumber: number) => {
-    reviewListRef.current?.focusQuestion(questionNumber);
+    if (isMobile && activeMobileTab !== 'detailed') {
+      return;
+    }
+
+    const questionNumber = pendingFocus;
+    setPendingFocus(null);
+
+    requestAnimationFrame(() => {
+      detailedRef.current?.focusQuestion(questionNumber);
+    });
+  }, [pendingFocus, activeMobileTab, isMobile]);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (typeof window === 'undefined') {
+        return;
+      }
+      setShowScrollTop(window.scrollY > 300);
+    };
+
+    handleScroll();
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const focusQuestion = useCallback(
+    (questionNumber: number) => {
+      if (isMobile) {
+        setActiveMobileTab('detailed');
+        setPendingFocus(questionNumber);
+        return;
+      }
+      detailedRef.current?.focusQuestion(questionNumber);
+    },
+    [isMobile]
+  );
+
+  const completedAt = useMemo(() => meta?.takenAt ?? data.completed_at ?? null, [data.completed_at, meta?.takenAt]);
+  const testTitle = useMemo(() => data.title ?? meta?.testName ?? null, [data.title, meta?.testName]);
+
+  const startNewHref = `/${locale}/practice/listening/rules`;
+
+  const handleStartNew = useCallback(
+    (event?: MouseEvent<HTMLAnchorElement>) => {
+      if (!onRetry) {
+        return;
+      }
+      if (event) {
+        event.preventDefault();
+      }
+      onRetry();
+    },
+    [onRetry]
+  );
+
+  const handleMobileTabChange = useCallback((value: 'overview' | 'detailed') => {
+    setActiveMobileTab(value);
+  }, []);
+
+  const closeAllSheets = useCallback(() => {
+    setMistakesOpen(false);
+    setBandModalOpen(false);
+    setFiltersOpen(false);
+  }, []);
+
+  const handleFilterSelect = useCallback((value: ListeningFilterKey, closeSheet = false) => {
+    setActiveFilter(value);
+    if (closeSheet) {
+      setFiltersOpen(false);
+    }
+  }, []);
+
+  const handleScrollTop = useCallback(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
 
   return (
-    <div className='relative min-h-screen bg-gradient-to-b from-[#EEF3FF] via-white to-white'>
-      <div className='mx-auto flex w-full max-w-[1240rem] flex-col gap-[28rem] px-[28rem] pb-[64rem] pt-[36rem] tablet:px-[40rem] desktop:px-[56rem]'>
-        <header className='flex flex-wrap items-center justify-between gap-[16rem] rounded-[28rem] border border-white/40 bg-white/70 px-[24rem] py-[18rem] shadow-[0_20rem_50rem_-40rem_rgba(62,88,189,0.55)] backdrop-blur'>
-          <nav aria-label='Page navigation' className='flex items-center gap-[12rem]'>
-            <button
-              type='button'
-              onClick={handleBack}
-              className='inline-flex items-center gap-[10rem] rounded-[18rem] border border-slate-200 bg-white px-[16rem] py-[10rem] text-[13rem] font-semibold text-slate-600 transition hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 focus-visible:ring-offset-2'
-            >
-              <ArrowLeft className='size-[16rem]' aria-hidden='true' />
-              Back to tasks
-            </button>
-          </nav>
-          <div className='flex flex-col items-center gap-[6rem] text-center'>
-            <span className='text-[13rem] font-semibold uppercase tracking-[0.22em] text-slate-400'>Listening results</span>
-            <h1 className='text-[20rem] font-semibold text-slate-900 tablet:text-[22rem]'>Answer sheet</h1>
-          </div>
-          <div className='flex items-center gap-[12rem]'>
-            <div className='inline-flex items-center gap-[10rem] rounded-[20rem] border border-slate-200 bg-white px-[18rem] py-[10rem] text-[13rem] font-semibold text-slate-600 shadow-[0_18rem_32rem_-26rem_rgba(27,52,129,0.4)]'>
-              <span className='rounded-[12rem] bg-slate-900 px-[12rem] py-[6rem] text-white'>Listening</span>
-              <span>{total} questions</span>
-            </div>
-            <button
-              type='button'
-              onClick={handleExit}
-              className='inline-flex items-center gap-[8rem] rounded-[18rem] border border-slate-200 bg-white px-[18rem] py-[10rem] text-[13rem] font-semibold text-slate-600 transition hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 focus-visible:ring-offset-2'
-            >
-              Exit
-              <LogOut className='size-[16rem]' aria-hidden='true' />
-            </button>
-          </div>
-        </header>
+    <div className='relative min-h-screen bg-[#F4FFF6]'>
+      <div className='hidden tablet:block'>
+        <WritingFeedbackHeader title='Listening Answer Sheet' />
+      </div>
+      <MobileHeader title='Listening Practice' tag='Answer Sheet' exitLabel='Exit' closeAs='link' closeHref='/profile' variant='listening' />
 
-        <ResultOverview
-          icon={<Headphones className='size-[26rem]' aria-hidden='true' />}
-          accentLabel='Listening'
-          accentValue={`${total} questions`}
+      <main className='mx-auto w-full max-w-[1180rem] space-y-[28rem] px-[20rem] pb-[96rem] pt-[24rem] tablet:space-y-[40rem] tablet:px-[48rem] tablet:pt-[48rem] desktop:px-[64rem] desktop:pt-[56rem]'>
+        <ListeningSummaryCard
           correctCount={correctCount}
           totalCount={total}
-          metaItems={metaItems}
-          metaDescription={metaDescription}
-          contextDescription={null}
+          testTitle={testTitle}
+          completedAt={completedAt}
           shouldReduceMotion={shouldReduceMotion}
         />
 
-        <section className='space-y-[20rem]'>
-          <header className='flex flex-wrap items-center justify-between gap-[16rem]'>
-            <div className='flex items-center gap-[12rem]'>
-              <span className='text-[15rem] font-semibold text-slate-900'>Answers overview</span>
-              <span className='rounded-[18rem] bg-white px-[14rem] py-[6rem] text-[12rem] font-semibold uppercase tracking-[0.2em] text-slate-500 shadow-[0_12rem_24rem_-20rem_rgba(34,51,120,0.35)]'>
-                Quick scan
-              </span>
+        <section className='space-y-[24rem] rounded-[32rem] border border-[#CFE7D5] bg-white px-[24rem] py-[28rem] shadow-[0_18rem_48rem_-30rem_rgba(47,143,104,0.16)]'>
+          <header className='flex flex-col gap-[6rem] text-[#0F3A2E] tablet:flex-row tablet:items-center tablet:justify-between'>
+            <div className='flex flex-col gap-[4rem]'>
+              <span className='text-[12rem] font-semibold uppercase tracking-[0.24em] text-[#2F8F68]/80'>Answers overview</span>
+              <h2 className='text-[18rem] font-semibold'>Quick scan</h2>
             </div>
-            <LegendTooltip shouldReduceMotion={shouldReduceMotion} />
+            <p className='text-[13rem] text-[#0F3A2E]/70'>Tap a tile to jump into the detailed review below.</p>
           </header>
-          <AnswersGrid questions={normalizedQuestions} shouldReduceMotion={shouldReduceMotion} onQuestionSelect={handleQuestionSelect} />
+
+          {isMobile ? (
+            <Tabs value={activeMobileTab} onValueChange={value => handleMobileTabChange(value as 'overview' | 'detailed')}>
+              <div className='flex items-center justify-between gap-[12rem]'>
+                <div className='relative flex w-full max-w-[260rem] items-center justify-between rounded-[999rem] bg-[#EAF8F0] p-[4rem]'>
+                  <motion.span
+                    initial={false}
+                    animate={{ x: `${mobileTabIndex * 100}%` }}
+                    transition={shouldReduceMotion ? { duration: 0 } : { duration: 0.22, ease: 'easeOut' }}
+                    className='absolute bottom-[4rem] top-[4rem] w-1/2 rounded-[999rem] bg-white shadow-[0_6rem_18rem_rgba(47,143,104,0.18)]'
+                  />
+                  <TabsList className='relative z-[1] flex w-full items-center justify-between rounded-[999rem] bg-transparent'>
+                    <TabsTrigger
+                      value='overview'
+                      className='w-1/2 rounded-[999rem] px-[16rem] py-[8rem] text-[13rem] font-semibold text-[#2F8F68]/90 transition data-[state=active]:text-[#0F3A2E] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2F8F68] focus-visible:ring-offset-1'
+                    >
+                      Overview
+                    </TabsTrigger>
+                    <TabsTrigger
+                      value='detailed'
+                      className='w-1/2 rounded-[999rem] px-[16rem] py-[8rem] text-[13rem] font-semibold text-[#2F8F68]/90 transition data-[state=active]:text-[#0F3A2E] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2F8F68] focus-visible:ring-offset-1'
+                    >
+                      Detailed
+                    </TabsTrigger>
+                  </TabsList>
+                </div>
+                <button
+                  type='button'
+                  onClick={() => {
+                    closeAllSheets();
+                    setFiltersOpen(true);
+                  }}
+                  aria-haspopup='dialog'
+                  aria-expanded={filtersOpen}
+                  className='inline-flex shrink-0 items-center gap-[6rem] rounded-[999rem] border border-[#CFE7D5] px-[14rem] py-[8rem] text-[12rem] font-semibold text-[#1E5A45] transition hover:bg-[#EAF8F0] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2F8F68] focus-visible:ring-offset-2 tablet:hidden'
+                >
+                  Filters
+                  <span className='rounded-[999rem] bg-[#EAF8F0] px-[8rem] py-[2rem] text-[11rem] font-semibold text-[#2F8F68]'>{filterCounts?.[activeFilter] || 0}</span>
+                </button>
+              </div>
+
+              <div className='mt-[16rem] rounded-[24rem] border border-[#CFE7D5]/60 bg-[#F4FFF6] px-[12rem] py-[16rem]'>
+                {activeMobileTab === 'overview' ? (
+                  <div className='flex flex-col gap-[12rem]'>
+                    <span className='inline-flex w-fit items-center gap-[6rem] rounded-[999rem] bg-white px-[12rem] py-[6rem] text-[12rem] font-semibold uppercase tracking-[0.18em] text-[#2F8F68]'>
+                      Showing {activeFilterLabel}
+                    </span>
+                    <AnswerTilesGrid questions={normalizedQuestions} activeFilter={activeFilter} onQuestionSelect={focusQuestion} shouldReduceMotion={shouldReduceMotion} />
+                  </div>
+                ) : (
+                  <div className='flex flex-col gap-[12rem]'>
+                    <ListeningDetailedReview
+                      ref={detailedRef}
+                      questions={normalizedQuestions}
+                      activeFilter={activeFilter}
+                      shouldReduceMotion={shouldReduceMotion}
+                      singleOpen
+                    />
+                  </div>
+                )}
+              </div>
+            </Tabs>
+          ) : (
+            <AnswerTilesGrid questions={normalizedQuestions} activeFilter={activeFilter} onQuestionSelect={focusQuestion} shouldReduceMotion={shouldReduceMotion} />
+          )}
         </section>
 
-        <ReviewList
-          ref={reviewListRef}
-          questions={normalizedQuestions}
-          shouldReduceMotion={shouldReduceMotion}
-          emptyStateMessage='Nothing to review here. Switch filters or explore another test.'
-        />
+        {!isMobile ? <FilterPillsBar counts={filterCounts} activeFilter={activeFilter} onChange={handleFilterSelect} shouldReduceMotion={shouldReduceMotion} /> : null}
 
-        <section className='grid gap-[18rem] tablet:grid-cols-2'>
-          <motion.article
-            whileHover={shouldReduceMotion ? undefined : { y: -4, scale: 1.01 }}
-            className='flex flex-col gap-[14rem] rounded-[28rem] border border-slate-100 bg-white px-[24rem] py-[24rem] shadow-[0_30rem_60rem_-46rem_rgba(48,60,128,0.45)]'
-          >
-            <div className='flex items-center gap-[12rem]'>
-              <CircleHelp className='size-[18rem] text-rose-500' aria-hidden='true' />
-              <div className='flex flex-col'>
-                <span className='text-[15rem] font-semibold text-slate-900'>Review mistakes only</span>
-                <p className='text-[13rem] text-slate-500'>Focus on incorrect and skipped questions in one place.</p>
+        {!isMobile ? (
+          <section className='space-y-[24rem] rounded-[32rem] border border-[#CFE7D5] bg-white px-[24rem] py-[28rem] shadow-[0_18rem_48rem_-30rem_rgba(47,143,104,0.16)]'>
+            <header className='flex flex-col gap-[4rem] text-[#0F3A2E] tablet:flex-row tablet:items-center tablet:justify-between'>
+              <div className='flex flex-col gap-[4rem]'>
+                <span className='text-[12rem] font-semibold uppercase tracking-[0.24em] text-[#2F8F68]/80'>Detailed review</span>
+                <h2 className='text-[18rem] font-semibold'>Tap a question to see both answers</h2>
+              </div>
+              <p className='text-[13rem] text-[#0F3A2E]/70'>Filters above control which questions appear here.</p>
+            </header>
+            <ListeningDetailedReview ref={detailedRef} questions={normalizedQuestions} activeFilter={activeFilter} shouldReduceMotion={shouldReduceMotion} singleOpen={false} />
+          </section>
+        ) : null}
+
+        <section className='grid gap-[16rem] tablet:grid-cols-2 tablet:gap-[20rem]'>
+          <div className='flex flex-col gap-[10rem] rounded-[24rem] border border-[#F6C4C2] bg-[#FFF5F4] px-[16rem] py-[18rem] text-[#0F3A2E] shadow-[0_14rem_32rem_-24rem_rgba(213,79,78,0.25)] tablet:gap-[12rem] tablet:rounded-[30rem] tablet:px-[24rem] tablet:py-[24rem] tablet:shadow-[0_18rem_42rem_-28rem_rgba(213,79,78,0.25)]'>
+            <div className='flex items-start gap-[12rem]'>
+              <span className='mt-[2rem] inline-flex size-[24rem] min-w-[24rem] items-center justify-center rounded-full bg-[#FFE0DF] text-[#D54F4E]'>
+                <CircleHelp className='size-[14rem]' aria-hidden='true' />
+              </span>
+              <div className='flex flex-col gap-[4rem]'>
+                <h3 className='text-[15rem] font-semibold'>Review mistakes only</h3>
+                <p className='text-[12rem] text-[#0F3A2E]/70 tablet:text-[13rem]'>Open a focused view of incorrect and unanswered questions.</p>
               </div>
             </div>
             <button
               type='button'
-              onClick={() => setReviewModalOpen(true)}
-              className='self-start rounded-[18rem] bg-slate-900 px-[20rem] py-[10rem] text-[13rem] font-semibold text-white shadow-[0_20rem_40rem_-28rem_rgba(22,36,96,0.55)] transition hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 focus-visible:ring-offset-2'
+              onClick={() => {
+                closeAllSheets();
+                setMistakesOpen(true);
+              }}
+              className='w-full rounded-[999rem] bg-[#2F8F68] px-[16rem] py-[8rem] text-[12rem] font-semibold text-white shadow-[0_10rem_26rem_-20rem_rgba(47,143,104,0.4)] transition hover:bg-[#247052] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1E5A45] focus-visible:ring-offset-2 tablet:w-auto tablet:px-[18rem] tablet:py-[10rem] tablet:text-[13rem] tablet:shadow-[0_12rem_30rem_-20rem_rgba(47,143,104,0.45)]'
             >
               Open mistake review
             </button>
-          </motion.article>
+          </div>
 
-          <motion.article
-            whileHover={shouldReduceMotion ? undefined : { y: -4, scale: 1.01 }}
-            className='flex flex-col gap-[14rem] rounded-[28rem] border border-slate-100 bg-white px-[24rem] py-[24rem] shadow-[0_30rem_60rem_-46rem_rgba(48,60,128,0.45)]'
-          >
-            <div className='flex items-center gap-[12rem]'>
-              <Table className='size-[18rem] text-slate-600' aria-hidden='true' />
-              <div className='flex flex-col'>
-                <span className='text-[15rem] font-semibold text-slate-900'>View band mapping</span>
-                <p className='text-[13rem] text-slate-500'>See how correct answers align with estimated IELTS bands.</p>
+          <div className='flex flex-col gap-[10rem] rounded-[24rem] border border-[#CFE7D5] bg-white px-[16rem] py-[18rem] text-[#0F3A2E] shadow-[0_12rem_28rem_-24rem_rgba(47,143,104,0.16)] tablet:gap-[12rem] tablet:rounded-[30rem] tablet:px-[24rem] tablet:py-[24rem] tablet:shadow-[0_12rem_32rem_-28rem_rgba(47,143,104,0.16)]'>
+            <div className='flex items-start gap-[12rem]'>
+              <span className='mt-[2rem] inline-flex size-[24rem] min-w-[24rem] items-center justify-center rounded-full bg-[#EAF8F0] text-[#2F8F68]'>
+                <Table className='size-[14rem]' aria-hidden='true' />
+              </span>
+              <div className='flex flex-col gap-[4rem]'>
+                <h3 className='text-[15rem] font-semibold'>View band mapping</h3>
+                <p className='text-[12rem] text-[#0F3A2E]/70 tablet:text-[13rem]'>See how your score aligns with IELTS band estimates.</p>
               </div>
             </div>
             <button
               type='button'
-              onClick={() => setBandModalOpen(true)}
-              className='self-start rounded-[18rem] border border-slate-200 bg-white px-[20rem] py-[10rem] text-[13rem] font-semibold text-slate-600 transition hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 focus-visible:ring-offset-2'
+              onClick={() => {
+                closeAllSheets();
+                setBandModalOpen(true);
+              }}
+              className='w-full rounded-[999rem] border border-[#CFE7D5] px-[16rem] py-[8rem] text-[12rem] font-semibold text-[#0F3A2E] transition hover:bg-[#EAF8F0] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2F8F68] focus-visible:ring-offset-2 tablet:w-auto tablet:px-[18rem] tablet:py-[10rem] tablet:text-[13rem]'
             >
               Open band mapping
             </button>
-          </motion.article>
+          </div>
 
-          <motion.article
-            whileHover={shouldReduceMotion ? undefined : { y: -4, scale: 1.01 }}
-            className='flex flex-col gap-[14rem] rounded-[28rem] border border-transparent bg-gradient-to-br from-[#4F86F7] to-[#7C5CFF] px-[24rem] py-[24rem] text-white shadow-[0_40rem_80rem_-50rem_rgba(64,80,200,0.75)] tablet:col-span-2'
-          >
-            <div className='flex items-center gap-[12rem]'>
-              <Sparkles className='size-[20rem]' aria-hidden='true' />
-              <div className='flex flex-col'>
-                <span className='text-[15rem] font-semibold'>Try another Listening test</span>
-                <p className='text-[13rem] text-white/80'>Keep practicing while the insights are fresh.</p>
-              </div>
-            </div>
-            <div className='flex flex-wrap items-center gap-[12rem]'>
-              <button
-                type='button'
-                onClick={handleRetry}
-                className='rounded-[18rem] bg-white px-[22rem] py-[12rem] text-[13rem] font-semibold text-slate-900 shadow-[0_20rem_40rem_-32rem_rgba(54,72,180,0.65)] transition hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent'
-              >
-                Start new test
-              </button>
-              <span className='text-[12rem] text-white/80'>Reset mindset · Build timing · Track improvements</span>
-            </div>
-          </motion.article>
+          <div className='tablet:col-span-2'>
+            <ListeningCtaCard startNewHref={startNewHref} onStartNew={handleStartNew} shouldReduceMotion={shouldReduceMotion} />
+          </div>
         </section>
 
         {!hasAnyAnswers ? (
-          <section className='rounded-[28rem] border border-slate-100 bg-white px-[28rem] py-[32rem] text-center text-[14rem] text-slate-600'>
-            You didn’t submit answers yet. Jump back into the practice test when ready.
-            <div className='mt-[18rem] flex justify-center'>
-              <button
-                type='button'
-                onClick={handleRetry}
-                className='rounded-[18rem] bg-slate-900 px-[20rem] py-[10rem] text-[13rem] font-semibold text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 focus-visible:ring-offset-2'
+          <section className='rounded-[32rem] border border-dashed border-[#CFE7D5] bg-white px-[28rem] py-[32rem] text-center text-[14rem] text-[#1E5A45]/80'>
+            You have not submitted answers yet. Jump back into the practice test when ready.
+            <div className='mt-[16rem] flex justify-center'>
+              <Link
+                href={startNewHref}
+                onClick={event => handleStartNew(event)}
+                className='rounded-[999rem] bg-[#2F8F68] px-[20rem] py-[10rem] text-[13rem] font-semibold text-white transition hover:bg-[#247052] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1E5A45] focus-visible:ring-offset-2'
               >
                 Resume practice
-              </button>
+              </Link>
             </div>
           </section>
         ) : null}
-      </div>
+      </main>
 
-      <MistakesReviewModal open={reviewModalOpen} onOpenChange={open => setReviewModalOpen(open)} questions={mistakeQuestions} />
+      <BackToTopButton visible={showScrollTop} onClick={handleScrollTop} variant='listening' display='all' />
 
-      <BandMappingModal
+      <ListeningMistakesModal
+        open={mistakesOpen}
+        onOpenChange={value => {
+          if (!value) {
+            setMistakesOpen(false);
+            return;
+          }
+          closeAllSheets();
+          setMistakesOpen(true);
+        }}
+        questions={mistakeQuestions}
+        shouldReduceMotion={shouldReduceMotion}
+        onSelectQuestion={focusQuestion}
+      />
+
+      <ListeningBandMappingModal
         open={bandModalOpen}
-        onOpenChange={open => setBandModalOpen(open)}
+        onOpenChange={value => {
+          if (!value) {
+            setBandModalOpen(false);
+            return;
+          }
+          closeAllSheets();
+          setBandModalOpen(true);
+        }}
         bandMapping={effectiveBandMapping}
         correctCount={correctCount}
         shouldReduceMotion={shouldReduceMotion}
       />
+
+      {isMobile ? (
+        <ListeningFiltersSheet
+          open={filtersOpen}
+          onOpenChange={value => {
+            if (!value) {
+              setFiltersOpen(false);
+              return;
+            }
+            closeAllSheets();
+            setFiltersOpen(true);
+          }}
+          counts={filterCounts}
+          activeFilter={activeFilter}
+          onSelect={value => handleFilterSelect(value, true)}
+        />
+      ) : null}
     </div>
   );
 }
 
 export function ListeningAnswerSheetSkeleton() {
   return (
-    <div className='relative min-h-[40vh] animate-pulse space-y-[24rem] rounded-[32rem] bg-gradient-to-b from-white to-slate-50 p-[24rem]'>
-      <div className='h-[120rem] rounded-[24rem] bg-slate-200/60' />
-      <div className='h-[180rem] rounded-[24rem] bg-slate-200/50' />
-      <div className='h-[280rem] rounded-[24rem] bg-slate-200/40' />
-    </div>
+    <section className='flex h-[100dvh] w-full flex-col items-center justify-center gap-[18rem] overflow-hidden bg-[#F4FFF6] px-[24rem] text-center'>
+      <div className='flex items-center gap-[12rem] text-[#2F8F68]'>
+        <span className='size-[12rem] animate-pulse rounded-full bg-[#2F8F68]' aria-hidden='true' />
+        <span className='text-[13rem] font-semibold uppercase tracking-[0.24em]'>Listening practice</span>
+      </div>
+      <div className='space-y-[12rem]'>
+        <p className='text-[20rem] font-semibold text-[#0F3A2E]'>Loading your listening results…</p>
+        <p className='text-[14rem] text-[#0F3A2E]/70'>We’re crunching the answers and preparing insights for you.</p>
+      </div>
+      <motion.span
+        aria-hidden='true'
+        className='h-[4px] w-[200rem] rounded-full bg-[#CFE7D5]/70'
+        initial={{ scaleX: 0 }}
+        animate={{ scaleX: [0, 0.85, 0.4, 1] }}
+        transition={{ duration: 1.6, repeat: Infinity, ease: 'easeInOut' }}
+      />
+    </section>
   );
 }
 
 export function ListeningAnswerSheetError({ onRetry }: { onRetry?: () => void }) {
   return (
-    <div className='flex flex-col items-center justify-center gap-[14rem] rounded-[28rem] border border-rose-100 bg-rose-50 px-[32rem] py-[40rem] text-center text-[14rem] text-rose-700'>
+    <div className='flex flex-col items-center justify-center gap-[16rem] rounded-[32rem] border border-[#F6C4C2] bg-[#FFF5F4] px-[32rem] py-[40rem] text-center text-[14rem] text-[#B23B3A]'>
       Something went wrong while loading your listening results.
       {onRetry ? (
         <button
           type='button'
           onClick={onRetry}
-          className='rounded-[18rem] border border-rose-200 bg-white px-[20rem] py-[10rem] text-[13rem] font-semibold text-rose-600 transition hover:text-rose-800'
+          className='rounded-[999rem] border border-[#F6C4C2] px-[20rem] py-[10rem] text-[13rem] font-semibold text-[#B23B3A] transition hover:bg-[#FFECEC]'
         >
           Retry
         </button>
