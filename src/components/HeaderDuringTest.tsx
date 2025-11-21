@@ -5,19 +5,26 @@ import { format } from 'date-fns';
 import { mockStore } from '@/stores/mock';
 import { usePathname } from 'next/navigation';
 import { useCustomTranslations } from '@/hooks/useCustomTranslations';
+import { ArrowLeft } from 'lucide-react';
 
 interface Props {
   title: string;
   tag?: string;
   time?: string;
   audio?: string;
+  backHref?: string;
+  backLabel?: string;
+  exitHref?: string;
+  onExit?: () => void;
+  logoHref?: string;
 }
 
-export const HeaderDuringTest = ({ title, tag, time, audio }: Props) => {
+export const HeaderDuringTest = ({ title, tag, time, audio, backHref, backLabel, exitHref = '/profile', onExit, logoHref = '/profile' }: Props) => {
   const { timer, setTimer } = mockStore();
 
   const pathname = usePathname();
   const { t, tImgAlts, tActions } = useCustomTranslations('headerDuringTest');
+  const resolvedBackLabel = backLabel ?? 'Back to tasks';
 
   useEffect(() => {
     if (!timer) return;
@@ -49,10 +56,21 @@ export const HeaderDuringTest = ({ title, tag, time, audio }: Props) => {
     <header className={`${backgroundColor()}`}>
       <div className='relative z-10 h-[93rem] rounded-b-[32rem] bg-white'>
         <nav className='container relative flex h-full max-w-[1440rem] items-center justify-between px-[40rem]'>
-          <Link href='/profile' className='relative z-10 flex w-auto items-center gap-x-[6rem]'>
-            <img src='/images/logo.svg' className='size-[36rem]' alt='logo' />
-            <div className='font-poppins text-[21rem] font-semibold'>studybox</div>
-          </Link>
+          <div className='relative z-10 flex w-auto items-center gap-x-[12rem]'>
+            {backHref ? (
+              <Link
+                href={backHref}
+                className='flex items-center gap-x-[8rem] rounded-[32rem] border border-d-gray/50 bg-white px-[18rem] py-[10rem] text-[14rem] font-semibold text-d-black transition hover:border-d-gray focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-d-gray/80 focus-visible:ring-offset-2'
+              >
+                <ArrowLeft className='size-[16rem]' aria-hidden='true' />
+                <span>{resolvedBackLabel}</span>
+              </Link>
+            ) : null}
+            <Link href={logoHref} className='flex items-center gap-x-[6rem]'>
+              <img src='/images/logo.svg' className='size-[36rem]' alt='logo' />
+              <div className='font-poppins text-[21rem] font-semibold'>studybox</div>
+            </Link>
+          </div>
 
           <div className='absolute left-0 top-0 flex h-[93rem] w-[1440rem] items-center justify-center text-center text-[20rem] font-medium'>{title}</div>
 
@@ -75,7 +93,16 @@ export const HeaderDuringTest = ({ title, tag, time, audio }: Props) => {
                   <span className='text-[14rem] font-semibold'>{formatTime(timer)}</span>
                 </div>
               )}
-              <Link href='/profile' className='flex h-[42rem] w-[74rem] items-center justify-center rounded-[40rem] bg-d-gray hover:bg-d-green/40'>
+              <Link
+                href={exitHref}
+                onClick={event => {
+                  if (onExit) {
+                    event.preventDefault();
+                    onExit();
+                  }
+                }}
+                className='flex h-[42rem] w-[94rem] items-center justify-center rounded-[40rem] bg-d-gray px-[16rem] text-center transition hover:bg-d-green/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-d-gray/80 focus-visible:ring-offset-2'
+              >
                 <span className='text-[14rem] font-semibold'>{tActions('exit')}</span>
               </Link>
             </div>
