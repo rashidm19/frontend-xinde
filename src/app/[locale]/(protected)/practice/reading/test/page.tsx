@@ -4,7 +4,6 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 import { Form, FormControl, FormField } from '@/components/ui/form';
-import { HeaderDuringTest } from '@/components/HeaderDuringTest';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -37,6 +36,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { ArrowUp } from 'lucide-react';
 import { format } from 'date-fns';
 import { mockStore } from '@/stores/mock';
+import { WritingFeedbackHeader } from '@/components/practice/WritingFeedbackHeader';
 
 const optionVariants = {
   idle: { scale: 1, opacity: 0.96 },
@@ -736,7 +736,7 @@ export default function Page() {
   return (
     <PracticeLeaveGuard>
       <div className='hidden tablet:block'>
-        <HeaderDuringTest title={tCommon('practice')} tag={tCommon('reading')} />
+        <WritingFeedbackHeader title={'Practice Reading'} exitLabel={tActions('exit')} onExit={() => router.push('/profile')} />
       </div>
 
       <MobileHeader

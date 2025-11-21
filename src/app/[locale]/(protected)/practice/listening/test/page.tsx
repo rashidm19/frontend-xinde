@@ -13,7 +13,6 @@ import { z } from 'zod';
 
 import { GET_practice_listening_id } from '@/api/GET_practice_listening_id';
 import { PracticeLeaveGuard } from '@/components/PracticeLeaveGuard';
-import { HeaderDuringTest } from '@/components/HeaderDuringTest';
 import { AudioBar, type AudioBarHandle, type AudioBarState, type AudioCuePoint } from '@/components/practice/listening/mobile/AudioBar';
 import { QuestionCard } from '@/components/practice/listening/mobile/QuestionCard';
 import { CheckboxOptionRow, RadioOptionRow, TextAnswerInput } from '@/components/practice/listening/mobile/AnswerInputs';
@@ -34,6 +33,7 @@ import { CheckboxSquare } from '@/components/ui/checkboxSquare';
 import { MobileHeader } from '@/components/practice/reading/mobile/MobileHeader';
 import { format } from 'date-fns';
 import { mockStore } from '@/stores/mock';
+import { WritingFeedbackHeader } from '@/components/practice/WritingFeedbackHeader';
 
 type FormValues = {
   [key: string]: string | undefined;
@@ -831,12 +831,12 @@ export default function Page() {
   return (
     <PracticeLeaveGuard>
       <div className='hidden tablet:block'>
-        <HeaderDuringTest title={tCommon('practice')} tag={tCommon('listening')} audio={data.audio_url} />
+        <WritingFeedbackHeader title={'Practice Listening'} exitLabel={tActions('exit')} onExit={() => router.push('/profile')} />
       </div>
 
       <MobileHeader
         title={tCommon('practice')}
-        tag={tCommon('reading')}
+        tag={tCommon('listening')}
         timerLabel={timerLabel}
         closeAs={'link'}
         exitLabel={tActions('exit')}
