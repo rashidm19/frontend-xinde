@@ -350,6 +350,7 @@
     "title": "Log into your account",
     "forgotPassword": "Forgot your password?",
     "dontHaveAccount": "Don’t have an account? <span>Sign up</span>",
+    "postAuthLoading": "Finishing your sign-in…",
     "google": {
       "button": "Continue with Google",
       "errors": {
