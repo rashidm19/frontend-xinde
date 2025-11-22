@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
@@ -50,9 +50,12 @@ export default function LoginPage({ params }: PageProps) {
   const [googleError, setGoogleError] = useState<string | null>(null);
   const [googleProcessing, setGoogleProcessing] = useState(false);
   const [captchaMessage, setCaptchaMessage] = useState<string | null>(null);
+  const [postAuthLoading, setPostAuthLoading] = useState(false);
   const prefersReducedMotion = useReducedMotion();
   const captcha = useCaptcha({ action: 'auth_login', locale });
   const tCaptcha = useTranslations('auth.captcha');
+  const tLogin = useTranslations('login');
+
   const {
     register,
     handleSubmit,
@@ -73,34 +76,35 @@ export default function LoginPage({ params }: PageProps) {
     };
   }, []);
 
-  useEffect(() => {
-    router.prefetch(`/${locale}/onboarding`);
-    router.prefetch(`/${locale}/profile`);
-  }, [locale, router]);
-
   const navigateAfterAuth = async () => {
+    setPostAuthLoading(true);
     NProgress.start();
 
-    if (typeof window !== 'undefined') {
-      try {
-        window.sessionStorage.removeItem(ONBOARDING_STORAGE_KEY);
-      } catch (error) {
-        console.error('Failed to reset onboarding state', error);
-      }
-    }
-
-    let nextRoute = `/${locale}/onboarding`;
-
     try {
-      const profile = await fetchProfileOnce();
-      if (profile?.onboarding_completed) {
-        nextRoute = `/${locale}/profile`;
+      if (typeof window !== 'undefined') {
+        try {
+          window.sessionStorage.removeItem(ONBOARDING_STORAGE_KEY);
+        } catch (error) {
+          console.error('Failed to reset onboarding state', error);
+        }
       }
-    } catch (error) {
-      console.error('Failed to load profile after login', error);
-    }
 
-    router.push(nextRoute);
+      let nextRoute = `/${locale}/onboarding`;
+
+      try {
+        const profile = await fetchProfileOnce();
+        if (profile?.onboarding_completed) {
+          nextRoute = `/${locale}/profile`;
+        }
+      } catch (error) {
+        console.error('Failed to load profile after login', error);
+      }
+
+      router.prefetch(nextRoute);
+      router.push(nextRoute);
+    } catch {
+      setPostAuthLoading(true);
+    }
   };
 
   const handleGoogleCredential = async (credential: string) => {
@@ -144,7 +148,7 @@ export default function LoginPage({ params }: PageProps) {
       await persistAuthToken(result.token);
       resetProfile();
       captcha.handleBackendResult(true);
-      navigateAfterAuth();
+      await navigateAfterAuth();
     } catch (error) {
       let handledByCaptcha = false;
 
@@ -225,7 +229,7 @@ export default function LoginPage({ params }: PageProps) {
       await persistAuthToken(result.token);
       resetProfile();
       captcha.handleBackendResult(true);
-      navigateAfterAuth();
+      await navigateAfterAuth();
     } catch (error) {
       if (error instanceof AuthLoginError) {
         if (error.code === 'captcha_low_score') {
@@ -295,73 +299,81 @@ export default function LoginPage({ params }: PageProps) {
     <AuthLayout>
       <FormCard title='Welcome back' subtitle='Sign in to continue with lessons that remember how you like to learn.'>
         <motion.form
-          className='flex flex-col gap-[16rem]'
           onSubmit={handleSubmit(onSubmit)}
           noValidate
           initial={prefersReducedMotion ? undefined : 'hidden'}
           animate={prefersReducedMotion ? undefined : 'visible'}
           variants={prefersReducedMotion ? undefined : formVariants}
+          aria-busy={postAuthLoading}
         >
-          <motion.div variants={prefersReducedMotion ? undefined : itemVariants}>
-            <OAuthButtons
-              onGoogleCredential={handleGoogleCredential}
-              onGoogleError={handleGoogleInitError}
-              disabled={isSubmitting || googleProcessing}
-              processing={googleProcessing}
-            />
-          </motion.div>
+          <fieldset className='flex flex-col gap-[16rem]' disabled={isSubmitting || postAuthLoading}>
+            <motion.div variants={prefersReducedMotion ? undefined : itemVariants}>
+              <OAuthButtons
+                onGoogleCredential={handleGoogleCredential}
+                onGoogleError={handleGoogleInitError}
+                disabled={isSubmitting || googleProcessing || postAuthLoading}
+                processing={googleProcessing || postAuthLoading}
+              />
+            </motion.div>
 
-          <motion.div className='relative flex items-center' variants={prefersReducedMotion ? undefined : itemVariants}>
-            <span className='h-[1rem] flex-1 bg-gray-200' />
-            <span className='px-[12rem] text-[12rem] text-gray-400'>or use email</span>
-            <span className='h-[1rem] flex-1 bg-gray-200' />
-          </motion.div>
+            <motion.div className='relative flex items-center' variants={prefersReducedMotion ? undefined : itemVariants}>
+              <span className='h-[1rem] flex-1 bg-gray-200' />
+              <span className='px-[12rem] text-[12rem] text-gray-400'>or use email</span>
+              <span className='h-[1rem] flex-1 bg-gray-200' />
+            </motion.div>
 
-          <motion.div className='flex flex-col gap-[12rem]' variants={prefersReducedMotion ? undefined : itemVariants}>
-            <AuthInput label='Email' type='email' autoComplete='email' error={errors.email?.message} {...register('email')} />
-            <PasswordInput label='Password' autoComplete='current-password' error={errors.password?.message} {...register('password')} />
-          </motion.div>
+            <motion.div className='flex flex-col gap-[12rem]' variants={prefersReducedMotion ? undefined : itemVariants}>
+              <AuthInput label='Email' type='email' autoComplete='email' error={errors.email?.message} {...register('email')} />
+              <PasswordInput label='Password' autoComplete='current-password' error={errors.password?.message} {...register('password')} />
+            </motion.div>
 
-          <motion.div variants={prefersReducedMotion ? undefined : itemVariants}>
-            <div className='flex items-center justify-between text-[13rem] text-gray-500'>
+            <motion.div variants={prefersReducedMotion ? undefined : itemVariants}>
+              <div className='flex items-center justify-between text-[13rem] text-gray-500'>
+                <Link
+                  href={`/${locale}/password-recovery`}
+                  className='font-medium text-blue-600 transition hover:text-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-200'
+                >
+                  Forgot password?
+                </Link>
+              </div>
+            </motion.div>
+
+            <motion.div variants={prefersReducedMotion ? undefined : itemVariants}>
+              <AuthButton type='submit' loading={isSubmitting || postAuthLoading}>
+                Sign in
+              </AuthButton>
+            </motion.div>
+
+            <motion.div variants={prefersReducedMotion ? undefined : itemVariants}>
+              <CaptchaGate controller={captcha} />
+            </motion.div>
+
+            {postAuthLoading ? (
+              <motion.div variants={prefersReducedMotion ? undefined : itemVariants} aria-live='polite'>
+                <AuthAlert variant='success' description={tLogin('postAuthLoading')} />
+              </motion.div>
+            ) : null}
+
+            {(serverMessage?.type === 'error' || !!googleError || !!captchaMessage) && (
+              <motion.div variants={prefersReducedMotion ? undefined : itemVariants} aria-live='polite' className='flex flex-col gap-[10rem]'>
+                <AnimatePresence>
+                  {serverMessage?.type === 'error' ? <AuthAlert key={serverMessage.text} variant='error' description={serverMessage.text} /> : null}
+                </AnimatePresence>
+                <AnimatePresence>{googleError ? <AuthAlert key={googleError} variant='error' description={googleError} /> : null}</AnimatePresence>
+                <AnimatePresence>{captchaMessage ? <AuthAlert key={captchaMessage} variant='error' description={captchaMessage} /> : null}</AnimatePresence>
+              </motion.div>
+            )}
+
+            <motion.div variants={prefersReducedMotion ? undefined : itemVariants} className='text-[13rem] text-gray-500'>
+              <span>New to Studybox?</span>{' '}
               <Link
-                href={`/${locale}/password-recovery`}
+                href={`/${locale}/registration`}
                 className='font-medium text-blue-600 transition hover:text-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-200'
               >
-                Forgot password?
+                Create an account
               </Link>
-            </div>
-          </motion.div>
-
-          <motion.div variants={prefersReducedMotion ? undefined : itemVariants}>
-            <AuthButton type='submit' loading={isSubmitting}>
-              Sign in
-            </AuthButton>
-          </motion.div>
-
-          <motion.div variants={prefersReducedMotion ? undefined : itemVariants}>
-            <CaptchaGate controller={captcha} />
-          </motion.div>
-
-          {(serverMessage?.type === 'error' || !!googleError || !!captchaMessage) && (
-            <motion.div variants={prefersReducedMotion ? undefined : itemVariants} aria-live='polite' className='flex flex-col gap-[10rem]'>
-              <AnimatePresence>
-                {serverMessage?.type === 'error' ? <AuthAlert key={serverMessage.text} variant='error' description={serverMessage.text} /> : null}
-              </AnimatePresence>
-              <AnimatePresence>{googleError ? <AuthAlert key={googleError} variant='error' description={googleError} /> : null}</AnimatePresence>
-              <AnimatePresence>{captchaMessage ? <AuthAlert key={captchaMessage} variant='error' description={captchaMessage} /> : null}</AnimatePresence>
             </motion.div>
-          )}
-
-          <motion.div variants={prefersReducedMotion ? undefined : itemVariants} className='text-[13rem] text-gray-500'>
-            <span>New to Studybox?</span>{' '}
-            <Link
-              href={`/${locale}/registration`}
-              className='font-medium text-blue-600 transition hover:text-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-200'
-            >
-              Create an account
-            </Link>
-          </motion.div>
+          </fieldset>
         </motion.form>
       </FormCard>
     </AuthLayout>

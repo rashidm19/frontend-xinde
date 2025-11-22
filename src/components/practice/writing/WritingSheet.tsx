@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { AnimatePresence, motion } from 'framer-motion';
 import { BottomSheet, BottomSheetClose, BottomSheetContent } from '@/components/ui/bottom-sheet';
@@ -13,7 +13,6 @@ import type { PracticeWritingListResponse } from '@/types/PracticeWriting';
 import { cn } from '@/lib/utils';
 import nProgress from 'nprogress';
 import { useRouter } from 'next/navigation';
-import { useMobileSheetSubmit } from '@/hooks/useMobileSheetSubmit';
 
 type WritingSheetStep = 'customize' | 'rules';
 
@@ -56,6 +55,8 @@ interface MobileSelectSheetProps {
 }
 
 const INTERACTIVE_TAP = { scale: 0.97 };
+const DEFAULT_SUBMIT_ERROR_MESSAGE = 'Something went wrong — try again';
+const COOLDOWN_MS = 340;
 
 const MobileSelectSheet = ({ open, title, options, selected, onSelect, onClose, emptyLabel }: MobileSelectSheetProps) => (
   <BottomSheet
@@ -149,7 +150,129 @@ export function WritingSheet({ open, step, onRequestClose, onRequestStep, routeS
   const [selectedType, setSelectedType] = useState<string>('random');
   const [typeSheetOpen, setTypeSheetOpen] = useState(false);
 
-  const { isSubmitting, submitError, isCoolingDown, submitTransition, submitAsync, resetError, resetSubmission, ariaBusy } = useMobileSheetSubmit({ resetKey: routeSignature });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [isCoolingDown, setIsCoolingDown] = useState(false);
+  const cooldownTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const mountedRef = useRef(true);
+  const resetSignatureRef = useRef(routeSignature);
+
+  const clearCooldown = useCallback(() => {
+    if (cooldownTimeoutRef.current) {
+      clearTimeout(cooldownTimeoutRef.current);
+      cooldownTimeoutRef.current = null;
+    }
+    if (mountedRef.current) {
+      setIsCoolingDown(false);
+    }
+  }, []);
+
+  const beginCooldown = useCallback(() => {
+    clearCooldown();
+    if (!mountedRef.current) {
+      return;
+    }
+    setIsCoolingDown(true);
+    cooldownTimeoutRef.current = setTimeout(() => {
+      if (!mountedRef.current) {
+        return;
+      }
+      setIsCoolingDown(false);
+      cooldownTimeoutRef.current = null;
+    }, COOLDOWN_MS);
+  }, [clearCooldown]);
+
+  const resetSubmission = useCallback(() => {
+    if (!mountedRef.current) {
+      return;
+    }
+    setSubmitError(null);
+    setIsSubmitting(false);
+    clearCooldown();
+  }, [clearCooldown]);
+
+  const resetError = useCallback(() => {
+    if (mountedRef.current) {
+      setSubmitError(null);
+    }
+  }, []);
+
+  const runTransition = useCallback(
+    (action: () => void) => {
+      if (isSubmitting || isCoolingDown || !mountedRef.current) {
+        return;
+      }
+
+      setSubmitError(null);
+      setIsSubmitting(true);
+
+      try {
+        action();
+        if (mountedRef.current) {
+          beginCooldown();
+        }
+      } catch (error) {
+        console.error(error);
+        if (mountedRef.current) {
+          setSubmitError(DEFAULT_SUBMIT_ERROR_MESSAGE);
+        }
+        clearCooldown();
+
+        if (mountedRef.current) {
+          setIsSubmitting(false);
+        }
+      }
+    },
+    [beginCooldown, clearCooldown, isCoolingDown, isSubmitting]
+  );
+
+  const runAsyncAction = useCallback(
+    async (action: () => Promise<void> | void) => {
+      if (isSubmitting || isCoolingDown || !mountedRef.current) {
+        return;
+      }
+
+      setSubmitError(null);
+      setIsSubmitting(true);
+
+      try {
+        await action();
+        if (mountedRef.current) {
+          beginCooldown();
+        }
+      } catch (error) {
+        console.error(error);
+        if (mountedRef.current) {
+          setSubmitError(DEFAULT_SUBMIT_ERROR_MESSAGE);
+        }
+        clearCooldown();
+
+        if (mountedRef.current) {
+          setIsSubmitting(false);
+        }
+      }
+    },
+    [beginCooldown, clearCooldown, isCoolingDown, isSubmitting]
+  );
+
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+      if (cooldownTimeoutRef.current) {
+        clearTimeout(cooldownTimeoutRef.current);
+        cooldownTimeoutRef.current = null;
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (resetSignatureRef.current === routeSignature) {
+      return;
+    }
+    resetSignatureRef.current = routeSignature;
+    resetSubmission();
+  }, [routeSignature, resetSubmission]);
 
   useEffect(() => {
     if (!open) {
@@ -227,7 +350,7 @@ export function WritingSheet({ open, step, onRequestClose, onRequestStep, routeS
       return;
     }
 
-    void submitAsync(async () => {
+    void runAsyncAction(async () => {
       const canStart = await requireSubscription();
       if (!canStart) {
         return;
@@ -271,15 +394,15 @@ export function WritingSheet({ open, step, onRequestClose, onRequestStep, routeS
       onRequestClose();
       router.push('/practice/writing/test');
     });
-  }, [isCoolingDown, isSubmitting, onRequestClose, randomType, requireSubscription, router, rulesContinueDisabled, selectedPart, selectedType, submitAsync]);
+  }, [isCoolingDown, isSubmitting, onRequestClose, randomType, requireSubscription, router, rulesContinueDisabled, runAsyncAction, selectedPart, selectedType]);
 
   const handleCustomizeContinue = useCallback(() => {
     if (customizeContinueDisabled || isSubmitting || isCoolingDown) {
       return;
     }
 
-    void submitTransition(() => onRequestStep('rules', { history: 'push' }));
-  }, [customizeContinueDisabled, isCoolingDown, isSubmitting, onRequestStep, submitTransition]);
+    void runTransition(() => onRequestStep('rules', { history: 'push' }));
+  }, [customizeContinueDisabled, isCoolingDown, isSubmitting, onRequestStep, runTransition]);
 
   const handleOpenChange = useCallback(
     (nextOpen: boolean) => {
@@ -345,7 +468,13 @@ export function WritingSheet({ open, step, onRequestClose, onRequestStep, routeS
               </button>
             </header>
 
-            <motion.div key={step} initial={{ opacity: 0.4 }} animate={{ opacity: 1 }} transition={{ duration: 0.2 }} className='flex-1 overflow-y-auto px-[20rem] py-[20rem]'>
+            <motion.div
+              key={step}
+              initial={{ opacity: 0.4 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.2 }}
+              className='flex-1 overflow-y-auto px-[20rem] py-[20rem]'
+            >
               {step === 'customize' ? (
                 <div className='flex flex-col gap-[24rem]'>
                   <div className='flex flex-col gap-[8rem]'>
@@ -428,7 +557,7 @@ export function WritingSheet({ open, step, onRequestClose, onRequestStep, routeS
             </motion.div>
 
             <footer className='sticky bottom-0 z-[1] border-t border-slate-200 bg-white/95 px-[20rem] pb-[calc(20rem+env(safe-area-inset-bottom))] pt-[16rem] shadow-[0_-18rem_36rem_-28rem_rgba(15,23,42,0.18)]'>
-              <div className='space-y-[8rem]' aria-busy={ariaBusy}>
+              <div className='space-y-[8rem]' aria-busy={isSubmitting}>
                 <span className='sr-only' aria-live='polite'>
                   {isSubmitting ? 'Continuing…' : ''}
                 </span>

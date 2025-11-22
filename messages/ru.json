@@ -348,6 +348,7 @@
     "title": "Войти",
     "forgotPassword": "Забыли пароль?",
     "dontHaveAccount": "Нет аккаунта? <span>Зарегистрироваться</span>",
+    "postAuthLoading": "Завершаем вход…",
     "google": {
       "button": "Продолжить с Google",
       "errors": {
