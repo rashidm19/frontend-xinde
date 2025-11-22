@@ -1,13 +1,12 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { AnimatePresence, motion } from 'framer-motion';
 import { BottomSheet, BottomSheetContent } from '@/components/ui/bottom-sheet';
 import { SubscriptionAccessLabel } from '@/components/SubscriptionAccessLabel';
 import { useCustomTranslations } from '@/hooks/useCustomTranslations';
 import { useSubscriptionGate } from '@/hooks/useSubscriptionGate';
-import { useMobileSheetSubmit } from '@/hooks/useMobileSheetSubmit';
 import axiosInstance from '@/lib/axiosInstance';
 import { cn } from '@/lib/utils';
 import nProgress from 'nprogress';
@@ -20,12 +19,107 @@ interface ReadingRulesSheetProps {
 }
 
 const INTERACTIVE_TAP = { scale: 0.97 };
+const DEFAULT_SUBMIT_ERROR_MESSAGE = 'Something went wrong — try again';
+const COOLDOWN_MS = 340;
 
 export function ReadingRulesSheet({ open, onRequestClose, routeSignature }: ReadingRulesSheetProps) {
   const router = useRouter();
   const { t, tImgAlts, tCommon, tActions } = useCustomTranslations('practice.reading.rules');
   const { requireSubscription, isCheckingAccess } = useSubscriptionGate();
-  const { isSubmitting, submitError, isCoolingDown, submitAsync, resetError, resetSubmission, ariaBusy } = useMobileSheetSubmit({ resetKey: routeSignature });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [isCoolingDown, setIsCoolingDown] = useState(false);
+  const cooldownTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const mountedRef = useRef(true);
+  const resetSignatureRef = useRef(routeSignature);
+
+  const clearCooldown = useCallback(() => {
+    if (cooldownTimeoutRef.current) {
+      clearTimeout(cooldownTimeoutRef.current);
+      cooldownTimeoutRef.current = null;
+    }
+    if (mountedRef.current) {
+      setIsCoolingDown(false);
+    }
+  }, []);
+
+  const beginCooldown = useCallback(() => {
+    clearCooldown();
+    if (!mountedRef.current) {
+      return;
+    }
+    setIsCoolingDown(true);
+    cooldownTimeoutRef.current = setTimeout(() => {
+      if (!mountedRef.current) {
+        return;
+      }
+      setIsCoolingDown(false);
+      cooldownTimeoutRef.current = null;
+    }, COOLDOWN_MS);
+  }, [clearCooldown]);
+
+  const resetSubmission = useCallback(() => {
+    if (!mountedRef.current) {
+      return;
+    }
+    setSubmitError(null);
+    setIsSubmitting(false);
+    clearCooldown();
+  }, [clearCooldown]);
+
+  const resetError = useCallback(() => {
+    if (mountedRef.current) {
+      setSubmitError(null);
+    }
+  }, []);
+
+  const runAsyncAction = useCallback(
+    async (action: () => Promise<void> | void) => {
+      if (isSubmitting || isCoolingDown || !mountedRef.current) {
+        return;
+      }
+
+      setSubmitError(null);
+      setIsSubmitting(true);
+
+      try {
+        await action();
+        if (mountedRef.current) {
+          beginCooldown();
+        }
+      } catch (error) {
+        console.error(error);
+        if (mountedRef.current) {
+          setSubmitError(DEFAULT_SUBMIT_ERROR_MESSAGE);
+        }
+        clearCooldown();
+
+        if (mountedRef.current) {
+          setIsSubmitting(false);
+        }
+      }
+    },
+    [beginCooldown, clearCooldown, isCoolingDown, isSubmitting]
+  );
+
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+      if (cooldownTimeoutRef.current) {
+        clearTimeout(cooldownTimeoutRef.current);
+        cooldownTimeoutRef.current = null;
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (resetSignatureRef.current === routeSignature) {
+      return;
+    }
+    resetSignatureRef.current = routeSignature;
+    resetSubmission();
+  }, [routeSignature, resetSubmission]);
 
   useEffect(() => {
     if (!open) {
@@ -57,7 +151,7 @@ export function ReadingRulesSheet({ open, onRequestClose, routeSignature }: Read
 
     resetError();
 
-    void submitAsync(async () => {
+    void runAsyncAction(async () => {
       const canStart = await requireSubscription();
 
       if (!canStart) {
@@ -90,7 +184,7 @@ export function ReadingRulesSheet({ open, onRequestClose, routeSignature }: Read
       onRequestClose();
       router.push('/practice/reading/test');
     });
-  }, [isCheckingAccess, isCoolingDown, isSubmitting, onRequestClose, requireSubscription, resetError, router, submitAsync]);
+  }, [isCheckingAccess, isCoolingDown, isSubmitting, onRequestClose, requireSubscription, resetError, router, runAsyncAction]);
 
   const sheetTitle = `${tCommon('reading')} • ${tCommon('minCount', { count: 60 })} • 3 passages`;
   const buttonDisabled = isCheckingAccess || isSubmitting || isCoolingDown;
@@ -119,7 +213,13 @@ export function ReadingRulesSheet({ open, onRequestClose, routeSignature }: Read
             </button>
           </header>
 
-          <motion.div key='content' initial={{ opacity: 0.45 }} animate={{ opacity: 1 }} transition={{ duration: 0.2 }} className='flex-1 overflow-y-auto px-[20rem] py-[20rem]'>
+          <motion.div
+            key='content'
+            initial={{ opacity: 0.45 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.2 }}
+            className='flex-1 overflow-y-auto px-[20rem] py-[20rem]'
+          >
             <div className='flex flex-col gap-[20rem]'>
               <h1 className='text-[22rem] font-semibold leading-[120%] text-slate-900'>{t('title')}</h1>
               <div className='flex flex-col gap-[12rem]'>
@@ -134,7 +234,7 @@ export function ReadingRulesSheet({ open, onRequestClose, routeSignature }: Read
           </motion.div>
 
           <footer className='sticky bottom-0 z-[1] border-t border-slate-200 bg-white/95 px-[20rem] pb-[calc(20rem+env(safe-area-inset-bottom))] pt-[16rem] shadow-[0_-18rem_36rem_-28rem_rgba(15,23,42,0.18)]'>
-            <div className='space-y-[8rem]' aria-busy={ariaBusy}>
+            <div className='space-y-[8rem]' aria-busy={isSubmitting}>
               <span className='sr-only' aria-live='polite'>
                 {isSubmitting ? 'Continuing…' : ''}
               </span>

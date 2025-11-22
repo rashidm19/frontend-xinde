@@ -13,7 +13,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { SubscriptionAccessLabel } from '@/components/SubscriptionAccessLabel';
 import { useCustomTranslations } from '@/hooks/useCustomTranslations';
 import { useSubscriptionGate } from '@/hooks/useSubscriptionGate';
-import { useMobileSheetSubmit } from '@/hooks/useMobileSheetSubmit';
 import { GET_practice_speaking_categories } from '@/api/GET_practice_speaking_categories';
 import { AudioCheckStepContent } from '@/components/practice/listening/ListeningSheet';
 import axiosInstance from '@/lib/axiosInstance';
@@ -34,6 +33,8 @@ interface SpeakingSheetProps {
 
 const INTERACTIVE_TAP = { scale: 0.97 };
 const SHEET_MAX_HEIGHT = 'max-h-[90dvh]';
+const DEFAULT_SUBMIT_ERROR_MESSAGE = 'Something went wrong — try again';
+const COOLDOWN_MS = 340;
 const PART_OPTIONS: PracticeSpeakingPartValue[] = ['1', '2', '3', 'all'];
 
 const AudioVisualizer = dynamic(() => import('./AudioVisualizerClient'), { ssr: false });
@@ -44,7 +45,129 @@ export function SpeakingSheet({ open, step, onRequestClose, onStepChange, routeS
   const { t: tAudio } = useCustomTranslations('practice.speaking.audioCheck');
   const { requireSubscription, isCheckingAccess } = useSubscriptionGate();
 
-  const { isSubmitting, submitError, isCoolingDown, submitTransition, submitAsync, resetError, resetSubmission, ariaBusy } = useMobileSheetSubmit({ resetKey: routeSignature });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [isCoolingDown, setIsCoolingDown] = useState(false);
+  const cooldownTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const mountedRef = useRef(true);
+  const resetSignatureRef = useRef(routeSignature);
+
+  const clearCooldown = useCallback(() => {
+    if (cooldownTimeoutRef.current) {
+      clearTimeout(cooldownTimeoutRef.current);
+      cooldownTimeoutRef.current = null;
+    }
+    if (mountedRef.current) {
+      setIsCoolingDown(false);
+    }
+  }, []);
+
+  const beginCooldown = useCallback(() => {
+    clearCooldown();
+    if (!mountedRef.current) {
+      return;
+    }
+    setIsCoolingDown(true);
+    cooldownTimeoutRef.current = setTimeout(() => {
+      if (!mountedRef.current) {
+        return;
+      }
+      setIsCoolingDown(false);
+      cooldownTimeoutRef.current = null;
+    }, COOLDOWN_MS);
+  }, [clearCooldown]);
+
+  const resetSubmission = useCallback(() => {
+    if (!mountedRef.current) {
+      return;
+    }
+    setSubmitError(null);
+    setIsSubmitting(false);
+    clearCooldown();
+  }, [clearCooldown]);
+
+  const resetError = useCallback(() => {
+    if (mountedRef.current) {
+      setSubmitError(null);
+    }
+  }, []);
+
+  const runTransition = useCallback(
+    (action: () => void) => {
+      if (isSubmitting || isCoolingDown || !mountedRef.current) {
+        return;
+      }
+
+      setIsSubmitting(true);
+      setSubmitError(null);
+
+      try {
+        action();
+        if (mountedRef.current) {
+          beginCooldown();
+        }
+      } catch (error) {
+        console.error(error);
+        if (mountedRef.current) {
+          setSubmitError(DEFAULT_SUBMIT_ERROR_MESSAGE);
+        }
+        clearCooldown();
+
+        if (mountedRef.current) {
+          setIsSubmitting(false);
+        }
+      }
+    },
+    [beginCooldown, clearCooldown, isCoolingDown, isSubmitting]
+  );
+
+  const runAsyncAction = useCallback(
+    async (action: () => Promise<void> | void) => {
+      if (isSubmitting || isCoolingDown || !mountedRef.current) {
+        return;
+      }
+
+      setSubmitError(null);
+      setIsSubmitting(true);
+
+      try {
+        await action();
+        if (mountedRef.current) {
+          beginCooldown();
+        }
+      } catch (error) {
+        console.error(error);
+        if (mountedRef.current) {
+          setSubmitError(DEFAULT_SUBMIT_ERROR_MESSAGE);
+        }
+        clearCooldown();
+      } finally {
+        if (mountedRef.current) {
+          setIsSubmitting(false);
+        }
+      }
+    },
+    [beginCooldown, clearCooldown, isCoolingDown, isSubmitting]
+  );
+
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+      if (cooldownTimeoutRef.current) {
+        clearTimeout(cooldownTimeoutRef.current);
+        cooldownTimeoutRef.current = null;
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (resetSignatureRef.current === routeSignature) {
+      return;
+    }
+    resetSignatureRef.current = routeSignature;
+    resetSubmission();
+  }, [routeSignature, resetSubmission]);
 
   const [selectedPart, setSelectedPart] = useState<PracticeSpeakingPartValue | null>(null);
   const [selectedTopic, setSelectedTopic] = useState<string>('random');
@@ -242,22 +365,22 @@ export function SpeakingSheet({ open, step, onRequestClose, onStepChange, routeS
     if (!selectedPart || isSubmitting || isCoolingDown) {
       return;
     }
-    void submitTransition(() => onStepChange('rules', { history: 'push' }));
-  }, [isCoolingDown, isSubmitting, onStepChange, selectedPart, submitTransition]);
+    void runTransition(() => onStepChange('rules', { history: 'push' }));
+  }, [isCoolingDown, isSubmitting, onStepChange, runTransition, selectedPart]);
 
   const handleContinueFromRules = useCallback(() => {
     if (isSubmitting || isCoolingDown) {
       return;
     }
-    void submitTransition(() => onStepChange('audio-check', { history: 'push' }));
-  }, [isCoolingDown, isSubmitting, onStepChange, submitTransition]);
+    void runTransition(() => onStepChange('audio-check', { history: 'push' }));
+  }, [isCoolingDown, isSubmitting, onStepChange, runTransition]);
 
   const handleContinueFromAudioCheck = useCallback(() => {
     if (!hasPlayedSample || audioError || isSubmitting || isCoolingDown) {
       return;
     }
-    void submitTransition(() => onStepChange('mic-check', { history: 'push' }));
-  }, [audioError, hasPlayedSample, isCoolingDown, isSubmitting, onStepChange, submitTransition]);
+    void runTransition(() => onStepChange('mic-check', { history: 'push' }));
+  }, [audioError, hasPlayedSample, isCoolingDown, isSubmitting, onStepChange, runTransition]);
 
   const handleTopicSelectOpenChange = useCallback(
     (nextOpen: boolean) => {
@@ -313,7 +436,7 @@ export function SpeakingSheet({ open, step, onRequestClose, onStepChange, routeS
       return;
     }
 
-    void submitAsync(async () => {
+    void runAsyncAction(async () => {
       setIsLaunching(true);
       try {
         const canStart = await requireSubscription();
@@ -364,7 +487,7 @@ export function SpeakingSheet({ open, step, onRequestClose, onStepChange, routeS
         setIsLaunching(false);
       }
     });
-  }, [isCheckingAccess, isCoolingDown, isLaunching, isSubmitting, resetError, selectedPart, hasRecorded, hasPlayedRecording, submitAsync, requireSubscription, selectedTopic, resolveRandomTopicId, onRequestClose, router]);
+  }, [hasPlayedRecording, hasRecorded, isCheckingAccess, isCoolingDown, isLaunching, isSubmitting, onRequestClose, requireSubscription, resetError, resolveRandomTopicId, runAsyncAction, selectedPart, selectedTopic, router]);
 
   const customizeContinueDisabled = categoriesLoading || categoriesError || !selectedPart;
   const rulesContinueDisabled = false;
@@ -509,11 +632,16 @@ export function SpeakingSheet({ open, step, onRequestClose, onStepChange, routeS
           </motion.div>
 
           <footer className='sticky bottom-0 z-[1] border-t border-slate-200 bg-white/95 px-[20rem] pb-[calc(20rem+env(safe-area-inset-bottom))] pt-[16rem] shadow-[0_-18rem_36rem_-28rem_rgba(15,23,42,0.18)]'>
-            <div className='space-y-[8rem]' aria-busy={ariaBusy}>
+            <div className='space-y-[8rem]' aria-busy={isSubmitting}>
               <span className='sr-only' aria-live='polite'>
                 {isSubmitting ? 'Continuing…' : ''}
               </span>
-              {submitError ? <p className='text-center text-[12rem] font-medium text-red-600'>{submitError}</p> : null}
+              {submitError || launchError ? (
+                <div aria-live='polite' className='space-y-[4rem]'>
+                  {submitError ? <p className='text-center text-[12rem] font-medium text-red-600'>{submitError}</p> : null}
+                  {launchError ? <p className='text-center text-[12rem] font-medium text-red-600'>{launchError}</p> : null}
+                </div>
+              ) : null}
               <motion.button
                 key={`speaking-${step}-cta`}
                 type='button'

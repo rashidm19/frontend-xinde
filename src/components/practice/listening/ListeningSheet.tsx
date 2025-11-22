@@ -9,7 +9,6 @@ import { BottomSheet, BottomSheetContent } from '@/components/ui/bottom-sheet';
 import { SubscriptionAccessLabel } from '@/components/SubscriptionAccessLabel';
 import { useCustomTranslations } from '@/hooks/useCustomTranslations';
 import { useSubscriptionGate } from '@/hooks/useSubscriptionGate';
-import { useMobileSheetSubmit } from '@/hooks/useMobileSheetSubmit';
 import { cn } from '@/lib/utils';
 import nProgress from 'nprogress';
 import { useRouter } from 'next/navigation';
@@ -26,6 +25,8 @@ interface ListeningSheetProps {
 
 const INTERACTIVE_TAP = { scale: 0.97 };
 const SHEET_MAX_HEIGHT = 'max-h-[90dvh]';
+const DEFAULT_SUBMIT_ERROR_MESSAGE = 'Something went wrong — try again';
+const COOLDOWN_MS = 340;
 type UseCustomTranslationsReturn = ReturnType<typeof useCustomTranslations>;
 
 export function ListeningSheet({ open, step, onRequestClose, onStepChange, routeSignature }: ListeningSheetProps) {
@@ -38,7 +39,123 @@ export function ListeningSheet({ open, step, onRequestClose, onStepChange, route
   const [hasPlayed, setHasPlayed] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  const { isSubmitting, submitError, isCoolingDown, submitTransition, submitAsync, resetSubmission, ariaBusy } = useMobileSheetSubmit({ resetKey: routeSignature });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [isCoolingDown, setIsCoolingDown] = useState(false);
+  const cooldownTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const mountedRef = useRef(true);
+  const resetSignatureRef = useRef(routeSignature);
+
+  const clearCooldown = useCallback(() => {
+    if (cooldownTimeoutRef.current) {
+      clearTimeout(cooldownTimeoutRef.current);
+      cooldownTimeoutRef.current = null;
+    }
+    if (mountedRef.current) {
+      setIsCoolingDown(false);
+    }
+  }, []);
+
+  const beginCooldown = useCallback(() => {
+    clearCooldown();
+    if (!mountedRef.current) {
+      return;
+    }
+    setIsCoolingDown(true);
+    cooldownTimeoutRef.current = setTimeout(() => {
+      if (!mountedRef.current) {
+        return;
+      }
+      setIsCoolingDown(false);
+      cooldownTimeoutRef.current = null;
+    }, COOLDOWN_MS);
+  }, [clearCooldown]);
+
+  const resetSubmission = useCallback(() => {
+    if (!mountedRef.current) {
+      return;
+    }
+    setSubmitError(null);
+    setIsSubmitting(false);
+    clearCooldown();
+  }, [clearCooldown]);
+
+  const runTransition = useCallback(
+    (action: () => void) => {
+      if (isSubmitting || isCoolingDown || !mountedRef.current) {
+        return;
+      }
+
+      setSubmitError(null);
+      setIsSubmitting(true);
+
+      try {
+        action();
+        if (mountedRef.current) {
+          beginCooldown();
+        }
+      } catch (error) {
+        console.error(error);
+        if (mountedRef.current) {
+          setSubmitError(DEFAULT_SUBMIT_ERROR_MESSAGE);
+        }
+        clearCooldown();
+
+        if (mountedRef.current) {
+          setIsSubmitting(false);
+        }
+      }
+    },
+    [beginCooldown, clearCooldown, isCoolingDown, isSubmitting]
+  );
+
+  const runAsyncAction = useCallback(
+    async (action: () => Promise<void> | void) => {
+      if (isSubmitting || isCoolingDown || !mountedRef.current) {
+        return;
+      }
+
+      setSubmitError(null);
+      setIsSubmitting(true);
+
+      try {
+        await action();
+        if (mountedRef.current) {
+          beginCooldown();
+        }
+      } catch (error) {
+        console.error(error);
+        if (mountedRef.current) {
+          setSubmitError(DEFAULT_SUBMIT_ERROR_MESSAGE);
+        }
+        clearCooldown();
+
+        if (mountedRef.current) {
+          setIsSubmitting(false);
+        }
+      }
+    },
+    [beginCooldown, clearCooldown, isCoolingDown, isSubmitting]
+  );
+
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+      if (cooldownTimeoutRef.current) {
+        clearTimeout(cooldownTimeoutRef.current);
+        cooldownTimeoutRef.current = null;
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (resetSignatureRef.current === routeSignature) {
+      return;
+    }
+    resetSignatureRef.current = routeSignature;
+    resetSubmission();
+  }, [routeSignature, resetSubmission]);
 
   const handleOpenChange = useCallback(
     (nextOpen: boolean) => {
@@ -88,15 +205,15 @@ export function ListeningSheet({ open, step, onRequestClose, onStepChange, route
       return;
     }
 
-    void submitTransition(() => onStepChange('audio-check', { history: 'push' }));
-  }, [isCheckingAccess, isCoolingDown, isSubmitting, onStepChange, submitTransition]);
+    void runTransition(() => onStepChange('audio-check', { history: 'push' }));
+  }, [isCheckingAccess, isCoolingDown, isSubmitting, onStepChange, runTransition]);
 
   const handleStartListening = useCallback(() => {
     if (isCheckingAccess || !hasPlayed || audioError || isSubmitting || isCoolingDown) {
       return;
     }
 
-    void submitAsync(async () => {
+    void runAsyncAction(async () => {
       const canStart = await requireSubscription();
       if (!canStart) {
         return;
@@ -106,7 +223,7 @@ export function ListeningSheet({ open, step, onRequestClose, onStepChange, route
       onRequestClose();
       router.push('/practice/listening/test/');
     });
-  }, [audioError, hasPlayed, isCheckingAccess, isCoolingDown, isSubmitting, onRequestClose, requireSubscription, router, submitAsync]);
+  }, [audioError, hasPlayed, isCheckingAccess, isCoolingDown, isSubmitting, onRequestClose, requireSubscription, router, runAsyncAction]);
 
   const rulesContinueDisabled = isCheckingAccess;
   const audioContinueDisabled = isCheckingAccess || !hasPlayed || Boolean(audioError);
@@ -130,7 +247,13 @@ export function ListeningSheet({ open, step, onRequestClose, onStepChange, route
             iconAlt={tImgAlts('listening') ?? 'Listening'}
           />
 
-          <motion.div key={step} initial={{ opacity: 0.45 }} animate={{ opacity: 1 }} transition={{ duration: 0.2 }} className='flex-1 overflow-y-auto px-[20rem] py-[20rem]'>
+          <motion.div
+            key={step}
+            initial={{ opacity: 0.45 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.2 }}
+            className='flex-1 overflow-y-auto px-[20rem] py-[20rem]'
+          >
             {step === 'rules' ? (
               <div className='flex flex-col gap-[20rem]'>
                 <h1 className='text-[22rem] font-semibold leading-[120%] text-slate-900'>{tRules('title')}</h1>
@@ -151,7 +274,7 @@ export function ListeningSheet({ open, step, onRequestClose, onStepChange, route
           </motion.div>
 
           <footer className='sticky bottom-0 z-[1] border-t border-slate-200 bg-white/95 px-[20rem] pb-[calc(20rem+env(safe-area-inset-bottom))] pt-[16rem] shadow-[0_-18rem_36rem_-28rem_rgba(15,23,42,0.18)]'>
-            <div className='space-y-[8rem]' aria-busy={ariaBusy}>
+            <div className='space-y-[8rem]' aria-busy={isSubmitting}>
               <span className='sr-only' aria-live='polite'>
                 {isSubmitting ? 'Continuing…' : ''}
               </span>
