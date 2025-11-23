@@ -1,5 +1,6 @@
 import { dehydrate, QueryClient } from '@tanstack/react-query';
 import { redirect } from 'next/navigation';
+import { headers } from 'next/headers';
 import type { ReactNode } from 'react';
 
 import HydrateOnly from '@/app/_providers/HydrateOnly';
@@ -8,6 +9,7 @@ import { getMe } from '@/lib/auth/getMe';
 import { getBalance } from '@/lib/subscription/getBalance';
 import { getSubscription } from '@/lib/subscription/getSubscription';
 import { UpstreamServiceError } from '@/lib/api/errors';
+import { sanitizeNextPath } from '@/lib/auth/safeRedirect';
 import type { IBillingBalance, IClientSubscription } from '@/types/Billing';
 import type { User } from '@/types/types';
 
@@ -29,6 +31,9 @@ const ServiceUnavailable = () => (
 
 export default async function ProtectedLayout({ children, params }: ProtectedLayoutProps) {
   const { locale } = params;
+  const requestHeaders = headers();
+  const originalUrl = requestHeaders.get('x-sb-original-url');
+  const safeNextPath = sanitizeNextPath(originalUrl, locale);
   let serviceUnavailable = false;
   let me: User | null = null;
 
@@ -47,7 +52,13 @@ export default async function ProtectedLayout({ children, params }: ProtectedLay
   }
 
   if (!me) {
-    redirect(`/${locale}/login`);
+    const loginPath = `/${locale}/login`;
+    if (safeNextPath) {
+      const search = new URLSearchParams({ next: safeNextPath }).toString();
+      redirect(`${loginPath}?${search}`);
+    }
+
+    redirect(loginPath);
   }
 
   const queryClient = new QueryClient();

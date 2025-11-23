@@ -18,6 +18,7 @@ import { ONBOARDING_STORAGE_KEY } from '@/components/onboarding';
 import { type CaptchaExecutionResult, useCaptcha } from '@/hooks/useCaptcha';
 import { fetchProfileOnce, resetProfile } from '@/stores/profileStore';
 import { persistAuthToken } from '@/lib/auth/session';
+import { sanitizeNextPath } from '@/lib/auth/safeRedirect';
 
 const loginSchema = z.object({
   email: z.string().trim().min(1, 'Email is required').email('Enter a valid email'),
@@ -30,6 +31,7 @@ interface PageProps {
   params: {
     locale: string;
   };
+  searchParams?: Record<string, string | string[] | undefined>;
 }
 
 const GOOGLE_ERROR_MESSAGES: Record<string, string> = {
@@ -43,7 +45,7 @@ const GOOGLE_ERROR_MESSAGES: Record<string, string> = {
   default: 'We couldn’t complete Google sign-in. Please try again or use email and password.',
 };
 
-export default function LoginPage({ params }: PageProps) {
+export default function LoginPage({ params, searchParams = {} }: PageProps) {
   const { locale } = params;
   const router = useRouter();
   const [serverMessage, setServerMessage] = useState<{ type: 'error' | 'success'; text: string } | null>(null);
@@ -55,6 +57,9 @@ export default function LoginPage({ params }: PageProps) {
   const captcha = useCaptcha({ action: 'auth_login', locale });
   const tCaptcha = useTranslations('auth.captcha');
   const tLogin = useTranslations('login');
+  const nextParamValue = searchParams.next;
+  const rawNextParam = Array.isArray(nextParamValue) ? nextParamValue[0] : nextParamValue ?? null;
+  const safeNextPath = useMemo(() => sanitizeNextPath(rawNextParam, locale), [rawNextParam, locale]);
 
   const {
     register,
@@ -87,6 +92,12 @@ export default function LoginPage({ params }: PageProps) {
         } catch (error) {
           console.error('Failed to reset onboarding state', error);
         }
+      }
+
+      if (safeNextPath) {
+        router.prefetch(safeNextPath);
+        router.replace(safeNextPath);
+        return;
       }
 
       let nextRoute = `/${locale}/onboarding`;

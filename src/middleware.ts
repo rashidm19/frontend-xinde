@@ -87,6 +87,17 @@ function maybeRedirectDesktopMobileRoutes(request: NextRequest) {
   return NextResponse.redirect(redirectUrl);
 }
 
+function continueWithOriginalUrl(request: NextRequest) {
+  const headers = new Headers(request.headers);
+  headers.set('x-sb-original-url', `${request.nextUrl.pathname}${request.nextUrl.search}`);
+
+  return NextResponse.next({
+    request: {
+      headers,
+    },
+  });
+}
+
 export function middleware(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
 
@@ -105,7 +116,7 @@ export function middleware(request: NextRequest) {
   }
 
   if (LOCALE_PREFIX_PATTERN.test(pathname)) {
-    return NextResponse.next();
+    return continueWithOriginalUrl(request);
   }
 
   const locale = getLocaleFromRequest(request);
