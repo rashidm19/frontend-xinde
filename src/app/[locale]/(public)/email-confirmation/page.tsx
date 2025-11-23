@@ -4,11 +4,10 @@ import { useEffect, useState } from 'react';
 
 import { AnimatePresence } from 'framer-motion';
 import { CheckCircle2 } from 'lucide-react';
-import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 
 import { AuthResendVerificationError, postAuthResendVerification } from '@/api/POST_auth_resend_verification';
-import { AuthAlert, AuthButton, AuthLayout, CaptchaGate, FormCard } from '@/components/auth';
+import { AuthAlert, AuthLayout, AuthLinkButton, CaptchaGate, FormCard } from '@/components/auth';
 import { useCaptcha, type CaptchaExecutionResult } from '@/hooks/useCaptcha';
 import { cn } from '@/lib/utils';
 
@@ -20,7 +19,6 @@ interface PageProps {
 
 export default function EmailConfirmationPage({ params }: PageProps) {
   const { locale } = params;
-  const router = useRouter();
   const [serverMessage, setServerMessage] = useState<{ type: 'error' | 'success'; text: string } | null>(null);
   const [isResending, setIsResending] = useState(false);
   const [email, setEmail] = useState('');
@@ -131,9 +129,9 @@ export default function EmailConfirmationPage({ params }: PageProps) {
             </div>
           </div>
 
-          <AuthButton type='button' onClick={() => router.push(`/${locale}/login`)}>
+          <AuthLinkButton href={`/${locale}/login`}>
             Go to login
-          </AuthButton>
+          </AuthLinkButton>
 
           <button
             type='button'
