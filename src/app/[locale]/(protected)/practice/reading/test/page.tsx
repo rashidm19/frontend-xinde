@@ -55,6 +55,19 @@ export default function Page() {
   const router = useRouter();
   const { t, tCommon, tActions } = useCustomTranslations('practice.reading.test');
 
+  const fallbackContent = useMemo(
+    () => ({
+      title: t('fallback.title'),
+      description: t('fallback.description'),
+      actionLabel: t('fallback.action'),
+    }),
+    [t]
+  );
+
+  const handleFallbackNavigation = useCallback(() => {
+    void router.push('/profile');
+  }, [router]);
+
   const [activeTab, setActiveTab] = useState<'p1' | 'p2' | 'p3'>('p1');
   const isMobile = useMediaQuery('(max-width: 767px)');
   const { timer } = mockStore();
@@ -169,9 +182,9 @@ export default function Page() {
 
     if (response.status >= 200 && response.status < 300) {
       const result = response.data;
-      router.push(`/practice/reading/results/${result.id}`);
+      void router.push(`/practice/reading/results/${result.id}`);
     } else {
-      router.push('/error500');
+      void router.push('/error500');
     }
   }
 
@@ -866,7 +879,11 @@ export default function Page() {
                               ) : null}
                               <ul className='ml-[20rem] flex list-outside list-disc flex-col items-start gap-y-[18rem]'>
                                 {block.questions.map((q: any) => (
-                                  <li id={`question-${q.number}`} className='scroll-target text-[16rem] font-normal leading-[30rem] tracking-[-0.2rem] text-d-black'>
+                                  <li
+                                    key={`paragraph-${q.number}`}
+                                    id={`question-${q.number}`}
+                                    className='scroll-target text-[16rem] font-normal leading-[30rem] tracking-[-0.2rem] text-d-black'
+                                  >
                                     {q.question}{' '}
                                     <FormField
                                       control={form.control}
@@ -905,6 +922,7 @@ export default function Page() {
                                   if (str.type === 'input') {
                                     return (
                                       <FormField
+                                        key={`words-input-${block.questions[str.index].number}`}
                                         control={form.control}
                                         name={block.questions[str.index].number.toString()}
                                         render={({ field }) => (

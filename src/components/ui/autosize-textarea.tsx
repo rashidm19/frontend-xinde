@@ -14,11 +14,21 @@ interface UseAutosizeTextAreaProps {
 
 export const useAutosizeTextArea = ({ textAreaRef, triggerAutoSize, maxHeight = Number.MAX_SAFE_INTEGER, minHeight = 0 }: UseAutosizeTextAreaProps) => {
   const [init, setInit] = React.useState(true);
+  const lastMeasurementRef = React.useRef<{ element: HTMLTextAreaElement | null; value: string }>({ element: null, value: '' });
   React.useEffect(() => {
     // We need to reset the height momentarily to get the correct scrollHeight for the textarea
     const offsetBorder = 6;
     const textAreaElement = textAreaRef.current;
     if (textAreaElement) {
+      const measurementKey = triggerAutoSize ?? '';
+
+      if (!init && lastMeasurementRef.current.element === textAreaElement && lastMeasurementRef.current.value === measurementKey) {
+        // React StrictMode runs effects twice in development; short-circuit when the same element/value pair was already measured.
+        return;
+      }
+
+      lastMeasurementRef.current = { element: textAreaElement, value: measurementKey };
+
       if (init) {
         textAreaElement.style.minHeight = `${minHeight + offsetBorder}px`;
         if (maxHeight > minHeight) {
@@ -29,14 +39,14 @@ export const useAutosizeTextArea = ({ textAreaRef, triggerAutoSize, maxHeight = 
       textAreaElement.style.height = `${minHeight + offsetBorder}px`;
       const scrollHeight = textAreaElement.scrollHeight;
       // We then set the height directly, outside of the render loop
-      // Trying to set this with state or a ref will product an incorrect value.
+      // Trying to set this with state or a ref will produce an incorrect value.
       if (scrollHeight > maxHeight) {
         textAreaElement.style.height = `${maxHeight}px`;
       } else {
         textAreaElement.style.height = `${scrollHeight + offsetBorder}px`;
       }
     }
-  }, [textAreaRef.current, triggerAutoSize]);
+  }, [init, maxHeight, minHeight, textAreaRef, triggerAutoSize]);
 };
 
 export type AutosizeTextAreaRef = {

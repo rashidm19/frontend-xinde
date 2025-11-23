@@ -7,7 +7,7 @@ import { Form, FormControl, FormField } from '@/components/ui/form';
 import { HeaderDuringTest } from '@/components/HeaderDuringTest';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import React, { useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useQuery } from '@tanstack/react-query';
 import { z } from 'zod';
@@ -18,6 +18,7 @@ import { DndText } from '../components/DndText';
 import { GET_practice_reading_id } from '@/api/GET_practice_reading_id';
 import axiosInstance from '@/lib/axiosInstance';
 import { transformStringToArrayV2, transformStringToArrayV4 } from '@/lib/utils';
+import { MissingDataFallback } from '@/components/MissingDataFallback';
 import type { PracticeReadingContent, PracticeReadingPart, PracticeReadingResult } from '@/types/PracticeReading';
 
 import { useRouter } from 'next/navigation';
@@ -36,6 +37,19 @@ type PartNumber = 1 | 2 | 3;
 export default function Page({ params }: { params: { id: string } }) {
   const router = useRouter();
   const { t, tCommon, tActions } = useCustomTranslations('practice.reading.test');
+
+  const fallbackContent = useMemo(
+    () => ({
+      title: t('fallback.title'),
+      description: t('fallback.description'),
+      actionLabel: t('fallback.action'),
+    }),
+    [t]
+  );
+
+  const handleFallbackNavigation = useCallback(() => {
+    void router.push('/profile');
+  }, [router]);
 
   const [activeTab, setActiveTab] = useState<'p1' | 'p2' | 'p3'>('p1');
   const isMobile = useMediaQuery('(max-width: 767px)');
@@ -134,9 +148,9 @@ export default function Page({ params }: { params: { id: string } }) {
 
     if (response.status >= 200 && response.status < 300) {
       const result = response.data;
-      router.push(`/practice/reading/results/${result.id}`);
+      void router.push(`/practice/reading/results/${result.id}`);
     } else {
-      router.push('/error500');
+      void router.push('/error500');
     }
   }
 
@@ -164,12 +178,18 @@ export default function Page({ params }: { params: { id: string } }) {
     return <></>;
   }
 
-  if (status === 'error') {
-    return <></>;
-  }
-
-  if (!data) {
-    return <></>;
+  if (status === 'error' || !data) {
+    return (
+      <PracticeLeaveGuard>
+        <MissingDataFallback
+          title={fallbackContent.title}
+          description={fallbackContent.description}
+          actionLabel={fallbackContent.actionLabel}
+          className='bg-d-yellow-secondary'
+          onAction={handleFallbackNavigation}
+        />
+      </PracticeLeaveGuard>
+    );
   }
 
   const getPart = (partNumber: PartNumber): PracticeReadingPart => {
@@ -275,7 +295,11 @@ export default function Page({ params }: { params: { id: string } }) {
                         {block.kind === 'paragraph' && (
                           <ul className='ml-[20rem] flex list-outside list-disc flex-col items-start gap-y-[18rem]'>
                             {block.questions.map((q: any) => (
-                              <li id={q.question} className='scroll-target text-[16rem] font-normal leading-[30rem] tracking-[-0.2rem] text-d-black'>
+                              <li
+                                key={`paragraph-${q.number}`}
+                                id={q.question}
+                                className='scroll-target text-[16rem] font-normal leading-[30rem] tracking-[-0.2rem] text-d-black'
+                              >
                                 {q.question}{' '}
                                 <FormField
                                   control={form.control}
@@ -304,6 +328,7 @@ export default function Page({ params }: { params: { id: string } }) {
                                 if (str.type === 'input') {
                                   return (
                                     <FormField
+                                      key={`words-input-${block.questions[str.index].number}`}
                                       control={form.control}
                                       name={block.questions[str.index].number.toString()}
                                       render={({ field }) => (
@@ -473,6 +498,7 @@ export default function Page({ params }: { params: { id: string } }) {
                             {block.cells.map((row: string[], rowIndex: number) =>
                               row.map((cell: string, cellIndex: number) => (
                                 <div
+                                  key={`table-cell-${rowIndex}-${cellIndex}`}
                                   className={`flex h-auto flex-col items-center justify-center hyphens-auto text-wrap border-b border-b-d-black p-[16rem] text-center text-[14rem] leading-[120%] tracking-[-0.2rem] text-d-black ${rowIndex === 0 ? 'font-semibold' : ''} ${cellIndex !== 0 ? 'border-l' : ''}`}
                                   lang='en'
                                 >
@@ -495,8 +521,8 @@ export default function Page({ params }: { params: { id: string } }) {
 
                                   {cell !== '___' &&
                                     cell.includes('___') &&
-                                    transformStringToArrayV2(cell).map(s => (
-                                      <>
+                                    transformStringToArrayV2(cell).map((s, fragmentIndex) => (
+                                      <React.Fragment key={`table-fragment-${rowIndex}-${cellIndex}-${fragmentIndex}`}>
                                         {s === '___' ? (
                                           <FormField
                                             control={form.control}
@@ -515,7 +541,7 @@ export default function Page({ params }: { params: { id: string } }) {
                                         ) : (
                                           <div>{s}</div>
                                         )}
-                                      </>
+                                      </React.Fragment>
                                     ))}
 
                                   {!cell.includes('___') && cell}

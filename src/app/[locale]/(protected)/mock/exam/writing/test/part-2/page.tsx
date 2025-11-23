@@ -5,6 +5,7 @@ import React, { useEffect } from 'react';
 
 import { AutosizeTextarea } from '@/components/ui/autosize-textarea';
 import { HeaderDuringTest } from '@/components/HeaderDuringTest';
+import { MissingDataFallback } from '@/components/MissingDataFallback';
 import { mockStore } from '@/stores/mock';
 import nProgress from 'nprogress';
 import { useForm } from 'react-hook-form';
@@ -19,13 +20,9 @@ export default function Page() {
   const { mockData, setTimer } = mockStore();
   const data = mockData?.writing?.part_2;
 
-  if (!data) {
-    return router.push('/mock');
-  }
-
   async function onSubmit(values: z.infer<typeof formSchema>) {
     nProgress.start();
-    router.push('/mock/exam/speaking/rules');
+    void router.push('/mock/exam/speaking/rules');
   }
 
   const formSchema = z.object({
@@ -42,8 +39,24 @@ export default function Page() {
   const formValues = form.watch();
 
   useEffect(() => {
+    if (!data) {
+      void router.replace('/mock');
+      return;
+    }
     setTimer(1800000);
-  }, []);
+  }, [data, router, setTimer]);
+
+  if (!data) {
+    return (
+      <MissingDataFallback
+        title='Writing section is unavailable'
+        description='We could not load Writing Task 2. Please return to the mock dashboard and try again.'
+        actionLabel='Back to mock exams'
+        className='bg-d-blue-secondary'
+        onAction={() => void router.replace('/mock')}
+      />
+    );
+  }
 
   return (
     <>
@@ -111,7 +124,7 @@ export default function Page() {
                   type='submit'
                   className='flex h-[71rem] w-full items-center justify-center rounded-[40rem] bg-d-green text-[20rem] font-normal hover:bg-d-green/40'
                 >
-                  Submit part 2 ( you can't go back )
+                  Submit part 2 ( you can&apos;t go back )
                 </button>
               </form>
             </Form>

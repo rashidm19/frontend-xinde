@@ -569,6 +569,11 @@
       },
       "test": {
         "readTextAndAnswerQuestions": "Прочитайте текст и ответьте на вопросы ",
+        "fallback": {
+          "title": "Материалы практики по чтению недоступны",
+          "description": "Не удалось загрузить это задание. Вернитесь в раздел чтения и попробуйте ещё раз.",
+          "action": "Назад"
+        },
         "mobile": {
           "progressAccessibility": "Ответы есть на {percent}% вопросов",
           "rangeLabel": "№{from}–{to}",

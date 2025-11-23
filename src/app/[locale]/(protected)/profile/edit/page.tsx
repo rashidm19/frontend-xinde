@@ -67,7 +67,6 @@ const MobileEditProfileView = ({ onNavigateBack }: MobileEditProfileViewProps) =
     isDeleting,
   } = controller;
 
-  // const isDirty = form.formState.isDirty;
   const badgeLabel = useMemo(() => (!hasActiveSubscription ? tCommon('freeTrial') : undefined), [hasActiveSubscription, tCommon]);
 
   // const saveButton = (
