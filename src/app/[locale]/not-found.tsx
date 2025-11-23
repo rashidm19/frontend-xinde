@@ -1,10 +1,10 @@
-'use client'
+"use client";
 
 import React from 'react';
 import Image from 'next/image';
 import { useCustomTranslations } from '@/hooks/useCustomTranslations';
 
-export default async function NotFound() {
+export default function NotFound() {
   const { t, tImgAlts, tActions } = useCustomTranslations('notFound');
 
   return (

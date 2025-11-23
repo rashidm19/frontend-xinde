@@ -7,6 +7,7 @@ import type { Metadata } from 'next';
 import NextTopLoader from 'nextjs-toploader';
 import Providers from './providers';
 import { hasLocale, NextIntlClientProvider } from 'next-intl';
+import { getMessages, setRequestLocale } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import { routing } from '@/i18n/routing';
 
@@ -32,18 +33,20 @@ export const metadata: Metadata = {
   },
 };
 
-export default async function LocaleLayout({ children, params }: { children: React.ReactNode; params: Promise<{ locale: string }> }) {
-  const { locale } = await params;
+export default async function LocaleLayout({ children, params }: { children: React.ReactNode; params: { locale: string } }) {
+  const { locale } = params;
   if (!hasLocale(routing.locales, locale)) {
     notFound();
   }
+  setRequestLocale(locale);
+  const messages = await getMessages();
 
   return (
-    <html lang='en'>
+    <html lang={locale}>
       <body className={`body ${inter.className} ${poppins.variable}`}>
         <NextTopLoader height={4} color='#636AFB' initialPosition={0.3} showSpinner={false} />
 
-        <NextIntlClientProvider>
+        <NextIntlClientProvider locale={locale} messages={messages}>
           <Providers>
             <AosInit />
             {children}

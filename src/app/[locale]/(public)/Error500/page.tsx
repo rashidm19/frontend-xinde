@@ -1,8 +1,10 @@
+"use client";
+
 import Image from 'next/image';
 import React from 'react';
 import { useCustomTranslations } from '@/hooks/useCustomTranslations';
 
-export default async function Error500() {
+export default function Error500() {
   const { t, tImgAlts, tActions } = useCustomTranslations('error500');
 
   return (

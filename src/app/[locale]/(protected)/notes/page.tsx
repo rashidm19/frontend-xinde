@@ -75,7 +75,7 @@ export default function Notes() {
           </div> */}
 
           <div className='text-left text-[18rem]'>
-            You don't have any notes.
+            You don&apos;t have any notes.
             <br /> You can add notes after finishing practice of speaking or writing sections, through highlighting important parts of feedback.
           </div>
         </div>

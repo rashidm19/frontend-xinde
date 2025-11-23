@@ -2,7 +2,10 @@ import { IS_PROD_ENV } from '@/lib/config';
 import type { BootstrapTelemetryParams, TelemetryTrackProperties } from './types';
 
 type TelemetryRuntimeModule = typeof import('./runtime');
-type RuntimeFunctionKey = keyof TelemetryRuntimeModule;
+type RuntimeFunctionKey = {
+  [K in keyof TelemetryRuntimeModule]: TelemetryRuntimeModule[K] extends (...args: any[]) => unknown ? K : never;
+}[keyof TelemetryRuntimeModule];
+type RuntimeFunction<K extends RuntimeFunctionKey> = TelemetryRuntimeModule[K] extends (...args: infer A) => infer R ? (...args: A) => R : never;
 
 export { resolveDistinctId } from './distinct-id';
 
@@ -25,28 +28,42 @@ const loadTelemetryRuntime = (): Promise<TelemetryRuntimeModule> | null => {
   return runtimePromise;
 };
 
-const callRuntime = async <K extends RuntimeFunctionKey>(method: K, ...args: Parameters<TelemetryRuntimeModule[K]>) => {
+export const resolveRuntimeFunction = async <K extends RuntimeFunctionKey>(method: K): Promise<RuntimeFunction<K> | null> => {
   if (!shouldLoadTelemetryRuntime()) {
-    return undefined;
+    return null;
   }
 
-  const runtime = await loadTelemetryRuntime();
+  const runtime = runtimeModule ?? (await loadTelemetryRuntime());
 
   if (!runtime) {
+    return null;
+  }
+
+  return runtime[method] as RuntimeFunction<K>;
+};
+
+const callRuntime = async <K extends RuntimeFunctionKey>(method: K, ...args: Parameters<RuntimeFunction<K>>) => {
+  const runtimeFn = await resolveRuntimeFunction(method);
+
+  if (!runtimeFn) {
     return undefined;
   }
 
-  return runtime[method](...args);
+  return runtimeFn(...args);
 };
 
-const queueRuntimeCall = <K extends RuntimeFunctionKey>(method: K, ...args: Parameters<TelemetryRuntimeModule[K]>) => {
-  if (!shouldLoadTelemetryRuntime()) {
-    return;
-  }
+const queueRuntimeCall = <K extends RuntimeFunctionKey>(method: K, ...args: Parameters<RuntimeFunction<K>>) => {
+  void resolveRuntimeFunction(method)
+    .then(runtimeFn => {
+      if (!runtimeFn) {
+        return;
+      }
 
-  void callRuntime(method, ...args).catch(error => {
-    console.error('[telemetry] failed to load runtime module', error);
-  });
+      runtimeFn(...args);
+    })
+    .catch(error => {
+      console.error('[telemetry] failed to load runtime module', error);
+    });
 };
 
 export const bootstrapTelemetry = async ({ config, user }: BootstrapTelemetryParams): Promise<void> => {

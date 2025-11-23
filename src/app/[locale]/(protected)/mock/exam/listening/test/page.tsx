@@ -5,6 +5,7 @@ import React, { useEffect, useState } from 'react';
 import { CheckboxSquare } from '@/components/ui/checkboxSquare';
 import { HeaderDuringTest } from '@/components/HeaderDuringTest';
 import { Input } from '@/components/ui/input';
+import { MissingDataFallback } from '@/components/MissingDataFallback';
 import { useRouter } from 'next/navigation';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
@@ -30,10 +31,6 @@ export default function Page() {
 
   const { mockData, setTimer } = mockStore();
   const data = mockData.listening;
-
-  if (!data) {
-    return router.push('/mock/');
-  }
 
   const formSchema = z.object({
     ...Object.fromEntries(Array.from({ length: 41 }, (_, i) => [(i + 1).toString(), z.string().optional()])),
@@ -94,7 +91,27 @@ export default function Page() {
 
   async function onSubmit() {
     nProgress.start();
-    router.push('/mock/exam/reading/rules');
+    void router.push('/mock/exam/reading/rules');
+  }
+
+  useEffect(() => {
+    if (!data) {
+      void router.replace('/mock');
+      return;
+    }
+    setTimer(1800000);
+  }, [data, router, setTimer]);
+
+  if (!data) {
+    return (
+      <MissingDataFallback
+        title='Listening section is unavailable'
+        description='We could not load this mock exam section. Please return to the mock dashboard and try again.'
+        actionLabel='Back to mock exams'
+        className='bg-d-light-gray'
+        onAction={() => void router.replace('/mock')}
+      />
+    );
   }
 
   const questionsCountString = () => {
@@ -104,16 +121,11 @@ export default function Page() {
       return `${1 + data.part_1.questions_count} – ${data.part_1.questions_count + data.part_2.questions_count}`;
     } else if (activeTab === 'p3') {
       return `${1 + data.part_1.questions_count + data.part_2.questions_count} – ${data.part_1.questions_count + data.part_2.questions_count + data.part_3.questions_count}`;
-    } else if (activeTab === 'p4') {
-      return `${1 + data.part_1.questions_count + data.part_2.questions_count + data.part_3.questions_count} – ${
-        data.part_1.questions_count + data.part_2.questions_count + data.part_3.questions_count + data.part_4.questions_count
-      }`;
     }
+    return `${1 + data.part_1.questions_count + data.part_2.questions_count + data.part_3.questions_count} – ${
+      data.part_1.questions_count + data.part_2.questions_count + data.part_3.questions_count + data.part_4.questions_count
+    }`;
   };
-
-  useEffect(() => {
-    setTimer(1800000);
-  }, []);
 
   return (
     <>
@@ -565,7 +577,7 @@ export default function Page() {
                   type='submit'
                   className='my-[24rem] flex h-[71rem] w-full max-w-full items-center justify-center rounded-[40rem] bg-d-green text-[20rem] font-normal leading-[24rem] tracking-[-0.2rem] text-d-black'
                 >
-                  Submit listening section ( you can't go back )
+                  Submit listening section ( you can&apos;t go back )
                 </button>
               )}
             </Tabs>

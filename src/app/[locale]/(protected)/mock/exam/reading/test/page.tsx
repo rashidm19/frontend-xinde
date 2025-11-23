@@ -7,6 +7,7 @@ import { Form, FormControl, FormField } from '@/components/ui/form';
 import { HeaderDuringTest } from '@/components/HeaderDuringTest';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { MissingDataFallback } from '@/components/MissingDataFallback';
 import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -37,22 +38,6 @@ export default function Page() {
 
   const { mockData, setTimer } = mockStore();
   const data = mockData.reading;
-
-  if (!data) {
-    return router.push('/mock');
-  }
-
-  const getPart = (partNumber: PartNumber): PracticeReadingPart => {
-    if (partNumber === 1) {
-      return data.part_1;
-    }
-
-    if (partNumber === 2) {
-      return data.part_2;
-    }
-
-    return data.part_3;
-  };
 
   const formSchema = z.object({
     ...Object.fromEntries(Array.from({ length: 40 }, (_, i) => [(i + 1).toString(), z.string().optional()])),
@@ -149,12 +134,40 @@ export default function Page() {
   // }
 
   useEffect(() => {
+    if (!data) {
+      void router.replace('/mock');
+      return;
+    }
     setTimer(3600000);
-  }, []);
+  }, [data, router, setTimer]);
+
+  if (!data) {
+    return (
+      <MissingDataFallback
+        title='Reading section is unavailable'
+        description='We could not load this mock exam section. Please return to the mock dashboard and try again.'
+        actionLabel='Back to mock exams'
+        className='bg-d-yellow-secondary'
+        onAction={() => void router.replace('/mock')}
+      />
+    );
+  }
+
+  const getPart = (partNumber: PartNumber): PracticeReadingPart => {
+    if (partNumber === 1) {
+      return data.part_1;
+    }
+
+    if (partNumber === 2) {
+      return data.part_2;
+    }
+
+    return data.part_3;
+  };
 
   async function onSubmit() {
     nProgress.start();
-    router.push('/mock/exam/writing/rules');
+    void router.push('/mock/exam/writing/rules');
   }
 
   const values = form.watch();
@@ -271,7 +284,7 @@ export default function Page() {
                         {block.kind === 'paragraph' && (
                           <ul className='ml-[20rem] flex list-outside list-disc flex-col items-start gap-y-[18rem]'>
                             {block.questions.map((q: any) => (
-                              <li id={q.question} className='scroll-target text-[16rem] font-normal leading-[30rem] tracking-[-0.2rem] text-d-black'>
+                              <li key={`paragraph-${q.number}`} id={q.question} className='scroll-target text-[16rem] font-normal leading-[30rem] tracking-[-0.2rem] text-d-black'>
                                 {q.question}{' '}
                                 <FormField
                                   control={form.control}
@@ -300,6 +313,7 @@ export default function Page() {
                                 if (str.type === 'input') {
                                   return (
                                     <FormField
+                                      key={`words-input-${block.questions[str.index].number}`}
                                       control={form.control}
                                       name={block.questions[str.index].number.toString()}
                                       render={({ field }) => (
@@ -469,6 +483,7 @@ export default function Page() {
                             {block.cells.map((row: string[], rowIndex: number) =>
                               row.map((cell: string, cellIndex: number) => (
                                 <div
+                                  key={`table-cell-${rowIndex}-${cellIndex}`}
                                   className={`flex h-auto flex-col items-center justify-center hyphens-auto text-wrap border-b border-b-d-black p-[16rem] text-center text-[14rem] leading-[120%] tracking-[-0.2rem] text-d-black ${rowIndex === 0 ? 'font-semibold' : ''} ${cellIndex !== 0 ? 'border-l' : ''}`}
                                   lang='en'
                                 >
@@ -491,8 +506,8 @@ export default function Page() {
 
                                   {cell !== '___' &&
                                     cell.includes('___') &&
-                                    transformStringToArrayV2(cell).map(s => (
-                                      <>
+                                    transformStringToArrayV2(cell).map((s, fragmentIndex) => (
+                                      <React.Fragment key={`table-fragment-${rowIndex}-${cellIndex}-${fragmentIndex}`}>
                                         {s === '___' ? (
                                           <FormField
                                             control={form.control}
@@ -511,7 +526,7 @@ export default function Page() {
                                         ) : (
                                           <div>{s}</div>
                                         )}
-                                      </>
+                                      </React.Fragment>
                                     ))}
 
                                   {!cell.includes('___') && cell}
@@ -670,7 +685,7 @@ export default function Page() {
                         type='submit'
                         className='flex h-[71rem] w-full items-center justify-center rounded-[40rem] bg-d-green text-[20rem] font-normal leading-[24rem] tracking-[-0.2rem] text-d-black'
                       >
-                        Submit reading section ( you can't go back )
+                        Submit reading section ( you can&apos;t go back )
                       </button>
                     )}
                   </div>
