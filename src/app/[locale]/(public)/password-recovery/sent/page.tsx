@@ -6,7 +6,7 @@ import { motion, useReducedMotion } from "framer-motion";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
-import { AuthButton, AuthLayout, FormCard } from "@/components/auth";
+import { AuthLayout, AuthLinkButton, FormCard } from "@/components/auth";
 
 interface PageProps {
   params: {
@@ -50,9 +50,9 @@ export default function PasswordSentPage({ params }: PageProps) {
           </p>
 
           <div className="flex w-full flex-col gap-[12rem]">
-            <AuthButton type="button" onClick={() => router.push(`/${locale}/login`)}>
+            <AuthLinkButton href={`/${locale}/login`}>
               Return to login
-            </AuthButton>
+            </AuthLinkButton>
             <Link
               href={`/${locale}/login`}
               className="text-center text-[13rem] font-medium text-blue-600 transition hover:text-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-200"

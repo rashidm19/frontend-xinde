@@ -6,5 +6,6 @@ export * from "./OAuthButtons";
 export * from "./AuthAlert";
 export * from "./HeadlineBlock";
 export * from "./AuthButton";
+export * from "./AuthLinkButton";
 export * from "./Logo";
 export * from "./CaptchaGate";

@@ -1,6 +1,7 @@
 'use client';
 
 import { AnimatePresence, motion } from 'framer-motion';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useReactMediaRecorder } from 'react-media-recorder';
@@ -913,13 +914,12 @@ export default function SpeakingTestForm({ data, exitLabel, onExit }: FormProps)
             >
               <div className='mb-[12rem] text-[20rem] font-semibold text-d-black tablet:mb-[16rem] tablet:text-[26rem]'>No questions available right now</div>
               <p className='mb-[24rem] text-[14rem] text-d-black/70 tablet:mb-[32rem] tablet:text-[18rem]'>Please try again later or choose another practice set.</p>
-              <button
-                type='button'
-                onClick={() => router.push('/practice')}
-                className='mx-auto flex h-[48rem] w-full max-w-[240rem] items-center justify-center rounded-[26rem] bg-[#F9A826] text-[15rem] font-semibold text-white transition hover:bg-[#f8b645] tablet:h-[54rem] tablet:max-w-[220rem] tablet:rounded-[32rem] tablet:text-[18rem]'
+              <Link
+                href='/practice'
+                className='mx-auto flex h-[48rem] w-full max-w-[240rem] items-center justify-center rounded-[26rem] bg-[#F9A826] text-[15rem] font-semibold text-white transition hover:bg-[#f8b645] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F9A826]/40 tablet:h-[54rem] tablet:max-w-[220rem] tablet:rounded-[32rem] tablet:text-[18rem]'
               >
                 Back to profile
-              </button>
+              </Link>
             </motion.div>
           </main>
         </div>

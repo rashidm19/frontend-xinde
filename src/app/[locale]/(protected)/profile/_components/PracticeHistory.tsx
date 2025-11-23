@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useMemo, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { format, isSameWeek, isToday, parseISO, startOfDay, subDays } from 'date-fns';
@@ -15,7 +16,6 @@ interface PracticeHistoryProps {
   entries: PracticeHistoryEntry[];
   loading?: boolean;
   onRetry?: () => void;
-  onCta: (section: PracticeSectionKey, id: number) => void;
   onStartSection: (section: PracticeSectionKey) => void;
 }
 
@@ -53,7 +53,7 @@ const itemVariants = {
 
 const DEFAULT_LIMIT = 6;
 
-export function PracticeHistory({ entries, loading, onRetry, onCta, onStartSection }: PracticeHistoryProps) {
+export function PracticeHistory({ entries, loading, onRetry, onStartSection }: PracticeHistoryProps) {
   const [filter, setFilter] = useState<FilterValue>('all');
   const [limit, setLimit] = useState(DEFAULT_LIMIT);
   const { t, tCommon, tActions, tImgAlts } = useCustomTranslations('profile.practiceHistory');
@@ -222,11 +222,8 @@ export function PracticeHistory({ entries, loading, onRetry, onCta, onStartSecti
                           <span className={cn('rounded-full px-[12rem] py-[6rem] text-[12rem] font-medium', STATUS_PILL_CLASSES[statusKey])}>
                             {statusLabels[statusKey]}
                           </span>
-                          <Button
-                            onClick={() => onCta(item.section, item.id)}
-                            className='h-auto rounded-[22rem] bg-d-violet px-[16rem] py-[8rem] text-[12rem] text-white hover:bg-d-violet/80'
-                          >
-                            {tActions('review')}
+                          <Button asChild className='h-auto rounded-[22rem] bg-d-violet px-[16rem] py-[8rem] text-[12rem] text-white hover:bg-d-violet/80'>
+                            <Link href={buildSectionResultHref(item.section, item.id)}>{tActions('review')}</Link>
                           </Button>
                         </div>
                       </motion.li>
@@ -405,6 +402,13 @@ function formatSpeakingPart(part: PracticeSpeakingPartValue | number | null | un
 
 function HistorySkeleton() {
   return <Skeleton className='h-[88rem] w-full rounded-[18rem]' />;
+}
+
+function buildSectionResultHref(section: PracticeSectionKey, id: number) {
+  if (section === 'writing' || section === 'speaking') {
+    return `/practice/${section}/feedback/${id}`;
+  }
+  return `/practice/${section}/results/${id}`;
 }
 
 function EmptyHistoryState({

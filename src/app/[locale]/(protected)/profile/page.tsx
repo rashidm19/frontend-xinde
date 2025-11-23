@@ -81,19 +81,6 @@ export default function Page() {
     router.push(target);
   };
 
-  const handleHistoryCta = (section: PracticeSectionKey, id: number) => {
-    if (section === 'writing') {
-      router.push(`/practice/writing/feedback/${id}`);
-      return;
-    }
-    if (section === 'speaking') {
-      router.push(`/practice/speaking/feedback/${id}`);
-      return;
-    }
-    router.push(`/practice/${section}/results/${id}`);
-    return;
-  };
-
   const handleLogout = useCallback(() => {
     void performLogout();
   }, [performLogout]);
@@ -138,7 +125,6 @@ export default function Page() {
                     <PracticeHistory
                       entries={practiceHistory || []}
                       loading={isLoading || practiceHistoryLoading}
-                      onCta={handleHistoryCta}
                       onStartSection={handleStartSection}
                     />
                   </div>
@@ -184,7 +170,6 @@ export default function Page() {
                   <PracticeHistory
                     entries={practiceHistory || []}
                     loading={isLoading || practiceHistoryLoading}
-                    onCta={handleHistoryCta}
                     onStartSection={handleStartSection}
                   />
                 </div>

@@ -373,23 +373,6 @@ export function MobileDashboardPage({ activeTab }: MobileDashboardPageProps) {
     [openListeningSheet, openReadingSheet, openSpeakingSheet, openWritingSheet]
   );
 
-  const handleHistoryCta = useCallback(
-    (section: PracticeSectionKey, id: number) => {
-      if (section === 'writing') {
-        router.push(`/practice/writing/feedback/${id}`);
-        return;
-      }
-
-      if (section === 'speaking') {
-        router.push(`/practice/speaking/feedback/${id}`);
-        return;
-      }
-
-      router.push(`/practice/${section}/results/${id}`);
-    },
-    [router]
-  );
-
   const handleLogout = useCallback(() => {
     void performLogout();
   }, [performLogout]);
@@ -448,7 +431,6 @@ export function MobileDashboardPage({ activeTab }: MobileDashboardPageProps) {
     <PracticeHistory
       entries={practiceHistory || []}
       loading={isLoadingProfile || practiceHistoryLoading}
-      onCta={handleHistoryCta}
       onStartSection={handleStartSection}
     />
   );
