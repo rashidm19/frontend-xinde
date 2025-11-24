@@ -1,3 +1,5 @@
+'use client';
+
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { BottomSheet } from './ui/bottom-sheet';
 import { Dialog, DialogContent } from './ui/dialog';
@@ -61,7 +63,7 @@ const HeaderComponent = ({ name, email, avatar, title: _title, onOpenSubscriptio
   const isMobile = useMediaQuery('(max-width: 767px)');
 
   React.useEffect(() => {
-    if (!isUserMenuOpen) {
+    if (!isUserMenuOpen || typeof document === 'undefined') {
       return;
     }
 
