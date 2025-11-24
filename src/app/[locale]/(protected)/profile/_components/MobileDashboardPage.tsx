@@ -8,6 +8,7 @@ import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useLocale } from 'next-intl';
 import { useMediaQuery } from 'usehooks-ts';
+import { withHydrationGuard } from '@/hooks/useHasMounted';
 import { useQuery } from '@tanstack/react-query';
 import type { LucideIcon } from 'lucide-react';
 import { BarChart3, History as HistoryIcon, PenSquare, UserRound } from 'lucide-react';
@@ -65,19 +66,13 @@ interface MobileDashboardPageProps {
   activeTab: MobileTabKey;
 }
 
-export function MobileDashboardPage({ activeTab }: MobileDashboardPageProps) {
+function MobileDashboardPageComponent({ activeTab }: MobileDashboardPageProps) {
   const router = useRouter();
   const pathname = usePathname();
   const { logout: performLogout } = useLogout();
   const searchParams = useSearchParams();
   const locale = useLocale();
   const isMobile = useMediaQuery('(max-width: 767px)');
-  const [hasMounted, setHasMounted] = useState(false);
-
-  useEffect(() => {
-    setHasMounted(true);
-  }, []);
-
   const { profile, status: profileStatus } = useProfile();
   const isLoadingProfile = !profile && (profileStatus === 'idle' || profileStatus === 'loading');
 
@@ -545,10 +540,6 @@ export function MobileDashboardPage({ activeTab }: MobileDashboardPageProps) {
     }
   };
 
-  if (!hasMounted) {
-    return null;
-  }
-
   if (!isMobile) {
     return null;
   }
@@ -701,3 +692,5 @@ export function MobileDashboardPage({ activeTab }: MobileDashboardPageProps) {
     </div>
   );
 }
+
+export const MobileDashboardPage = withHydrationGuard(MobileDashboardPageComponent);

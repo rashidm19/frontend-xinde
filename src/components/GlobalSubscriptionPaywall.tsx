@@ -7,12 +7,13 @@ import { PromoPromptModal } from './PromoPromptModal';
 import React from 'react';
 import { useSubscriptionStore } from '@/stores/subscriptionStore';
 import { useMediaQuery } from 'usehooks-ts';
+import { withHydrationGuard } from '@/hooks/useHasMounted';
 import { useRouter } from 'next/navigation';
 import { useLocale } from 'next-intl';
 import Router from 'next/router';
 import NProgress from 'nprogress';
 
-export const GlobalSubscriptionPaywall = () => {
+const GlobalSubscriptionPaywallComponent = () => {
   const isOpen = useSubscriptionStore(state => state.isPaywallOpen);
   const setPaywallOpen = useSubscriptionStore(state => state.setPaywallOpen);
 
@@ -94,3 +95,5 @@ export const GlobalSubscriptionPaywall = () => {
     </>
   );
 };
+
+export const GlobalSubscriptionPaywall = withHydrationGuard(GlobalSubscriptionPaywallComponent);

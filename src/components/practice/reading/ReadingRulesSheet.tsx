@@ -8,6 +8,7 @@ import { SubscriptionAccessLabel } from '@/components/SubscriptionAccessLabel';
 import { useCustomTranslations } from '@/hooks/useCustomTranslations';
 import { useSubscriptionGate } from '@/hooks/useSubscriptionGate';
 import axiosInstance from '@/lib/axiosInstance';
+import { setPracticeSessionCookie } from '@/lib/practiceSession';
 import { cn } from '@/lib/utils';
 import nProgress from 'nprogress';
 import { useRouter } from 'next/navigation';
@@ -177,9 +178,7 @@ export function ReadingRulesSheet({ open, onRequestClose, routeSignature }: Read
         throw new Error('Invalid reading task payload');
       }
 
-      if (typeof window !== 'undefined') {
-        window.localStorage.setItem('practiceReadingId', String(randomReadingId));
-      }
+      await setPracticeSessionCookie({ flow: 'reading', practiceId: randomReadingId });
       nProgress.start();
       onRequestClose();
       router.push('/practice/reading/test');

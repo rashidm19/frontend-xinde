@@ -22,6 +22,7 @@ import { DndText } from '@/app/[locale]/(protected)/practice/reading/test/compon
 import { mockStore } from '@/stores/mock';
 import nProgress from 'nprogress';
 import { useMediaQuery } from 'usehooks-ts';
+import { withHydrationGuard } from '@/hooks/useHasMounted';
 import { MobileMatching } from '@/components/practice/reading/mobile/MobileMatching';
 import { MobileTextInsert } from '@/components/practice/reading/mobile/MobileTextInsert';
 
@@ -31,7 +32,7 @@ type FormValues = {
 
 type PartNumber = 1 | 2 | 3;
 
-export default function Page() {
+function Page() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<'p1' | 'p2' | 'p3'>('p1');
   const isMobile = useMediaQuery('(max-width: 767px)');
@@ -699,3 +700,7 @@ export default function Page() {
     </>
   );
 }
+
+const HydratedPage = withHydrationGuard(Page);
+
+export default HydratedPage;

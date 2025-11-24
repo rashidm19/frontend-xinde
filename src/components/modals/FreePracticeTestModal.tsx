@@ -8,6 +8,7 @@ import { BottomSheet, BottomSheetContent } from '@/components/ui/bottom-sheet';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { useMediaQuery } from 'usehooks-ts';
+import { withHydrationGuard } from '@/hooks/useHasMounted';
 import { BottomSheetHeader } from '@/components/mobile/MobilePageHeader';
 
 interface FreePracticeTestModalProps {
@@ -31,7 +32,7 @@ const FREE_TEST_DESCRIPTION = 'You have 1 free Writing Practice — start your f
 const NO_TEST_TITLE = 'Free practice test';
 const NO_TEST_DESCRIPTION = 'You’ve already used your free IELTS practice test.';
 
-export function FreePracticeTestModal({ open, onOpenChange, onStart, onDismiss, hasFreeTest }: FreePracticeTestModalProps) {
+function FreePracticeTestModalComponent({ open, onOpenChange, onStart, onDismiss, hasFreeTest }: FreePracticeTestModalProps) {
   const reducedMotionPreference = useReducedMotion();
   const prefersReducedMotion = reducedMotionPreference ?? false;
   const isMobile = useMediaQuery('(max-width: 767px)');
@@ -358,3 +359,5 @@ const FreePracticeTestUnavailableFooter = ({ variant, onDismiss }: { variant: 'd
     </button>
   </div>
 );
+
+export const FreePracticeTestModal = withHydrationGuard(FreePracticeTestModalComponent);

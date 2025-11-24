@@ -9,9 +9,10 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { refreshSubscriptionAndBalance } from '@/stores/subscriptionStore';
 import { useCustomTranslations } from '@/hooks/useCustomTranslations';
 import { useMediaQuery } from 'usehooks-ts';
+import { withHydrationGuard } from '@/hooks/useHasMounted';
 import { BottomSheetHeader } from '@/components/mobile/MobilePageHeader';
 
-export const SubscriptionPaymentStatusModal = () => {
+const SubscriptionPaymentStatusModalComponent = () => {
   const searchParams = useSearchParams();
   const { t: tPrices, tActions } = useCustomTranslations('pricesModal');
   const [isOpen, setIsOpen] = React.useState(false);
@@ -110,3 +111,5 @@ export const SubscriptionPaymentStatusModal = () => {
     </Dialog>
   );
 };
+
+export const SubscriptionPaymentStatusModal = withHydrationGuard(SubscriptionPaymentStatusModalComponent);

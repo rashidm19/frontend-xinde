@@ -2,7 +2,9 @@
 
 import * as React from 'react';
 import * as RechartsPrimitive from 'recharts';
+import { useLocale } from 'next-intl';
 
+import { formatNumber } from '@/lib/formatters';
 import { cn } from '@/lib/utils';
 
 // Format: { THEME_NAME: CSS_SELECTOR }
@@ -121,6 +123,7 @@ const ChartTooltipContent = React.forwardRef<
     ref
   ) => {
     const { config } = useChart();
+    const locale = useLocale();
 
     const tooltipLabel = React.useMemo(() => {
       if (hideLabel || !payload?.length) {
@@ -157,6 +160,8 @@ const ChartTooltipContent = React.forwardRef<
             const key = `${nameKey || item.name || item.dataKey || 'value'}`;
             const itemConfig = getPayloadConfigFromPayload(config, item, key);
             const indicatorColor = color || item.payload.fill || item.color;
+            const hasValue = item.value !== undefined && item.value !== null;
+            const displayValue = typeof item.value === 'number' ? formatNumber(item.value, locale) : item.value;
 
             return (
               <div
@@ -195,7 +200,7 @@ const ChartTooltipContent = React.forwardRef<
                         {nestLabel ? tooltipLabel : null}
                         <span className='text-muted-foreground'>{itemConfig?.label || item.name}</span>
                       </div>
-                      {item.value && <span className='font-mono font-medium tabular-nums text-foreground'>{item.value.toLocaleString()}</span>}
+                      {hasValue ? <span className='font-mono font-medium tabular-nums text-foreground'>{displayValue}</span> : null}
                     </div>
                   </>
                 )}

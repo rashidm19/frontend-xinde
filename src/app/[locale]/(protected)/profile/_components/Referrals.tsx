@@ -1,10 +1,35 @@
-import { useState } from 'react';
+'use client';
+
+import { useCallback, useState } from 'react';
 import { useCustomTranslations } from '@/hooks/useCustomTranslations';
 
 export const Referrals = () => {
   const { t, tImgAlts, tActions, tMessages } = useCustomTranslations('profile.referrals');
 
   const [status, setStatus] = useState('default');
+
+  const handleCopy = useCallback(async () => {
+    if (typeof document === 'undefined' || typeof navigator === 'undefined') {
+      return;
+    }
+
+    const hiddenInput = document.getElementById('ref-link') as HTMLInputElement | null;
+    if (!hiddenInput) {
+      return;
+    }
+
+    try {
+      hiddenInput.select();
+      hiddenInput.setSelectionRange(0, hiddenInput.value.length);
+      await navigator.clipboard?.writeText(hiddenInput.value);
+      setStatus('copied');
+      setTimeout(() => {
+        setStatus('default');
+      }, 3000);
+    } catch (error) {
+      console.warn('[referrals] failed to copy link', error);
+    }
+  }, []);
 
   return (
     <section className='rounded-[16rem] bg-white p-[24rem]'>
@@ -13,16 +38,7 @@ export const Referrals = () => {
       <button
         type='button'
         className='group flex h-[54rem] w-full items-center justify-center gap-x-[8rem] rounded-[40rem] bg-d-light-gray hover:bg-d-green/40'
-        onClick={async () => {
-          setStatus('copied');
-          setTimeout(() => {
-            setStatus('default');
-          }, 3000);
-          var copyText = document.getElementById('ref-link') as HTMLInputElement;
-          copyText.select();
-          copyText.setSelectionRange(0, 99999);
-          navigator.clipboard.writeText(copyText.value);
-        }}
+        onClick={handleCopy}
       >
         {status === 'copied' ? (
           <>

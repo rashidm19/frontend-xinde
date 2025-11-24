@@ -3,6 +3,7 @@
 import { useMemo } from 'react';
 import { X } from 'lucide-react';
 import { useMediaQuery } from 'usehooks-ts';
+import { withHydrationGuard } from '@/hooks/useHasMounted';
 
 import { ModalShell } from '@/components/modals/UnifiedModalShell';
 import { BottomSheet, BottomSheetClose, BottomSheetContent } from '@/components/ui/bottom-sheet';
@@ -13,7 +14,7 @@ interface SpeakingTaskModalProps {
   sections: Array<{ id: string; title: string; questions: string[] }>;
 }
 
-export function SpeakingTaskModal({ open, onOpenChange, sections }: SpeakingTaskModalProps) {
+function SpeakingTaskModalComponent({ open, onOpenChange, sections }: SpeakingTaskModalProps) {
   const isDesktop = useMediaQuery('(min-width: 768px)');
 
   const content = useMemo(() => {
@@ -83,3 +84,5 @@ export function SpeakingTaskModal({ open, onOpenChange, sections }: SpeakingTask
     </ModalShell>
   );
 }
+
+export const SpeakingTaskModal = withHydrationGuard(SpeakingTaskModalComponent);

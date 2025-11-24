@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback } from 'react';
 
 import { BottomSheet, BottomSheetContent } from '@/components/ui/bottom-sheet';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -10,6 +10,7 @@ import { cn } from '@/lib/utils';
 import { useConfirmationModalStore } from '@/stores/confirmationModalStore';
 import { useShallow } from 'zustand/react/shallow';
 import { useMediaQuery } from 'usehooks-ts';
+import { withHydrationGuard } from '@/hooks/useHasMounted';
 import { BottomSheetHeader } from '@/components/mobile/MobilePageHeader';
 
 const parseErrorMessage = (error: unknown, fallback: string) => {
@@ -41,7 +42,7 @@ const parseErrorMessage = (error: unknown, fallback: string) => {
   return fallback;
 };
 
-export const GlobalConfirmationModal = () => {
+const GlobalConfirmationModalComponent = () => {
   const { tActions, tMessages } = useCustomTranslations();
   const { isOpen, options, isLoading, error, close, setLoading, setError } = useConfirmationModalStore(
     useShallow(state => ({
@@ -61,11 +62,6 @@ export const GlobalConfirmationModal = () => {
   const isMobile = useMediaQuery('(max-width: 767px)');
   const sheetTitle = options?.title ?? tActions('confirm');
   const sheetMessage = options?.message ?? undefined;
-  const [hasMounted, setHasMounted] = useState(false);
-
-  useEffect(() => {
-    setHasMounted(true);
-  }, []);
 
   const handleClose = useCallback(() => {
     if (isLoading || !isOpen) {
@@ -131,27 +127,15 @@ export const GlobalConfirmationModal = () => {
     </div>
   );
 
-  if (!hasMounted) {
-    return null;
-  }
-
   if (isMobile) {
     return (
       <BottomSheet open={isOpen} onOpenChange={open => (!open ? handleClose() : undefined)}>
         <BottomSheetContent hideHandle={isLoading} aria-describedby={undefined}>
           <div className='flex min-h-0 flex-1 flex-col overflow-hidden'>
-            <BottomSheetHeader
-              title={sheetTitle}
-              subtitle={sheetMessage}
-              closeLabel={cancelLabel}
-              onClose={handleClose}
-              closeButton
-            />
+            <BottomSheetHeader title={sheetTitle} subtitle={sheetMessage} closeLabel={cancelLabel} onClose={handleClose} closeButton />
 
             <ScrollArea className='flex-1 px-[20rem]'>
-              <div className='pb-[24rem] text-left'>
-                {error ? <p className='text-[12rem] font-medium leading-tight text-d-red'>{error}</p> : null}
-              </div>
+              <div className='pb-[24rem] text-left'>{error ? <p className='text-[12rem] font-medium leading-tight text-d-red'>{error}</p> : null}</div>
             </ScrollArea>
 
             <div className='border-t border-gray-100 bg-white/95 px-[20rem] pb-[calc(16rem+env(safe-area-inset-bottom))] pt-[16rem] shadow-[0_-4px_16px_rgba(15,23,42,0.08)]'>
@@ -166,7 +150,7 @@ export const GlobalConfirmationModal = () => {
   return (
     <Dialog open={isOpen} onOpenChange={open => (!open ? handleClose() : undefined)}>
       <DialogContent
-        className='fixed left-[50%] top-[50%] flex-col items-center justify-center flex h-auto min-w-[30%] -translate-x-1/2 -translate-y-1/2 rounded-[24rem] bg-white p-[28rem] text-left'
+        className='fixed left-[50%] top-[50%] flex h-auto min-w-[30%] -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center rounded-[24rem] bg-white p-[28rem] text-left'
         onInteractOutside={event => {
           if (isLoading) {
             event.preventDefault();
@@ -190,3 +174,5 @@ export const GlobalConfirmationModal = () => {
     </Dialog>
   );
 };
+
+export const GlobalConfirmationModal = withHydrationGuard(GlobalConfirmationModalComponent);

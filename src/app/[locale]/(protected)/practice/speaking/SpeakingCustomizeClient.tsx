@@ -8,6 +8,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useCustomTranslations } from "@/hooks/useCustomTranslations";
 import axiosInstance from "@/lib/axiosInstance";
+import { setPracticeSessionCookie } from '@/lib/practiceSession';
 import { useSubscriptionGate } from "@/hooks/useSubscriptionGate";
 import { SubscriptionAccessLabel } from "@/components/SubscriptionAccessLabel";
 import { GET_practice_speaking_categories } from "@/api/GET_practice_speaking_categories";
@@ -31,9 +32,13 @@ export function SpeakingCustomizeClient() {
   const [isStarting, setIsStarting] = useState(false);
 
   useEffect(() => {
-    const storedPart = typeof window !== "undefined" ? window.localStorage.getItem("practiceSpeakingPart") : null;
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    const storedPart = window.localStorage.getItem('speakingPreferredPart');
     if (isPracticeSpeakingPartValue(storedPart)) {
-      setSelectedPart(storedPart === "2-3" ? "all" : storedPart);
+      setSelectedPart(storedPart === '2-3' ? 'all' : storedPart);
     }
   }, []);
 
@@ -91,8 +96,10 @@ export function SpeakingCustomizeClient() {
         if (Array.isArray(json.data) && json.data.length > 0) {
           const randomIndex = Math.floor(Math.random() * json.data.length);
           const randomSpeakingId = json.data[randomIndex].speaking_id;
-          window.localStorage.setItem("practiceSpeakingId", randomSpeakingId.toString());
-          window.localStorage.setItem("practiceSpeakingPart", selectedPart);
+          await setPracticeSessionCookie({ flow: 'speaking', practiceId: randomSpeakingId, part: selectedPart });
+          if (typeof window !== 'undefined') {
+            window.localStorage.setItem('speakingPreferredPart', selectedPart);
+          }
           router.push("/practice/speaking/rules/");
         } else {
           console.error("Нет доступных speaking_id");

@@ -1,3 +1,5 @@
+'use client';
+
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { BottomSheet } from './ui/bottom-sheet';
 import { Dialog, DialogContent } from './ui/dialog';
@@ -13,6 +15,7 @@ import { PricesModal } from '@/components/PricesModal';
 import { Skeleton, SkeletonAvatar, SkeletonButton, SkeletonText } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import { useMediaQuery } from 'usehooks-ts';
+import { withHydrationGuard } from '@/hooks/useHasMounted';
 import { useLocale } from 'next-intl';
 import { useLogout } from '@/hooks/useLogout';
 
@@ -38,7 +41,7 @@ interface Props {
   onLogout?: () => void;
 }
 
-export const Header = ({ name, email, avatar, title: _title, onOpenSubscription, onOpenProfileSettings, onOpenLanguage, onLogout }: Props) => {
+const HeaderComponent = ({ name, email, avatar, title: _title, onOpenSubscription, onOpenProfileSettings, onOpenLanguage, onLogout }: Props) => {
   const router = useRouter();
   const { t, tImgAlts, tActions } = useCustomTranslations('header');
   const { hasActiveSubscription, subscription, balanceStatus } = useSubscription();
@@ -60,7 +63,7 @@ export const Header = ({ name, email, avatar, title: _title, onOpenSubscription,
   const isMobile = useMediaQuery('(max-width: 767px)');
 
   React.useEffect(() => {
-    if (!isUserMenuOpen) {
+    if (!isUserMenuOpen || typeof document === 'undefined') {
       return;
     }
 
@@ -515,3 +518,5 @@ export const Header = ({ name, email, avatar, title: _title, onOpenSubscription,
     </header>
   );
 };
+
+export const Header = withHydrationGuard(HeaderComponent);

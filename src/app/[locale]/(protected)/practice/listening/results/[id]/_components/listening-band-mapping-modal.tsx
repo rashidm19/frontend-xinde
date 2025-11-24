@@ -6,6 +6,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
 import { X } from 'lucide-react';
 import { useMediaQuery } from 'usehooks-ts';
+import { withHydrationGuard } from '@/hooks/useHasMounted';
 
 import { cn } from '@/lib/utils';
 
@@ -21,7 +22,7 @@ interface ListeningBandMappingModalProps {
   shouldReduceMotion: boolean;
 }
 
-export function ListeningBandMappingModal({ open, onOpenChange, bandMapping, correctCount, shouldReduceMotion }: ListeningBandMappingModalProps) {
+function ListeningBandMappingModalComponent({ open, onOpenChange, bandMapping, correctCount, shouldReduceMotion }: ListeningBandMappingModalProps) {
   const highlightedRange = useMemo(() => bandMapping.find(entry => correctCount >= entry.minCorrect && correctCount <= entry.maxCorrect) ?? null, [bandMapping, correctCount]);
   const isMobile = useMediaQuery('(max-width: 767px)');
 
@@ -168,3 +169,5 @@ export function ListeningBandMappingModal({ open, onOpenChange, bandMapping, cor
     </BottomSheet>
   );
 }
+
+export const ListeningBandMappingModal = withHydrationGuard(ListeningBandMappingModalComponent);

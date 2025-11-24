@@ -1,37 +1,20 @@
-'use client';
+﻿import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
 
-import { GET_practice_speaking_id } from '@/api/GET_practice_speaking_id';
-import { POST_practice_speaking_id_begin } from '@/api/POST_practice_speaking_id_begin';
-import { PracticeLeaveGuard } from '@/components/PracticeLeaveGuard';
-import dynamic from 'next/dynamic';
-import React, { useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { WritingFeedbackHeader } from '@/components/practice/WritingFeedbackHeader';
-import { useCustomTranslations } from '@/hooks/useCustomTranslations';
-import { useRouter } from 'next/navigation';
+import SpeakingTestClient from './SpeakingTestClient';
+import { isPracticeSpeakingPartValue } from '@/types/PracticeSpeaking';
 
-const SpeakingTestForm = dynamic(() => import('./_components/SpeakingTestForm').then(mod => mod.default), { ssr: false });
+export const dynamic = 'force-dynamic';
 
 export default function Page() {
-  const router = useRouter();
-  const { tActions } = useCustomTranslations();
+  const cookieStore = cookies();
+  const practiceId = cookieStore.get('practiceSpeakingId')?.value;
+  const partCookie = cookieStore.get('practiceSpeakingPart')?.value;
+  const practicePart = partCookie && isPracticeSpeakingPartValue(partCookie) ? partCookie : null;
 
-  const { data, status } = useQuery({
-    queryKey: ['practice-speaking'],
-    queryFn: GET_practice_speaking_id,
-  });
+  if (!practiceId) {
+    redirect('/practice/speaking/customize');
+  }
 
-  useEffect(() => {
-    POST_practice_speaking_id_begin().then(() => null);
-  }, []);
-
-  return (
-    <PracticeLeaveGuard>
-      <div className='hidden tablet:block'>
-        <WritingFeedbackHeader title={'Practice Speaking'} exitLabel={tActions('exit')} onExit={() => router.push('/profile')} />
-      </div>
-
-      {status === 'success' && <SpeakingTestForm data={data} exitLabel={tActions('exit')} onExit={() => router.push('/profile')} />}
-    </PracticeLeaveGuard>
-  );
+  return <SpeakingTestClient practiceId={practiceId} practicePart={practicePart} />;
 }

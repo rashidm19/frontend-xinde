@@ -6,6 +6,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
 import { X } from 'lucide-react';
 import { useMediaQuery } from 'usehooks-ts';
+import { withHydrationGuard } from '@/hooks/useHasMounted';
 
 import { cn } from '@/lib/utils';
 
@@ -54,7 +55,7 @@ const cardVisuals: Record<NormalizedListeningQuestion['status'], { border: strin
   },
 };
 
-export function ListeningMistakesModal({ open, onOpenChange, questions, shouldReduceMotion, onSelectQuestion }: ListeningMistakesModalProps) {
+function ListeningMistakesModalComponent({ open, onOpenChange, questions, shouldReduceMotion, onSelectQuestion }: ListeningMistakesModalProps) {
   const filtered = useMemo(() => questions.filter(question => question.status !== 'correct'), [questions]);
   const isMobile = useMediaQuery('(max-width: 767px)');
 
@@ -248,3 +249,5 @@ export function ListeningMistakesModal({ open, onOpenChange, questions, shouldRe
     </BottomSheet>
   );
 }
+
+export const ListeningMistakesModal = withHydrationGuard(ListeningMistakesModalComponent);

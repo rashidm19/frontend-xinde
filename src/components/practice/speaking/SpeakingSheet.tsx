@@ -16,6 +16,7 @@ import { useSubscriptionGate } from '@/hooks/useSubscriptionGate';
 import { GET_practice_speaking_categories } from '@/api/GET_practice_speaking_categories';
 import { AudioCheckStepContent } from '@/components/practice/listening/ListeningSheet';
 import axiosInstance from '@/lib/axiosInstance';
+import { setPracticeSessionCookie } from '@/lib/practiceSession';
 import { cn } from '@/lib/utils';
 import type { PracticeSpeakingCategoriesResponse, PracticeSpeakingCategoryTag, PracticeSpeakingPartValue } from '@/types/PracticeSpeaking';
 import nProgress from 'nprogress';
@@ -467,10 +468,12 @@ export function SpeakingSheet({ open, step, onRequestClose, onStepChange, routeS
             const speakingEntry = payload.data[randomIndex];
             const speakingId = speakingEntry?.speaking_id;
 
-            if (typeof speakingId === 'number' && typeof window !== 'undefined') {
-              window.localStorage.setItem('practiceSpeakingId', String(speakingId));
-              window.localStorage.setItem('practiceSpeakingPart', selectedPart);
+            if (typeof speakingId !== 'number') {
+              setLaunchError('Unable to start speaking practice. Please try again.');
+              return;
             }
+
+            await setPracticeSessionCookie({ flow: 'speaking', practiceId: speakingId, part: selectedPart });
 
             nProgress.start();
             onRequestClose();

@@ -3,6 +3,7 @@
 import { X } from 'lucide-react';
 import { useMemo } from 'react';
 import { useMediaQuery } from 'usehooks-ts';
+import { withHydrationGuard } from '@/hooks/useHasMounted';
 
 import { ModalShell } from '@/components/modals/UnifiedModalShell';
 import { BottomSheet, BottomSheetClose, BottomSheetContent } from '@/components/ui/bottom-sheet';
@@ -17,7 +18,7 @@ interface WritingTaskModalProps {
   picture?: string | null;
 }
 
-export function WritingTaskModal({ open, onOpenChange, title, prompt, question, description, picture }: WritingTaskModalProps) {
+function WritingTaskModalComponent({ open, onOpenChange, title, prompt, question, description, picture }: WritingTaskModalProps) {
   const isDesktop = useMediaQuery('(min-width: 768px)');
   const hasPrompt = Boolean(prompt && prompt.trim().length > 0);
   const hasQuestion = Boolean(question && question.trim().length > 0);
@@ -85,3 +86,5 @@ export function WritingTaskModal({ open, onOpenChange, title, prompt, question, 
     </ModalShell>
   );
 }
+
+export const WritingTaskModal = withHydrationGuard(WritingTaskModalComponent);

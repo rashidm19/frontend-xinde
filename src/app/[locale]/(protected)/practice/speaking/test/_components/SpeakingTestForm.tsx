@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useReactMediaRecorder } from 'react-media-recorder';
 import axiosInstance from '@/lib/axiosInstance';
+import { clearPracticeSessionCookie } from '@/lib/practiceSession';
 import type { PracticeSpeakingAnswer, PracticeSpeakingAttempt, PracticeSpeakingPartResponse, PracticeSpeakingPartValue } from '@/types/PracticeSpeaking';
 import { isPracticeSpeakingPartValue } from '@/types/PracticeSpeaking';
 import { cn } from '@/lib/utils';
@@ -14,6 +15,8 @@ import { AlertTriangle, CheckCircle, Info, Loader2, Mic, MicOff, Play, RefreshCw
 
 interface FormProps {
   data: PracticeSpeakingPartResponse;
+  practicePart?: PracticeSpeakingPartValue | null;
+  practiceAttemptId?: string | null;
   exitLabel?: string;
   onExit?: () => void;
 }
@@ -78,7 +81,7 @@ const getExtensionForMimeType = (mimeType: string) => MIME_EXTENSION_MAP[mimeTyp
 
 const hasIntroContent = (question?: PracticeSpeakingPartResponse['questions'][number]) => Boolean(question?.intro || question?.intro_url);
 
-export default function SpeakingTestForm({ data, exitLabel, onExit }: FormProps) {
+export default function SpeakingTestForm({ data, practicePart, practiceAttemptId, exitLabel, onExit }: FormProps) {
   const router = useRouter();
 
   const sortedQuestions = useMemo(() => [...data.questions].sort((a, b) => a.number - b.number), [data.questions]);
@@ -103,7 +106,7 @@ export default function SpeakingTestForm({ data, exitLabel, onExit }: FormProps)
   const [introAudioState, setIntroAudioState] = useState<'idle' | 'playing'>('idle');
   const [audioMimeType, setAudioMimeType] = useState<string | null>(null);
 
-  const practiceAttemptIdRef = useRef<string | null>(null);
+  const practiceAttemptIdRef = useRef<string | null>(practiceAttemptId ?? null);
   const recordStartRef = useRef<number | null>(null);
   const intervalRef = useRef<number | null>(null);
   const didCancelRef = useRef(false);
@@ -168,17 +171,21 @@ export default function SpeakingTestForm({ data, exitLabel, onExit }: FormProps)
   }, [onExit, router]);
 
   useEffect(() => {
-    const storedPart = localStorage.getItem('practiceSpeakingPart');
-    if (isPracticeSpeakingPartValue(storedPart)) {
-      setPartValue(storedPart);
+    if (isPracticeSpeakingPartValue(practicePart)) {
+      setPartValue(practicePart);
     }
-    practiceAttemptIdRef.current = localStorage.getItem('practiceSpeakingIdStarted');
-  }, []);
+  }, [practicePart]);
+
+  useEffect(() => {
+    practiceAttemptIdRef.current = practiceAttemptId ?? null;
+  }, [practiceAttemptId]);
 
   useEffect(() => {
     if (isPracticeSpeakingPartValue(data.part)) {
       setPartValue(data.part);
-      localStorage.setItem('practiceSpeakingPart', data.part);
+      if (typeof window !== 'undefined') {
+        window.localStorage.setItem('speakingPreferredPart', data.part);
+      }
     }
   }, [data.part]);
 
@@ -658,11 +665,14 @@ export default function SpeakingTestForm({ data, exitLabel, onExit }: FormProps)
       const finishData = response.data;
       if (isPracticeSpeakingPartValue(finishData?.part)) {
         setPartValue(finishData.part);
-        localStorage.setItem('practiceSpeakingPart', finishData.part);
+        if (typeof window !== 'undefined') {
+          window.localStorage.setItem('speakingPreferredPart', finishData.part);
+        }
       }
       if (finishData?.id) {
         setFeedbackAttemptId(finishData.id);
       }
+      await clearPracticeSessionCookie('speaking');
       return finishData;
     } catch (error) {
       throw error instanceof Error ? error : new Error('finish_attempt_failed');

@@ -9,6 +9,7 @@ import { FEEDBACK_HIGHLIGHT_LABELS } from '@/lib/feedback';
 import { cn } from '@/lib/utils';
 import type { FeedbackModalSubmitPayload, FeedbackModalSubmitResult } from './types';
 import { useMediaQuery } from 'usehooks-ts';
+import { withHydrationGuard } from '@/hooks/useHasMounted';
 import { BottomSheetHeader } from '@/components/mobile/MobilePageHeader';
 
 type FeedbackStep = 0 | 1 | 2 | 'success';
@@ -36,9 +37,7 @@ interface FeedbackModalProps {
   onSuccess?: () => void;
 }
 
-export function FeedbackModal(props: FeedbackModalProps) {
-  return <FeedbackModalContent {...props} />;
-}
+export const FeedbackModal = withHydrationGuard(FeedbackModalContent);
 
 export function FeedbackModalContent({ open, onClose, onSubmit, onSuccess }: FeedbackModalProps) {
   const prefersReducedMotion = useReducedMotion();
