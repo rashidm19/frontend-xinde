@@ -1,8 +1,11 @@
 "use client";
 
 import { useMemo } from "react";
+import { useLocale } from "next-intl";
 
 import { motion } from "framer-motion";
+
+import { formatDateTime } from "@/lib/formatters";
 
 interface ReadingSummaryCardProps {
   correctCount: number;
@@ -12,27 +15,8 @@ interface ReadingSummaryCardProps {
   shouldReduceMotion: boolean;
 }
 
-const formatDateTime = (value: string | null) => {
-  if (!value) {
-    return null;
-  }
-
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) {
-    return null;
-  }
-
-  try {
-    return new Intl.DateTimeFormat(undefined, {
-      dateStyle: "medium",
-      timeStyle: "short",
-    }).format(date);
-  } catch (error) {
-    return date.toLocaleString();
-  }
-};
-
 export function ReadingSummaryCard({ correctCount, totalCount, testTitle, completedAt, shouldReduceMotion }: ReadingSummaryCardProps) {
+  const locale = useLocale();
   const accuracy = useMemo(() => {
     if (totalCount <= 0) {
       return 0;
@@ -41,7 +25,7 @@ export function ReadingSummaryCard({ correctCount, totalCount, testTitle, comple
   }, [correctCount, totalCount]);
 
   const accuracyPercent = Math.round(accuracy * 100);
-  const formattedDate = useMemo(() => formatDateTime(completedAt), [completedAt]);
+  const formattedDate = useMemo(() => formatDateTime(completedAt, locale, { dateStyle: "medium", timeStyle: "short" }), [completedAt, locale]);
 
   return (
     <section className="rounded-[32rem] border border-[#E1D6B4] bg-white px-[24rem] py-[28rem] shadow-[0_22rem_60rem_-40rem_rgba(56,56,56,0.16)] tablet:px-[32rem] tablet:py-[36rem]">

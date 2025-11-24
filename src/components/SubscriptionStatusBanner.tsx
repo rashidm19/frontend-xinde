@@ -1,8 +1,9 @@
 'use client';
 
 import { useMemo } from 'react';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 
+import { formatDateTime } from '@/lib/formatters';
 import { cn } from '@/lib/utils';
 import { useSubscriptionStore } from '@/stores/subscriptionStore';
 
@@ -13,6 +14,7 @@ interface SubscriptionStatusBannerProps {
 export const SubscriptionStatusBanner = ({ className }: SubscriptionStatusBannerProps = {}) => {
   const subscription = useSubscriptionStore(state => state.subscription);
   const t = useTranslations('subscription');
+  const locale = useLocale();
 
   const warningMessage = useMemo(() => {
     if (!subscription?.cancel_at_period_end) {
@@ -23,19 +25,17 @@ export const SubscriptionStatusBanner = ({ className }: SubscriptionStatusBanner
       return null;
     }
 
-    const periodEnd = new Date(subscription.current_period_end);
+    const formattedDate = formatDateTime(subscription.current_period_end, locale, {
+      dateStyle: 'medium',
+      timeStyle: 'short',
+    });
 
-    if (Number.isNaN(periodEnd.getTime())) {
+    if (!formattedDate) {
       return null;
     }
 
-    const formattedDate = new Intl.DateTimeFormat(undefined, {
-      dateStyle: 'medium',
-      timeStyle: 'short',
-    }).format(periodEnd);
-
     return t('cancelWarning', { date: formattedDate });
-  }, [subscription, t]);
+  }, [subscription, locale, t]);
 
   if (!warningMessage) {
     return null;

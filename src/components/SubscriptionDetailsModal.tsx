@@ -1,13 +1,14 @@
 'use client';
 
 import React from 'react';
-import { format, parseISO } from 'date-fns';
+import { useLocale } from 'next-intl';
 
 import { BottomSheet, BottomSheetContent } from '@/components/ui/bottom-sheet';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
+import { formatDateTime } from '@/lib/formatters';
 import { useCustomTranslations } from '@/hooks/useCustomTranslations';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useMediaQuery } from 'usehooks-ts';
@@ -41,6 +42,7 @@ export const SubscriptionDetailsModal = ({ open, onOpenChange }: Props) => {
 
 const useSubscriptionDetailsViewModel = () => {
   const { t } = useCustomTranslations('subscriptionModal');
+  const locale = useLocale();
   const { subscription, status, error, balance, balanceStatus, balanceError, hasActiveSubscription } = useSubscription();
 
   const isLoading = status === 'loading' || balanceStatus === 'loading';
@@ -54,12 +56,8 @@ const useSubscriptionDetailsViewModel = () => {
       return null;
     }
 
-    try {
-      return format(parseISO(renewalDate), 'dd MMM yyyy');
-    } catch (err) {
-      return renewalDate;
-    }
-  }, [renewalDate]);
+    return formatDateTime(renewalDate, locale, { dateStyle: 'medium' }) ?? renewalDate;
+  }, [locale, renewalDate]);
 
   const statusLabel = hasActiveSubscription ? t('status.active') : t('status.inactive');
 
