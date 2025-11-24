@@ -6,6 +6,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import { useMediaQuery } from 'usehooks-ts';
+import { withHydrationGuard } from '@/hooks/useHasMounted';
 
 import type { RewriteErrorSegment, RewriteParseResult, RewriteSegment } from '@/lib/writing-feedback-v2';
 import { BottomSheet, BottomSheetClose, BottomSheetContent } from '@/components/ui/bottom-sheet';
@@ -24,7 +25,7 @@ interface DisplaySegment {
   meta?: RewriteErrorSegment;
 }
 
-export function HighlightedText({ rewrite, mode = 'improved', sourceText }: HighlightedTextProps) {
+function HighlightedTextComponent({ rewrite, mode = 'improved', sourceText }: HighlightedTextProps) {
   const segments = useMemo(() => {
     if (mode === 'original') {
       return buildOriginalDisplaySegments(sourceText ?? '', rewrite.segments);
@@ -460,3 +461,5 @@ function ErrorHighlight({ segment, displayText, mode, index, useTooltip, onRegis
     </>
   );
 }
+
+export const HighlightedText = withHydrationGuard(HighlightedTextComponent);

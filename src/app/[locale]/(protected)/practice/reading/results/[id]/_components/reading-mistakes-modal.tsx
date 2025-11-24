@@ -6,6 +6,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
 import { X } from 'lucide-react';
 import { useMediaQuery } from 'usehooks-ts';
+import { withHydrationGuard } from '@/hooks/useHasMounted';
 
 import { cn } from '@/lib/utils';
 
@@ -54,7 +55,7 @@ const cardVisuals: Record<NormalizedReadingQuestion['status'], { border: string;
   },
 };
 
-export function ReadingMistakesModal({ open, onOpenChange, questions, shouldReduceMotion, onSelectQuestion }: ReadingMistakesModalProps) {
+function ReadingMistakesModalComponent({ open, onOpenChange, questions, shouldReduceMotion, onSelectQuestion }: ReadingMistakesModalProps) {
   const filtered = useMemo(() => questions.filter(question => question.status !== 'correct'), [questions]);
   const isMobile = useMediaQuery('(max-width: 767px)');
 
@@ -254,3 +255,5 @@ export function ReadingMistakesModal({ open, onOpenChange, questions, shouldRedu
     </BottomSheet>
   );
 }
+
+export const ReadingMistakesModal = withHydrationGuard(ReadingMistakesModalComponent);

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { BottomSheet, BottomSheetContent } from './ui/bottom-sheet';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from './ui/dialog';
 import { ScrollArea } from './ui/scroll-area';
@@ -13,6 +13,7 @@ import { IPaymentOrder } from '@/types/Payments';
 import axios from 'axios';
 import { useRouter } from 'next/navigation';
 import { useMediaQuery } from 'usehooks-ts';
+import { withHydrationGuard } from '@/hooks/useHasMounted';
 import { BottomSheetHeader } from '@/components/mobile/MobilePageHeader';
 
 declare global {
@@ -36,17 +37,10 @@ interface PromoPromptModalProps {
   onErrorMessage?: (message: string | null) => void;
 }
 
-export const PromoPromptModal = ({ open, planId, onClose, onBackToPlans, onDiscountUpdate, onSuccessMessage, onErrorMessage }: PromoPromptModalProps) => {
+const PromoPromptModalComponent = ({ open, planId, onClose, onBackToPlans, onDiscountUpdate, onSuccessMessage, onErrorMessage }: PromoPromptModalProps) => {
   const { t, tActions } = useCustomTranslations('pricesModal');
   const router = useRouter();
-  const isMobileMedia = useMediaQuery('(max-width: 767px)');
-  const [hasMounted, setHasMounted] = useState(false);
-
-  useEffect(() => {
-    setHasMounted(true);
-  }, []);
-
-  const isMobile = hasMounted && isMobileMedia;
+  const isMobile = useMediaQuery('(max-width: 767px)');
 
   const [step, setStep] = React.useState<'prompt' | 'input'>('prompt');
   const [promoCode, setPromoCode] = React.useState('');
@@ -346,10 +340,6 @@ export const PromoPromptModal = ({ open, planId, onClose, onBackToPlans, onDisco
     </div>
   );
 
-  if (!hasMounted) {
-    return null;
-  }
-
   if (isMobile) {
     return (
       <BottomSheet open={open} onOpenChange={handleOpenChange}>
@@ -388,3 +378,5 @@ export const PromoPromptModal = ({ open, planId, onClose, onBackToPlans, onDisco
     </Dialog>
   );
 };
+
+export const PromoPromptModal = withHydrationGuard(PromoPromptModalComponent);

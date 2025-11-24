@@ -10,6 +10,7 @@ import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { PricesModal } from '@/components/PricesModal';
 import { usePricingPlans } from '@/hooks/usePricingPlans';
 import { useMediaQuery } from 'usehooks-ts';
+import { withHydrationGuard } from '@/hooks/useHasMounted';
 import type { ISubscriptionPlan } from '@/types/Billing';
 import { MobilePageHeader } from '@/components/mobile/MobilePageHeader';
 
@@ -36,7 +37,7 @@ const getCardBackground = (index: number) => {
   return 'bg-white border-slate-200';
 };
 
-const PricingPage = () => {
+const PricingPageComponent = () => {
   const router = useRouter();
   const isMobile = useMediaQuery('(max-width: 767px)', { initializeWithValue: false });
   const { t } = useCustomTranslations('pricesModal');
@@ -264,5 +265,7 @@ const PricingMobileView = ({
     </motion.main>
   );
 };
+
+const PricingPage = withHydrationGuard(PricingPageComponent);
 
 export default PricingPage;

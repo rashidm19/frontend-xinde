@@ -6,12 +6,13 @@ import TargetGoalModal from './TargetGoalModal';
 import { useCustomTranslations } from '@/hooks/useCustomTranslations';
 import React from 'react';
 import { useMediaQuery } from 'usehooks-ts';
+import { withHydrationGuard } from '@/hooks/useHasMounted';
 
 interface Props {
   grade?: number | string;
 }
 
-export const IeltsGoal = ({ grade }: Props) => {
+const IeltsGoalComponent = ({ grade }: Props) => {
   const { t, tImgAlts } = useCustomTranslations('profile.ieltsGoal');
   const isMobile = useMediaQuery('(max-width: 767px)');
   const [goalModalOpen, setGoalModalOpen] = React.useState(false);
@@ -107,3 +108,5 @@ export const IeltsGoal = ({ grade }: Props) => {
     </section>
   );
 };
+
+export const IeltsGoal = withHydrationGuard(IeltsGoalComponent);

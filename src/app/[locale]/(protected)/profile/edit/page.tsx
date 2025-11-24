@@ -10,9 +10,10 @@ import { ProfileEditForm } from '../settings/_components/ProfileEditForm';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { ProfileEditFormModal } from '../settings/_components/ProfileEditFormModal';
 import { useMediaQuery } from 'usehooks-ts';
+import { withHydrationGuard } from '@/hooks/useHasMounted';
 import { MobilePageHeader } from '@/components/mobile/MobilePageHeader';
 
-const EditProfilePage = () => {
+const EditProfilePageComponent = () => {
   const router = useRouter();
   const isMobile = useMediaQuery('(max-width: 767px)', { initializeWithValue: false });
 
@@ -157,5 +158,7 @@ const MobileEditProfileView = ({ onNavigateBack }: MobileEditProfileViewProps) =
     </motion.main>
   );
 };
+
+const EditProfilePage = withHydrationGuard(EditProfilePageComponent);
 
 export default EditProfilePage;

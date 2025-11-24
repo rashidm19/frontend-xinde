@@ -18,10 +18,11 @@ import { cn } from '@/lib/utils';
 import { X } from 'lucide-react';
 import { MobileHeader } from '@/components/practice/reading/mobile/MobileHeader';
 import { useMediaQuery } from 'usehooks-ts';
+import { withHydrationGuard } from '@/hooks/useHasMounted';
 
 export const dynamic = 'force-dynamic';
 
-export default function Page() {
+function Page() {
   const router = useRouter();
   const isMobile = useMediaQuery('(max-width: 767px)');
   const { t, tCommon, tActions, tForm, tMessages } = useCustomTranslations('practice.writing.test');
@@ -334,3 +335,7 @@ export default function Page() {
     </PracticeLeaveGuard>
   );
 }
+
+const HydratedPage = withHydrationGuard(Page);
+
+export default HydratedPage;

@@ -7,6 +7,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { motion, useReducedMotion } from 'framer-motion';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
 import { useMediaQuery } from 'usehooks-ts';
+import { withHydrationGuard } from '@/hooks/useHasMounted';
 
 import { type FreePracticeTestModalPayload, isModalNotAvailableError, isModalNotTrackedError, postModalEvent } from '@/api/uiModals';
 import { ACTIVE_MODALS_QUERY_KEY, useActiveModals } from '@/hooks/useActiveModals';
@@ -296,7 +297,7 @@ interface ManagedFreePracticeUpsellModalProps {
   onDismiss: () => void;
 }
 
-const ManagedFreePracticeUpsellModal = ({ onPrimary, onDismiss }: ManagedFreePracticeUpsellModalProps) => {
+const ManagedFreePracticeUpsellModalComponent = ({ onPrimary, onDismiss }: ManagedFreePracticeUpsellModalProps) => {
   const isMobile = useMediaQuery('(max-width: 767px)');
   const prefersReducedMotion = useReducedMotion() || false;
   const headingId = useId();
@@ -374,6 +375,8 @@ const ManagedFreePracticeUpsellModal = ({ onPrimary, onDismiss }: ManagedFreePra
     </DialogPrimitive.Root>
   );
 };
+
+const ManagedFreePracticeUpsellModal = withHydrationGuard(ManagedFreePracticeUpsellModalComponent);
 
 interface ManagedFreePracticeTestModalProps {
   modal: UiModalInstance<'FREE_PRACTICE_TEST_MODAL'>;

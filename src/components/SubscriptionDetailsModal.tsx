@@ -12,6 +12,7 @@ import { formatDateTime } from '@/lib/formatters';
 import { useCustomTranslations } from '@/hooks/useCustomTranslations';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useMediaQuery } from 'usehooks-ts';
+import { withHydrationGuard } from '@/hooks/useHasMounted';
 import { BottomSheetHeader } from '@/components/mobile/MobilePageHeader';
 import { refreshSubscriptionAndBalance } from '@/stores/subscriptionStore';
 
@@ -20,7 +21,7 @@ interface Props {
   onOpenChange: (open: boolean) => void;
 }
 
-export const SubscriptionDetailsModal = ({ open, onOpenChange }: Props) => {
+const SubscriptionDetailsModalComponent = ({ open, onOpenChange }: Props) => {
   const isMobile = useMediaQuery('(max-width: 767px)');
 
   if (isMobile) {
@@ -190,3 +191,5 @@ export const SubscriptionDetailsContent = () => {
     </>
   );
 };
+
+export const SubscriptionDetailsModal = withHydrationGuard(SubscriptionDetailsModalComponent);

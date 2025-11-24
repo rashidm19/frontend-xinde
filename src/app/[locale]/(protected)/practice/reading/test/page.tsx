@@ -23,6 +23,7 @@ import { useRouter } from 'next/navigation';
 import { useCustomTranslations } from '@/hooks/useCustomTranslations';
 import { PracticeLeaveGuard } from '@/components/PracticeLeaveGuard';
 import { useMediaQuery } from 'usehooks-ts';
+import { withHydrationGuard } from '@/hooks/useHasMounted';
 import { MobileHeader } from '@/components/practice/reading/mobile/MobileHeader';
 import { PartSheet } from '@/components/practice/reading/mobile/PartSheet';
 import { QuestionsMapSheet } from '@/components/practice/reading/mobile/QuestionsMapSheet';
@@ -51,7 +52,7 @@ type FormValues = {
 
 type PartNumber = 1 | 2 | 3;
 
-export default function Page() {
+function Page() {
   const router = useRouter();
   const { t, tCommon, tActions } = useCustomTranslations('practice.reading.test');
 
@@ -1443,3 +1444,7 @@ export default function Page() {
     </PracticeLeaveGuard>
   );
 }
+
+const HydratedPage = withHydrationGuard(Page);
+
+export default HydratedPage;

@@ -6,6 +6,7 @@ import { type MouseEvent, useCallback, useEffect, useMemo, useRef, useState } fr
 import { motion, useReducedMotion } from 'framer-motion';
 import { CircleHelp, Table } from 'lucide-react';
 import { useMediaQuery } from 'usehooks-ts';
+import { withHydrationGuard } from '@/hooks/useHasMounted';
 
 import type { BandMappingEntry } from '@/components/answer-sheets';
 import { DEFAULT_BAND_MAPPING } from '@/components/answer-sheets';
@@ -46,7 +47,7 @@ const MOBILE_FILTER_LABELS: Record<ListeningFilterKey, string> = {
   unanswered: 'Unanswered',
 };
 
-export function ListeningAnswerSheet({ data, locale, meta, bandMapping, onRetry }: ListeningAnswerSheetProps) {
+function ListeningAnswerSheetComponent({ data, locale, meta, bandMapping, onRetry }: ListeningAnswerSheetProps) {
   const shouldReduceMotion = useReducedMotion() ?? false;
   const isMobile = useMediaQuery('(max-width: 767px)');
 
@@ -464,3 +465,5 @@ export function ListeningAnswerSheetError({ onRetry }: { onRetry?: () => void })
     </div>
   );
 }
+
+export const ListeningAnswerSheet = withHydrationGuard(ListeningAnswerSheetComponent);

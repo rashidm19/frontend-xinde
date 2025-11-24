@@ -9,6 +9,7 @@ import { ArrowUp } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { useMediaQuery } from 'usehooks-ts';
+import { withHydrationGuard } from '@/hooks/useHasMounted';
 import { z } from 'zod';
 
 import { GET_practice_listening_id } from '@/api/GET_practice_listening_id';
@@ -60,7 +61,7 @@ const isCheckboxesBlock = (block: ListeningBlock): block is ListeningCheckboxesB
   return candidate.kind === 'checkboxes' && Array.isArray(candidate.answers);
 };
 
-export default function Page() {
+function Page() {
   const router = useRouter();
   const { t, tCommon, tActions } = useCustomTranslations('practice.listening.test');
 
@@ -1046,3 +1047,7 @@ function getPartFromData(data: Awaited<ReturnType<typeof GET_practice_listening_
   }
   return data.part_4;
 }
+
+const HydratedPage = withHydrationGuard(Page);
+
+export default HydratedPage;
