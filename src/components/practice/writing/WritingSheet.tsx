@@ -9,6 +9,7 @@ import { useCustomTranslations } from '@/hooks/useCustomTranslations';
 import { useSubscriptionGate } from '@/hooks/useSubscriptionGate';
 import { useQuery } from '@tanstack/react-query';
 import axiosInstance from '@/lib/axiosInstance';
+import { setPracticeSessionCookie } from '@/lib/practiceSession';
 import type { PracticeWritingListResponse } from '@/types/PracticeWriting';
 import { cn } from '@/lib/utils';
 import nProgress from 'nprogress';
@@ -386,9 +387,7 @@ export function WritingSheet({ open, step, onRequestClose, onRequestStep, routeS
         throw new Error('Invalid writing task payload');
       }
 
-      if (typeof window !== 'undefined') {
-        window.localStorage.setItem('practiceWritingId', String(randomWritingId));
-      }
+      await setPracticeSessionCookie({ flow: 'writing', practiceId: randomWritingId });
 
       nProgress.start();
       onRequestClose();

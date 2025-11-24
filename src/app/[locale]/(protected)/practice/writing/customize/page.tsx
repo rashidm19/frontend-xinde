@@ -8,6 +8,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { useCustomTranslations } from '@/hooks/useCustomTranslations';
 import axiosInstance from '@/lib/axiosInstance';
+import { setPracticeSessionCookie } from '@/lib/practiceSession';
 import { useSubscriptionGate } from '@/hooks/useSubscriptionGate';
 import { SubscriptionAccessLabel } from '@/components/SubscriptionAccessLabel';
 import type { PracticeWritingListResponse } from '@/types/PracticeWriting';
@@ -97,9 +98,7 @@ export default function Page() {
         if (Array.isArray(payload.data) && payload.data.length > 0) {
           const randomIndex = Math.floor(Math.random() * payload.data.length);
           const randomWritingId = payload.data[randomIndex].writing_id;
-          if (typeof window !== 'undefined') {
-            window.localStorage.setItem('practiceWritingId', String(randomWritingId));
-          }
+          await setPracticeSessionCookie({ flow: 'writing', practiceId: randomWritingId });
           nProgress.start();
           router.push('/practice/writing/rules/');
         } else {

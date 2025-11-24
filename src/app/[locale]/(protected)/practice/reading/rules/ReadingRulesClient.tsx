@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import { SubscriptionAccessLabel } from '@/components/SubscriptionAccessLabel';
 import { PracticeWritingCard } from '@/components/practice/PracticeWritingCard';
 import axiosInstance from '@/lib/axiosInstance';
+import { setPracticeSessionCookie } from '@/lib/practiceSession';
 import { useCustomTranslations } from '@/hooks/useCustomTranslations';
 import { useSubscriptionGate } from '@/hooks/useSubscriptionGate';
 
@@ -39,7 +40,7 @@ export function ReadingRulesClient() {
         if (Array.isArray(json.data) && json.data.length > 0) {
           const randomIndex = Math.floor(Math.random() * json.data.length);
           const randomReadingId = json.data[randomIndex].reading_id;
-          localStorage.setItem('practiceReadingId', randomReadingId);
+          await setPracticeSessionCookie({ flow: 'reading', practiceId: randomReadingId });
           router.push('/practice/reading/test');
         } else {
           console.error('Нет доступных reading_id');

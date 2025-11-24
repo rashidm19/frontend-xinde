@@ -5,6 +5,7 @@ import React, { useState } from "react";
 import { SubscriptionAccessLabel } from "@/components/SubscriptionAccessLabel";
 import { PracticeWritingCard } from "@/components/practice/PracticeWritingCard";
 import axiosInstance from "@/lib/axiosInstance";
+import { setPracticeSessionCookie } from '@/lib/practiceSession';
 import { useCustomTranslations } from "@/hooks/useCustomTranslations";
 import { useSubscriptionGate } from "@/hooks/useSubscriptionGate";
 import nProgress from "nprogress";
@@ -40,9 +41,7 @@ export function ListeningRulesClient() {
         if (Array.isArray(payload.data) && payload.data.length > 0) {
           const randomIndex = Math.floor(Math.random() * payload.data.length);
           const randomListeningId = payload.data[randomIndex].listening_id;
-          if (typeof window !== "undefined") {
-            window.localStorage.setItem("practiceListeningId", String(randomListeningId));
-          }
+          await setPracticeSessionCookie({ flow: 'listening', practiceId: randomListeningId });
           router.push("/practice/listening/audio-check");
         } else {
           console.error("No available listening tasks");
