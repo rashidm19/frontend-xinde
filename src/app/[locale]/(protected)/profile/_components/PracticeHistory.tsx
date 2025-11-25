@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { format, isSameWeek, isToday, parseISO, startOfDay, subDays } from 'date-fns';
 
@@ -94,9 +94,13 @@ export function PracticeHistory({ entries, loading, onRetry, onStartSection }: P
   const limitedEntries = useMemo(() => filteredEntries.slice(0, limit), [filteredEntries, limit]);
   const canShowMore = filteredEntries.length > limit;
 
-  const groups = useMemo(() => groupEntries(limitedEntries), [limitedEntries]);
+  const [groups, setGroups] = useState<Array<{ label: GroupLabel; items: PracticeHistoryEntry[] }>>([]);
+  const [weekStats, setWeekStats] = useState<{ sessions: number; medianBand: string; streak: number } | null>(null);
 
-  const weekStats = useMemo(() => computeWeekStats(entries), [entries]);
+  useEffect(() => {
+    setGroups(groupEntries(limitedEntries));
+    setWeekStats(computeWeekStats(entries));
+  }, [limitedEntries, entries]);
 
   if (!entries.length && !loading) {
     return (
@@ -125,9 +129,9 @@ export function PracticeHistory({ entries, loading, onRetry, onStartSection }: P
         </div>
 
         <div className='grid grid-cols-3 gap-[8rem] rounded-[16rem] bg-d-light-gray/40 p-[12rem] text-center tablet:gap-[12rem]'>
-          <MiniStat label={t('stats.sessions')} value={weekStats.sessions} />
-          <MiniStat label={t('stats.medianBand')} value={weekStats.medianBand} />
-          <MiniStat label={t('stats.streak')} value={t('stats.streakValue', { count: weekStats.streak })} />
+          <MiniStat label={t('stats.sessions')} value={weekStats?.sessions ?? '--'} />
+          <MiniStat label={t('stats.medianBand')} value={weekStats?.medianBand ?? '--'} />
+          <MiniStat label={t('stats.streak')} value={t('stats.streakValue', { count: weekStats?.streak ?? 0 })} />
         </div>
 
         <div className='-mx-[4rem] flex items-center gap-[8rem] overflow-x-auto pb-[4rem] pl-[4rem] pr-[4rem] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden'>
@@ -234,15 +238,15 @@ export function PracticeHistory({ entries, loading, onRetry, onStartSection }: P
             ))}
           </AnimatePresence>
 
-          {canShowMore || weekStats.streak > 0 ? (
+          {canShowMore || (weekStats?.streak ?? 0) > 0 ? (
             <div className='flex flex-col items-center gap-[10rem] pt-[14rem]'>
               {canShowMore ? (
                 <Button onClick={() => setLimit(value => value + 6)} variant='secondary' className='h-[44rem] rounded-[24rem] px-[28rem] text-[12.5rem] font-semibold'>
                   {tActions('showMore')}
                 </Button>
               ) : null}
-              {weekStats.streak >= 3 ? (
-                <span className='text-[12.5rem] font-semibold text-d-black/70'>{t('streakBanner', { count: weekStats.streak })}</span>
+              {(weekStats?.streak ?? 0) >= 3 ? (
+                <span className='text-[12.5rem] font-semibold text-d-black/70'>{t('streakBanner', { count: weekStats?.streak ?? 0 })}</span>
               ) : null}
             </div>
           ) : null}
