@@ -4,11 +4,13 @@ import { type DehydratedState, HydrationBoundary, QueryClientProvider } from '@t
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { type ReactNode, useEffect } from 'react';
 
+import { GlobalAppLoader } from '@/components/GlobalAppLoader';
 import { GlobalConfirmationModal } from '@/components/GlobalConfirmationModal';
 import { GlobalSubscriptionPaywall } from '@/components/GlobalSubscriptionPaywall';
+import { ProfileInitializer } from '@/components/ProfileInitializer';
 import { SubscriptionInitializer } from '@/components/SubscriptionInitializer';
-import { TelemetryInitializer } from '@/components/TelemetryInitializer';
 import { SubscriptionPaymentStatusModal } from '@/components/SubscriptionPaymentStatusModal';
+import { TelemetryInitializer } from '@/components/TelemetryInitializer';
 import { UiModalManager } from '@/components/modals/UiModalManager';
 import { queryClient } from '@/lib/queryClient';
 import { IS_NOT_PROD_BUILD, IS_PROD_ENV } from '@/lib/config';
@@ -43,7 +45,9 @@ export default function Providers({ children, dehydratedState }: ProvidersProps)
   return (
     <QueryClientProvider client={queryClient}>
       <HydrationBoundary state={dehydratedState}>
+        <GlobalAppLoader />
         <TelemetryInitializer />
+        <ProfileInitializer />
         <SubscriptionInitializer />
         {children}
 
