@@ -1,6 +1,6 @@
 'use client';
 
-import { useLayoutEffect, type ReactNode } from 'react';
+import { type ReactNode } from 'react';
 
 import { motion, useReducedMotion } from 'framer-motion';
 
@@ -35,18 +35,10 @@ export function AuthLayout({
 }: AuthLayoutProps) {
   const prefersReducedMotion = useReducedMotion();
 
-  useLayoutEffect(() => {
-    const root = document.documentElement;
-    root.classList.add('sb-auth-fixed-scale');
-    return () => {
-      root.classList.remove('sb-auth-fixed-scale');
-    };
-  }, []);
-
   return (
     <div className={cn('relative min-h-screen w-full overflow-y-auto bg-gray-50', className)}>
-      <div className='desktop:left-[36rem] desktop:top-[32rem] absolute left-[20rem] top-[20rem] z-20 flex items-center'>
-        <Logo showStudyboxText className='desktop:h-[28rem] h-[24rem]' />
+      <div className='absolute left-[20rem] top-[20rem] z-20 flex items-center desktop:left-[36rem] desktop:top-[32rem]'>
+        <Logo showStudyboxText className='h-[24rem] desktop:h-[28rem]' />
       </div>
       <div
         aria-hidden='true'

@@ -50,10 +50,6 @@ const MobileEditProfileView = ({ onNavigateBack }: MobileEditProfileViewProps) =
   const { t: tProfile } = useCustomTranslations('profileSettings.profileEditForm');
   const controller = useProfileEditController({ onClose: onNavigateBack });
 
-  if (controller.isProfileLoading) {
-    return null;
-  }
-
   const {
     profile,
     hasActiveSubscription,
@@ -66,9 +62,14 @@ const MobileEditProfileView = ({ onNavigateBack }: MobileEditProfileViewProps) =
     handleDeleteAccount,
     handleLogout,
     isDeleting,
+    isProfileLoading,
   } = controller;
 
   const badgeLabel = useMemo(() => (!hasActiveSubscription ? tCommon('freeTrial') : undefined), [hasActiveSubscription, tCommon]);
+
+  if (isProfileLoading) {
+    return null;
+  }
 
   // const saveButton = (
   //   <button

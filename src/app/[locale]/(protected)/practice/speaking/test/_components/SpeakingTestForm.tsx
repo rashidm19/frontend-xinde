@@ -1033,7 +1033,7 @@ export default function SpeakingTestForm({ data, practicePart, practiceAttemptId
                   <div className='flex items-center gap-[6rem] text-[12rem] text-d-black/60 tablet:text-[12.5rem]'>
                     {
                       phase === 'recording' ? (
-                        <span>{formatDuration(Date.now() - (recordStartRef.current ?? Date.now()))}</span>
+                        <span>{formatDuration(recordElapsedMs)}</span>
                       ) : (
                         recordDurationMs > 0 && <span>{formatDuration(recordDurationMs)}</span>
                       )

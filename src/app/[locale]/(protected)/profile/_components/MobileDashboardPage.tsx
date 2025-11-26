@@ -85,39 +85,28 @@ function MobileDashboardPageComponent({ activeTab }: MobileDashboardPageProps) {
   const planName = subscription?.plan?.name ?? subscription?.subscription_plan?.name ?? null;
   const isSubscriptionReady = subscriptionStatus === 'success' || subscriptionStatus === 'error';
 
-  const [handoffSeen, setHandoffSeen] = useState<Record<PracticeSectionKey, boolean>>(() => {
+  const [handoffSeen, setHandoffSeen] = useState<Record<PracticeSectionKey, boolean>>(createDefaultHandoffState);
+
+  useEffect(() => {
     if (typeof window === 'undefined') {
-      return createDefaultHandoffState();
+      return;
     }
     try {
       const raw = window.localStorage.getItem(PRACTICE_HANDOFF_STORAGE_KEY);
-      if (!raw) {
-        return createDefaultHandoffState();
+      if (raw) {
+        const parsed = JSON.parse(raw) as Partial<Record<PracticeSectionKey, boolean>>;
+        setHandoffSeen(prev => ({ ...prev, ...parsed }));
       }
-      const parsed = JSON.parse(raw) as Partial<Record<PracticeSectionKey, boolean>>;
-      return { ...createDefaultHandoffState(), ...parsed };
     } catch (error) {
       console.warn('Failed to parse practice handoff state', error);
-      return createDefaultHandoffState();
     }
-  });
+  }, []);
 
-  const [desktopPracticeUrls, setDesktopPracticeUrls] = useState<Record<PracticeSectionKey, string | null>>(() => {
-    if (typeof window === 'undefined') {
-      return {
-        writing: null,
-        reading: null,
-        listening: null,
-        speaking: null,
-      };
-    }
-    const origin = window.location.origin;
-    return {
-      writing: `${origin}/${locale}${sectionStartRoutes.writing}`,
-      reading: `${origin}/${locale}${sectionStartRoutes.reading}`,
-      listening: `${origin}/${locale}${sectionStartRoutes.listening}`,
-      speaking: `${origin}/${locale}${sectionStartRoutes.speaking}`,
-    };
+  const [desktopPracticeUrls, setDesktopPracticeUrls] = useState<Record<PracticeSectionKey, string | null>>({
+    writing: null,
+    reading: null,
+    listening: null,
+    speaking: null,
   });
 
   useEffect(() => {
@@ -125,15 +114,11 @@ function MobileDashboardPageComponent({ activeTab }: MobileDashboardPageProps) {
       return;
     }
     const origin = window.location.origin;
-    setDesktopPracticeUrls(prev => {
-      const next = {
-        writing: `${origin}/${locale}${sectionStartRoutes.writing}`,
-        reading: `${origin}/${locale}${sectionStartRoutes.reading}`,
-        listening: `${origin}/${locale}${sectionStartRoutes.listening}`,
-        speaking: `${origin}/${locale}${sectionStartRoutes.speaking}`,
-      };
-      const changed = (Object.keys(next) as PracticeSectionKey[]).some(key => prev[key] !== next[key]);
-      return changed ? next : prev;
+    setDesktopPracticeUrls({
+      writing: `${origin}/${locale}${sectionStartRoutes.writing}`,
+      reading: `${origin}/${locale}${sectionStartRoutes.reading}`,
+      listening: `${origin}/${locale}${sectionStartRoutes.listening}`,
+      speaking: `${origin}/${locale}${sectionStartRoutes.speaking}`,
     });
   }, [locale]);
 

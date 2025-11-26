@@ -298,6 +298,7 @@ export default function Page() {
                               if (str.type === 'input') {
                                 return (
                                   <FormField
+                                    key={`listening-input-${block.questions[str.index].number}`}
                                     control={form.control}
                                     name={block.questions[str.index].number.toString()}
                                     render={({ field }) => (
