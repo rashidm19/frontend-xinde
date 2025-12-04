@@ -2,19 +2,15 @@
 
 import { useQuery } from '@tanstack/react-query';
 
-import { GET_practice_listening_results_id } from '@/api/GET_practice_listening_results_id';
-import type { PracticeListeningResult } from '@/types/PracticeListening';
+import { GET_practice_listening_results_id_v2 } from '@/api/GET_practice_listening_results_id_v2';
+import type { PracticeListeningResultV2 } from '@/types/PracticeListeningResultV2';
 
-import {
-  ListeningAnswerSheet,
-  ListeningAnswerSheetError,
-  ListeningAnswerSheetSkeleton,
-} from './_components/listening-answer-sheet';
+import { ListeningAnswerSheetV2, ListeningAnswerSheetV2Error, ListeningAnswerSheetV2Skeleton } from './_components/listening-answer-sheet-v2';
 
 export default function Page({ params }: { params: { id: string; locale: string } }) {
-  const query = useQuery<PracticeListeningResult, Error>({
-    queryKey: ['practice-listening-results', params.id],
-    queryFn: () => GET_practice_listening_results_id(params.id),
+  const query = useQuery<PracticeListeningResultV2, Error>({
+    queryKey: ['practice-listening-results-v2', params.id],
+    queryFn: () => GET_practice_listening_results_id_v2(params.id),
     retry: false,
   });
 
@@ -25,16 +21,16 @@ export default function Page({ params }: { params: { id: string; locale: string 
   };
 
   if (status === 'pending') {
-    return <ListeningAnswerSheetSkeleton />;
+    return <ListeningAnswerSheetV2Skeleton />;
   }
 
   if (status === 'error') {
-    return <ListeningAnswerSheetError onRetry={handleRetry} />;
+    return <ListeningAnswerSheetV2Error onRetry={handleRetry} />;
   }
 
   if (!data) {
-    return <ListeningAnswerSheetError onRetry={handleRetry} />;
+    return <ListeningAnswerSheetV2Error onRetry={handleRetry} />;
   }
 
-  return <ListeningAnswerSheet data={data} locale={params.locale} />;
+  return <ListeningAnswerSheetV2 data={data} locale={params.locale} />;
 }
