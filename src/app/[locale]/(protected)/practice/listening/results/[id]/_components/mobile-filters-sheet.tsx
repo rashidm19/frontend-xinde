@@ -5,24 +5,24 @@ import { memo } from 'react';
 import { BottomSheet, BottomSheetClose, BottomSheetContent } from '@/components/ui/bottom-sheet';
 import { cn } from '@/lib/utils';
 
-import type { ReadingFilterKey } from './question-types';
+import type { FilterKey } from './mobile-answer-grid';
 
-interface ReadingFiltersSheetProps {
+interface MobileFiltersSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  counts: Record<ReadingFilterKey, number>;
-  activeFilter: ReadingFilterKey;
-  onSelect: (value: ReadingFilterKey) => void;
+  counts: Record<FilterKey, number>;
+  activeFilter: FilterKey;
+  onSelect: (value: FilterKey) => void;
 }
 
-const FILTER_LABELS: Record<ReadingFilterKey, string> = {
+const FILTER_LABELS: Record<FilterKey, string> = {
   all: 'All questions',
   correct: 'Correct',
   incorrect: 'Incorrect',
   unanswered: 'Unanswered',
 };
 
-export const ReadingFiltersSheet = memo(function ReadingFiltersSheet({ open, onOpenChange, counts, activeFilter, onSelect }: ReadingFiltersSheetProps) {
+export const MobileFiltersSheet = memo(function MobileFiltersSheet({ open, onOpenChange, counts, activeFilter, onSelect }: MobileFiltersSheetProps) {
   return (
     <BottomSheet open={open} onOpenChange={onOpenChange}>
       <BottomSheetContent className='px-[4rem]'>
@@ -46,7 +46,7 @@ export const ReadingFiltersSheet = memo(function ReadingFiltersSheet({ open, onO
 
           <div className='flex-1 overflow-y-auto px-[12rem] py-[20rem] scrollbar-thin scrollbar-thumb-[#E1D6B4]'>
             <ul className='flex flex-col gap-[12rem]'>
-              {(Object.keys(FILTER_LABELS) as ReadingFilterKey[]).map(key => {
+              {(Object.keys(FILTER_LABELS) as FilterKey[]).map(key => {
                 const isActive = activeFilter === key;
                 return (
                   <li key={key}>

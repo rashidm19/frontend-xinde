@@ -1,0 +1,708 @@
+{
+  "id": 28,
+  "listening_id": 1,
+  "title": "For tests",
+  "completed_at": "2025-11-04T01:29:52.367Z",
+  "score": 0,
+  "correct_answers_count": 0,
+  "listening": {
+    "rules": "rules",
+    "audio_url": "https://s3.studybox.kz/media/mock/listening/ielts_01_o4ilzP2.mp3",
+    "questions_count": 41,
+    "part_1": {
+      "questions_count": 10,
+      "blocks": [
+        {
+          "kind": "test",
+          "task": "Listen to the audio and select apropriate answers.",
+          "task_questions": "Questions - 1-5",
+          "task_questions_count": 5,
+          "text": "Listen to the audio and select apropriate answers.",
+          "hint": "",
+          "picture": null,
+          "questions": [
+            {
+              "number": 1,
+              "question": "What does her briefcase look like?",
+              "choices": null,
+              "picture": "https://s3.studybox.kz/media/mock/listening/Screenshot_2025-02-24_at_02.54.40.png",
+              "user_answer": null,
+              "correct_answer": "A",
+              "correct": false
+            },
+            {
+              "number": 2,
+              "question": "Which picture shows the distinguishing features?",
+              "choices": null,
+              "picture": "https://s3.studybox.kz/media/mock/listening/Screenshot_2025-02-24_at_02.55.01.png",
+              "user_answer": null,
+              "correct_answer": "C",
+              "correct": false
+            },
+            {
+              "number": 3,
+              "question": "What did she have inside her briefcase?",
+              "choices": [
+                {
+                  "answer": "A",
+                  "choice": "wallet, pens, and novel"
+                },
+                {
+                  "answer": "B",
+                  "choice": "papers and wallet"
+                },
+                {
+                  "answer": "C",
+                  "choice": "pens and novel"
+                },
+                {
+                  "answer": "D",
+                  "choice": "papers, pens, and novel"
+                }
+              ],
+              "picture": null,
+              "user_answer": null,
+              "correct_answer": "D",
+              "correct": false
+            },
+            {
+              "number": 4,
+              "question": "Where was she standing when she lost her briefcase?",
+              "choices": null,
+              "picture": "https://s3.studybox.kz/media/mock/listening/Screenshot_2025-02-24_at_02.55.18.png",
+              "user_answer": null,
+              "correct_answer": "D",
+              "correct": false
+            },
+            {
+              "number": 5,
+              "question": "What time was it when she lost her briefcase?",
+              "choices": null,
+              "picture": "https://s3.studybox.kz/media/mock/listening/Screenshot_2025-02-24_at_02.55.33.png",
+              "user_answer": null,
+              "correct_answer": "C",
+              "correct": false
+            }
+          ]
+        },
+        {
+          "kind": "words",
+          "task": "Complete the form Write NO MORE THAN THREE WORDS for each answer.",
+          "task_questions": "Questions - 6-10",
+          "task_questions_count": 5,
+          "text": "PERSONAL DETAILS FORM\r\n\r\nName: Marry ___ . \r\nAddress: Flat 2 ___ ___ Road Canterbury.\r\nTelephone: ___ .\r\nEstimate values of lost item: ___ pounds.",
+          "hint": "",
+          "picture": null,
+          "questions": [
+            {
+              "number": 6,
+              "question": "6",
+              "hint": "",
+              "user_answer": null,
+              "correct_answer": "Prescott",
+              "correct": false
+            },
+            {
+              "number": 7,
+              "question": "7",
+              "hint": "",
+              "user_answer": null,
+              "correct_answer": "41",
+              "correct": false
+            },
+            {
+              "number": 8,
+              "question": "8",
+              "hint": "",
+              "user_answer": null,
+              "correct_answer": "Fountain",
+              "correct": false
+            },
+            {
+              "number": 9,
+              "question": "9",
+              "hint": "",
+              "user_answer": null,
+              "correct_answer": "752239",
+              "correct": false
+            },
+            {
+              "number": 10,
+              "question": "10",
+              "hint": "",
+              "user_answer": null,
+              "correct_answer": "65",
+              "correct": false
+            }
+          ]
+        }
+      ]
+    },
+    "part_2": {
+      "questions_count": 11,
+      "blocks": [
+        {
+          "kind": "checkboxes",
+          "task": "Pick the THREE other items which are mentioned in the news headlines.",
+          "task_questions": "Questions - 11-13",
+          "task_questions_count": 3,
+          "text": "NEWS HEADLINES",
+          "hint": "A. Rivers flood in the north\r\nC. Nurses on strike in Melbourne\r\nD. Passengers rescued from ship\r\nE. Passengers rescued from plane\r\nF. Bus and train drivers national strike threat\r\nG. Teachers demand more pay\r\nH. New uniform for QANTAS staff\r\nI. National airports under new management",
+          "picture": null,
+          "choices": [
+            {
+              "answer": "A",
+              "choice": "Rivers flood in the north"
+            },
+            {
+              "answer": "C",
+              "choice": "Nurses on strike in Melbourne"
+            },
+            {
+              "answer": "D",
+              "choice": "Passengers rescued from ship"
+            },
+            {
+              "answer": "E",
+              "choice": "Passengers rescued from plane"
+            },
+            {
+              "answer": "F",
+              "choice": "Bus and train drivers national strike threat"
+            },
+            {
+              "answer": "G",
+              "choice": "Teachers demand more pay"
+            },
+            {
+              "answer": "H",
+              "choice": "New uniform for QANTAS staff"
+            },
+            {
+              "answer": "I",
+              "choice": "National airports under new management"
+            }
+          ],
+          "answers": [
+            {
+              "number": 11,
+              "user_answer": "C",
+              "correct_answer": "E|F|H",
+              "correct": false
+            },
+            {
+              "number": 12,
+              "user_answer": "D",
+              "correct_answer": "E|F|H",
+              "correct": false
+            },
+            {
+              "number": 13,
+              "user_answer": null,
+              "correct_answer": "E|F|H",
+              "correct": false
+            }
+          ]
+        },
+        {
+          "kind": "words",
+          "task": "Complete the notes below by writing NO MORE THAN THREE WORDS in the spaces provided.",
+          "task_questions": "Questions - 14-21",
+          "task_questions_count": 8,
+          "text": "The Government plans to give $ ___ to assist the farmers. This money was to be spent on improving Sydney’s ___ but has now been re-allocated. Australia has experienced its worst drought in over fifty years. Farmers say that the money will not help them because it is ___ .\r\n\r\nAn aeroplane which was carrying a group of ___ was forced to land just ___ minutes after take-off. The passengers were rescued by ___. The operation was helped because of the good weather. The passengers thanked the ___ for saving their lives but unfortunately they lost their ___ .",
+          "hint": "",
+          "picture": null,
+          "questions": [
+            {
+              "number": 14,
+              "question": "14",
+              "hint": "",
+              "user_answer": null,
+              "correct_answer": "250 millions",
+              "correct": false
+            },
+            {
+              "number": 15,
+              "question": "15",
+              "hint": "",
+              "user_answer": null,
+              "correct_answer": "roads|roads system",
+              "correct": false
+            },
+            {
+              "number": 16,
+              "question": "16",
+              "hint": "",
+              "user_answer": null,
+              "correct_answer": "too late",
+              "correct": false
+            },
+            {
+              "number": 17,
+              "question": "17",
+              "hint": "",
+              "user_answer": null,
+              "correct_answer": "boys|school chidlren",
+              "correct": false
+            },
+            {
+              "number": 18,
+              "question": "18",
+              "hint": "",
+              "user_answer": null,
+              "correct_answer": "3",
+              "correct": false
+            },
+            {
+              "number": 19,
+              "question": "19",
+              "hint": "",
+              "user_answer": null,
+              "correct_answer": "boats",
+              "correct": false
+            },
+            {
+              "number": 20,
+              "question": "20",
+              "hint": "",
+              "user_answer": null,
+              "correct_answer": "pilot",
+              "correct": false
+            },
+            {
+              "number": 21,
+              "question": "21",
+              "hint": "",
+              "user_answer": null,
+              "correct_answer": "instruments",
+              "correct": false
+            }
+          ]
+        }
+      ]
+    },
+    "part_3": {
+      "questions_count": 10,
+      "blocks": [
+        {
+          "kind": "test",
+          "task": "Mark the appropriate option.",
+          "task_questions": "Questions - 22-25",
+          "task_questions_count": 4,
+          "text": "Mark the appropriate option.",
+          "hint": "",
+          "picture": null,
+          "questions": [
+            {
+              "number": 22,
+              "question": "The orientation meeting",
+              "choices": [
+                {
+                  "answer": "A",
+                  "choice": "Took place recently."
+                },
+                {
+                  "answer": "B",
+                  "choice": "Took place last term."
+                },
+                {
+                  "answer": "C",
+                  "choice": "Will take place tomorrow."
+                },
+                {
+                  "answer": "D",
+                  "choice": "Will take place next week."
+                }
+              ],
+              "picture": null,
+              "user_answer": null,
+              "correct_answer": "A",
+              "correct": false
+            },
+            {
+              "number": 23,
+              "question": "Attendance at lectures is",
+              "choices": [
+                {
+                  "answer": "A",
+                  "choice": "Optional after 4 pm."
+                },
+                {
+                  "answer": "B",
+                  "choice": "Closely monitored."
+                },
+                {
+                  "answer": "C",
+                  "choice": "Difficult to enforce."
+                },
+                {
+                  "answer": "D",
+                  "choice": "Sometimes unnecessary."
+                }
+              ],
+              "picture": null,
+              "user_answer": null,
+              "correct_answer": "B",
+              "correct": false
+            },
+            {
+              "number": 24,
+              "question": "Tutorials take place",
+              "choices": [
+                {
+                  "answer": "A",
+                  "choice": "Every morning."
+                },
+                {
+                  "answer": "B",
+                  "choice": "Twice a week."
+                },
+                {
+                  "answer": "C",
+                  "choice": "Three mornings a week."
+                },
+                {
+                  "answer": "D",
+                  "choice": "Three afternoons a week."
+                }
+              ],
+              "picture": null,
+              "user_answer": null,
+              "correct_answer": "C",
+              "correct": false
+            },
+            {
+              "number": 25,
+              "question": "The lecturer’s name is",
+              "choices": [
+                {
+                  "answer": "A",
+                  "choice": "Roberts."
+                },
+                {
+                  "answer": "B",
+                  "choice": "Rawson."
+                },
+                {
+                  "answer": "C",
+                  "choice": "Rogers."
+                },
+                {
+                  "answer": "D",
+                  "choice": "Robertson."
+                }
+              ],
+              "picture": null,
+              "user_answer": null,
+              "correct_answer": "A",
+              "correct": false
+            }
+          ]
+        },
+        {
+          "kind": "words",
+          "task": "Complete the notes below using NO MORE THAN THREE WORDS.",
+          "task_questions": "Questions - 26-31",
+          "task_questions_count": 6,
+          "text": "Course requirements:\r\n\r\nTutorial paper:\r\nA piece of work ON A given topic. Students must:\r\n• ___ for 25 minutes\r\n• ___ \r\n• give to lecturer for marking\r\n\r\nEssay:\r\nUsually ___ .\r\n\r\nType of exam:\r\n___ .\r\n\r\nLibrary:\r\nImportant books are in ___ .\r\n\r\nFocus of course:\r\nFocus on ___ .",
+          "hint": "",
+          "picture": null,
+          "questions": [
+            {
+              "number": 26,
+              "question": "26",
+              "hint": "",
+              "user_answer": null,
+              "correct_answer": "talk",
+              "correct": false
+            },
+            {
+              "number": 27,
+              "question": "27",
+              "hint": "",
+              "user_answer": null,
+              "correct_answer": "write up work",
+              "correct": false
+            },
+            {
+              "number": 28,
+              "question": "28",
+              "hint": "",
+              "user_answer": null,
+              "correct_answer": "can choose",
+              "correct": false
+            },
+            {
+              "number": 29,
+              "question": "29",
+              "hint": "",
+              "user_answer": null,
+              "correct_answer": "open book",
+              "correct": false
+            },
+            {
+              "number": 30,
+              "question": "30",
+              "hint": "",
+              "user_answer": null,
+              "correct_answer": "closed reserve",
+              "correct": false
+            },
+            {
+              "number": 31,
+              "question": "31",
+              "hint": "",
+              "user_answer": null,
+              "correct_answer": "vocational",
+              "correct": false
+            }
+          ]
+        }
+      ]
+    },
+    "part_4": {
+      "questions_count": 10,
+      "blocks": [
+        {
+          "kind": "test",
+          "task": "Mark the appropriate option.",
+          "task_questions": "Questions - 32-33",
+          "task_questions_count": 2,
+          "text": "Mark the appropriate option.",
+          "hint": "",
+          "picture": null,
+          "questions": [
+            {
+              "number": 32,
+              "question": "The speaker works within the Faculty of",
+              "choices": [
+                {
+                  "answer": "A",
+                  "choice": "Science and Technology."
+                },
+                {
+                  "answer": "B",
+                  "choice": "Arts and Social Sciences."
+                },
+                {
+                  "answer": "C",
+                  "choice": "Architecture."
+                },
+                {
+                  "answer": "D",
+                  "choice": "Law."
+                }
+              ],
+              "picture": null,
+              "user_answer": null,
+              "correct_answer": "B",
+              "correct": false
+            },
+            {
+              "number": 33,
+              "question": "The Faculty consists firstly of",
+              "choices": [
+                {
+                  "answer": "A",
+                  "choice": "subjects."
+                },
+                {
+                  "answer": "B",
+                  "choice": "degrees."
+                },
+                {
+                  "answer": "C",
+                  "choice": "divisions."
+                },
+                {
+                  "answer": "D",
+                  "choice": "departments."
+                }
+              ],
+              "picture": null,
+              "user_answer": null,
+              "correct_answer": "C",
+              "correct": false
+            }
+          ]
+        },
+        {
+          "kind": "words",
+          "task": "Complete the notes with NO MORE THAN THREE WORDS.",
+          "task_questions": "Questions - 34-36",
+          "task_questions_count": 3,
+          "text": "The subjects taken in the first semester in this course are psychology, sociology,\r\n___ .\r\n\r\nStudents may have problems with\r\n___ and ___ .",
+          "hint": "",
+          "picture": null,
+          "questions": [
+            {
+              "number": 34,
+              "question": "34",
+              "hint": "",
+              "user_answer": null,
+              "correct_answer": "history and economics",
+              "correct": false
+            },
+            {
+              "number": 35,
+              "question": "35",
+              "hint": "",
+              "user_answer": null,
+              "correct_answer": "deadlines",
+              "correct": false
+            },
+            {
+              "number": 36,
+              "question": "36",
+              "hint": "",
+              "user_answer": null,
+              "correct_answer": "attendance",
+              "correct": false
+            }
+          ]
+        },
+        {
+          "kind": "test",
+          "task": "Mark the appropriate option.",
+          "task_questions": "Questions - 37-41",
+          "task_questions_count": 5,
+          "text": "Mark the appropriate option.",
+          "hint": "",
+          "picture": null,
+          "questions": [
+            {
+              "number": 37,
+              "question": "The speaker says students can visit her",
+              "choices": [
+                {
+                  "answer": "A",
+                  "choice": "every morning."
+                },
+                {
+                  "answer": "B",
+                  "choice": "some mornings."
+                },
+                {
+                  "answer": "C",
+                  "choice": "mornings only."
+                },
+                {
+                  "answer": "D",
+                  "choice": "Friday morning."
+                }
+              ],
+              "picture": null,
+              "user_answer": null,
+              "correct_answer": "B",
+              "correct": false
+            },
+            {
+              "number": 38,
+              "question": "According to the speaker, a tutorial",
+              "choices": [
+                {
+                  "answer": "A",
+                  "choice": "is a type of lecture."
+                },
+                {
+                  "answer": "B",
+                  "choice": "is less important than a lecture."
+                },
+                {
+                  "answer": "C",
+                  "choice": "provides a chance to share views."
+                },
+                {
+                  "answer": "D",
+                  "choice": "provides an alternative to groupwork."
+                }
+              ],
+              "picture": null,
+              "user_answer": null,
+              "correct_answer": "C",
+              "correct": false
+            },
+            {
+              "number": 39,
+              "question": "When writing essays, the speaker advises the students to",
+              "choices": [
+                {
+                  "answer": "A",
+                  "choice": "research their work well."
+                },
+                {
+                  "answer": "B",
+                  "choice": "name the books they have read."
+                },
+                {
+                  "answer": "C",
+                  "choice": "share work with their friends."
+                },
+                {
+                  "answer": "D",
+                  "choice": "avoid using other writers’ ideas."
+                }
+              ],
+              "picture": null,
+              "user_answer": null,
+              "correct_answer": "B",
+              "correct": false
+            },
+            {
+              "number": 40,
+              "question": "The speaker thinks that plagiarism is",
+              "choices": [
+                {
+                  "answer": "A",
+                  "choice": "a common problem."
+                },
+                {
+                  "answer": "B",
+                  "choice": "an acceptable risk."
+                },
+                {
+                  "answer": "C",
+                  "choice": "a minor concern."
+                },
+                {
+                  "answer": "D",
+                  "choice": "a serious offence."
+                }
+              ],
+              "picture": null,
+              "user_answer": "A",
+              "correct_answer": "D",
+              "correct": false
+            },
+            {
+              "number": 41,
+              "question": "The speaker’s aims are to",
+              "choices": [
+                {
+                  "answer": "A",
+                  "choice": "introduce students to university expectations."
+                },
+                {
+                  "answer": "B",
+                  "choice": "introduce students to the members of staff."
+                },
+                {
+                  "answer": "C",
+                  "choice": "warn students about the difficulties of studying."
+                },
+                {
+                  "answer": "D",
+                  "choice": "guide students round the university."
+                }
+              ],
+              "picture": null,
+              "user_answer": "B",
+              "correct_answer": "A",
+              "correct": false
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

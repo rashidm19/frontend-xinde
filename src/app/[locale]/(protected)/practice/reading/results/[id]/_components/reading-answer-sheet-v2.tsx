@@ -332,7 +332,7 @@ function ReadingAnswerSheetV2Component({ data }: ReadingAnswerSheetV2Props) {
         </section>
       </main>
 
-      <BackToTopButton visible={showScrollTop} onClick={handleScrollTop} variant='reading' display='all' />
+      {!isMobile && <BackToTopButton visible={showScrollTop} onClick={handleScrollTop} variant='reading' display='all' />}
 
       {/* Floating navigation button (mobile only) */}
       {isMobile && (
