@@ -7,7 +7,7 @@ import { Menu } from 'lucide-react';
 import { useMediaQuery } from 'usehooks-ts';
 
 import { withHydrationGuard } from '@/hooks/useHasMounted';
-import type { PracticeReadingResultV2, ReadingBlockFeedback } from '@/types/PracticeReadingResultV2';
+import type { PracticeListeningResultV2 } from '@/types/PracticeListeningResultV2';
 import { WritingFeedbackHeader } from '@/components/practice/WritingFeedbackHeader';
 import { MobileHeader } from '@/components/practice/reading/mobile/MobileHeader';
 import { BackToTopButton } from '@/app/[locale]/(protected)/practice/writing/feedback/[id]/_components/back-to-top-button';
@@ -15,28 +15,31 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
 
 import { ScoreSummaryCard } from './score-summary-card';
+import { AudioPlayer } from './audio-player';
 import { PartTabs } from './part-tabs';
 import { PartContent } from './part-content';
 import { type FilterKey, MobileAnswerGrid, type MobileQuestion } from './mobile-answer-grid';
 import { MobileFiltersSheet } from './mobile-filters-sheet';
 import { MobileNavSheet } from './mobile-nav-sheet';
-import { PassageModal } from './passage-modal';
 
-interface ReadingAnswerSheetV2Props {
-  data: PracticeReadingResultV2;
+interface ListeningAnswerSheetV2Props {
+  data: PracticeListeningResultV2;
   locale: string;
 }
 
-type PartKey = 'part_1' | 'part_2' | 'part_3';
+type PartKey = 'part_1' | 'part_2' | 'part_3' | 'part_4';
 
-function getQuestionsFromBlock(block: ReadingBlockFeedback): Array<{ number: number; user_answer: string | null; correct: boolean }> {
+type ListeningBlockFeedback = PracticeListeningResultV2['listening']['part_1']['blocks'][number];
+
+function getQuestionsFromBlock(block: ListeningBlockFeedback): Array<{ number: number; user_answer: string | null; correct: boolean }> {
   switch (block.kind) {
     case 'checkboxes':
       return block.answers.map(a => ({ number: a.number, user_answer: a.user_answer, correct: a.correct }));
+    case 'titles':
     case 'matching':
       return block.answers.map(a => ({ number: a.number, user_answer: a.user_answer, correct: a.correct }));
-    case 'cards':
-      return block.cards.flatMap(card => card.questions.map(q => ({ number: q.number, user_answer: q.user_answer, correct: q.correct })));
+    case 'table':
+      return block.questions.map(q => ({ number: q.number, user_answer: q.user_answer, correct: q.correct }));
     default:
       if ('questions' in block) {
         return block.questions.map(q => ({ number: q.number, user_answer: q.user_answer, correct: q.correct }));
@@ -45,7 +48,7 @@ function getQuestionsFromBlock(block: ReadingBlockFeedback): Array<{ number: num
   }
 }
 
-function ReadingAnswerSheetV2Component({ data }: ReadingAnswerSheetV2Props) {
+function ListeningAnswerSheetV2Component({ data }: ListeningAnswerSheetV2Props) {
   const shouldReduceMotion = useReducedMotion() ?? false;
   const isMobile = useMediaQuery('(max-width: 767px)');
 
@@ -57,7 +60,6 @@ function ReadingAnswerSheetV2Component({ data }: ReadingAnswerSheetV2Props) {
   const [activeFilter, setActiveFilter] = useState<FilterKey>('all');
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [navOpen, setNavOpen] = useState(false);
-  const [passageOpen, setPassageOpen] = useState(false);
   const [pendingFocus, setPendingFocus] = useState<number | null>(null);
   const [expandedQuestionId, setExpandedQuestionId] = useState<number | null>(null);
 
@@ -65,22 +67,23 @@ function ReadingAnswerSheetV2Component({ data }: ReadingAnswerSheetV2Props) {
 
   const partCounts = useMemo(
     () => ({
-      part_1: data.reading.part_1.questions_count,
-      part_2: data.reading.part_2.questions_count,
-      part_3: data.reading.part_3.questions_count,
+      part_1: data.listening.part_1.questions_count,
+      part_2: data.listening.part_2.questions_count,
+      part_3: data.listening.part_3.questions_count,
+      part_4: data.listening.part_4.questions_count,
     }),
-    [data.reading]
+    [data.listening]
   );
 
-  const totalQuestions = data.reading.questions_count;
+  const totalQuestions = data.listening.questions_count;
   const correctCount = data.correct_answers_count;
 
   // Normalize all questions for the mobile grid
   const allQuestions = useMemo<MobileQuestion[]>(() => {
     const questions: MobileQuestion[] = [];
 
-    (['part_1', 'part_2', 'part_3'] as const).forEach(partKey => {
-      const part = data.reading[partKey];
+    (['part_1', 'part_2', 'part_3', 'part_4'] as const).forEach(partKey => {
+      const part = data.listening[partKey];
       part.blocks.forEach((block, blockIndex) => {
         const blockQuestions = getQuestionsFromBlock(block);
         blockQuestions.forEach(q => {
@@ -96,7 +99,7 @@ function ReadingAnswerSheetV2Component({ data }: ReadingAnswerSheetV2Props) {
     });
 
     return questions.sort((a, b) => a.number - b.number);
-  }, [data.reading]);
+  }, [data.listening]);
 
   // Filter counts for the filter sheet
   const filterCounts = useMemo(
@@ -108,12 +111,6 @@ function ReadingAnswerSheetV2Component({ data }: ReadingAnswerSheetV2Props) {
     }),
     [allQuestions]
   );
-
-  // Check if current part has a passage
-  const currentPartHasPassage = useMemo(() => {
-    const part = data.reading[activePart];
-    return Boolean(part.text && part.text.trim());
-  }, [data.reading, activePart]);
 
   const handleScrollTop = useCallback(() => {
     if (typeof window === 'undefined') return;
@@ -205,7 +202,6 @@ function ReadingAnswerSheetV2Component({ data }: ReadingAnswerSheetV2Props) {
   const closeAllSheets = useCallback(() => {
     setFiltersOpen(false);
     setNavOpen(false);
-    setPassageOpen(false);
   }, []);
 
   const handleOpenFilters = useCallback(() => {
@@ -213,17 +209,12 @@ function ReadingAnswerSheetV2Component({ data }: ReadingAnswerSheetV2Props) {
     setFiltersOpen(true);
   }, [closeAllSheets]);
 
-  const handleOpenPassage = useCallback(() => {
-    closeAllSheets();
-    setPassageOpen(true);
-  }, [closeAllSheets]);
-
   return (
     <div className='relative min-h-screen bg-[#FFFDF0]'>
       <div className='hidden tablet:block'>
-        <WritingFeedbackHeader title='Reading Answer Sheet' />
+        <WritingFeedbackHeader title='Listening Answer Sheet' />
       </div>
-      <MobileHeader title='Reading Practice' tag='Answer Sheet V2' exitLabel='Exit' closeAs='link' closeHref='/profile' variant='reading' />
+      <MobileHeader title='Listening Practice' tag='Answer Sheet V2' exitLabel='Exit' closeAs='link' closeHref='/profile' variant='reading' />
 
       <main className='mx-auto w-full max-w-[1180rem] space-y-[28rem] px-[20rem] pb-[96rem] pt-[24rem] tablet:space-y-[40rem] tablet:px-[48rem] tablet:pt-[48rem] desktop:px-[64rem] desktop:pt-[56rem]'>
         <ScoreSummaryCard
@@ -234,6 +225,8 @@ function ReadingAnswerSheetV2Component({ data }: ReadingAnswerSheetV2Props) {
           completedAt={data.completed_at}
           shouldReduceMotion={shouldReduceMotion}
         />
+
+        {data.listening.audio_url && <AudioPlayer src={data.listening.audio_url} shouldReduceMotion={shouldReduceMotion} />}
 
         <section
           className={cn(
@@ -296,7 +289,7 @@ function ReadingAnswerSheetV2Component({ data }: ReadingAnswerSheetV2Props) {
                       transition={shouldReduceMotion ? undefined : { duration: 0.25, ease: 'easeOut' }}
                     >
                       <PartContent
-                        part={data.reading[activePart]}
+                        part={data.listening[activePart]}
                         partKey={activePart}
                         shouldReduceMotion={shouldReduceMotion}
                         singleOpen
@@ -319,7 +312,7 @@ function ReadingAnswerSheetV2Component({ data }: ReadingAnswerSheetV2Props) {
                 transition={shouldReduceMotion ? undefined : { duration: 0.25, ease: 'easeOut' }}
               >
                 <PartContent
-                  part={data.reading[activePart]}
+                  part={data.listening[activePart]}
                   partKey={activePart}
                   shouldReduceMotion={shouldReduceMotion}
                   singleOpen={false}
@@ -364,17 +357,7 @@ function ReadingAnswerSheetV2Component({ data }: ReadingAnswerSheetV2Props) {
             activePart={activePart}
             onPartChange={setActivePart}
             partCounts={partCounts}
-            onViewPassage={handleOpenPassage}
             onOpenFilters={handleOpenFilters}
-            hasPassage={currentPartHasPassage}
-          />
-
-          <PassageModal
-            open={passageOpen}
-            onOpenChange={setPassageOpen}
-            title='Reading Passage'
-            text={data.reading[activePart].text}
-            picture={data.reading[activePart].picture}
           />
         </>
       )}
@@ -382,12 +365,12 @@ function ReadingAnswerSheetV2Component({ data }: ReadingAnswerSheetV2Props) {
   );
 }
 
-export function ReadingAnswerSheetV2Skeleton() {
+export function ListeningAnswerSheetV2Skeleton() {
   return (
     <section className='flex h-[100dvh] w-full flex-col items-center justify-center gap-[18rem] overflow-hidden bg-[#FFFDF0] px-[24rem] text-center'>
       <div className='flex items-center gap-[12rem] text-[#85784A]'>
         <span className='size-[12rem] animate-pulse rounded-full bg-[#4C7A3A]' aria-hidden='true' />
-        <span className='text-[13rem] font-semibold uppercase tracking-[0.24em]'>Reading practice</span>
+        <span className='text-[13rem] font-semibold uppercase tracking-[0.24em]'>Listening practice</span>
       </div>
       <div className='space-y-[12rem]'>
         <p className='text-[20rem] font-semibold text-d-black'>Loading your detailed results...</p>
@@ -404,10 +387,10 @@ export function ReadingAnswerSheetV2Skeleton() {
   );
 }
 
-export function ReadingAnswerSheetV2Error({ onRetry }: { onRetry?: () => void }) {
+export function ListeningAnswerSheetV2Error({ onRetry }: { onRetry?: () => void }) {
   return (
     <div className='flex min-h-[60vh] flex-col items-center justify-center gap-[16rem] rounded-[32rem] border border-rose-200 bg-rose-50 px-[32rem] py-[40rem] text-center text-[14rem] text-rose-800'>
-      Something went wrong while loading your detailed reading results.
+      Something went wrong while loading your detailed listening results.
       {onRetry ? (
         <button
           type='button'
@@ -421,4 +404,4 @@ export function ReadingAnswerSheetV2Error({ onRetry }: { onRetry?: () => void })
   );
 }
 
-export const ReadingAnswerSheetV2 = withHydrationGuard(ReadingAnswerSheetV2Component);
+export const ListeningAnswerSheetV2 = withHydrationGuard(ListeningAnswerSheetV2Component);
