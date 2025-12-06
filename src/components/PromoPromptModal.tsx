@@ -113,8 +113,8 @@ const PromoPromptModalComponent = ({ open, planId, onClose, onBackToPlans, onDis
       backLink = backLink ?? successUrl.toString();
       failureBackLink = failureBackLink ?? failureUrl.toString();
     } else {
-      backLink = backLink ?? '/profile?subscribePaymentStatus=true';
-      failureBackLink = failureBackLink ?? '/profile?subscribePaymentStatus=false';
+      backLink = backLink ?? '/dashboard?subscribePaymentStatus=true';
+      failureBackLink = failureBackLink ?? '/dashboard?subscribePaymentStatus=false';
     }
 
     await ensurePaymentScript(order);

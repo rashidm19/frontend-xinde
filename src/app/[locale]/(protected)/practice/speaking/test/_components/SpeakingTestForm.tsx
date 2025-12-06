@@ -167,7 +167,7 @@ export default function SpeakingTestForm({ data, practicePart, practiceAttemptId
       onExit();
       return;
     }
-    router.push('/profile');
+    router.push('/dashboard');
   }, [onExit, router]);
 
   useEffect(() => {
@@ -654,7 +654,7 @@ export default function SpeakingTestForm({ data, practicePart, practiceAttemptId
     if (feedbackAttemptId) {
       router.push(`/practice/speaking/feedback/${feedbackAttemptId}`);
     } else {
-      router.push('/profile');
+      router.push('/dashboard');
     }
   };
 

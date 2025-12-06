@@ -100,7 +100,7 @@ export default function RegistrationPage({ params }: PageProps) {
 
   const navigateToProfile = () => {
     NProgress.start();
-    router.push(`/${locale}/profile`);
+    router.push(`/${locale}/dashboard`);
   };
 
   const handleGoogleCredential = async (credential: string) => {

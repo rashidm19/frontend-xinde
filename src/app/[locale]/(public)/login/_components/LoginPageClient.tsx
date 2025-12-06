@@ -102,7 +102,7 @@ export function LoginPageClient({ locale, searchParams = {} }: LoginPageClientPr
       try {
         const profile = await fetchProfileOnce();
         if (profile?.onboarding_completed) {
-          nextRoute = `/${locale}/profile`;
+          nextRoute = `/${locale}/dashboard`;
         }
       } catch (error) {
         console.error('Failed to load profile after login', error);

@@ -743,7 +743,7 @@ function ReadingTestClient({ practiceId }: ReadingTestClientProps) {
   return (
     <PracticeLeaveGuard>
       <div className='hidden tablet:block'>
-        <WritingFeedbackHeader title={'Practice Reading'} exitLabel={tActions('exit')} onExit={() => router.push('/profile')} showFullscreen={!isMobile} />
+        <WritingFeedbackHeader title={'Practice Reading'} exitLabel={tActions('exit')} onExit={() => router.push('/dashboard')} showFullscreen={!isMobile} />
       </div>
 
       <MobileHeader

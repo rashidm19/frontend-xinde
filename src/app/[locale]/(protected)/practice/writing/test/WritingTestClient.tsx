@@ -41,7 +41,7 @@ function WritingTestClient({ practiceId }: WritingTestClientProps) {
   });
 
   const handleExit = React.useCallback(() => {
-    router.push('/profile');
+    router.push('/dashboard');
   }, [router]);
 
   async function onSubmit(values: z.infer<typeof formSchema>) {

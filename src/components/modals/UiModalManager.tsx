@@ -25,12 +25,12 @@ import { useProfile } from '@/hooks/useProfile';
 
 const DEFAULT_START_ROUTE = '/practice/writing/customize';
 
-const isProfilePath = (pathname: string | null): boolean => {
+const isDashboardPath = (pathname: string | null): boolean => {
   if (!pathname) {
     return false;
   }
 
-  return pathname.toLowerCase().includes('/profile');
+  return pathname.toLowerCase().includes('/dashboard');
 };
 
 const isPracticePath = (pathname: string | null): boolean => {
@@ -48,7 +48,6 @@ const shouldEnableForPath = (pathname: string | null): boolean => {
 
   const normalized = pathname.toLowerCase();
   return (
-    normalized.includes('/profile') ||
     normalized.includes('/dashboard') ||
     normalized.includes('/m/stats') ||
     normalized.includes('/m/profile')
@@ -88,9 +87,9 @@ export function UiModalManager() {
   useEffect(() => {
     const previousPath = previousPathnameRef.current;
     if (previousPath !== pathname) {
-      if (previousPath && isPracticePath(previousPath) && isProfilePath(pathname)) {
+      if (previousPath && isPracticePath(previousPath) && isDashboardPath(pathname)) {
         returnedFromPracticeRef.current = true;
-      } else if (!isProfilePath(pathname)) {
+      } else if (!isDashboardPath(pathname)) {
         returnedFromPracticeRef.current = false;
       }
 
@@ -107,7 +106,7 @@ export function UiModalManager() {
       return;
     }
 
-    if (!isProfilePath(pathname)) {
+    if (!isDashboardPath(pathname)) {
       return;
     }
 

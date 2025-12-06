@@ -223,7 +223,7 @@ function ReadingAnswerSheetV2Component({ data }: ReadingAnswerSheetV2Props) {
       <div className='hidden tablet:block'>
         <WritingFeedbackHeader title='Reading Answer Sheet' showFullscreen />
       </div>
-      <MobileHeader title='Reading Practice' tag='Answer Sheet V2' exitLabel='Exit' closeAs='link' closeHref='/profile' variant='reading' />
+      <MobileHeader title='Reading Practice' tag='Answer Sheet V2' exitLabel='Exit' closeAs='link' closeHref='/dashboard' variant='reading' />
 
       <main className='mx-auto w-full max-w-[1180rem] space-y-[28rem] px-[20rem] pb-[96rem] pt-[24rem] tablet:space-y-[40rem] tablet:px-[48rem] tablet:pt-[48rem] desktop:px-[64rem] desktop:pt-[56rem]'>
         <ScoreSummaryCard

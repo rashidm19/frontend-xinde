@@ -204,9 +204,9 @@ export function WritingFeedbackLayout({ data }: WritingFeedbackLayoutProps) {
   return (
     <div className='relative min-h-[100dvh] bg-[#EAF7FF]'>
       <div className='hidden tablet:block'>
-        <WritingFeedbackHeader title='Writing Feedback' exitHref='/profile' showFullscreen />
+        <WritingFeedbackHeader title='Writing Feedback' exitHref='/dashboard' showFullscreen />
       </div>
-      <MobileHeader title='Writing Practice' tag='Feedback' exitLabel='Exit' closeAs='link' closeHref='/profile' variant='writing' />
+      <MobileHeader title='Writing Practice' tag='Feedback' exitLabel='Exit' closeAs='link' closeHref='/dashboard' variant='writing' />
 
       <div ref={headerSentinelRef} aria-hidden='true' className='h-[1px]' />
 
