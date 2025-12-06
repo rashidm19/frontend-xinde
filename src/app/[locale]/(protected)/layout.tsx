@@ -1,6 +1,7 @@
 import { dehydrate, QueryClient } from '@tanstack/react-query';
 import { redirect } from 'next/navigation';
 import { headers } from 'next/headers';
+import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 
 import HydrateOnly from '@/app/_providers/HydrateOnly';
@@ -16,6 +17,13 @@ import type { User } from '@/types/types';
 type ProtectedLayoutProps = {
   children: ReactNode;
   params: { locale: string };
+};
+
+export const metadata: Metadata = {
+  robots: {
+    index: false,
+    follow: false,
+  },
 };
 
 export const dynamic = 'force-dynamic';

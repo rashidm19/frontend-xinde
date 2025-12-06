@@ -915,5 +915,179 @@
         "challenge": "Please solve the CAPTCHA to continue."
       }
     }
+  },
+  "metadata": {
+    "home": {
+      "title": "Studybox | Smart IELTS Prep with AI",
+      "description": "Prepare for the IELTS exam with AI-powered practice. Get personalized study plans, instant feedback, and smart tools to boost your scores."
+    },
+    "login": {
+      "title": "Log In",
+      "description": "Sign in to your Studybox account to continue your IELTS preparation journey."
+    },
+    "registration": {
+      "title": "Create Account",
+      "description": "Join Studybox and start your IELTS preparation journey with AI-powered practice."
+    },
+    "pricing": {
+      "title": "Pricing",
+      "description": "Choose the perfect Studybox plan for your IELTS preparation."
+    },
+    "passwordRecovery": {
+      "title": "Password Recovery",
+      "description": "Reset your Studybox account password securely."
+    },
+    "emailConfirmation": {
+      "title": "Confirm Your Email",
+      "description": "Verify your email address to complete your registration."
+    },
+    "emailVerified": {
+      "title": "Email Verified",
+      "description": "Your email has been verified. Start your IELTS journey."
+    },
+    "dashboard": {
+      "title": "Dashboard",
+      "description": "Your IELTS practice dashboard with progress tracking and recommendations."
+    },
+    "practice": {
+      "title": "Practice",
+      "description": "Practice IELTS skills with AI-powered feedback."
+    },
+    "writingPractice": {
+      "title": "Writing Practice",
+      "description": "Practice IELTS Writing with AI feedback on grammar, vocabulary, and coherence."
+    },
+    "readingPractice": {
+      "title": "Reading Practice",
+      "description": "Practice IELTS Reading with academic passages and various question types."
+    },
+    "listeningPractice": {
+      "title": "Listening Practice",
+      "description": "Practice IELTS Listening with authentic audio recordings."
+    },
+    "speakingPractice": {
+      "title": "Speaking Practice",
+      "description": "Practice IELTS Speaking with AI conversation simulation."
+    },
+    "mockExam": {
+      "title": "Mock Exam",
+      "description": "Take a full IELTS mock exam with realistic timing and AI scoring."
+    },
+    "notes": {
+      "title": "Notes",
+      "description": "Your saved study notes and bookmarked content."
+    },
+    "settings": {
+      "title": "Settings",
+      "description": "Manage your account settings and preferences."
+    },
+    "onboarding": {
+      "title": "Get Started",
+      "description": "Set up your IELTS learning preferences and goals."
+    },
+    "userAgreement": {
+      "title": "User Agreement",
+      "description": "Read the Studybox user agreement and terms of service."
+    },
+    "error500": {
+      "title": "Server Error",
+      "description": "An unexpected error occurred. Please try again later."
+    },
+    "error503": {
+      "title": "Service Unavailable",
+      "description": "The service is temporarily unavailable. Please check your connection."
+    },
+    "editProfile": {
+      "title": "Edit Profile",
+      "description": "Update your Studybox profile information and preferences."
+    },
+    "mobile": {
+      "title": "Dashboard",
+      "description": "Your IELTS practice dashboard with progress tracking."
+    },
+    "writingTest": {
+      "title": "Writing Test",
+      "description": "Complete your IELTS Writing practice test with Task 1 and Task 2."
+    },
+    "readingTest": {
+      "title": "Reading Test",
+      "description": "Complete your IELTS Reading practice test with academic passages."
+    },
+    "listeningTest": {
+      "title": "Listening Test",
+      "description": "Complete your IELTS Listening practice test with audio recordings."
+    },
+    "speakingTest": {
+      "title": "Speaking Test",
+      "description": "Complete your IELTS Speaking practice with AI conversation."
+    },
+    "writingFeedback": {
+      "title": "Writing Feedback",
+      "description": "Review your IELTS Writing performance with detailed AI feedback."
+    },
+    "speakingFeedback": {
+      "title": "Speaking Feedback",
+      "description": "Review your IELTS Speaking performance with detailed AI feedback."
+    },
+    "readingResults": {
+      "title": "Reading Results",
+      "description": "Review your IELTS Reading answers and scores."
+    },
+    "listeningResults": {
+      "title": "Listening Results",
+      "description": "Review your IELTS Listening answers and scores."
+    },
+    "practiceHistory": {
+      "title": "Practice History",
+      "description": "View your complete IELTS practice history and progress."
+    },
+    "statistics": {
+      "title": "Statistics",
+      "description": "Track your IELTS practice statistics and improvement trends."
+    },
+    "mobileProfile": {
+      "title": "Dashboard",
+      "description": "Your IELTS practice dashboard with progress tracking."
+    },
+    "mobilePractice": {
+      "title": "Practice",
+      "description": "Practice IELTS skills with AI-powered feedback."
+    },
+    "customizeWriting": {
+      "title": "Customize Writing",
+      "description": "Select task types and configure your IELTS Writing practice session."
+    },
+    "customizeListening": {
+      "title": "Customize Listening",
+      "description": "Select parts and configure your IELTS Listening practice session."
+    },
+    "customizeSpeaking": {
+      "title": "Customize Speaking",
+      "description": "Select parts and configure your IELTS Speaking practice session."
+    },
+    "writingRules": {
+      "title": "Writing Rules",
+      "description": "Review the rules and instructions for your IELTS Writing practice."
+    },
+    "readingRules": {
+      "title": "Reading Rules",
+      "description": "Review the rules and instructions for your IELTS Reading practice."
+    },
+    "listeningRules": {
+      "title": "Listening Rules",
+      "description": "Review the rules and instructions for your IELTS Listening practice."
+    },
+    "speakingRules": {
+      "title": "Speaking Rules",
+      "description": "Review the rules and instructions for your IELTS Speaking practice."
+    },
+    "audioCheck": {
+      "title": "Audio Check",
+      "description": "Test your audio setup before starting your IELTS practice."
+    },
+    "micCheck": {
+      "title": "Microphone Check",
+      "description": "Test your microphone setup before starting your IELTS Speaking practice."
+    }
   }
 }

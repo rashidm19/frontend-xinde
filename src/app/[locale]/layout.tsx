@@ -7,31 +7,71 @@ import type { Metadata } from 'next';
 import NextTopLoader from 'nextjs-toploader';
 import Providers from './providers';
 import { hasLocale, NextIntlClientProvider } from 'next-intl';
-import { getMessages, setRequestLocale } from 'next-intl/server';
+import { getMessages, getTranslations, setRequestLocale } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import { routing } from '@/i18n/routing';
 
 const inter = Inter({ subsets: ['latin'], weight: ['400', '500', '600'] });
 const poppins = Poppins({ subsets: ['latin'], weight: ['400', '500', '600'], variable: '--font-poppins' });
 
-export const metadata: Metadata = {
-  title: 'Studybox | Smart learning with AI',
-  description: 'Prepare for the IELTS exam with the power of AI. Get personalized study plans, instant feedback, and smart tools to boost your scores efficiently.',
-  openGraph: {
-    title: 'Studybox | Smart learning with AI',
-    description: 'Prepare for the IELTS exam with the power of AI. Get personalized study plans, instant feedback, and smart tools to boost your scores efficiently.',
-    type: 'website',
-    url: 'https://studybox.kz',
-    // images: ['https://qoople.com/images/img__meta.png'],
-  },
-  twitter: {
-    title: 'Studybox | Smart learning with AI',
-    description: 'Prepare for the IELTS exam with the power of AI. Get personalized study plans, instant feedback, and smart tools to boost your scores efficiently.',
-    site: 'https://studybox.kz',
-    // card: 'summary_large_image',
-    // images: ['https://qoople.com/images/img__meta.png'],
-  },
+type Props = {
+  params: { locale: string };
 };
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const t = await getTranslations({ locale: params.locale, namespace: 'metadata.home' });
+  const ogLocale = params.locale === 'ru' ? 'ru_RU' : 'en_US';
+
+  return {
+    metadataBase: new URL('https://studybox.kz'),
+    title: {
+      template: '%s | Studybox',
+      default: t('title'),
+    },
+    description: t('description'),
+    keywords: ['IELTS', 'IELTS preparation', 'IELTS practice', 'AI learning', 'English test', 'IELTS speaking', 'IELTS writing', 'IELTS reading', 'IELTS listening'],
+    authors: [{ name: 'Studybox' }],
+    creator: 'Studybox',
+    publisher: 'Studybox',
+    alternates: {
+      canonical: '/',
+      languages: {
+        en: '/en',
+        ru: '/ru',
+      },
+    },
+    robots: {
+      index: true,
+      follow: true,
+      googleBot: {
+        index: true,
+        follow: true,
+      },
+    },
+    openGraph: {
+      type: 'website',
+      siteName: 'Studybox',
+      title: t('title'),
+      description: t('description'),
+      url: 'https://studybox.kz',
+      locale: ogLocale,
+      images: [
+        {
+          url: '/images/og-studybox.png',
+          width: 1200,
+          height: 630,
+          alt: 'Studybox - Smart IELTS Preparation with AI',
+        },
+      ],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: t('title'),
+      description: t('description'),
+      images: ['/images/og-studybox.png'],
+    },
+  };
+}
 
 export default async function LocaleLayout({ children, params }: { children: React.ReactNode; params: { locale: string } }) {
   const { locale } = params;
