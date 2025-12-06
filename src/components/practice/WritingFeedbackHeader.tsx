@@ -6,6 +6,7 @@ import { LogOut } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
 import { Logo } from '@/components/auth/Logo';
+import { FullscreenToggle } from '@/components/ui/fullscreen-toggle';
 import Link from 'next/link';
 
 export interface WritingFeedbackHeaderProps {
@@ -15,9 +16,10 @@ export interface WritingFeedbackHeaderProps {
   exitHref?: string;
   onExit?: () => void;
   rightSlot?: ReactNode;
+  showFullscreen?: boolean;
 }
 
-export function WritingFeedbackHeader({ topBarElevated, title, exitLabel = 'Exit', exitHref = '/profile', onExit, rightSlot }: WritingFeedbackHeaderProps) {
+export function WritingFeedbackHeader({ topBarElevated, title, exitLabel = 'Exit', exitHref = '/profile', onExit, rightSlot, showFullscreen = false }: WritingFeedbackHeaderProps) {
   return (
     <header
       className={cn(
@@ -32,6 +34,7 @@ export function WritingFeedbackHeader({ topBarElevated, title, exitLabel = 'Exit
       </div>
       <h1 className='hidden text-[18rem] font-semibold text-slate-900 tablet:block'>{title}</h1>
       <div className='flex flex-1 items-center justify-end gap-[12rem] tablet:flex-none tablet:gap-[16rem]'>
+        {showFullscreen && <FullscreenToggle />}
         {exitLabel && (
           <Link
             href={exitHref ?? '#'}

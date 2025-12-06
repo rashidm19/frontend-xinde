@@ -875,6 +875,7 @@ function ListeningTestClient({ practiceId }: ListeningTestClientProps) {
           exitLabel={tActions('exit')}
           onExit={() => router.push('/profile')}
           rightSlot={!isMobile && data?.audio_url ? <AudioStatusIndicator state={desktopAudioStatus} /> : undefined}
+          showFullscreen={!isMobile}
         />
       </div>
 

@@ -221,7 +221,7 @@ function ReadingAnswerSheetV2Component({ data }: ReadingAnswerSheetV2Props) {
   return (
     <div className='relative min-h-screen bg-[#FFFDF0]'>
       <div className='hidden tablet:block'>
-        <WritingFeedbackHeader title='Reading Answer Sheet' />
+        <WritingFeedbackHeader title='Reading Answer Sheet' showFullscreen />
       </div>
       <MobileHeader title='Reading Practice' tag='Answer Sheet V2' exitLabel='Exit' closeAs='link' closeHref='/profile' variant='reading' />
 

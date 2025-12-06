@@ -60,7 +60,7 @@ export default function SpeakingTestClient({ practiceId, practicePart }: Speakin
   return (
     <PracticeLeaveGuard>
       <div className='hidden tablet:block'>
-        <WritingFeedbackHeader title={'Practice Speaking'} exitLabel={tActions('exit')} onExit={() => router.push('/profile')} />
+        <WritingFeedbackHeader title={'Practice Speaking'} exitLabel={tActions('exit')} onExit={() => router.push('/profile')} showFullscreen />
       </div>
 
       {status === 'success' ? (

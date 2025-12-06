@@ -130,6 +130,7 @@ function WritingTestClient({ practiceId }: WritingTestClientProps) {
           title={tCommon('practicePartNumber', { number: data?.picture ? 1 : 2 })}
           exitLabel={tActions('exit')}
           onExit={handleExit}
+          showFullscreen={!isMobile}
         />
       </div>
 

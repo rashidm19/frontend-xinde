@@ -258,7 +258,7 @@ export function SpeakingFeedbackLayout({ data }: SpeakingFeedbackLayoutProps) {
   return (
     <div className='relative min-h-[100dvh] bg-[#EAF7FF]'>
       <div className='hidden tablet:block'>
-        <WritingFeedbackHeader title='Speaking Feedback' exitHref='/profile' />
+        <WritingFeedbackHeader title='Speaking Feedback' exitHref='/profile' showFullscreen />
       </div>
       <MobileHeader title='Speaking Practice' tag='Feedback' exitLabel='Exit' closeAs='link' closeHref='/profile' variant='writing' />
 

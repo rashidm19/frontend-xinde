@@ -67,7 +67,11 @@
     "practiceNow": "Practice now",
     "review": "Review",
     "showMore": "Show more",
-    "refresh": "Refresh"
+    "refresh": "Refresh",
+    "fullscreen": {
+      "enter": "Enter full screen",
+      "exit": "Exit full screen"
+    }
   },
   "handoff": {
     "common": {
