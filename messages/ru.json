@@ -804,5 +804,179 @@
         "challenge": "Чтобы продолжить, реши CAPTCHA."
       }
     }
+  },
+  "metadata": {
+    "home": {
+      "title": "Studybox | Умная подготовка к IELTS с ИИ",
+      "description": "Готовьтесь к IELTS с помощью ИИ. Персональные планы обучения, мгновенная обратная связь и умные инструменты для повышения баллов."
+    },
+    "login": {
+      "title": "Вход",
+      "description": "Войдите в аккаунт Studybox, чтобы продолжить подготовку к IELTS."
+    },
+    "registration": {
+      "title": "Создать аккаунт",
+      "description": "Присоединяйтесь к Studybox и начните подготовку к IELTS с помощью ИИ."
+    },
+    "pricing": {
+      "title": "Тарифы",
+      "description": "Выберите идеальный тариф Studybox для подготовки к IELTS."
+    },
+    "passwordRecovery": {
+      "title": "Восстановление пароля",
+      "description": "Безопасно сбросьте пароль от аккаунта Studybox."
+    },
+    "emailConfirmation": {
+      "title": "Подтвердите email",
+      "description": "Подтвердите адрес электронной почты для завершения регистрации."
+    },
+    "emailVerified": {
+      "title": "Email подтверждён",
+      "description": "Ваш email подтверждён. Начните подготовку к IELTS."
+    },
+    "dashboard": {
+      "title": "Главная",
+      "description": "Ваша панель практики IELTS с отслеживанием прогресса и рекомендациями."
+    },
+    "practice": {
+      "title": "Практика",
+      "description": "Практикуйте навыки IELTS с обратной связью от ИИ."
+    },
+    "writingPractice": {
+      "title": "Практика письма",
+      "description": "Практикуйте IELTS Writing с ИИ-обратной связью по грамматике, лексике и связности."
+    },
+    "readingPractice": {
+      "title": "Практика чтения",
+      "description": "Практикуйте IELTS Reading с академическими текстами и различными типами вопросов."
+    },
+    "listeningPractice": {
+      "title": "Практика аудирования",
+      "description": "Практикуйте IELTS Listening с аутентичными аудиозаписями."
+    },
+    "speakingPractice": {
+      "title": "Практика говорения",
+      "description": "Практикуйте IELTS Speaking с ИИ-симуляцией разговора."
+    },
+    "mockExam": {
+      "title": "Пробный экзамен",
+      "description": "Пройдите полный пробный экзамен IELTS с реалистичным таймингом и ИИ-оценкой."
+    },
+    "notes": {
+      "title": "Заметки",
+      "description": "Ваши сохранённые заметки и закладки."
+    },
+    "settings": {
+      "title": "Настройки",
+      "description": "Управляйте настройками аккаунта и предпочтениями."
+    },
+    "onboarding": {
+      "title": "Начало работы",
+      "description": "Настройте свои цели и предпочтения для изучения IELTS."
+    },
+    "userAgreement": {
+      "title": "Пользовательское соглашение",
+      "description": "Ознакомьтесь с пользовательским соглашением и условиями использования Studybox."
+    },
+    "error500": {
+      "title": "Ошибка сервера",
+      "description": "Произошла непредвиденная ошибка. Пожалуйста, попробуйте позже."
+    },
+    "error503": {
+      "title": "Сервис недоступен",
+      "description": "Сервис временно недоступен. Пожалуйста, проверьте подключение."
+    },
+    "editProfile": {
+      "title": "Редактирование профиля",
+      "description": "Обновите информацию профиля и настройки Studybox."
+    },
+    "mobile": {
+      "title": "Главная",
+      "description": "Ваша панель практики IELTS с отслеживанием прогресса."
+    },
+    "writingTest": {
+      "title": "Тест по письму",
+      "description": "Пройдите практический тест IELTS Writing с заданиями 1 и 2."
+    },
+    "readingTest": {
+      "title": "Тест по чтению",
+      "description": "Пройдите практический тест IELTS Reading с академическими текстами."
+    },
+    "listeningTest": {
+      "title": "Тест по аудированию",
+      "description": "Пройдите практический тест IELTS Listening с аудиозаписями."
+    },
+    "speakingTest": {
+      "title": "Тест по говорению",
+      "description": "Пройдите практику IELTS Speaking с ИИ-собеседником."
+    },
+    "writingFeedback": {
+      "title": "Результаты письма",
+      "description": "Просмотрите результаты IELTS Writing с подробной обратной связью от ИИ."
+    },
+    "speakingFeedback": {
+      "title": "Результаты говорения",
+      "description": "Просмотрите результаты IELTS Speaking с подробной обратной связью от ИИ."
+    },
+    "readingResults": {
+      "title": "Результаты чтения",
+      "description": "Просмотрите ваши ответы и баллы по IELTS Reading."
+    },
+    "listeningResults": {
+      "title": "Результаты аудирования",
+      "description": "Просмотрите ваши ответы и баллы по IELTS Listening."
+    },
+    "practiceHistory": {
+      "title": "История практики",
+      "description": "Просмотрите полную историю практики IELTS и ваш прогресс."
+    },
+    "statistics": {
+      "title": "Статистика",
+      "description": "Отслеживайте статистику практики IELTS и тенденции улучшения."
+    },
+    "mobileProfile": {
+      "title": "Главная",
+      "description": "Ваша панель практики IELTS с отслеживанием прогресса."
+    },
+    "mobilePractice": {
+      "title": "Практика",
+      "description": "Практикуйте навыки IELTS с обратной связью от ИИ."
+    },
+    "customizeWriting": {
+      "title": "Настройка письма",
+      "description": "Выберите типы заданий и настройте сессию практики IELTS Writing."
+    },
+    "customizeListening": {
+      "title": "Настройка аудирования",
+      "description": "Выберите части и настройте сессию практики IELTS Listening."
+    },
+    "customizeSpeaking": {
+      "title": "Настройка говорения",
+      "description": "Выберите части и настройте сессию практики IELTS Speaking."
+    },
+    "writingRules": {
+      "title": "Правила письма",
+      "description": "Ознакомьтесь с правилами и инструкциями для практики IELTS Writing."
+    },
+    "readingRules": {
+      "title": "Правила чтения",
+      "description": "Ознакомьтесь с правилами и инструкциями для практики IELTS Reading."
+    },
+    "listeningRules": {
+      "title": "Правила аудирования",
+      "description": "Ознакомьтесь с правилами и инструкциями для практики IELTS Listening."
+    },
+    "speakingRules": {
+      "title": "Правила говорения",
+      "description": "Ознакомьтесь с правилами и инструкциями для практики IELTS Speaking."
+    },
+    "audioCheck": {
+      "title": "Проверка звука",
+      "description": "Проверьте настройки звука перед началом практики IELTS."
+    },
+    "micCheck": {
+      "title": "Проверка микрофона",
+      "description": "Проверьте настройки микрофона перед началом практики IELTS Speaking."
+    }
   }
 }
