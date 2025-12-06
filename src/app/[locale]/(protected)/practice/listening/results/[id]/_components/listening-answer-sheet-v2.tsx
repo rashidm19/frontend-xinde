@@ -212,7 +212,7 @@ function ListeningAnswerSheetV2Component({ data }: ListeningAnswerSheetV2Props) 
   return (
     <div className='relative min-h-screen bg-[#FFFDF0]'>
       <div className='hidden tablet:block'>
-        <WritingFeedbackHeader title='Listening Answer Sheet' />
+        <WritingFeedbackHeader title='Listening Answer Sheet' showFullscreen />
       </div>
       <MobileHeader title='Listening Practice' tag='Answer Sheet V2' exitLabel='Exit' closeAs='link' closeHref='/profile' variant='reading' />
 

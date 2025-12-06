@@ -61,19 +61,6 @@ function ReadingTestClient({ practiceId }: ReadingTestClientProps) {
   const router = useRouter();
   const { t, tCommon, tActions } = useCustomTranslations('practice.reading.test');
 
-  const fallbackContent = useMemo(
-    () => ({
-      title: t('fallback.title'),
-      description: t('fallback.description'),
-      actionLabel: t('fallback.action'),
-    }),
-    [t]
-  );
-
-  const handleFallbackNavigation = useCallback(() => {
-    void router.push('/profile');
-  }, [router]);
-
   const [activeTab, setActiveTab] = useState<'p1' | 'p2' | 'p3'>('p1');
   const isMobile = useMediaQuery('(max-width: 767px)');
   const { timer } = mockStore();
@@ -756,7 +743,7 @@ function ReadingTestClient({ practiceId }: ReadingTestClientProps) {
   return (
     <PracticeLeaveGuard>
       <div className='hidden tablet:block'>
-        <WritingFeedbackHeader title={'Practice Reading'} exitLabel={tActions('exit')} onExit={() => router.push('/profile')} />
+        <WritingFeedbackHeader title={'Practice Reading'} exitLabel={tActions('exit')} onExit={() => router.push('/profile')} showFullscreen={!isMobile} />
       </div>
 
       <MobileHeader
