@@ -13,6 +13,7 @@ import { withHydrationGuard } from '@/hooks/useHasMounted';
 import { z } from 'zod';
 
 import { GET_practice_listening_id } from '@/api/GET_practice_listening_id';
+import { AudioStatusIndicator, type AudioStatus } from '@/components/practice/listening/AudioStatusIndicator';
 import { PracticeLeaveGuard } from '@/components/PracticeLeaveGuard';
 import { AudioBar, type AudioBarHandle, type AudioBarState, type AudioCuePoint } from '@/components/practice/listening/mobile/AudioBar';
 import { QuestionCard } from '@/components/practice/listening/mobile/QuestionCard';
@@ -81,6 +82,9 @@ function ListeningTestClient({ practiceId }: ListeningTestClientProps) {
 
   const audioBarRef = useRef<AudioBarHandle | null>(null);
   const [audioState, setAudioState] = useState<AudioBarState>('idle');
+
+  const desktopAudioRef = useRef<HTMLAudioElement | null>(null);
+  const [desktopAudioStatus, setDesktopAudioStatus] = useState<AudioStatus>('loading');
 
   const scrollPositionsRef = useRef<Record<PartTab, number>>({ p1: 0, p2: 0, p3: 0, p4: 0 });
   const pendingScrollRef = useRef<number | null>(null);
@@ -443,6 +447,34 @@ function ListeningTestClient({ practiceId }: ListeningTestClientProps) {
       return null;
     }
   }, [timer]);
+
+  useEffect(() => {
+    if (isMobile || !data?.audio_url) return;
+
+    const audio = new Audio(data.audio_url);
+    desktopAudioRef.current = audio;
+
+    const handleCanPlay = () => {
+      audio.play().catch(() => setDesktopAudioStatus('error'));
+    };
+    const handlePlaying = () => setDesktopAudioStatus('playing');
+    const handleEnded = () => setDesktopAudioStatus('finished');
+    const handleError = () => setDesktopAudioStatus('error');
+
+    audio.addEventListener('canplay', handleCanPlay);
+    audio.addEventListener('playing', handlePlaying);
+    audio.addEventListener('ended', handleEnded);
+    audio.addEventListener('error', handleError);
+
+    return () => {
+      audio.removeEventListener('canplay', handleCanPlay);
+      audio.removeEventListener('playing', handlePlaying);
+      audio.removeEventListener('ended', handleEnded);
+      audio.removeEventListener('error', handleError);
+      audio.pause();
+      desktopAudioRef.current = null;
+    };
+  }, [isMobile, data?.audio_url]);
 
   const questionsCountString = useCallback(() => {
     if (!activeRange) {
@@ -838,7 +870,12 @@ function ListeningTestClient({ practiceId }: ListeningTestClientProps) {
   return (
     <PracticeLeaveGuard>
       <div className='hidden tablet:block'>
-        <WritingFeedbackHeader title={'Practice Listening'} exitLabel={tActions('exit')} onExit={() => router.push('/profile')} />
+        <WritingFeedbackHeader
+          title={'Practice Listening'}
+          exitLabel={tActions('exit')}
+          onExit={() => router.push('/profile')}
+          rightSlot={!isMobile && data?.audio_url ? <AudioStatusIndicator state={desktopAudioStatus} /> : undefined}
+        />
       </div>
 
       <MobileHeader
