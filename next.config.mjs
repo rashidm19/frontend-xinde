@@ -10,17 +10,17 @@ const nextConfig = {
     return [
       {
         source: '/',
-        destination: `/${DEFAULT_LOCALE}/profile`,
+        destination: `/${DEFAULT_LOCALE}/dashboard`,
         permanent: false,
       },
       {
         source: '/en',
-        destination: '/en/profile',
+        destination: '/en/dashboard',
         permanent: false,
       },
       {
         source: '/ru',
-        destination: '/ru/profile',
+        destination: '/ru/dashboard',
         permanent: false,
       },
     ];
