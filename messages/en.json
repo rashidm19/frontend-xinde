@@ -1089,5 +1089,177 @@
       "title": "Microphone Check",
       "description": "Test your microphone setup before starting your IELTS Speaking practice."
     }
+  },
+  "privacyPolicy": {
+    "title": "Privacy Policy",
+    "content": [
+      {
+        "title": "INTRODUCTION",
+        "elements": [
+          {
+            "title": "This Privacy and Personal Data Processing Policy regulates the processing and use of personal and other data of the Studybox LTD website (hereinafter referred to as the Operator). The current version of this Privacy Policy is constantly available for review, and is posted on the Internet at: www.studybox.kz"
+          },
+          {
+            "title": "By transmitting personal and other data to the Operator via the website, the User confirms his consent to the use of these data on the terms set out in this Privacy Policy."
+          },
+          {
+            "title": "If the User does not agree with the terms of this Privacy Policy, he is obliged to stop using the Site."
+          },
+          {
+            "title": "Unconditional acceptance of this Privacy Policy is the beginning of the use of the site by the User."
+          }
+        ]
+      },
+      {
+        "title": "TERMS",
+        "elements": [
+          {
+            "title": "Website — a website located on the Internet at www.studybox.kz All exclusive rights to the site and its individual elements (including software, design) belong to the Operator in full. The transfer of exclusive rights to the User is not the subject of this Privacy Policy."
+          },
+          {
+            "title": "User — a person using the Site."
+          },
+          {
+            "title": "Legislation — current legislation of the Republic of Kazakhstan."
+          },
+          {
+            "title": "User's personal data that the User provides independently during registration or during the use of the Website functionality."
+          },
+          {
+            "title": "Data — other data about the User (not included in the concept of Personal Data)."
+          },
+          {
+            "title": "Registration — User fills in the Registration form located on the website by specifying the necessary information in the registration form on the Website."
+          },
+          {
+            "title": "Registration form is a form located on the site that the User must fill out in order to be able to use the site in full."
+          },
+          {
+            "title": "Service(s) — services provided by the Operator on the basis of an agreement."
+          }
+        ]
+      },
+      {
+        "title": "COLLECTION AND PROCESSING OF PERSONAL DATA",
+        "elements": [
+          {
+            "title": "The Operator collects and stores only those Personal Data that are necessary for the provision of Services by the Operator and interaction with the User."
+          },
+          {
+            "title": "Personal data may be used for the following purposes:",
+            "elements": [
+              {
+                "title": "provision of Services to the User;"
+              },
+              {
+                "title": "User identification;"
+              },
+              {
+                "title": "User interaction;"
+              },
+              {
+                "title": "sending advertising materials, information and requests to the User;"
+              },
+              {
+                "title": "conducting statistical and other research."
+              }
+            ]
+          },
+          {
+            "title": "The operator also processes the following data:",
+            "elements": [
+              {
+                "title": "surname, first name and patronymic;"
+              },
+              {
+                "title": "email address;"
+              },
+              {
+                "title": "phone number (including mobile)."
+              }
+            ]
+          },
+          {
+            "title": "The user is prohibited from indicating personal data of third parties on the site (except for the condition of representing the interests of these persons, having documentary evidence of third parties to carry out such actions)."
+          },
+          {
+            "title": "The Operator may also collect anonymized technical data using cookies and analytics services (such as Google Analytics). This data may include the User’s device type, browser, location, and actions on the website. It is used solely to improve the quality, performance, and personalization of Studybox.kz."
+          }
+        ]
+      },
+      {
+        "title": "PROCEDURE FOR PROCESSING PERSONAL AND OTHER DATA",
+        "elements": [
+          {
+            "title": "The Operator undertakes to use Personal Data in accordance with the Law \"On Personal Data\" of the Republic of Kazakhstan and internal documents of the Operator."
+          },
+          {
+            "title": "With respect to Personal Data and other User Data, their confidentiality is maintained, except in cases when the specified data is publicly available."
+          },
+          {
+            "title": "The Operator has the right to keep an archived copy of Personal Data."
+          },
+          {
+            "title": "The Operator has the right to transfer Personal Data and User Data without the User's consent to the following persons:",
+            "elements": [
+              {
+                "title": "state bodies, including bodies of inquiry and investigation, and local self-government bodies at their reasoned request;"
+              },
+              {
+                "title": "in other cases directly provided for by the current legislation of the Republic of Kazakhstan."
+              }
+            ]
+          },
+          {
+            "title": "The Operator has the right to transfer Personal Data and Data to third parties not specified in clause 3.4. of this Privacy Policy in the following cases:",
+            "elements": [
+              {
+                "title": "the User has expressed his consent to such actions;"
+              },
+              {
+                "title": "the transfer is necessary as part of the User's use of the site or the provision of Services to the User."
+              }
+            ]
+          },
+          {
+            "title": "The Operator performs automated processing of Personal Data and Data."
+          }
+        ]
+      },
+      {
+        "title": "PERSONAL DATA PROTECTION",
+        "elements": [
+          {
+            "title": "The Operator performs proper protection of Personal and other Data in accordance with the Law and takes the necessary and sufficient organizational and technical measures to protect Personal Data."
+          },
+          {
+            "title": "The applied protection measures, among other things, allow protecting Personal Data from unauthorized or accidental access, destruction, modification, blocking, copying, distribution, as well as from other illegal actions with them by third parties."
+          }
+        ]
+      },
+      {
+        "title": "OTHER PROVISIONS",
+        "elements": [
+          {
+            "title": "The law of the Republic of Kazakhstan is subject to the application of this Privacy Policy and the relations between the User and the Operator arising in connection with the application of the Privacy Policy."
+          },
+          {
+            "title": "All possible disputes arising from this Agreement are subject to resolution in accordance with the current legislation at the place of registration of the Operator. Before applying to the court, the User must comply with the mandatory pre-trial procedure and send the corresponding claim to the Operator in writing. The response period to the claim is 30 (thirty) working days."
+          },
+          {
+            "title": "If, for one reason or another, one or more provisions of the Privacy Policy are declared invalid or unenforceable, this does not affect the validity or applicability of the remaining provisions of the Privacy Policy."
+          },
+          {
+            "title": "The Operator has the right at any time to change the Privacy Policy (in whole or in part) unilaterally without prior agreement with the User. All changes take effect from the moment it is posted on the Site."
+          },
+          {
+            "title": "The User undertakes to independently monitor changes to the Privacy Policy by reviewing the current version."
+          },
+          {
+            "title": "All suggestions or questions regarding this Privacy Policy should be reported by email info@studybox.kz or by phone: +7 778 888 8855."
+          }
+        ]
+      }
+    ]
   }
 }

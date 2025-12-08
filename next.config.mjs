@@ -25,6 +25,14 @@ const nextConfig = {
       },
     ];
   },
+  async rewrites() {
+    return [
+      {
+        source: '/:locale/docs/:path*',
+        destination: '/docs/:path*',
+      },
+    ];
+  },
 };
 
 export default withNextIntl(nextConfig);
