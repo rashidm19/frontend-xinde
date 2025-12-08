@@ -37,7 +37,7 @@ export function AuthLayout({
 
   return (
     <div className={cn('relative min-h-screen w-full overflow-y-auto bg-gray-50', className)}>
-      <div className='absolute left-[20rem] top-[20rem] z-20 flex items-center desktop:left-[36rem] desktop:top-[32rem]'>
+      <div className='absolute left-[20rem] top-[12rem] z-20 flex items-center'>
         <Logo showStudyboxText className='h-[24rem] desktop:h-[28rem]' />
       </div>
       <div

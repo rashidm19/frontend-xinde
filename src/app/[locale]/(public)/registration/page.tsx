@@ -360,9 +360,19 @@ export default function RegistrationPage({ params }: PageProps) {
                 {...register('agreement')}
                 checked={isAgreementChecked}
                 onChange={event => setValue('agreement', event.target.checked, { shouldValidate: true })}
-                className='mt-[4rem] size-[18rem] rounded-[4rem] border border-gray-300 accent-blue-600'
+                className='size-[18rem] rounded-[4rem] border border-gray-300 accent-blue-600'
               />
-              <span>I agree to the Studybox Terms and Privacy Policy.</span>
+              <span>
+                I agree to the Studybox{' '}
+                <Link href={`/${locale}/docs/terms.pdf`} className='text-blue-600 hover:underline' target='_blank'>
+                  Terms
+                </Link>{' '}
+                and{' '}
+                <Link href={`/${locale}/privacy`} className='text-blue-600 hover:underline' target='_blank'>
+                  Privacy Policy
+                </Link>
+                .
+              </span>
             </label>
             {errors.agreement ? <p className='text-[13rem] font-medium text-rose-500'>{errors.agreement.message}</p> : null}
           </motion.div>
