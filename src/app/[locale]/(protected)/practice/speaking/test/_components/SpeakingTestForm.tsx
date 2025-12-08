@@ -4,7 +4,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useReactMediaRecorder } from 'react-media-recorder';
+import { useVoiceVisualizer, VoiceVisualizer } from 'react-voice-visualizer';
 import axiosInstance from '@/lib/axiosInstance';
 import { clearPracticeSessionCookie } from '@/lib/practiceSession';
 import type { PracticeSpeakingAnswer, PracticeSpeakingAttempt, PracticeSpeakingPartResponse, PracticeSpeakingPartValue } from '@/types/PracticeSpeaking';
@@ -12,6 +12,7 @@ import { isPracticeSpeakingPartValue } from '@/types/PracticeSpeaking';
 import { cn } from '@/lib/utils';
 import { MobileHeader } from '@/components/practice/reading/mobile/MobileHeader';
 import { AlertTriangle, CheckCircle, Info, Loader2, Mic, MicOff, Play, RefreshCw, SkipForward, Square, Volume2 } from 'lucide-react';
+import { useMediaQuery } from 'usehooks-ts';
 
 interface FormProps {
   data: PracticeSpeakingPartResponse;
@@ -62,19 +63,10 @@ const PART_DETAILS: Partial<Record<PracticeSpeakingPartValue, { label: string; t
 
 const CTA_ORANGE = '#F9A826';
 
-const AUDIO_MIME_TYPE_PREFERENCE = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4;codecs=mp4a.40.2', 'audio/mp4', 'audio/mpeg'];
-const DEFAULT_AUDIO_BLOB_TYPE = 'audio/webm';
-
 const MIME_EXTENSION_MAP: Record<string, string> = {
   'audio/webm': 'webm',
   'audio/mp4': 'm4a',
   'audio/mpeg': 'mp3',
-};
-
-const normaliseBlobMimeType = (mimeType: string | null) => {
-  if (!mimeType) return DEFAULT_AUDIO_BLOB_TYPE;
-  const [base] = mimeType.split(';');
-  return base || DEFAULT_AUDIO_BLOB_TYPE;
 };
 
 const getExtensionForMimeType = (mimeType: string) => MIME_EXTENSION_MAP[mimeType] ?? 'webm';
@@ -104,7 +96,6 @@ export default function SpeakingTestForm({ data, practicePart, practiceAttemptId
   const [currentAudioSource, setCurrentAudioSource] = useState<AudioSource | null>(null);
   const [audioPlaybackState, setAudioPlaybackState] = useState<Record<number, { introPlayed: boolean; questionPlayed: boolean }>>({});
   const [introAudioState, setIntroAudioState] = useState<'idle' | 'playing'>('idle');
-  const [audioMimeType, setAudioMimeType] = useState<string | null>(null);
 
   const practiceAttemptIdRef = useRef<string | null>(practiceAttemptId ?? null);
   const recordStartRef = useRef<number | null>(null);
@@ -120,25 +111,73 @@ export default function SpeakingTestForm({ data, practicePart, practiceAttemptId
   const [questionAudioState, setQuestionAudioState] = useState<'idle' | 'playing'>('idle');
   const fallbackRecordUrlRef = useRef<string | null>(null);
 
-  const resolvedBlobMimeType = useMemo(() => normaliseBlobMimeType(audioMimeType), [audioMimeType]);
-  const audioFileExtension = useMemo(() => getExtensionForMimeType(resolvedBlobMimeType), [resolvedBlobMimeType]);
+  const [containerWidth, setContainerWidth] = useState(0);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const isMobile = useMediaQuery('(max-width: 767px)');
 
   useEffect(() => {
-    if (typeof window === 'undefined' || !('MediaRecorder' in window)) {
-      setAudioMimeType(null);
+    if (!containerRef.current) return;
+    const resizeObserver = new ResizeObserver(entries => {
+      for (const entry of entries) {
+        if (entry.contentRect) {
+          setContainerWidth(entry.contentRect.width);
+        }
+      }
+    });
+    resizeObserver.observe(containerRef.current);
+    return () => resizeObserver.disconnect();
+  }, []);
+
+  const recorderControls = useVoiceVisualizer();
+  const {
+    recordedBlob,
+    error: voiceError,
+    startRecording,
+    stopRecording,
+    clearCanvas,
+  } = recorderControls;
+
+  const audioFileExtension = useMemo(() => {
+    if (recordBlob?.type) {
+      return getExtensionForMimeType(recordBlob.type);
+    }
+    return 'webm';
+  }, [recordBlob]);
+
+  useEffect(() => {
+    if (!recordedBlob) return;
+    if (didCancelRef.current) {
+      didCancelRef.current = false;
       return;
     }
 
-    const supported = AUDIO_MIME_TYPE_PREFERENCE.find(type => {
-      try {
-        return window.MediaRecorder.isTypeSupported(type);
-      } catch {
-        return false;
-      }
-    });
+    const finalUrl = URL.createObjectURL(recordedBlob);
 
-    setAudioMimeType(supported ?? null);
-  }, []);
+    if (fallbackRecordUrlRef.current) {
+      URL.revokeObjectURL(fallbackRecordUrlRef.current);
+    }
+    fallbackRecordUrlRef.current = finalUrl;
+
+    setRecordBlob(recordedBlob);
+    setRecordUrl(finalUrl);
+    setRecordDurationMs(Date.now() - (recordStartRef.current ?? Date.now()));
+    setRecordElapsedMs(Date.now() - (recordStartRef.current ?? Date.now()));
+    setPhase('review');
+  }, [recordedBlob]);
+
+  useEffect(() => {
+    if (!voiceError) return;
+    const msg = voiceError.message ?? 'Recording error';
+    setErrorMessage(msg);
+    if (voiceError.name === 'NotAllowedError' || msg.toLowerCase().includes('permission')) {
+      setPhase('permission');
+      emitTelemetry('speaking_permission_denied');
+      pushToast({ tone: 'warning', text: 'Please enable microphone access to start recording.' });
+    } else {
+      setPhase('error');
+      pushToast({ tone: 'error', text: 'Recording error occurred. Please try again.' });
+    }
+  }, [voiceError]);
 
   const handleReviewTimeUpdate = useCallback(() => {
     const audio = reviewAudioRef.current;
@@ -296,34 +335,7 @@ export default function SpeakingTestForm({ data, practicePart, practiceAttemptId
     });
   }, [currentIndex, sortedQuestions]);
 
-  const { status, startRecording, stopRecording, mediaBlobUrl, clearBlobUrl, error } = useReactMediaRecorder({
-    video: false,
-    audio: true,
-    mediaRecorderOptions: audioMimeType ? { mimeType: audioMimeType } : undefined,
-    blobPropertyBag: { type: resolvedBlobMimeType },
-    onStop: (_blobUrl, blob) => {
-      if (didCancelRef.current) {
-        didCancelRef.current = false;
-        return;
-      }
-      const finalBlob = blob.type ? blob : new Blob([blob], { type: resolvedBlobMimeType });
-      const finalUrl = _blobUrl ?? URL.createObjectURL(finalBlob);
-      if (!_blobUrl) {
-        if (fallbackRecordUrlRef.current) {
-          URL.revokeObjectURL(fallbackRecordUrlRef.current);
-        }
-        fallbackRecordUrlRef.current = finalUrl;
-      } else if (fallbackRecordUrlRef.current) {
-        URL.revokeObjectURL(fallbackRecordUrlRef.current);
-        fallbackRecordUrlRef.current = null;
-      }
-      setRecordBlob(finalBlob);
-      setRecordUrl(finalUrl);
-      setRecordDurationMs(Date.now() - (recordStartRef.current ?? Date.now()));
-      setRecordElapsedMs(Date.now() - (recordStartRef.current ?? Date.now()));
-      setPhase('review');
-    },
-  });
+
 
   const partDetails = partValue ? (PART_DETAILS[partValue] ?? null) : null;
   const timeLimitSeconds = partDetails?.timeLimit ?? 60;
@@ -349,43 +361,7 @@ export default function SpeakingTestForm({ data, practicePart, practiceAttemptId
     return Math.min(1, recordElapsedMs / (timeLimitSeconds * 1000));
   }, [phase, timeLimitSeconds, recordElapsedMs]);
 
-  useEffect(() => {
-    if (status === 'recording') {
-      setPhase('recording');
-      setErrorMessage(null);
-      startInterval();
-      return;
-    }
 
-    stopInterval();
-
-    if (status === 'idle' && !recordBlob) {
-      setPhase('idle');
-    }
-
-    if (status === 'stopped' && recordBlob) {
-      setPhase('review');
-    }
-  }, [status, recordBlob]);
-
-  useEffect(() => {
-    if (status === 'permission_denied') {
-      setPhase('permission');
-      setErrorMessage('Microphone access was blocked. Allow access in your browser settings.');
-      emitTelemetry('speaking_permission_denied');
-      pushToast({ tone: 'warning', text: 'Please enable microphone access to start recording.' });
-    }
-  }, [status]);
-
-  useEffect(() => {
-    if (!error || status === 'permission_denied') {
-      return;
-    }
-
-    setErrorMessage(error);
-    setPhase('error');
-    pushToast({ tone: 'error', text: 'Recording error occurred. Please try again.' });
-  }, [error, status]);
 
   useEffect(() => {
     return () => {
@@ -428,12 +404,7 @@ export default function SpeakingTestForm({ data, practicePart, practiceAttemptId
     }
   }, [phase]);
 
-  useEffect(() => {
-    if (!mediaBlobUrl || status !== 'stopped') {
-      return;
-    }
-    setRecordUrl(mediaBlobUrl);
-  }, [mediaBlobUrl, status]);
+
 
   useEffect(() => {
     if (!recordUrl) {
@@ -516,7 +487,8 @@ export default function SpeakingTestForm({ data, practicePart, practiceAttemptId
       setRecordElapsedMs(0);
       setPlayProgress(0);
       recordStartRef.current = Date.now();
-      await startRecording();
+      startInterval();
+      startRecording();
     } catch (error) {
       setPhase('permission');
       setErrorMessage('Unable to access microphone.');
@@ -525,7 +497,7 @@ export default function SpeakingTestForm({ data, practicePart, practiceAttemptId
   };
 
   const handleStopRecording = () => {
-    if (status !== 'recording') return;
+    if (phase !== 'recording') return;
     stopInterval();
     const started = recordStartRef.current;
     if (started) {
@@ -547,13 +519,13 @@ export default function SpeakingTestForm({ data, practicePart, practiceAttemptId
     setRecordUrl(null);
     setRecordDurationMs(0);
     setRecordElapsedMs(0);
-    clearBlobUrl();
+    clearCanvas();
     if (fallbackRecordUrlRef.current) {
       URL.revokeObjectURL(fallbackRecordUrlRef.current);
       fallbackRecordUrlRef.current = null;
     }
     setPhase('idle');
-    if (status === 'recording') {
+    if (phase === 'recording') {
       stopRecording();
     }
   };
@@ -564,7 +536,7 @@ export default function SpeakingTestForm({ data, practicePart, practiceAttemptId
     setRecordUrl(null);
     setRecordDurationMs(0);
     setRecordElapsedMs(0);
-    clearBlobUrl();
+    clearCanvas();
     if (fallbackRecordUrlRef.current) {
       URL.revokeObjectURL(fallbackRecordUrlRef.current);
       fallbackRecordUrlRef.current = null;
@@ -619,7 +591,7 @@ export default function SpeakingTestForm({ data, practicePart, practiceAttemptId
       setRecordDurationMs(0);
       setRecordElapsedMs(0);
       setPlayProgress(0);
-      clearBlobUrl();
+      clearCanvas();
       setCurrentIndex(nextIndex);
       setContentStage(hasIntroContent(nextQuestion) ? 'intro' : 'question');
       if (hasIntroContent(nextQuestion)) {
@@ -949,6 +921,10 @@ export default function SpeakingTestForm({ data, practicePart, practiceAttemptId
       : 'Submitting…'
     : (audioSourceLabel ?? (isFinalQuestion ? 'Submit test' : 'Next'));
 
+  const visualizerConfig = isMobile
+    ? { height: 48, barWidth: 2, gap: 1 }
+    : { height: 64, barWidth: 2, gap: 1 };
+
   return (
     <>
       <div className='min-h-[100dvh] bg-d-red-secondary'>
@@ -1043,6 +1019,25 @@ export default function SpeakingTestForm({ data, practicePart, practiceAttemptId
                     }
                   </div>
                 </div>
+                {phase === 'recording' && (
+                  <div
+                    ref={containerRef}
+                    className='relative my-[12rem] flex h-[48rem] w-full items-center justify-center overflow-hidden rounded-[12rem] border border-[#F9A826]/20 bg-[#FFF7EE] tablet:h-[64rem]'
+                  >
+                    <VoiceVisualizer
+                      controls={recorderControls}
+                      mainBarColor='#F9A826'
+                      secondaryBarColor='#F6D7B0'
+                      barWidth={visualizerConfig.barWidth}
+                      gap={visualizerConfig.gap}
+                      isControlPanelShown={false}
+                      isDefaultUIShown={false}
+                      onlyRecording={true}
+                      height={visualizerConfig.height}
+                      width={containerWidth || 300}
+                    />
+                  </div>
+                )}
                 <div className='h-[5rem] w-full overflow-hidden rounded-full bg-[#F6D7B0]/50 tablet:h-[4rem]'>
                   <div
                     className={cn('h-full rounded-full transition-all', phase === 'recording' ? 'bg-[#F9A826]' : 'bg-[#F6D7B0]')}
