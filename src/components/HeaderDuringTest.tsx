@@ -19,7 +19,7 @@ interface Props {
   logoHref?: string;
 }
 
-export const HeaderDuringTest = ({ title, tag, time, audio, backHref, backLabel, exitHref = '/profile', onExit, logoHref = '/profile' }: Props) => {
+export const HeaderDuringTest = ({ title, tag, time, audio, backHref, backLabel, exitHref = '/dashboard', onExit, logoHref = '/dashboard' }: Props) => {
   const { timer, setTimer } = mockStore();
 
   const pathname = usePathname();

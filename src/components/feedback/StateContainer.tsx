@@ -90,7 +90,7 @@ export function StateContainer({
           <p className='text-[15rem] text-slate-600'>You can wait here or come back to view your feedback later.</p>
         </motion.div>
         <StatusMarquee reducedMotion={!!shouldReduceMotion} messages={resolvedStatusMessages} />
-        <ActionButtons reducedMotion={!!shouldReduceMotion} primaryLabel={primaryLabel} secondaryLabel={secondaryLabel} onGoToProfile={() => router.push('/profile')} />
+        <ActionButtons reducedMotion={!!shouldReduceMotion} primaryLabel={primaryLabel} secondaryLabel={secondaryLabel} onGoToProfile={() => router.push('/dashboard')} />
       </div>
     </div>
   );

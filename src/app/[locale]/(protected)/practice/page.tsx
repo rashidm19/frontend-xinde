@@ -7,7 +7,7 @@ type PageProps = {
 };
 
 export default function Page({ params }: PageProps) {
-  redirect(`/${params.locale}/profile`);
+  redirect(`/${params.locale}/dashboard`);
 }
 
 // 'use client';

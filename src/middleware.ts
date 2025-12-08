@@ -8,7 +8,7 @@ const DEFAULT_LOCALE = 'en';
 const LOCALE_PREFIX_PATTERN = new RegExp(`^/(?:${SUPPORTED_LOCALES.join('|')})(?:/|$)`, 'i');
 const MOBILE_USER_AGENT_PATTERN = /Android|iP(?:hone|ad|od)|webOS|BlackBerry|IEMobile|Opera Mini|Mobile/i;
 
-const PROFILE_PATH = '/profile';
+const DASHBOARD_PATH = '/dashboard';
 const MOBILE_STATS_PATH = '/m/stats';
 
 function getLocaleFromRequest(request: NextRequest) {
@@ -51,7 +51,7 @@ function maybeRedirectMobileProfile(request: NextRequest) {
   const restPath = localeMatch[2] ?? '';
   const normalizedRestPath = restPath.replace(/\/+$/, '').toLowerCase();
 
-  if (normalizedRestPath !== PROFILE_PATH) {
+  if (normalizedRestPath !== DASHBOARD_PATH) {
     return null;
   }
 
@@ -82,7 +82,7 @@ function maybeRedirectDesktopMobileRoutes(request: NextRequest) {
   const locale = localeCandidate as (typeof SUPPORTED_LOCALES)[number];
 
   const redirectUrl = request.nextUrl.clone();
-  redirectUrl.pathname = `/${locale}${PROFILE_PATH}`;
+  redirectUrl.pathname = `/${locale}${DASHBOARD_PATH}`;
 
   return NextResponse.redirect(redirectUrl);
 }

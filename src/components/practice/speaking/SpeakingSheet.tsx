@@ -5,8 +5,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { AnimatePresence, motion } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
-import { useReactMediaRecorder } from 'react-media-recorder';
-import dynamic from 'next/dynamic';
+import { Mic, Pause, Play, Square } from 'lucide-react';
+import { useVoiceVisualizer, VoiceVisualizer } from 'react-voice-visualizer';
 
 import { BottomSheet, BottomSheetContent } from '@/components/ui/bottom-sheet';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -37,8 +37,6 @@ const SHEET_MAX_HEIGHT = 'max-h-[90dvh]';
 const DEFAULT_SUBMIT_ERROR_MESSAGE = 'Something went wrong — try again';
 const COOLDOWN_MS = 340;
 const PART_OPTIONS: PracticeSpeakingPartValue[] = ['1', '2', '3', 'all'];
-
-const AudioVisualizer = dynamic(() => import('./AudioVisualizerClient'), { ssr: false });
 
 export function SpeakingSheet({ open, step, onRequestClose, onStepChange, routeSignature }: SpeakingSheetProps) {
   const router = useRouter();
@@ -180,22 +178,10 @@ export function SpeakingSheet({ open, step, onRequestClose, onStepChange, routeS
 
   const [hasRecorded, setHasRecorded] = useState(false);
   const [hasPlayedRecording, setHasPlayedRecording] = useState(false);
-  const [recordingBlob, setRecordingBlob] = useState<Blob | null>(null);
   const [recordingError, setRecordingError] = useState<string | null>(null);
   const [launchError, setLaunchError] = useState<string | null>(null);
   const [isTopicSelectInteracting, setIsTopicSelectInteracting] = useState(false);
-  const micAudioRef = useRef<HTMLAudioElement | null>(null);
-  const [micPlayState, setMicPlayState] = useState<'playing' | 'paused'>('paused');
   const topicSelectInteractionTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const {
-    status: recordingStatus,
-    startRecording,
-    stopRecording,
-    mediaBlobUrl,
-    clearBlobUrl,
-    error: mediaRecorderError,
-  } = useReactMediaRecorder({ audio: true, video: false });
 
   const {
     data: categories,
@@ -241,7 +227,6 @@ export function SpeakingSheet({ open, step, onRequestClose, onStepChange, routeS
       setAudioError(null);
       setHasRecorded(false);
       setHasPlayedRecording(false);
-      setRecordingBlob(null);
       setRecordingError(null);
       setLaunchError(null);
       setIsTopicSelectInteracting(false);
@@ -249,15 +234,9 @@ export function SpeakingSheet({ open, step, onRequestClose, onStepChange, routeS
         clearTimeout(topicSelectInteractionTimeoutRef.current);
         topicSelectInteractionTimeoutRef.current = null;
       }
-      setMicPlayState('paused');
-      clearBlobUrl();
       if (audioRef.current) {
         audioRef.current.pause();
         audioRef.current.currentTime = 0;
-      }
-      if (micAudioRef.current) {
-        micAudioRef.current.pause();
-        micAudioRef.current.currentTime = 0;
       }
       setIsLaunching(false);
       resetSubmission();
@@ -270,52 +249,7 @@ export function SpeakingSheet({ open, step, onRequestClose, onStepChange, routeS
     return () => {
       document.body.style.overflow = previousOverflow;
     };
-  }, [open, clearBlobUrl, resetError, resetSubmission]);
-
-  useEffect(() => {
-    if (!mediaBlobUrl) {
-      setRecordingBlob(null);
-      setHasRecorded(false);
-      setHasPlayedRecording(false);
-      setRecordingError(null);
-      setLaunchError(null);
-      return;
-    }
-
-    let cancelled = false;
-
-    const loadRecording = async () => {
-      try {
-        const response = await fetch(mediaBlobUrl);
-        if (!response.ok) {
-          throw new Error('Failed to load recording');
-        }
-        const blob = await response.blob();
-        if (!cancelled) {
-          setRecordingBlob(blob);
-          setHasRecorded(true);
-          setRecordingError(null);
-        }
-      } catch (error) {
-        if (!cancelled) {
-          setRecordingBlob(null);
-          setRecordingError('Unable to access recording. Please try again.');
-        }
-      }
-    };
-
-    void loadRecording();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [mediaBlobUrl]);
-
-  useEffect(() => {
-    if (mediaRecorderError) {
-      setRecordingError(mediaRecorderError);
-    }
-  }, [mediaRecorderError]);
+  }, [open, resetError, resetSubmission]);
 
   useEffect(() => {
     if (step !== 'audio-check' && audioRef.current) {
@@ -324,23 +258,8 @@ export function SpeakingSheet({ open, step, onRequestClose, onStepChange, routeS
   }, [step]);
 
   useEffect(() => {
-    if (step !== 'mic-check' && micAudioRef.current) {
-      micAudioRef.current.pause();
-      micAudioRef.current.currentTime = 0;
-      setMicPlayState('paused');
-    }
-  }, [step]);
-
-  useEffect(() => {
     resetError();
   }, [step, resetError]);
-
-  useEffect(() => {
-    if (recordingStatus === 'recording') {
-      setRecordingError(null);
-      setLaunchError(null);
-    }
-  }, [recordingStatus]);
 
   useEffect(() => {
     return () => {
@@ -383,25 +302,22 @@ export function SpeakingSheet({ open, step, onRequestClose, onStepChange, routeS
     void runTransition(() => onStepChange('mic-check', { history: 'push' }));
   }, [audioError, hasPlayedSample, isCoolingDown, isSubmitting, onStepChange, runTransition]);
 
-  const handleTopicSelectOpenChange = useCallback(
-    (nextOpen: boolean) => {
-      if (topicSelectInteractionTimeoutRef.current) {
-        clearTimeout(topicSelectInteractionTimeoutRef.current);
-        topicSelectInteractionTimeoutRef.current = null;
-      }
+  const handleTopicSelectOpenChange = useCallback((nextOpen: boolean) => {
+    if (topicSelectInteractionTimeoutRef.current) {
+      clearTimeout(topicSelectInteractionTimeoutRef.current);
+      topicSelectInteractionTimeoutRef.current = null;
+    }
 
-      if (nextOpen) {
-        setIsTopicSelectInteracting(true);
-        return;
-      }
+    if (nextOpen) {
+      setIsTopicSelectInteracting(true);
+      return;
+    }
 
-      topicSelectInteractionTimeoutRef.current = setTimeout(() => {
-        setIsTopicSelectInteracting(false);
-        topicSelectInteractionTimeoutRef.current = null;
-      }, 160);
-    },
-    []
-  );
+    topicSelectInteractionTimeoutRef.current = setTimeout(() => {
+      setIsTopicSelectInteracting(false);
+      topicSelectInteractionTimeoutRef.current = null;
+    }, 160);
+  }, []);
 
   const handleBack = useCallback(() => {
     if (step === 'mic-check') {
@@ -477,7 +393,7 @@ export function SpeakingSheet({ open, step, onRequestClose, onStepChange, routeS
 
             nProgress.start();
             onRequestClose();
-      router.push('/practice/speaking/test');
+            router.push('/practice/speaking/test');
             return;
           }
 
@@ -490,7 +406,22 @@ export function SpeakingSheet({ open, step, onRequestClose, onStepChange, routeS
         setIsLaunching(false);
       }
     });
-  }, [hasPlayedRecording, hasRecorded, isCheckingAccess, isCoolingDown, isLaunching, isSubmitting, onRequestClose, requireSubscription, resetError, resolveRandomTopicId, runAsyncAction, selectedPart, selectedTopic, router]);
+  }, [
+    hasPlayedRecording,
+    hasRecorded,
+    isCheckingAccess,
+    isCoolingDown,
+    isLaunching,
+    isSubmitting,
+    onRequestClose,
+    requireSubscription,
+    resetError,
+    resolveRandomTopicId,
+    runAsyncAction,
+    selectedPart,
+    selectedTopic,
+    router,
+  ]);
 
   const customizeContinueDisabled = categoriesLoading || categoriesError || !selectedPart;
   const rulesContinueDisabled = false;
@@ -498,13 +429,7 @@ export function SpeakingSheet({ open, step, onRequestClose, onStepChange, routeS
   const micContinueDisabled = isCheckingAccess || isLaunching || Boolean(recordingError);
 
   const baseButtonDisabled =
-    step === 'customize'
-      ? customizeContinueDisabled
-      : step === 'rules'
-        ? rulesContinueDisabled
-        : step === 'audio-check'
-          ? audioContinueDisabled
-          : micContinueDisabled;
+    step === 'customize' ? customizeContinueDisabled : step === 'rules' ? rulesContinueDisabled : step === 'audio-check' ? audioContinueDisabled : micContinueDisabled;
 
   const buttonDisabled = baseButtonDisabled || isSubmitting || isCoolingDown;
   const shouldLockPrimaryAction = step === 'customize' && isTopicSelectInteracting;
@@ -561,7 +486,13 @@ export function SpeakingSheet({ open, step, onRequestClose, onStepChange, routeS
             backLabel={tActions('back')}
           />
 
-          <motion.div key={step} initial={{ opacity: 0.45 }} animate={{ opacity: 1 }} transition={{ duration: 0.2 }} className='flex-1 overflow-y-auto px-[20rem] py-[20rem]'>
+          <motion.div
+            key={step}
+            initial={{ opacity: 0.45 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.2 }}
+            className='flex-1 overflow-y-auto px-[20rem] py-[20rem]'
+          >
             {step === 'customize' ? (
               <CustomizeStep
                 categoriesLoading={categoriesLoading}
@@ -608,28 +539,17 @@ export function SpeakingSheet({ open, step, onRequestClose, onStepChange, routeS
                 instruction='Record your voice and make sure you can hear it clearly before you continue.'
                 retryLabel='Record again'
                 tImgAlts={tImgAlts}
-                status={recordingStatus}
-                startRecording={startRecording}
-                stopRecording={stopRecording}
-                clearRecording={() => {
-                  resetError();
-                  clearBlobUrl();
-                  setRecordingBlob(null);
-                  setHasRecorded(false);
-                  setHasPlayedRecording(false);
+                onRecordingComplete={() => {
+                  setHasRecorded(true);
                   setRecordingError(null);
-                  setLaunchError(null);
-                  setMicPlayState('paused');
                 }}
-                recordingBlob={recordingBlob}
-                audioRef={micAudioRef}
-                playState={micPlayState}
-                setPlayState={setMicPlayState}
-                onPlayback={() => {
+                onPlaybackComplete={() => {
                   setHasPlayedRecording(true);
                   setRecordingError(null);
                 }}
-                error={recordingError}
+                onError={error => {
+                  setRecordingError(error);
+                }}
               />
             ) : null}
           </motion.div>
@@ -643,6 +563,7 @@ export function SpeakingSheet({ open, step, onRequestClose, onStepChange, routeS
                 <div aria-live='polite' className='space-y-[4rem]'>
                   {submitError ? <p className='text-center text-[12rem] font-medium text-red-600'>{submitError}</p> : null}
                   {launchError ? <p className='text-center text-[12rem] font-medium text-red-600'>{launchError}</p> : null}
+                  {recordingError ? <p className='text-center text-[12rem] font-medium text-red-600'>{recordingError}</p> : null}
                 </div>
               ) : null}
               <motion.button
@@ -806,66 +727,59 @@ interface MicCheckStepProps {
   title: string;
   instruction: string;
   retryLabel: string;
-  tImgAlts: ReturnType<typeof useCustomTranslations>['tImgAlts'];
-  status: string;
-  startRecording: () => void;
-  stopRecording: () => void;
-  clearRecording: () => void;
-  recordingBlob: Blob | null;
-  audioRef: React.MutableRefObject<HTMLAudioElement | null>;
-  playState: 'playing' | 'paused';
-  setPlayState: (state: 'playing' | 'paused') => void;
-  onPlayback: () => void;
-  error: string | null;
+  tImgAlts: (key: string) => string;
+  onRecordingComplete: (blob: Blob) => void;
+  onPlaybackComplete: () => void;
+  onError: (error: string) => void;
 }
 
-const MicCheckStep = ({
-  title,
-  instruction,
-  retryLabel,
-  tImgAlts,
-  status,
-  startRecording,
-  stopRecording,
-  clearRecording,
-  recordingBlob,
-  audioRef,
-  playState,
-  setPlayState,
-  onPlayback,
-  error,
-}: MicCheckStepProps) => {
-  const [currentTime, setCurrentTime] = useState(0);
+const MicCheckStep = ({ title, instruction, retryLabel, tImgAlts, onRecordingComplete, onPlaybackComplete, onError }: MicCheckStepProps) => {
+  const recorderControls = useVoiceVisualizer();
+  const { startRecording, stopRecording, recordedBlob, isRecordingInProgress, clearCanvas, isPausedRecordedAudio, startAudioPlayback, audioRef, error } =
+    recorderControls;
 
-  const recordingUrl = useMemo(() => {
-    if (!recordingBlob) {
-      return null;
-    }
-    return URL.createObjectURL(recordingBlob);
-  }, [recordingBlob]);
+  const [containerWidth, setContainerWidth] = useState(0);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // States
+  const isReview = !!recordedBlob && !isRecordingInProgress;
+  const isIdle = !isRecordingInProgress && !recordedBlob;
 
   useEffect(() => {
-    if (!recordingUrl) {
-      return;
+    if (error) {
+      onError(error.message || 'Microphone error');
     }
-
-    const node = audioRef.current;
-    if (node) {
-      node.src = recordingUrl;
-      node.load();
-    }
-
-    return () => {
-      URL.revokeObjectURL(recordingUrl);
-    };
-  }, [recordingUrl, audioRef]);
+  }, [error, onError]);
 
   useEffect(() => {
-    if (!recordingBlob) {
-      setCurrentTime(0);
-      setPlayState('paused');
+    if (recordedBlob) {
+      onRecordingComplete(recordedBlob);
     }
-  }, [recordingBlob, setPlayState]);
+  }, [recordedBlob, onRecordingComplete]);
+
+  const togglePlayback = () => {
+    if (isPausedRecordedAudio) {
+      startAudioPlayback();
+      onPlaybackComplete();
+    } else {
+      audioRef.current?.pause();
+    }
+  };
+
+  useEffect(() => {
+    if (!containerRef.current) return;
+
+    setContainerWidth(containerRef.current.offsetWidth);
+
+    const resizeObserver = new ResizeObserver(entries => {
+      for (const entry of entries) {
+        setContainerWidth(entry.contentRect.width);
+      }
+    });
+
+    resizeObserver.observe(containerRef.current);
+    return () => resizeObserver.disconnect();
+  }, [isRecordingInProgress, isReview]);
 
   return (
     <div className='flex flex-col items-center gap-[24rem]'>
@@ -874,80 +788,64 @@ const MicCheckStep = ({
         <p className='mt-[8rem] text-[14rem] leading-[150%] text-slate-600'>{instruction}</p>
       </header>
 
-      <div className='flex flex-col items-center gap-[16rem]'>
+      <div className='flex w-full items-center justify-center gap-x-[16rem]'>
+        {/* Button */}
         <motion.button
           type='button'
           whileTap={INTERACTIVE_TAP}
           onClick={() => {
-            if (status === 'recording') {
-              stopRecording();
-            } else {
+            if (isIdle) {
               startRecording();
+            } else if (isRecordingInProgress) {
+              stopRecording();
+            } else if (isReview) {
+              togglePlayback();
             }
           }}
-          aria-label={status === 'recording' ? (tImgAlts('pause') ?? 'Stop recording') : (tImgAlts('speaking') ?? 'Start recording')}
-          className={cn('flex size-[72rem] items-center justify-center rounded-full text-white', status === 'recording' ? 'bg-red-500' : 'bg-d-green')}
+          className='flex size-[56rem] shrink-0 items-center justify-center rounded-full bg-[#C9FF55] text-d-black hover:bg-[#b6e64d]'
+          aria-label={
+            isRecordingInProgress
+              ? (tImgAlts('pause') ?? 'Stop recording')
+              : isReview
+                ? (tImgAlts('play') ?? 'Play recording')
+                : (tImgAlts('speaking') ?? 'Start recording')
+          }
         >
-          <img src={status === 'recording' ? '/images/icon_audioPause.svg' : '/images/icon_speakingSection.svg'} alt='' className='size-[24rem]' />
+          {isIdle && <Mic className='size-[26rem] text-d-black' />}
+          {isRecordingInProgress && <Square className='size-[26rem] fill-current text-d-black' />}
+          {isReview && (!isPausedRecordedAudio ? <Pause className='size-[26rem] text-d-black' /> : <Play className='size-[32rem] text-d-black' />)}
         </motion.button>
-        <p className='text-[14rem] font-medium text-slate-700'>{status === 'recording' ? 'Recording… say a few sentences.' : 'Tap to start recording'}</p>
+
+        {/* Visualizer / Text Area */}
+        {isIdle ? (
+          <div className='text-[16rem] font-medium leading-none text-d-black/80'>Tap to start recording</div>
+        ) : (
+          <div
+            ref={containerRef}
+            className='relative flex h-[48rem] w-full max-w-[320rem] items-center justify-center overflow-hidden rounded-[12rem] border border-[#C9FF55]/20 bg-[#F9FFEA]'
+          >
+            <VoiceVisualizer
+              controls={recorderControls}
+              mainBarColor='#C9FF55'
+              secondaryBarColor='#ECFFC3'
+              barWidth={2}
+              gap={1}
+              height={48}
+              width={containerWidth}
+              isControlPanelShown={false}
+              isDefaultUIShown={false}
+              onlyRecording={isRecordingInProgress}
+            />
+          </div>
+        )}
       </div>
 
-      {recordingBlob ? (
-        <div className='flex flex-col items-center gap-[16rem]'>
-          <audio
-            ref={node => {
-              audioRef.current = node;
-            }}
-            className='hidden'
-            onPlay={() => {
-              setPlayState('playing');
-              onPlayback();
-            }}
-            onPause={() => setPlayState('paused')}
-            onEnded={() => setPlayState('paused')}
-            onTimeUpdate={() => {
-              const node = audioRef.current;
-              if (node) {
-                setCurrentTime(node.currentTime);
-              }
-            }}
-          />
-          <motion.button
-            type='button'
-            whileTap={INTERACTIVE_TAP}
-            onClick={() => {
-              const node = audioRef.current;
-              if (!node) {
-                return;
-              }
-              if (node.paused) {
-                void node.play();
-              } else {
-                node.pause();
-              }
-            }}
-            aria-label={playState === 'playing' ? (tImgAlts('pause') ?? 'Pause playback') : (tImgAlts('play') ?? 'Play recording')}
-            className='flex size-[72rem] items-center justify-center rounded-full bg-d-green text-white'
-          >
-            <img src={playState === 'playing' ? '/images/icon_audioPause.svg' : '/images/icon_audioPlay.svg'} alt='' className='size-[24rem]' />
-          </motion.button>
-          <AudioVisualizer blob={recordingBlob} width={320} height={56} barWidth={2} gap={2} barColor='#d0d0d0' barPlayedColor='#383838' currentTime={currentTime} />
-          <button
-            type='button'
-            onClick={() => {
-              setCurrentTime(0);
-              setPlayState('paused');
-              clearRecording();
-            }}
-            className='text-[13rem] font-semibold text-d-violet'
-          >
-            {retryLabel}
-          </button>
-        </div>
-      ) : null}
-
-      {error ? <p className='text-[12rem] text-red-600'>{error}</p> : null}
+      {/* Retry Button (only in review) */}
+      {isReview && (
+        <button onClick={clearCanvas} className='text-[15rem] font-semibold text-d-black'>
+          {retryLabel}
+        </button>
+      )}
     </div>
   );
 };

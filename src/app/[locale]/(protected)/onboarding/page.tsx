@@ -218,7 +218,7 @@ export default function OnboardingPage({ params }: PageProps) {
   useEffect(() => {
     if (profileStatus !== 'success') return;
     if (!profile?.onboarding_completed) return;
-    router.replace(`/${locale}/profile`);
+    router.replace(`/${locale}/dashboard`);
   }, [profileStatus, profile?.onboarding_completed, router, locale]);
 
   useEffect(() => {
@@ -334,7 +334,7 @@ export default function OnboardingPage({ params }: PageProps) {
         }
       }
 
-      router.push(`/${locale}/profile`);
+      router.push(`/${locale}/dashboard`);
     } catch (error) {
       if (error instanceof OnboardingSubmitError && error.code === 'schema_version_conflict') {
         await fetchSchema();

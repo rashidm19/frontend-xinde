@@ -873,7 +873,7 @@ function ListeningTestClient({ practiceId }: ListeningTestClientProps) {
         <WritingFeedbackHeader
           title={'Practice Listening'}
           exitLabel={tActions('exit')}
-          onExit={() => router.push('/profile')}
+          onExit={() => router.push('/dashboard')}
           rightSlot={!isMobile && data?.audio_url ? <AudioStatusIndicator state={desktopAudioStatus} /> : undefined}
           showFullscreen={!isMobile}
         />

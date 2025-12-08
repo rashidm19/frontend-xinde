@@ -26,7 +26,7 @@ import { Header } from '@/components/Header';
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { SubscriptionDetailsModal } from '@/components/SubscriptionDetailsModal';
-import { ChangeLangModal } from '@/app/[locale]/(protected)/profile/settings/_components/ChangeLangModal';
+import { ChangeLangModal } from '@/app/[locale]/(protected)/dashboard/settings/_components/ChangeLangModal';
 import { BottomSheet } from '@/components/ui/bottom-sheet';
 import { useLogout } from '@/hooks/useLogout';
 import { trackScreenView } from '@/lib/analytics';
@@ -362,10 +362,10 @@ function MobileDashboardPageComponent({ activeTab }: MobileDashboardPageProps) {
   }, []);
 
   const openProfileSettings = useCallback(() => {
-    router.push(`/${locale}/profile/edit`);
+    router.push(`/${locale}/dashboard/edit`);
   }, [locale, router]);
 
-  const profileSettingsHref = `/${locale}/profile/edit`;
+  const profileSettingsHref = `/${locale}/dashboard/edit`;
 
   const openLanguageModal = useCallback(() => {
     setLanguageModalOpen(true);

@@ -19,7 +19,7 @@ export interface WritingFeedbackHeaderProps {
   showFullscreen?: boolean;
 }
 
-export function WritingFeedbackHeader({ topBarElevated, title, exitLabel = 'Exit', exitHref = '/profile', onExit, rightSlot, showFullscreen = false }: WritingFeedbackHeaderProps) {
+export function WritingFeedbackHeader({ topBarElevated, title, exitLabel = 'Exit', exitHref = '/dashboard', onExit, rightSlot, showFullscreen = false }: WritingFeedbackHeaderProps) {
   return (
     <header
       className={cn(

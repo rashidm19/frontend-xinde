@@ -20,13 +20,13 @@ import { useLocale } from 'next-intl';
 import { useLogout } from '@/hooks/useLogout';
 
 // Lazy-load protected modals so public routes don't eagerly bundle authenticated-only UI.
-const ChangeLangModal = dynamic(() => import('@/app/[locale]/(protected)/profile/settings/_components/ChangeLangModal').then(module => module.ChangeLangModal), {
+const ChangeLangModal = dynamic(() => import('@/app/[locale]/(protected)/dashboard/settings/_components/ChangeLangModal').then(module => module.ChangeLangModal), {
   ssr: false,
   loading: () => null,
 });
 
 const ProfileEditFormModal = dynamic(
-  () => import('@/app/[locale]/(protected)/profile/settings/_components/ProfileEditFormModal').then(module => module.ProfileEditFormModal),
+  () => import('@/app/[locale]/(protected)/dashboard/settings/_components/ProfileEditFormModal').then(module => module.ProfileEditFormModal),
   { ssr: false, loading: () => null }
 );
 
@@ -152,7 +152,7 @@ const HeaderComponent = ({ name, email, avatar, title: _title, onOpenSubscriptio
       onOpenProfileSettings();
     } else {
       if (isMobile) {
-        router.push(`/${locale}/profile/edit`);
+        router.push(`/${locale}/dashboard/edit`);
         return;
       }
 
@@ -243,7 +243,7 @@ const HeaderComponent = ({ name, email, avatar, title: _title, onOpenSubscriptio
   return (
     <header className={headerClass}>
       <nav className='container flex h-[60rem] max-w-[1200rem] items-center px-[16rem] tablet:hidden'>
-        <Link href='/profile' className='flex items-center gap-x-[8rem]'>
+        <Link href='/dashboard' className='flex items-center gap-x-[8rem]'>
           <img src='/images/logo.svg' className='size-[32rem]' alt={tImgAlts('logo')} />
           <span className='font-poppins text-[18rem] font-semibold text-d-black'>Studybox</span>
         </Link>
@@ -302,7 +302,7 @@ const HeaderComponent = ({ name, email, avatar, title: _title, onOpenSubscriptio
       </nav>
 
       <nav className='container hidden h-[93rem] max-w-[1200rem] items-center tablet:flex'>
-        <Link href='/profile' className='mr-[16rem] flex items-center gap-x-[6rem] tablet:mr-[90rem]'>
+        <Link href='/dashboard' className='mr-[16rem] flex items-center gap-x-[6rem] tablet:mr-[90rem]'>
           <img src='/images/logo.svg' className='size-[36rem]' alt={tImgAlts('logo')} />
           <div className='hidden font-poppins text-[21rem] font-semibold tablet:block'>studybox</div>
         </Link>

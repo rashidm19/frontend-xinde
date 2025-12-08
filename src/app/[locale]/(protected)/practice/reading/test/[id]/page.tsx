@@ -49,7 +49,7 @@ function Page({ params }: { params: { id: string } }) {
   );
 
   const handleFallbackNavigation = useCallback(() => {
-    void router.push('/profile');
+    void router.push('/dashboard');
   }, [router]);
 
   const [activeTab, setActiveTab] = useState<'p1' | 'p2' | 'p3'>('p1');
