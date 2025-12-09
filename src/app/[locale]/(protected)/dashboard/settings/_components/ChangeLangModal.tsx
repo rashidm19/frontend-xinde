@@ -138,7 +138,7 @@ const ChangeLangActions = ({ form, locale, pathname, tActions, className, primar
 };
 
 const DesktopChangeLang = ({ form, locale, pathname, t, tImgAlts, tForm, tActions }: SharedRenderProps) => (
-  <section className='relative flex w-[672rem] max-w-full flex-col gap-y-[32rem] rounded-[24rem] bg-white p-[24rem]'>
+  <section className='fixed bottom-0 flex max-h-[95dvh] w-[672rem] flex-col gap-y-[40rem] rounded-[16rem] bg-white p-[24rem] desktop:relative desktop:rounded-[24rem]'>
     <DialogPrimitive.Close asChild>
       <button
         type='button'
