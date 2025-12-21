@@ -13,6 +13,7 @@ import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { CheckboxSquare } from '@/components/ui/checkboxSquare';
 import { DndMatching } from './components/DndMatching';
+import { DiagramBlock } from './components/DiagramBlock';
 import { DndText } from './components/DndText';
 import { GET_practice_reading_id } from '@/api/GET_practice_reading_id';
 import axiosInstance from '@/lib/axiosInstance';
@@ -39,6 +40,8 @@ import { ArrowUp } from 'lucide-react';
 import { format } from 'date-fns';
 import { mockStore } from '@/stores/mock';
 import { WritingFeedbackHeader } from '@/components/practice/WritingFeedbackHeader';
+import { transformMatchingToDragDrop } from '@/lib/transformers';
+import { READING_BLOCK_INSTRUCTIONS } from '@/lib/constants';
 
 const optionVariants = {
   idle: { scale: 1, opacity: 0.96 },
@@ -74,10 +77,26 @@ function ReadingTestClient({ practiceId }: ReadingTestClientProps) {
   const pendingQuestionRef = useRef<number | null>(null);
   const lastScrollYRef = useRef<number>(0);
 
-  const { data, status } = useQuery<PracticeReadingContent>({
+  const { data: originalData, status } = useQuery<PracticeReadingContent>({
     queryKey: ['practice-reading', practiceId],
     queryFn: () => GET_practice_reading_id(practiceId),
   });
+
+  const data = useMemo(() => {
+    if (!originalData) return originalData;
+
+    const transformPart = (part: PracticeReadingPart) => ({
+      ...part,
+      blocks: part.blocks.map(transformMatchingToDragDrop),
+    });
+
+    return {
+      ...originalData,
+      part_1: transformPart(originalData.part_1),
+      part_2: transformPart(originalData.part_2),
+      part_3: transformPart(originalData.part_3),
+    };
+  }, [originalData]);
 
   const formSchema = z.object({
     ...Object.fromEntries(Array.from({ length: 40 }, (_, i) => [(i + 1).toString(), z.string().optional()])),
@@ -861,7 +880,9 @@ function ReadingTestClient({ practiceId }: ReadingTestClientProps) {
                         >
                           <div className='flex flex-col'>
                             <p className='mb-[16rem] text-[20rem] font-medium leading-[24rem] tracking-[-0.2rem] text-d-black'>{block.task_questions}</p>
-                            <p className='whitespace-pre-line text-[16rem] font-normal leading-[19rem] text-[#606060]'>{block.task}</p>
+                            <p className='whitespace-pre-line text-[16rem] font-normal leading-[19rem] text-[#606060]'>
+                              {READING_BLOCK_INSTRUCTIONS[block.kind] || block.task}
+                            </p>
                           </div>
                           {/* Параграф */}
                           {block.kind === 'paragraph' && (
@@ -916,21 +937,21 @@ function ReadingTestClient({ practiceId }: ReadingTestClientProps) {
                                   if (str.type === 'input') {
                                     return (
                                       <FormField
-                                        key={`words-input-${block.questions[str.index].number}`}
+                                        key={`words-input-${(block.questions[str.index]?.number || index)}`}
                                         control={form.control}
-                                        name={block.questions[str.index].number.toString()}
+                                        name={(block.questions[str.index]?.number || index).toString()}
                                         render={({ field }) => (
                                           <FormControl>
                                             <Input
                                               {...field}
                                               type='text'
-                                              placeholder={block.questions[str.index].number}
-                                              id={`question-${block.questions[str.index].number}`}
-                                              className={`my-[4rem] inline-flex h-[32rem] w-[300rem] items-center justify-center rounded-[8rem] border-[1.5rem] !border-d-black/60 p-[10rem] text-center text-[16rem] font-normal leading-[25rem] tracking-[-0.2rem] text-d-black placeholder:text-center placeholder:!text-d-black focus:!border-d-black focus:bg-d-light-gray focus-visible:border-d-black ${values[block.questions[str.index].number] ? 'bg-d-light-gray' : ''}`}
-                                              onFocus={() => handleQuestionFocus(block.questions[str.index].number)}
+                                              placeholder={(block.questions[str.index]?.number || index)}
+                                              id={`question-${(block.questions[str.index]?.number || index)}`}
+                                              className={`my-[4rem] inline-flex h-[32rem] w-[300rem] items-center justify-center rounded-[8rem] border-[1.5rem] !border-d-black/60 p-[10rem] text-center text-[16rem] font-normal leading-[25rem] tracking-[-0.2rem] text-d-black placeholder:text-center placeholder:!text-d-black focus:!border-d-black focus:bg-d-light-gray focus-visible:border-d-black ${values[(block.questions[str.index]?.number || index)] ? 'bg-d-light-gray' : ''}`}
+                                              onFocus={() => handleQuestionFocus((block.questions[str.index]?.number || index))}
                                               onChange={event => {
                                                 field.onChange(event.target.value);
-                                                handleQuestionFocus(block.questions[str.index].number);
+                                                handleQuestionFocus((block.questions[str.index]?.number || index));
                                               }}
                                             />
                                           </FormControl>
@@ -1324,6 +1345,10 @@ function ReadingTestClient({ practiceId }: ReadingTestClientProps) {
                             ) : (
                               <DndMatching block={block} value={values} setFieldValue={form.setValue} />
                             ))}
+                          {/* Diagram */}
+                          {block.kind === 'diagram' && (
+                            <DiagramBlock block={block} value={values} setFieldValue={form.setValue} control={form.control} />
+                          )}
                           {/* Драг-н-дроп списки */}
                           {block.kind === 'dragdrop' &&
                             (isMobile ? (
