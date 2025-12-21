@@ -30,7 +30,7 @@ export const DndMatching = ({ block, value, setFieldValue }: DndMatchingProps) =
   useEffect(() => {
     const initialState: Record<string, string | null> = {};
 
-    block.questions.forEach(q => {
+    block.questions?.forEach(q => {
       const savedAnswer = value[q.number];
       if (savedAnswer) {
         const matched = block.choices.find(c => c.answer === savedAnswer);
@@ -54,7 +54,7 @@ export const DndMatching = ({ block, value, setFieldValue }: DndMatchingProps) =
       <DndContext onDragEnd={handleDragEnd} autoScroll={{ layoutShiftCompensation: false }}>
         {/* Droppable containers */}
         <div className='flex flex-col items-start justify-start gap-x-[8rem] gap-y-[16rem] text-[16rem] leading-tight tracking-[-0.2rem] text-d-black'>
-          {block.questions.map((q: any) => (
+          {block.questions?.map((q: any) => (
             <div className='flex items-center gap-x-[10rem]' key={`question-${q.number}`}>
               <p className='w-[350rem]'>{q.question}</p>
               <Droppable
