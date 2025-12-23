@@ -580,7 +580,7 @@
         "readTextAndAnswerQuestions": "Read the text and answer questions ",
         "fallback": {
           "title": "Practice reading data is unavailable",
-          "description": "We couldn't load this practice attempt. Head back to the Reading dashboard and try again.",
+          "description": "We couldn't load this practice attempt. Head back to the dashboard and try again.",
           "action": "Back"
         },
         "mobile": {
