@@ -14,8 +14,6 @@ export interface PracticeReadingResult {
   completed_at: string | null;
 }
 
-export type PracticeReadingFullFeedback = PracticeReadingResult;
-
 export interface PracticeReadingBlock {
   kind: string;
   [key: string]: unknown;

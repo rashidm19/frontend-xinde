@@ -4,6 +4,7 @@ import { headers } from 'next/headers';
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 
+import Error503 from '@/app/[locale]/(public)/Error503/page';
 import HydrateOnly from '@/app/_providers/HydrateOnly';
 import { ME_QUERY_KEY, SUBSCRIPTION_QUERY_KEY, BALANCE_QUERY_KEY } from '@/lib/queryKeys';
 import { getMe } from '@/lib/auth/getMe';
@@ -28,15 +29,6 @@ export const metadata: Metadata = {
 
 export const dynamic = 'force-dynamic';
 
-const ServiceUnavailable = () => (
-  <div className='flex min-h-[60vh] w-full items-center justify-center px-[24rem] py-[40rem]'>
-    <div className='max-w-[420rem] text-center'>
-      <h1 className='text-[24rem] font-semibold text-d-black'>Service temporarily unavailable</h1>
-      <p className='mt-[12rem] text-[14rem] text-d-black/70'>Please try again in a few moments.</p>
-    </div>
-  </div>
-);
-
 export default async function ProtectedLayout({ children, params }: ProtectedLayoutProps) {
   const { locale } = params;
   const requestHeaders = headers();
@@ -56,7 +48,7 @@ export default async function ProtectedLayout({ children, params }: ProtectedLay
   }
 
   if (serviceUnavailable) {
-    return <ServiceUnavailable />;
+    return <Error503 />;
   }
 
   if (!me) {
@@ -92,7 +84,7 @@ export default async function ProtectedLayout({ children, params }: ProtectedLay
   }
 
   if (serviceUnavailable) {
-    return <ServiceUnavailable />;
+    return <Error503 />;
   }
 
   if (!balance) {

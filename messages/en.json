@@ -37,6 +37,8 @@
     "soon": "soon"
   },
   "actions": {
+    "tryAgain": "Try again",
+    "goToHome": "Go to home",
     "backToHomepage": "Back to the homepage",
     "upgradePlan": "Upgrade plan",
     "exit": "Exit",
@@ -394,8 +396,9 @@
     "text": "The server encountered an internal error <br></br> and was unable to complete your request. <br></br> Please go back and try again."
   },
   "error503": {
-    "title": "No internet connection",
-    "text": "Your device is currently unable to reach the <br></br> internet. Once your connection is restored, try <br></br> accessing the platform again and start the <br></br> exam over."
+    "title": "Service unavailable",
+    "text": "The server is temporarily busy <br></br> or under maintenance.",
+    "subtitle": "Please try again in a few moments <br></br> or return to the homepage."
   },
   "profile": {
     "achievements": {
@@ -577,7 +580,7 @@
         "readTextAndAnswerQuestions": "Read the text and answer questions ",
         "fallback": {
           "title": "Practice reading data is unavailable",
-          "description": "We couldn't load this practice attempt. Head back to the Reading dashboard and try again.",
+          "description": "We couldn't load this practice attempt. Head back to the dashboard and try again.",
           "action": "Back"
         },
         "mobile": {
