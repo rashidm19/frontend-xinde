@@ -36,7 +36,7 @@ import { MobileTextInsert } from '@/components/practice/reading/mobile/MobileTex
 import { MobileContextBar } from '@/components/practice/reading/mobile/MobileContextBar';
 import { HintBadge } from '@/components/practice/reading/mobile/HintBadge';
 import { AnimatePresence, motion } from 'framer-motion';
-import { ArrowUp } from 'lucide-react';
+import { ArrowUp, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { mockStore } from '@/stores/mock';
 import { WritingFeedbackHeader } from '@/components/practice/WritingFeedbackHeader';
@@ -160,7 +160,10 @@ function ReadingTestClient({ practiceId }: ReadingTestClientProps) {
     }
   }, [timer]);
 
+  const [isPending, setIsPending] = useState(false);
+
   async function onSubmit(values: z.infer<typeof formSchema>) {
+    setIsPending(true);
     const formattedValues = {
       answers: Object.entries(values).map(([question, answer]) => ({
         question: parseInt(question),
@@ -188,15 +191,21 @@ function ReadingTestClient({ practiceId }: ReadingTestClientProps) {
 
     formattedValues.answers = formattedValues.answers.filter(item => item.answer);
 
-    const response = await axiosInstance.post<PracticeReadingResult>(`/practice/reading/${practiceId}`, formattedValues, {
-      validateStatus: () => true,
-    });
+    try {
+      const response = await axiosInstance.post<PracticeReadingResult>(`/practice/reading/${practiceId}`, formattedValues, {
+        validateStatus: () => true,
+      });
 
-    if (response.status >= 200 && response.status < 300) {
-      const result = response.data;
-      await clearPracticeSessionCookie('reading');
-      void router.push(`/practice/reading/results/${result.id}`);
-    } else {
+      if (response.status >= 200 && response.status < 300) {
+        const result = response.data;
+        await clearPracticeSessionCookie('reading');
+        void router.push(`/practice/reading/results/${result.id}`);
+      } else {
+        setIsPending(false);
+        void router.push('/error500');
+      }
+    } catch (error) {
+      setIsPending(false);
       void router.push('/error500');
     }
   }
@@ -1391,8 +1400,13 @@ function ReadingTestClient({ practiceId }: ReadingTestClientProps) {
                       {activeTab === 'p3' && (
                         <button
                           type='submit'
-                          className='hidden h-[71rem] w-full items-center justify-center rounded-[40rem] bg-d-green text-[20rem] font-normal leading-[24rem] tracking-[-0.2rem] text-d-black tablet:flex'
+                          disabled={isPending || form.formState.isSubmitting}
+                          className={cn(
+                            'hidden h-[71rem] w-full items-center justify-center rounded-[40rem] bg-d-green text-[20rem] font-normal leading-[24rem] tracking-[-0.2rem] text-d-black tablet:flex',
+                            (isPending || form.formState.isSubmitting) && 'opacity-70 cursor-not-allowed'
+                          )}
                         >
+                          {(isPending || form.formState.isSubmitting) && <Loader2 className="mr-[8rem] size-[20rem] animate-spin" />}
                           {tActions('submit')}
                         </button>
                       )}
@@ -1454,7 +1468,8 @@ function ReadingTestClient({ practiceId }: ReadingTestClientProps) {
         rangeLabel={rangeLabelFormatted}
         primaryLabel={primaryLabel}
         onPrimaryAction={handlePrimaryAction}
-        primaryDisabled={form.formState.isSubmitting}
+        primaryDisabled={isPending || form.formState.isSubmitting}
+        primaryLoading={isPending || form.formState.isSubmitting}
         ariaPrimaryLabel={primaryLabel}
         progress={progress}
         progressLabel={mobileStrings.progressAccessibility}
