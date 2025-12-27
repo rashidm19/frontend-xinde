@@ -5,7 +5,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useQuery } from '@tanstack/react-query';
 import { AnimatePresence, motion } from 'framer-motion';
-import { ArrowUp } from 'lucide-react';
+import { ArrowUp, Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { useMediaQuery } from 'usehooks-ts';
@@ -104,11 +104,15 @@ function ListeningTestClient({ practiceId }: ListeningTestClientProps) {
     resolver: zodResolver(formSchema),
   });
 
+  const [isPending, setIsPending] = useState(false);
+
   const onSubmit = useCallback(
     async (values: z.infer<typeof formSchema>) => {
       if (!data) {
         return;
       }
+
+      setIsPending(true);
 
       const formattedValues = {
         answers: Object.entries(values).map(([question, answer]) => ({
@@ -139,18 +143,24 @@ function ListeningTestClient({ practiceId }: ListeningTestClientProps) {
 
       formattedValues.answers = formattedValues.answers.filter(item => item.answer);
 
-      const response = await axiosInstance.post<PracticeListeningResult>(`/practice/listening/${practiceId}`, formattedValues, {
-        validateStatus: () => true,
-      });
+      try {
+        const response = await axiosInstance.post<PracticeListeningResult>(`/practice/listening/${practiceId}`, formattedValues, {
+          validateStatus: () => true,
+        });
 
-      if (response.status >= 200 && response.status < 300) {
-        await clearPracticeSessionCookie('listening');
-        router.push(`/practice/listening/results/${response.data.id}`);
-      } else {
+        if (response.status >= 200 && response.status < 300) {
+          await clearPracticeSessionCookie('listening');
+          router.push(`/practice/listening/results/${response.data.id}`);
+        } else {
+          setIsPending(false);
+          router.push('/error500');
+        }
+      } catch (error) {
+        setIsPending(false);
         router.push('/error500');
       }
     },
-    [data, router]
+    [data, router, practiceId]
   );
 
   const values = form.watch();
@@ -989,8 +999,13 @@ function ListeningTestClient({ practiceId }: ListeningTestClientProps) {
                           ) : (
                             <button
                               type='submit'
-                              className='hidden h-[71rem] w-full items-center justify-center rounded-[40rem] bg-d-green text-[20rem] font-normal leading-[24rem] tracking-[-0.2rem] text-d-black tablet:flex'
+                              disabled={isPending || form.formState.isSubmitting}
+                              className={cn(
+                                'hidden h-[71rem] w-full items-center justify-center rounded-[40rem] bg-d-green text-[20rem] font-normal leading-[24rem] tracking-[-0.2rem] text-d-black tablet:flex',
+                                (isPending || form.formState.isSubmitting) && 'opacity-70 cursor-not-allowed'
+                              )}
                             >
+                              {(isPending || form.formState.isSubmitting) && <Loader2 className="mr-[8rem] size-[20rem] animate-spin" />}
                               {tActions('submit')}
                             </button>
                           )}
@@ -1051,7 +1066,8 @@ function ListeningTestClient({ practiceId }: ListeningTestClientProps) {
             rangeLabel={rangeLabelFormatted}
             primaryLabel={primaryLabel}
             onPrimaryAction={handlePrimaryAction}
-            primaryDisabled={form.formState.isSubmitting}
+            primaryDisabled={isPending || form.formState.isSubmitting}
+            primaryLoading={isPending || form.formState.isSubmitting}
             ariaPrimaryLabel={primaryLabel}
             progress={progress}
             progressLabel={mobileStrings.progressAccessibility}

@@ -16,7 +16,7 @@ import { WritingFeedbackHeader } from '@/components/practice/WritingFeedbackHead
 import { PracticeLeaveGuard } from '@/components/PracticeLeaveGuard';
 import { clearPracticeSessionCookie } from '@/lib/practiceSession';
 import { cn } from '@/lib/utils';
-import { X } from 'lucide-react';
+import { X, Loader2 } from 'lucide-react';
 import { MobileHeader } from '@/components/practice/reading/mobile/MobileHeader';
 import { useMediaQuery } from 'usehooks-ts';
 import { withHydrationGuard } from '@/hooks/useHasMounted';
@@ -40,12 +40,15 @@ function WritingTestClient({ practiceId }: WritingTestClientProps) {
     queryFn: () => GET_practice_writing_id(practiceId),
   });
 
+  const [isPending, setIsPending] = React.useState(false);
+
   const handleExit = React.useCallback(() => {
     router.push('/dashboard');
   }, [router]);
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setSubmitError(null);
+    setIsPending(true);
     try {
       const response = await POST_practice_writing_id(practiceId, values.answer);
       if (response?.id) {
@@ -53,8 +56,10 @@ function WritingTestClient({ practiceId }: WritingTestClientProps) {
         router.push(`/practice/writing/feedback/${response.id}`);
         return;
       }
+      setIsPending(false);
       setSubmitError(tMessages('unexpectedError'));
     } catch (error) {
+      setIsPending(false);
       setSubmitError(tMessages('unexpectedError'));
     }
   }
@@ -79,7 +84,7 @@ function WritingTestClient({ practiceId }: WritingTestClientProps) {
 
     return trimmedAnswer.split(/\s+/).filter((word: string) => word.trim().length > 1).length;
   }, [trimmedAnswer]);
-  const isSubmitting = form.formState.isSubmitting;
+  const isSubmitting = form.formState.isSubmitting || isPending;
   const isSubmitDisabled = trimmedAnswer.length === 0 || isSubmitting;
 
   React.useEffect(() => {
@@ -298,6 +303,7 @@ function WritingTestClient({ practiceId }: WritingTestClientProps) {
                           )}
                           aria-busy={isSubmitting}
                         >
+                          {isSubmitting && <Loader2 className="mr-[8rem] size-[18rem] animate-spin" />}
                           {isSubmitting ? tActions('sending') : tActions('submit')}
                         </button>
                       </div>

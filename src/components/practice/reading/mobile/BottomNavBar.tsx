@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { motion } from "framer-motion";
-import { Map } from "lucide-react";
+import { Map, Loader2 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
@@ -21,6 +21,7 @@ export interface BottomNavBarProps {
   primaryLabel: string;
   onPrimaryAction: () => void;
   primaryDisabled?: boolean;
+  primaryLoading?: boolean;
   ariaPrimaryLabel?: string;
   className?: string;
   progress: number;
@@ -35,6 +36,7 @@ export const BottomNavBar: React.FC<BottomNavBarProps> = ({
   primaryLabel,
   onPrimaryAction,
   primaryDisabled,
+  primaryLoading,
   ariaPrimaryLabel,
   className,
   progress,
@@ -80,13 +82,14 @@ export const BottomNavBar: React.FC<BottomNavBarProps> = ({
       <button
         type="button"
         onClick={onPrimaryAction}
-        disabled={primaryDisabled}
+        disabled={primaryDisabled || primaryLoading}
         className={cn(
           "flex min-h-[48rem] w-[70%] items-center justify-center rounded-[20rem] bg-gradient-to-r from-[#C9FF55] to-[#B7F152] text-[15rem] font-semibold text-d-black transition-all duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-d-green/60",
-          primaryDisabled ? "cursor-not-allowed opacity-60" : "hover:-translate-y-[1rem] hover:shadow-[0_14rem_32rem_rgba(56,56,56,0.16)]",
+          (primaryDisabled || primaryLoading) ? "cursor-not-allowed opacity-60" : "hover:-translate-y-[1rem] hover:shadow-[0_14rem_32rem_rgba(56,56,56,0.16)]",
         )}
         aria-label={ariaPrimaryLabel ?? primaryLabel}
       >
+        {primaryLoading && <Loader2 className="mr-[8rem] size-[16rem] animate-spin" />}
         {primaryLabel}
       </button>
     </motion.div>
