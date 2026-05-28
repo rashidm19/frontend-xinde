@@ -40,6 +40,6 @@ next-env.d.ts
 
 docs/ignored/*
 
-.env
+
 
 .factory
