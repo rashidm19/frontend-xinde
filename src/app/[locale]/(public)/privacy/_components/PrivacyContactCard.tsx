@@ -10,8 +10,8 @@ export const PrivacyContactCard = () => {
       </h2>
       <p className='text-[16rem] leading-relaxed text-d-black/80'>
         If you have any questions about this Privacy Policy, please contact us at{' '}
-        <Link href='mailto:info@studybox.kz' className='font-medium text-d-blue hover:underline'>
-          info@studybox.kz
+        <Link href='mailto:info@ieltsgg.com' className='font-medium text-d-blue hover:underline'>
+          info@ieltsgg.com
         </Link>
         .
       </p>

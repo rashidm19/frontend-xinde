@@ -33,7 +33,7 @@ npm run dev
 
 ```ts
 // src/lib/config.ts
-export const API_URL = 'https://api.studybox.kz';
+export const API_URL = 'https://api.ieltsgg.com';
 // export const API_URL = 'http://localhost:8080';
 ```
 

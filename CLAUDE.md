@@ -17,7 +17,7 @@ No test framework is configured. **ESLint is not actually set up**: there is no 
 
 ## Backend dependency (read first)
 
-The API base URL is **hardcoded** in `src/lib/config.ts` as `API_URL` — currently `http://localhost:8080`, with the prod URL (`https://api.studybox.kz`) commented out. It is **not** read from env. The frontend dev server runs standalone, but every authenticated/data page calls this backend; without it `(protected)` pages hit `getMe()` failures → render `Error503` or redirect to `/login`. Of the public pages, only `login`, `registration`, and `privacy` are fully functional offline — `pricing` renders its shell but shows no plans (it fetches `/billing/subscriptions/plans` at load).
+The API base URL is **hardcoded** in `src/lib/config.ts` as `API_URL` — currently `http://localhost:8080`, with the prod URL (`https://api.ieltsgg.com`) commented out. It is **not** read from env. The frontend dev server runs standalone, but every authenticated/data page calls this backend; without it `(protected)` pages hit `getMe()` failures → render `Error503` or redirect to `/login`. Of the public pages, only `login`, `registration`, and `privacy` are fully functional offline — `pricing` renders its shell but shows no plans (it fetches `/billing/subscriptions/plans` at load).
 
 Env that *is* used: `.env` holds `NEXT_PUBLIC_ENVIRONMENT` and `NEXT_PUBLIC_GOOGLE_CLIENT_ID`. `src/lib/config.ts` derives flags: `IS_PROD_BUILD` (from `NODE_ENV`), `IS_PROD_ENV`/`IS_DEV_ENV` (from `NEXT_PUBLIC_ENVIRONMENT`).
 
