@@ -287,6 +287,9 @@
     "cta": {
       "footerHint": "Tap any plan to continue"
     },
+    "errors": {
+      "loadFailed": "Unable to load plans. Please try again later."
+    },
     "promo": {
       "label": "Promo code",
       "placeholder": "Enter promo code",
