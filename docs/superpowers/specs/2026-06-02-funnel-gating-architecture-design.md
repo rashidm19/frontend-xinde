@@ -1,7 +1,7 @@
 # Funnel gating architecture — `login → onboarding → paywall → app`
 
 - **Date:** 2026-06-02
-- **Status:** Design approved; revised twice after code review (every claim verified against `frontend/` + `backend/`). Backend = GO; frontend Critical blocker (order-poll wiring) cleared. Ready for implementation plan.
+- **Status:** Design approved; revised three times after code review (every claim verified against `frontend/` + `backend/`). Backend = GO; checkout-return mechanism corrected to the real EPay flow. Ready for implementation plan.
 - **Scope:** Frontend routing/gating/redirect layer (reuse existing screens, with the extractions/adaptations in §6) + one reversible backend flag (and its test updates).
 
 ## 1. Problem
@@ -240,28 +240,36 @@ viewport (`pricing/page.tsx:82-117`): desktop = `PricesModal` in a `Dialog`; mob
      paying subscriber gets bounced to plans they already bought. (Subscription holders are never
      debited for practice — `payments/services.py:30`.)
 
-2. **Checkout-return (corrected — highest-risk flow).** The frontend sets the EPay `backLink` at
-   runtime to `order.backLink ?? (current URL + ?subscribePaymentStatus=true)`
-   (`PromoPromptModal.tsx:104,108-114`) — it returns to the **current page** (the paywall),
-   **not** `/dashboard`. Entitlement is granted **asynchronously** by the `postLink` webhook
-   (`payments/views.py:1109-1114`), so right after returning `/billing/subscriptions/current` may
-   still be 204. The real failure mode is **"stranded on `/paywall`,"** not a redirect loop.
-   Required behavior on `/paywall`:
-   - **Thread the `orderId`** (`CheckoutOrderOut.orderId`, returned by `POST /checkout/orders`)
-     across the redirect — append it to the success `backLink` query **and** stash it in
-     `sessionStorage` before `window.halyk.pay()` (belt-and-suspenders, since the backend may
-     override with its own `order.backLink`). **New work** — see §6.
-   - On return, detect `?subscribePaymentStatus=true`, read `orderId`, and **poll
-     `GET /orders/{orderId}` until `status === "paid"`** — the order flips to `paid` in the
-     *same* atomic transaction that grants entitlement (`payments/views.py:532-534`), so it's a
-     reliable signal (unlike `payment_status`, the PaymentIntent status, which never flips for a
-     100%-promo order). Bounded timeout + "activating…" state; then `refreshSubscriptionAndBalance()`
-     (`subscriptionStore.ts:112`) and navigate to `next ?? /dashboard`.
-   - `?subscribePaymentStatus=false` → stay on `/paywall`, show the failure.
-   - **Reconcile with the global `SubscriptionPaymentStatusModal`** (`Providers.tsx:56`), which
-     today grabs `subscribePaymentStatus` on any page: either suppress it on `/paywall` (add a
-     pathname check — it currently reads only `useSearchParams`) or have the paywall own the param.
-   - 100%-promo path returns `requiresPayment=false`, fulfilled synchronously — no poll.
+2. **Checkout-return (corrected twice — highest-risk flow).** The backend **overrides** the EPay
+   return URL: `CheckoutOrderOut.backLink` for a paid order is the **static** `EPAY_BACK_LINK`,
+   default `https://app.ieltsgg.com?subscribePaymentStatus=true` (`core/settings.py:302`,
+   `payments/views.py:998`). The frontend uses it verbatim — `backLink = order.backLink ?? successUrl`
+   short-circuits because `order.backLink` is non-null (`PromoPromptModal.tsx:104,113`), so the
+   current-page `successUrl` is dead code on the paid path. **So EPay returns to the app root**
+   (→ `next.config.mjs` `/`→`/{locale}/dashboard`), **not** `/paywall`, carrying **no `orderId`**
+   and **no locale**. Entitlement is granted **asynchronously** by the `postLink` webhook
+   (`payments/views.py:1109-1114`). The real risk is therefore a **transient bounce
+   dashboard → `/paywall`** while the webhook lands (the `(app)` gate sees `!entitled`) — **not**
+   "stranded on /paywall." Required behavior:
+   - **Carry `orderId` via `sessionStorage` only.** Stash it (`CheckoutOrderOut.orderId`, available
+     at `PromoPromptModal.tsx:132`) immediately before `window.halyk.pay()`. The query-append
+     approach does **not** work (the backend's static `backLink` wins); `sessionStorage` is the
+     sole carrier and survives the full-page bank round-trip. **New work** — see §6.
+   - **Own the poll in the global return handler, not on `/paywall`.** `SubscriptionPaymentStatusModal`
+     (`Providers.tsx:56`) already fires on `?subscribePaymentStatus=true` on whatever page the user
+     lands on (= dashboard/app root) and already calls `refreshSubscriptionAndBalance()`
+     (`:41`). Extend it: read `orderId` from `sessionStorage`, **poll `GET /orders/{orderId}` until
+     `status === "paid"`** with a bounded timeout + "activating…" state, then
+     `refreshSubscriptionAndBalance()` (`subscriptionStore.ts:112`) and clear the key. `status`
+     flips to `paid` in the *same* atomic transaction as the grant (`payments/views.py:532-534`) →
+     reliable; `payment_status` (PaymentIntent) would not flip for a 100%-promo order, so **poll
+     `status`, not `payment_status`**.
+   - **The `(app)` gate is the backstop.** If the user hits a gated route before the poll resolves,
+     the gate bounces to `/paywall`; it self-heals on the next navigation once the webhook lands.
+     (Optional polish to avoid even the transient bounce: a dedicated `/checkout/return` route that
+     owns the poll before forwarding — not required for MVP.)
+   - `?subscribePaymentStatus=false` → failure; the handler shows the error (no entitlement change).
+   - 100%-promo path: `requiresPayment=false`, `backLink=""`, fulfilled synchronously — no EPay, no poll.
 
 3. **Backend outage** (`UpstreamServiceError`): keep today's behavior — render `Error503`;
    never redirect-loop, never lock a paying user out on a timeout. "Unknown" ≠ "deny."
@@ -302,13 +310,13 @@ with absolute assignment, so they're unaffected — `client/tests.py` is the com
 - `src/lib/funnel/resolveStage.ts` — `FunnelStage`, `isEntitled`, `resolveFunnelStage`
 - `src/lib/funnel/paths.ts` — `pathForStage`, `screenFromPath` (locale-aware), `withNext`
 - `src/hooks/useFunnelStage.ts` — client selector over the Query cache
-- `src/api/GET_orders_id.ts` — **new** wrapper for `GET /orders/{id}` (the poll signal; none exists today)
+- `src/api/GET_orders_id.ts` — **new** wrapper for `GET /orders/{id}` (the poll signal; none exists today; consumed by the global return handler — §4.2)
 - `src/components/PricingPlansView.tsx` (or similar) — **extracted** from inline `PricingMobileView`, `onBack` optional
 - `src/app/[locale]/(protected)/(app)/layout.tsx` — app gate (`force-dynamic`)
 - `src/app/[locale]/(protected)/(funnel)/layout.tsx` — funnel gate (`force-dynamic`)
-- `src/app/[locale]/(protected)/(funnel)/paywall/page.tsx` — paywall page: composes desktop
-  `PricesModal`-in-`Dialog` (close hidden) + extracted mobile view (no back); detects
-  `?subscribePaymentStatus`, reads threaded `orderId`, polls `GET /orders/{id}` until `paid`
+- `src/app/[locale]/(protected)/(funnel)/paywall/page.tsx` — paywall page (**wall UI only**):
+  composes desktop `PricesModal`-in-`Dialog` (close hidden) + extracted mobile view (no back).
+  The checkout-return poll does **not** live here (§4.2) — EPay returns to the app root.
 
 **Moved (folders only; URLs unchanged):** `dashboard, practice, mock, notes, m` → `(app)/`;
 `onboarding` → `(funnel)/`
@@ -319,12 +327,14 @@ with absolute assignment, so they're unaffected — `client/tests.py` is the com
 - `(protected)/(funnel)/onboarding/page.tsx` — post-submit nav via `useFunnelStage`
   (completed-but-unpaid → `/paywall`, carrying `next`); read incoming `next`; **keep sending the
   `Idempotency-Key` header** to `/onboarding/submit`
-- `src/components/PromoPromptModal.tsx` — thread `orderId` across the EPay redirect (append to
-  the success `backLink` + stash in `sessionStorage`)
+- `src/components/PromoPromptModal.tsx` — stash `orderId` in `sessionStorage` before
+  `window.halyk.pay()` (the backend overrides `backLink`, so a query-append doesn't work — §4.2)
+- `src/components/SubscriptionPaymentStatusModal.tsx` — **becomes the checkout-return poll owner**
+  (net-new logic, not a one-liner): read `orderId` from `sessionStorage`, poll `GET /orders/{id}`
+  until `paid`, show "activating…", then `refreshSubscriptionAndBalance()` + clear the key
 - `src/components/PricesModal.tsx` — optional close-affordance prop / hidden-close variant for the wall
 - `GlobalSubscriptionPaywall.tsx` — mobile push `/pricing` → `/paywall`; reconcile modal vs route
 - `(public)/pricing/page.tsx` — consume the extracted `PricingPlansView`
-- Treatment of `SubscriptionPaymentStatusModal` on `/paywall` (suppress or paywall-owned)
 
 **Backend:** `core/settings.py` + `client/utils.py` (flag) **and** `client/tests.py` (test updates)
 
@@ -359,8 +369,10 @@ silently create a loop), and the `next=` trace. Manual-QA matrix:
 - Returning entitled user: login → straight to app; `/onboarding` and `/paywall` bounce out.
 - Lapsed user: practice 400 / sub expired → next navigation → `/paywall`. **Subscriber out of
   mock credits: mock 400 → in-app top-up, NOT the funnel paywall** (regression guard).
-- Checkout return: pay → `/paywall?subscribePaymentStatus=true&orderId=…` → poll
-  `GET /orders/{id}` → "activating…" → app (no strand, no bounce). And the `=false` failure path.
+- Checkout return: pay → EPay returns to app-root `?subscribePaymentStatus=true` →
+  `/{locale}/dashboard` → global handler reads `sessionStorage` `orderId` → poll `GET /orders/{id}`
+  until `paid` → "activating…" → admitted (a transient `(app)`-gate bounce to `/paywall`
+  self-heals once the webhook lands). And the `=false` failure path.
 
 ## 8. Non-goals / out of scope
 
@@ -391,13 +403,23 @@ enforcement-point accuracy, backend test updates.
 **Round 2 (revised → this version):** backend = **GO** (the `GET /orders/{id}` poll signal fully
 verified — `status=="paid"` flips in the same atomic txn as the grant). Frontend Critical:
 the poll had **no API wrapper and no `orderId` threading** → added `GET_orders_id.ts` + orderId
-threading across the redirect (§3.6/§4.2/§6). Important: paywall composes **both** desktop
+threading (the *mechanism* was then corrected again in round 3, below). Important: paywall composes **both** desktop
 `PricesModal` + extracted mobile view, both close/back removed; `onBack` made optional. Plus the
 **mock-vs-practice 400** correctness fix (§4.1 — don't bounce a paying subscriber who only lacks
 mock credits), `status==="paid"` poll signal (not `payment_status`), `EPAY_BACK_LINK` wording,
 and tightened line cites.
 
-**Confirmed solid (both rounds):** route-group zones, `resolveFunnelStage`, stage→path map,
+**Round 3 (this version):** the round-2 checkout-return *mechanism* rested on a false premise —
+the backend **overrides** `backLink` with a static app-root URL (`EPAY_BACK_LINK`,
+`core/settings.py:302`; used at `payments/views.py:998`; frontend `PromoPromptModal.tsx:104,113`
+short-circuits the current-page fallback). So EPay returns to `/{locale}/dashboard`, **not**
+`/paywall`, with no `orderId`. Rewrote §4.2/§6/§7: carry `orderId` via `sessionStorage` only; the
+poll lives in the global `SubscriptionPaymentStatusModal` (it already fires on the real landing
+page); the `(app)` gate is the backstop; the paywall page is wall-UI only. Re-verified the rest of
+the round-2 delta correct (mock-vs-practice 400, paywall composition, the `status==="paid"`
+same-transaction guarantee).
+
+**Confirmed solid (all rounds):** route-group zones, `resolveFunnelStage`, stage→path map,
 `next`-threading, loop-freedom, all contract paths/fields, `onboarding_completed` durability,
 same-transaction order-paid+grant guarantee. The "interest-step" is dormant/legacy — correctly
 **not** a gate.
