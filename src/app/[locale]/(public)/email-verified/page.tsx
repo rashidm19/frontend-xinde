@@ -51,7 +51,7 @@ export default function EmailVerifiedPage({ params }: PageProps) {
               Login now
             </AuthLinkButton>
             <Link
-              href={`https://www.studybox.kz/${locale}`}
+              href={`https://www.ieltsgg.com/${locale}`}
               className='text-center text-[13rem] font-medium text-blue-600 transition hover:text-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-200'
             >
               Back to the homepage

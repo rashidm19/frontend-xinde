@@ -1,135 +1,89 @@
 # Studybox Frontend
 
-## About the Project
-Studybox is an AI-driven IELTS preparation platform that delivers adaptive practice plans, analytics, and subscription-based learning experiences. This repository contains the production Next.js 14 frontend powering localized marketing pages, authenticated practice modules, paywall flows, and telemetry instrumentation for the platform.
+Веб-приложение для подготовки к IELTS: практика по четырём секциям (Listening, Reading, Speaking, Writing) с разбором ответов и AI-фидбеком, а также полноценный mock-экзамен. Построено на Next.js 14 (App Router).
 
-## Features
-- Next.js 14 App Router with nested layouts and streaming-friendly SSR.
-- Dynamic SSR layouts that prefetch user, subscription, and balance data.
-- Middleware-based locale routing with device-aware redirects and cookie persistence.
-- TanStack Query hydration pipeline for cache-first reads and offline-safe gates.
-- Zustand stores for subscription state, profile data, global modals, and UI shell.
-- TailwindCSS styling with shadcn-inspired primitives, Radix UI, and animation helpers.
-- Telemetry stack integrating PostHog analytics and OpenTelemetry tracing exporters.
-- Subscription/paywall flow management with shared balance cache and modal orchestration.
-- Modular practice experiences covering Reading, Writing, Listening, and Speaking tracks.
+Подробности архитектуры (аутентификация, слой данных, middleware, i18n) — в [CLAUDE.md](CLAUDE.md).
 
-## Tech Stack
-- **Framework:** Next.js 14, React 18
-- **Language:** TypeScript (ESNext, strict)
-- **Routing & i18n:** App Router, next-intl, custom edge middleware
-- **State & Data:** TanStack Query, Zustand, Axios (deduplicated adapter)
-- **Styling & UI:** TailwindCSS, class-variance-authority, tailwind-merge, Radix UI, Framer Motion, Embla Carousel
-- **Forms & Validation:** React Hook Form, Zod
-- **Telemetry:** PostHog JS SDK, @opentelemetry/web stack
-- **Tooling:** ESLint (Next.js config), Prettier (Tailwind plugin), TypeScript compiler
+## Стек
 
-## System Architecture
-```
-Client Request
-  ↓
-Edge Middleware (locale prefix, mobile/desktop redirects)
-  ↓
-App Router Layouts (public vs protected)
-  ↓
-Protected Layout SSR prefetch (getMe, getSubscription, getBalance)
-  ↓
-QueryClient dehydrate + Root Providers (React Query, telemetry, modals)
-  ↓
-Client hydration with TanStack cache + Zustand stores
-```
-- Locales propagate from middleware cookies into `app/[locale]/…` segments and next-intl providers.
-- Auth/subscription data fetched server-side hydrate TanStack Query, enabling cache-only gates on the client.
-- Zustand holds UI control state (modals, paywalls) while React Query manages async resources.
-- Public routes live under `app/[locale]/(public)`; protected routes reside in `(protected)` with SSR guards before render.
+- **Next.js 14** (App Router) + **React 18**, **TypeScript** (strict)
+- **next-intl** — локализация (en/ru)
+- **TanStack Query** — серверные данные; **Zustand** — клиентское состояние
+- **shadcn/ui** (Radix) + **Tailwind CSS** — UI
+- **react-hook-form** + **zod** — формы и валидация
+- **axios** — HTTP-клиент
+- **PostHog** + **OpenTelemetry** — телеметрия (только в проде)
 
-## Folder Structure
-```
-.
-├─ src/
-│  ├─ app/                # App Router routes, layouts, loaders
-│  ├─ components/         # Shared UI blocks, modals, shadcn-style primitives
-│  ├─ hooks/              # Reusable hooks (subscription gates, analytics, forms)
-│  ├─ stores/             # Zustand stores for profile, subscription, UI
-│  ├─ lib/                # Config, API clients, telemetry, subscription helpers
-│  ├─ api/                # Axios facades and schema utilities
-│  ├─ i18n/               # next-intl routing and request configuration
-│  ├─ types/              # Shared TypeScript types and zod schemas
-│  └─ utils/              # General-purpose utility helpers
-├─ messages/              # Localization bundles (en.json, ru.json)
-├─ public/                # Static assets
-├─ docs/                  # Internal design and architecture notes
-├─ next.config.mjs        # Next.js + next-intl configuration
-├─ tailwind.config.ts     # Tailwind design tokens and safelist
-└─ package.json
+## Требования
+
+- **Node.js ≥ 18.17** (минимум Next.js 14; в репозитории не закреплён — нет `engines`/`.nvmrc`)
+- **npm** (в репозитории `package-lock.json`)
+- Работающий **Studybox API** (по умолчанию ожидается на `http://localhost:8080`)
+
+## Запуск локально
+
+```bash
+npm install
+npm run dev
 ```
 
-## Environment Variables
-| Variable | Required | Description |
-| --- | --- | --- |
-| `NEXT_PUBLIC_ENVIRONMENT` | Yes | Declares the deployment tier (`development`, `preview`, `production`) for telemetry toggles and environment guards. |
-| `NEXT_PUBLIC_GOOGLE_CLIENT_ID` | Yes | Google OAuth client ID used by client-side login flows. |
-- Create `.env.local` for local development mirroring the keys above (no secrets committed).
-- Server-only secrets must be configured via deployment environment variables without the `NEXT_PUBLIC_` prefix.
+Дев-сервер поднимется на http://localhost:3000 (или 3001, если порт занят — поведение Next по умолчанию). Корень `/` редиректит на `/en/dashboard`.
 
-## Getting Started
-1. **Prerequisites:** Node.js ≥ 18.17 and npm ≥ 9.
-2. **Install dependencies:** `npm install`
-3. **Run development server:** `npm run dev` (default at http://localhost:3000)
-4. **Build for production:** `npm run build`
-5. **Serve production build locally:** `npm run start`
-6. **Lint & type-check:** `npm run lint`
-7. Restart the dev server when changing `next.config.mjs`, `tailwind.config.ts`, or `src/middleware.ts`.
+**Бэкенд.** Базовый URL API захардкожен в [`src/lib/config.ts`](src/lib/config.ts) (`API_URL`), а не берётся из env. По умолчанию это `http://localhost:8080`. Локального бэкенда в этом репозитории нет, поэтому для автономного запуска фронтенда переключите `API_URL` на прод:
 
-## Development Workflow
-- Branch from `main` using `feature/<slug>`, `fix/<slug>`, or `chore/<slug>` naming; avoid direct commits to `main` or `dev`.
-- Place new components in the relevant feature directory within `src/components` (shared primitives belong in `src/components/ui`).
-- Treat Server Components as default; opt into `'use client'` only when hooks or browser APIs are required.
-- Update translations by adding keys to both `messages/en.json` and `messages/ru.json` with stable dotted namespaces; never mutate existing keys without explicit approval.
-- Run smoke checks (`npm run lint`, `npm run build`, manual route validation) before raising PRs.
+```ts
+// src/lib/config.ts
+export const API_URL = 'https://api.ieltsgg.com';
+// export const API_URL = 'http://localhost:8080';
+```
 
-## Testing
-- **Linting:** `npm run lint` is mandatory before merge.
-- **Build verification:** `npm run build` ensures SSR and type safety.
-- **Future suites:** Vitest/React Testing Library or Playwright can be added under `tests/`; document new scripts when introduced.
-- **PR validation:** Include command outputs or screenshots (for visual work) in PR descriptions.
+Без доступного API страницы из группы `(protected)` отдадут 503 или редирект на `/login`. Из публичных страниц полностью работают офлайн только `login`, `registration` и `privacy`; `pricing` рендерится, но без планов (грузит `/billing/subscriptions/plans`).
 
-## Deployment
-- CI/CD should run `npm run lint` and `npm run build` before shipping artifacts.
-- Ensure environment variables are configured per environment (including server-only secrets).
-- Hosting platforms must support Next.js App Router and edge middleware (e.g., Vercel, custom Node edge setups).
-- Production deployments execute `npm run build` followed by platform-specific start commands.
+> **Важно:** запуск localhost-фронта против прод-API не гарантирован «из коробки» — браузерные запросы (включая логин) могут упираться в CORS, разрешённые origin'ы Google OAuth и домен httpOnly-cookie. Серверный рендеринг (`getMe`) ходит в API напрямую и затронут меньше.
 
-## Contributing
-- Use concise, imperative commit messages (`Practice: add reading answer grid`). Include Factory bot co-author trailers when pairing with Droid.
-- Rebase on `main` before opening PRs; avoid merge commits in feature branches.
-- PRs must summarize scope, list validation steps, mention translation updates, and call out environment or migration changes.
-- Require at least one peer review before merging; squash merges keep history clean.
+## Переменные окружения
 
-## License
-Proprietary – internal use only.
+Объявлены в `.env` (закоммичен в репозиторий; из локальных оверрайдов игнорируются только файлы вида `.env*.local`, например `.env.local`):
 
-## FAQ
-**Why is SSR required?**  
-SSR enforces authentication redirects before rendering and seeds client caches with subscription data for paywall gating.
+| Переменная | Назначение |
+| --- | --- |
+| `NEXT_PUBLIC_ENVIRONMENT` | Окружение: `development` / `preview` / `production`. Значение `production` включает телеметрию (PostHog/OpenTelemetry). |
+| `NEXT_PUBLIC_GOOGLE_CLIENT_ID` | Client ID для входа через Google. |
 
-**Why do we use middleware for locale?**  
-Edge middleware prefixes locale segments, sets `NEXT_LOCALE` cookies, and handles device-specific redirects before the request reaches App Router.
+> `API_URL` — **не** переменная окружения, а константа в `src/lib/config.ts` (см. «Запуск локально»).
 
-**How do I add new translation keys?**  
-Add dotted namespace keys to both `messages/en.json` and `messages/ru.json`, keep names stable, and consume them via next-intl helpers.
+## Команды
 
-**Why rely on Zustand instead of Context?**  
-Zustand yields serializable stores, imperative helpers, and fine-grained subscriptions suitable for modal/paywall state without excessive rerenders.
+```bash
+npm run dev     # дев-сервер (Next: порт 3000, при занятости — 3001)
+npm run build   # продакшен-сборка
+npm run start   # запуск собранного приложения
+npm run lint    # next lint — но ESLint НЕ настроен (см. ниже)
+```
 
-**Where should practice module screens live?**  
-Implement routes under `app/[locale]/(protected)/practice/<module>`, prefetch data in the protected layout, and wire translations under a dedicated namespace.
+Тест-фреймворк не подключён. **ESLint не сконфигурирован** — в репозитории нет `.eslintrc*` / `eslint.config.*`, поэтому `npm run lint` запускает интерактивный мастер настройки Next, а не линтит (в CI зависнет). Перед использованием добавьте конфиг (например, `.eslintrc.json` с `{"extends": "next/core-web-vitals"}`). Форматирование — Prettier (`.prettierrc`).
 
-**How is telemetry controlled?**  
-Telemetry initializes only when `NEXT_PUBLIC_ENVIRONMENT` equals `production`; other tiers run PostHog/OTEL in no-op mode.
+## Структура (верхний уровень)
 
-**When should I bypass Axios deduplication?**  
-Set `meta: { noDedup: true }` for long-polling or streaming requests that must run concurrently.
+```
+src/
+  app/         роуты App Router: [locale] с группами (protected)/(public) + API-роуты (api/)
+  api/         клиентские вызовы бэкенда (файл на эндпоинт: GET_*/POST_*, + доменные)
+  components/  общие компоненты; ui/ — примитивы shadcn, mobile/ — мобильные версии
+  lib/         инфраструктура: config, api/http (axios), auth, subscription, telemetry, queryClient
+  stores/      Zustand-сторы (profile, subscription, mock, модалки)
+  hooks/       переиспользуемые React-хуки
+  i18n/        конфигурация next-intl (routing, navigation, request)
+  types/       типы и zod-схемы
+  utils/       мелкие утилиты
+messages/      словари локализации (en.json, ru.json)
+public/        статика
+```
 
-**What smoke tests precede deployment?**  
-Run `npm run lint`, `npm run build`, then manually verify locale routing, login, paywall flows, and telemetry console logs.
+## Архитектура — кратко
+
+Для онбординга достаточно знать три вещи (остальное — в [CLAUDE.md](CLAUDE.md)):
+
+- **Аутентификация — токен в двух местах.** При успешном входе (email или Google) и Google-регистрации JWT пишется в `localStorage['token']` (клиентский axios подставляет его как `Bearer`) и дублируется в httpOnly-cookie `token` через роут `/api/auth/session` — cookie нужна для серверного рендеринга. Email/пароль-регистрация токен не выдаёт (сначала подтверждение почты).
+- **Гейт доступа — серверный.** Лейаут `src/app/[locale]/(protected)/layout.tsx` (`force-dynamic`) вызывает `getMe()` → бэкенд `/auth/profile`; без пользователя — редирект на `/login`, при недоступности API — страница 503.
+- **Кастомный middleware.** `src/middleware.ts` сам проставляет префикс локали и делает два узких UA-редиректа: мобильный на `/{locale}/dashboard` → `/{locale}/m/stats`, десктоп на `/{locale}/m/*` → `/{locale}/dashboard`. Это не стандартный middleware next-intl.
