@@ -352,6 +352,8 @@ import { getMeCached, getSubscriptionCached, getBalanceCached } from '@/lib/funn
 ```
 Then update the three call sites in that file: `getMe()` → `getMeCached()`, `getSubscription()` → `getSubscriptionCached()`, `getBalance()` → `getBalanceCached()`. (Leave all error handling / `Error503` / prefetch logic exactly as-is.)
 
+> ⚠️ Swap **all three** — if you swap only `getMe`, the gate layouts' independent `getSubscription`/`getBalance` calls won't be deduped and (worse) could throw an `UpstreamServiceError` outside the parent's `Promise.allSettled` tolerance, surfacing as an unhandled error instead of `Error503`.
+
 - [ ] **Step 3: Typecheck**
 
 Run: `npx tsc --noEmit`
@@ -545,9 +547,9 @@ interface PricingPlansViewProps {
   onBack?: () => void; // optional: omit on the hard-wall paywall
 }
 ```
-And guard the header's back control so it only renders when `onBack` is provided:
+And guard the header's back control. **Important:** `MobilePageHeader`'s `back` prop **defaults to `true`** and, with no `onBack`, falls back to `window.history.back()` (`src/components/mobile/MobilePageHeader.tsx:44,51-53`) — so omitting `onBack` is **not** enough to hide it. Pass `back: false` explicitly in the else branch:
 ```tsx
-<MobilePageHeader title={titleText} subtitle={subtitleText} {...(onBack ? { back: true, backLabel: tActions('back'), onBack } : {})} />
+<MobilePageHeader title={titleText} subtitle={subtitleText} {...(onBack ? { back: true, backLabel: tActions('back'), onBack } : { back: false })} />
 ```
 Export it: `export const PricingPlansView = (props: PricingPlansViewProps) => { ... }`.
 
@@ -603,11 +605,15 @@ import { PricesModal } from '@/components/PricesModal';
 import { PricingPlansView } from '@/components/PricingPlansView';
 import { PromoPromptModal } from '@/components/PromoPromptModal';
 import { usePricingPlans } from '@/hooks/usePricingPlans';
+import { useCustomTranslations } from '@/hooks/useCustomTranslations';
 import { withHydrationGuard } from '@/hooks/useHasMounted';
 
 const PaywallPageComponent = () => {
   const isMobile = useMediaQuery('(max-width: 767px)', { initializeWithValue: false });
   const { activePlans, status } = usePricingPlans();
+  const { t } = useCustomTranslations('pricesModal');
+  const demoIncludes = t.raw('demo.includes') as string[];
+  const premiumIncludes = t.raw('premium.includes') as string[];
 
   const [isPromoModalOpen, setPromoModalOpen] = useState(false);
   const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
@@ -645,8 +651,8 @@ const PaywallPageComponent = () => {
     return (
       <>
         <PricingPlansView
-          demoIncludes={[]}
-          premiumIncludes={[]}
+          demoIncludes={demoIncludes}
+          premiumIncludes={premiumIncludes}
           activePlans={activePlans}
           status={status}
           onPlanSelect={handlePlanSelect}
@@ -675,7 +681,7 @@ const PaywallPage = withHydrationGuard(PaywallPageComponent);
 
 export default PaywallPage;
 ```
-> Note: pass the exact `demoIncludes`/`premiumIncludes` props `PricingPlansView` expects (copy how `(public)/pricing/page.tsx` supplies them via `t.raw(...)`); the `[]` placeholders above must be replaced with the real translation arrays during implementation, matching the extracted component's prop contract from Task 8.
+> **Hide the desktop close button — the `[&_button[data-radix-dialog-close]]:hidden` selector is a no-op.** Radix `DialogClose` adds no such attribute (the trick is already dead in `GlobalSubscriptionPaywall.tsx:76`). `showClose={false}` drops `PricesModal`'s own `DialogClose`, but the shadcn `DialogContent` also renders a **built-in** close button — read `src/components/ui/dialog.tsx`, find the built-in close (an `absolute right-* top-*` button), and hide it via a matching selector on the `DialogContent` className; **verify visually** that no `✕` remains. (The wall is already non-dismissible — the `Dialog` has no `onOpenChange`, so X/Esc/overlay-click no-op — this only removes a dead, confusing button.)
 
 - [ ] **Step 2: Typecheck**
 
@@ -716,6 +722,23 @@ const destination = nextParam && nextParam.startsWith(`/${locale}`) ? nextParam 
 router.push(destination);
 ```
 (The `(app)` gate will bounce an unpaid user to `/paywall` server-side, carrying `next` — no client stage logic needed.)
+
+- [ ] **Step 2b: Stop the existing completion-effect from racing/overriding the navigation**
+
+An effect at ~lines 218-222 watches `profile?.onboarding_completed` and fires `router.replace(\`/${locale}/dashboard\`)` when it flips true. `handleFinish` flips it true via `setProfile(...)` (~line 326), so this effect **races** Step 2's `router.push` and hardcodes `/dashboard` — dropping `next`. Guard it with a ref so `handleFinish` owns post-finish navigation.
+
+Add near the other refs (~line 165): `const isFinishingRef = useRef(false);`
+At the very top of `handleFinish` (before `setIsSubmitting(true)`): `isFinishingRef.current = true;`
+Change the effect at ~218-222 to bail during finish:
+```ts
+useEffect(() => {
+  if (profileStatus !== 'success') return;
+  if (!profile?.onboarding_completed) return;
+  if (isFinishingRef.current) return; // handleFinish owns post-finish nav (preserves next)
+  router.replace(`/${locale}/dashboard`);
+}, [profileStatus, profile?.onboarding_completed, router, locale]);
+```
+(`useRef` is already imported in this file.)
 
 - [ ] **Step 3: Preserve `next` on the step-sync `router.replace`**
 
@@ -952,7 +975,7 @@ const SubscriptionPaymentStatusModalComponent = () => {
 
 export const SubscriptionPaymentStatusModal = withHydrationGuard(SubscriptionPaymentStatusModalComponent);
 ```
-> Add the two new translation keys (`promo.activatingTitle`, `promo.activating`) to `messages/en.json` and `messages/ru.json` under the `pricesModal.promo` namespace; the `defaultValue` fallbacks above keep it working until then.
+> **Required sub-step (not optional):** add the keys `promo.activatingTitle` + `promo.activating` to `messages/en.json` **and** `messages/ru.json` under `pricesModal.promo`. next-intl@4 does **not** honor the `t(key, { defaultValue })` arg for a missing key — it renders the literal key path (e.g. `pricesModal.promo.activatingTitle`) and logs `MISSING_MESSAGE`. So without these keys the user sees raw key paths during the checkout-return flow. (Step 6 already git-adds the message files — just don't skip adding the keys.)
 
 - [ ] **Step 4: Typecheck**
 
@@ -983,10 +1006,11 @@ git commit -m "feat: checkout-return — sessionStorage orderId + poll GET /orde
 
 - [ ] **Step 1: Add the setting**
 
-In `core/settings.py`, near the other `_env_bool` flags (e.g. `ANALYTICS_ENABLED` at ~line 264), add:
+In `core/settings.py`, near the other `_env_bool` flags (e.g. `ANALYTICS_ENABLED` at line 264), add:
 ```python
 WELCOME_CREDITS_ENABLED = _env_bool("WELCOME_CREDITS_ENABLED", False)
 ```
+Also add `WELCOME_CREDITS_ENABLED=0` to `backend/.env.example` for discoverability. The default is already `False`, so the hard wall is **live on merge** with no per-env action; set `1` to re-enable credits later. (`from django.conf import settings` is **already imported** in `client/utils.py:5`, so Step 2 needs no new import.)
 
 - [ ] **Step 2: Gate the grant**
 
