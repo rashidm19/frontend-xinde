@@ -668,7 +668,7 @@ const PaywallPageComponent = () => {
   return (
     <>
       <Dialog open>
-        <DialogContent className='fixed left-1/2 top-1/2 flex h-auto w-[1280rem] -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center [&_button[data-radix-dialog-close]]:hidden'>
+        <DialogContent className='fixed left-1/2 top-1/2 flex h-auto w-[1280rem] -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center [&>button]:hidden'>
           <PricesModal showClose={false} onSelectPlan={handlePlanSelect} promoMessage={promoMessage} promoError={promoError} planDiscounts={planDiscounts} />
         </DialogContent>
       </Dialog>
@@ -681,7 +681,7 @@ const PaywallPage = withHydrationGuard(PaywallPageComponent);
 
 export default PaywallPage;
 ```
-> **Hide the desktop close button — the `[&_button[data-radix-dialog-close]]:hidden` selector is a no-op.** Radix `DialogClose` adds no such attribute (the trick is already dead in `GlobalSubscriptionPaywall.tsx:76`). `showClose={false}` drops `PricesModal`'s own `DialogClose`, but the shadcn `DialogContent` also renders a **built-in** close button — read `src/components/ui/dialog.tsx`, find the built-in close (an `absolute right-* top-*` button), and hide it via a matching selector on the `DialogContent` className; **verify visually** that no `✕` remains. (The wall is already non-dismissible — the `Dialog` has no `onOpenChange`, so X/Esc/overlay-click no-op — this only removes a dead, confusing button.)
+> **Hiding the desktop close button (two sources):** (1) `showClose={false}` drops `PricesModal`'s own `DialogClose`; (2) the shadcn `DialogContent` *also* renders a built-in `<DialogPrimitive.Close className='absolute right-4 top-4 …'>` as a **direct child** (`src/components/ui/dialog.tsx:44`) — the `[&>button]:hidden` arbitrary variant on the `DialogContent` className above hides it (PricesModal renders a `<section>`, not a direct-child button, so nothing else is affected). The old `[&_button[data-radix-dialog-close]]:hidden` trick is a no-op (no such attribute exists) — don't use it. **Verify visually** no `✕` remains. (The wall is already non-dismissible: the `Dialog` has no `onOpenChange`.)
 
 - [ ] **Step 2: Typecheck**
 
