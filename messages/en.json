@@ -305,6 +305,8 @@
       "answerYes": "Yes",
       "answerNo": "Continue without",
       "confirm": "Confirm purchase",
+      "activatingTitle": "Activating…",
+      "activating": "Confirming your payment, one moment…",
       "paymentSuccessTitle": "Payment confirmed",
       "paymentSuccess": "Your subscription is active. Enjoy your studies!",
       "paymentFailureTitle": "Payment not completed",

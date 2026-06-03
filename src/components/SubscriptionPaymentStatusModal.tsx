@@ -11,23 +11,39 @@ import { useCustomTranslations } from '@/hooks/useCustomTranslations';
 import { useMediaQuery } from 'usehooks-ts';
 import { withHydrationGuard } from '@/hooks/useHasMounted';
 import { BottomSheetHeader } from '@/components/mobile/MobilePageHeader';
+import { GET_orders_id } from '@/api/GET_orders_id';
+
+const ORDER_ID_KEY = 'sb_checkout_order_id';
+const POLL_INTERVAL_MS = 1500;
+const POLL_MAX_ATTEMPTS = 12;
+
+const delay = (ms: number) => new Promise<void>(resolve => setTimeout(resolve, ms));
+
+async function pollOrderPaid(orderId: string): Promise<void> {
+  for (let attempt = 0; attempt < POLL_MAX_ATTEMPTS; attempt++) {
+    try {
+      const order = await GET_orders_id(orderId);
+      if (order.status === 'paid') return;
+    } catch {
+      // transient; keep polling
+    }
+    await delay(POLL_INTERVAL_MS);
+  }
+}
 
 const SubscriptionPaymentStatusModalComponent = () => {
   const searchParams = useSearchParams();
   const { t: tPrices, tActions } = useCustomTranslations('pricesModal');
   const [isOpen, setIsOpen] = React.useState(false);
   const [status, setStatus] = React.useState<'success' | 'failure' | null>(null);
+  const [isActivating, setIsActivating] = React.useState(false);
   const isMobile = useMediaQuery('(max-width: 767px)');
 
   React.useEffect(() => {
-    if (typeof window === 'undefined') {
-      return;
-    }
+    if (typeof window === 'undefined') return;
 
     const statusParam = searchParams?.get('subscribePaymentStatus');
-    if (!statusParam) {
-      return;
-    }
+    if (!statusParam) return;
 
     const normalizedStatus = statusParam === 'true' || statusParam === 'success' ? 'success' : 'failure';
     setStatus(normalizedStatus);
@@ -37,32 +53,51 @@ const SubscriptionPaymentStatusModalComponent = () => {
     url.searchParams.delete('subscribePaymentStatus');
     window.history.replaceState(null, '', url.toString());
 
-    if (normalizedStatus === 'success') {
-      refreshSubscriptionAndBalance().catch(() => {
-        // Background refresh; errors will be handled elsewhere by the app.
-      });
-    }
+    if (normalizedStatus !== 'success') return;
+
+    let cancelled = false;
+    const orderId = window.sessionStorage.getItem(ORDER_ID_KEY);
+
+    (async () => {
+      setIsActivating(true);
+      try {
+        if (orderId) await pollOrderPaid(orderId);
+        if (!cancelled) await refreshSubscriptionAndBalance();
+      } catch {
+        // refresh errors are non-fatal; the (app) gate re-resolves on next nav
+      } finally {
+        window.sessionStorage.removeItem(ORDER_ID_KEY);
+        if (!cancelled) setIsActivating(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
   }, [searchParams]);
 
-  const handleOpenChange = React.useCallback(
-    (open: boolean) => {
-      if (!open) {
-        setIsOpen(false);
-        setStatus(null);
-      }
-    },
-    []
-  );
+  const handleOpenChange = React.useCallback((open: boolean) => {
+    if (!open) {
+      setIsOpen(false);
+      setStatus(null);
+    }
+  }, []);
 
-  if (!status) {
-    return null;
-  }
+  if (!status) return null;
 
   const isSuccess = status === 'success';
-  const title = isSuccess ? tPrices('promo.paymentSuccessTitle') : tPrices('promo.paymentFailureTitle');
-  const description = isSuccess ? tPrices('promo.paymentSuccess') : tPrices('promo.paymentFailure');
+  const title = isActivating
+    ? tPrices('promo.activatingTitle')
+    : isSuccess
+      ? tPrices('promo.paymentSuccessTitle')
+      : tPrices('promo.paymentFailureTitle');
+  const description = isActivating
+    ? tPrices('promo.activating')
+    : isSuccess
+      ? tPrices('promo.paymentSuccess')
+      : tPrices('promo.paymentFailure');
 
-  const confirmButton = (
+  const confirmButton = isActivating ? null : (
     <button
       type='button'
       onClick={() => handleOpenChange(false)}
@@ -77,19 +112,12 @@ const SubscriptionPaymentStatusModalComponent = () => {
       <BottomSheet open={isOpen} onOpenChange={handleOpenChange}>
         <BottomSheetContent aria-labelledby='subscription-payment-status-title'>
           <div className='flex min-h-0 flex-1 flex-col overflow-hidden'>
-            <BottomSheetHeader
-              title={title}
-              subtitle={description}
-              closeLabel={tActions('ok')}
-              onClose={() => handleOpenChange(false)}
-            />
-
+            <BottomSheetHeader title={title} subtitle={description} closeLabel={tActions('ok')} onClose={() => handleOpenChange(false)} />
             <ScrollArea className='flex-1 px-[20rem]'>
               <div className='pb-[24rem] text-center'>
                 <p className='text-[15rem] leading-tight text-d-black/80'>{description}</p>
               </div>
             </ScrollArea>
-
             <div className='border-t border-gray-100 bg-white/95 px-[20rem] pb-[calc(16rem+env(safe-area-inset-bottom))] pt-[16rem] shadow-[0_-4px_16px_rgba(15,23,42,0.08)]'>
               {confirmButton}
             </div>

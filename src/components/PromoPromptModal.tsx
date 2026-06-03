@@ -119,6 +119,14 @@ const PromoPromptModalComponent = ({ open, planId, onClose, onBackToPlans, onDis
 
     await ensurePaymentScript(order);
 
+    if (typeof window !== 'undefined') {
+      try {
+        window.sessionStorage.setItem('sb_checkout_order_id', String(order.orderId));
+      } catch {
+        // sessionStorage unavailable; the (app) gate remains the backstop.
+      }
+    }
+
     window.halyk?.pay({
       invoiceId,
       amount: order.amount,

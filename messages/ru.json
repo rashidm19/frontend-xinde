@@ -303,6 +303,8 @@
       "answerYes": "Да",
       "answerNo": "Нет",
       "confirm": "Подтвердить покупку",
+      "activatingTitle": "Активация…",
+      "activating": "Подтверждаем оплату, одну секунду…",
       "paymentSuccessTitle": "Оплата прошла успешно",
       "paymentSuccess": "Подписка активирована. Приятной подготовки!",
       "paymentFailureTitle": "Оплата не завершена",
