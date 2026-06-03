@@ -7,9 +7,7 @@ import type { ReactNode } from 'react';
 import Error503 from '@/app/[locale]/(public)/Error503/page';
 import HydrateOnly from '@/app/_providers/HydrateOnly';
 import { ME_QUERY_KEY, SUBSCRIPTION_QUERY_KEY, BALANCE_QUERY_KEY } from '@/lib/queryKeys';
-import { getMe } from '@/lib/auth/getMe';
-import { getBalance } from '@/lib/subscription/getBalance';
-import { getSubscription } from '@/lib/subscription/getSubscription';
+import { getMeCached, getSubscriptionCached, getBalanceCached } from '@/lib/funnel/serverData';
 import { UpstreamServiceError } from '@/lib/api/errors';
 import { sanitizeNextPath } from '@/lib/auth/safeRedirect';
 import type { IBillingBalance, IClientSubscription } from '@/types/Billing';
@@ -38,7 +36,7 @@ export default async function ProtectedLayout({ children, params }: ProtectedLay
   let me: User | null = null;
 
   try {
-    me = await getMe();
+    me = await getMeCached();
   } catch (error) {
     if (error instanceof UpstreamServiceError) {
       serviceUnavailable = true;
@@ -65,7 +63,7 @@ export default async function ProtectedLayout({ children, params }: ProtectedLay
   let subscription: IClientSubscription | null = null;
   let balance: IBillingBalance | null = null;
 
-  const [subscriptionResult, balanceResult] = await Promise.allSettled([getSubscription(), getBalance()]);
+  const [subscriptionResult, balanceResult] = await Promise.allSettled([getSubscriptionCached(), getBalanceCached()]);
 
   if (subscriptionResult.status === 'fulfilled') {
     subscription = subscriptionResult.value;
