@@ -163,6 +163,7 @@ export default function OnboardingPage({ params }: PageProps) {
   const headingId = useId();
   const formId = useId();
   const schemaRequestedRef = useRef(false);
+  const isFinishingRef = useRef(false);
 
   const fetchSchema = useCallback(async () => {
     schemaRequestedRef.current = true;
@@ -181,6 +182,7 @@ export default function OnboardingPage({ params }: PageProps) {
   }, []);
 
   const stepParam = searchParams.get('step');
+  const nextParam = searchParams.get('next');
   const hasQueryStep = Boolean(stepParam);
 
   const questions = useMemo(() => {
@@ -218,6 +220,7 @@ export default function OnboardingPage({ params }: PageProps) {
   useEffect(() => {
     if (profileStatus !== 'success') return;
     if (!profile?.onboarding_completed) return;
+    if (isFinishingRef.current) return; // handleFinish owns post-finish navigation (preserves next)
     router.replace(`/${locale}/dashboard`);
   }, [profileStatus, profile?.onboarding_completed, router, locale]);
 
@@ -300,6 +303,7 @@ export default function OnboardingPage({ params }: PageProps) {
   };
 
   const handleFinish = async () => {
+    isFinishingRef.current = true;
     if (isSubmitting) return;
     if (!schema || schemaLoading) {
       setToastMessage(t('onboarding.errors.submitFailed'));
@@ -334,7 +338,8 @@ export default function OnboardingPage({ params }: PageProps) {
         }
       }
 
-      router.push(`/${locale}/dashboard`);
+      const destination = nextParam && nextParam.startsWith(`/${locale}`) ? nextParam : `/${locale}/dashboard`;
+      router.push(destination);
     } catch (error) {
       if (error instanceof OnboardingSubmitError && error.code === 'schema_version_conflict') {
         await fetchSchema();
