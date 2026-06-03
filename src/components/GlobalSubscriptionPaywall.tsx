@@ -43,7 +43,7 @@ const GlobalSubscriptionPaywallComponent = () => {
     if (isOpen && isMobile) {
       setPaywallOpen(false);
       NProgress.start();
-      router.push(`/${locale}/pricing`);
+      router.push(`/${locale}/paywall`);
     }
   }, [isOpen, isMobile, locale, router, setPaywallOpen]);
 
