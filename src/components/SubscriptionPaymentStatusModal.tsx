@@ -53,10 +53,15 @@ const SubscriptionPaymentStatusModalComponent = () => {
     url.searchParams.delete('subscribePaymentStatus');
     window.history.replaceState(null, '', url.toString());
 
+    // Consume the stashed orderId exactly once — clear it on BOTH success and failure,
+    // so a failed payment can't leave a stale id that a later 100%-promo redemption
+    // (which sets the success param but never re-stashes an id) would poll for ~18s.
+    const orderId = window.sessionStorage.getItem(ORDER_ID_KEY);
+    window.sessionStorage.removeItem(ORDER_ID_KEY);
+
     if (normalizedStatus !== 'success') return;
 
     let cancelled = false;
-    const orderId = window.sessionStorage.getItem(ORDER_ID_KEY);
 
     (async () => {
       setIsActivating(true);
@@ -66,7 +71,6 @@ const SubscriptionPaymentStatusModalComponent = () => {
       } catch {
         // refresh errors are non-fatal; the (app) gate re-resolves on next nav
       } finally {
-        window.sessionStorage.removeItem(ORDER_ID_KEY);
         if (!cancelled) setIsActivating(false);
       }
     })();
