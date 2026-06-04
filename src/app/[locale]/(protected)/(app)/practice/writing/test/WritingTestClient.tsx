@@ -9,6 +9,7 @@ import React from 'react';
 import { useForm } from 'react-hook-form';
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
+import { handleEntitlementLapseFromError } from '@/lib/funnel/handleEntitlementLapse';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useCustomTranslations } from '@/hooks/useCustomTranslations';
@@ -60,6 +61,7 @@ function WritingTestClient({ practiceId }: WritingTestClientProps) {
       setSubmitError(tMessages('unexpectedError'));
     } catch (error) {
       setIsPending(false);
+      if (await handleEntitlementLapseFromError(error, router)) return;
       setSubmitError(tMessages('unexpectedError'));
     }
   }

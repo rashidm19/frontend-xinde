@@ -22,6 +22,7 @@ import { MissingDataFallback } from '@/components/MissingDataFallback';
 import type { PracticeReadingContent, PracticeReadingPart, PracticeReadingResult } from '@/types/PracticeReading';
 
 import { useRouter } from 'next/navigation';
+import { handleEntitlementLapse } from '@/lib/funnel/handleEntitlementLapse';
 import { useCustomTranslations } from '@/hooks/useCustomTranslations';
 import { PracticeLeaveGuard } from '@/components/PracticeLeaveGuard';
 import { useMediaQuery } from 'usehooks-ts';
@@ -151,6 +152,7 @@ function Page({ params }: { params: { id: string } }) {
       const result = response.data;
       void router.push(`/practice/reading/results/${result.id}`);
     } else {
+      if (await handleEntitlementLapse({ status: response.status, message: (response.data as unknown as { message?: unknown })?.message }, router)) return;
       void router.push('/error500');
     }
   }

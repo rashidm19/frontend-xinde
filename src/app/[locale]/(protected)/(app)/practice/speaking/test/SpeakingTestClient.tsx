@@ -6,6 +6,7 @@ import { PracticeLeaveGuard } from '@/components/PracticeLeaveGuard';
 import { WritingFeedbackHeader } from '@/components/practice/WritingFeedbackHeader';
 import { useCustomTranslations } from '@/hooks/useCustomTranslations';
 import { useRouter } from 'next/navigation';
+import { handleEntitlementLapseFromError } from '@/lib/funnel/handleEntitlementLapse';
 import dynamic from 'next/dynamic';
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
@@ -47,6 +48,7 @@ export default function SpeakingTestClient({ practiceId, practicePart }: Speakin
       })
       .catch(error => {
         console.error('[speaking] failed to begin practice attempt', error);
+        void handleEntitlementLapseFromError(error, router);
         if (mounted) {
           setAttemptId(null);
         }
