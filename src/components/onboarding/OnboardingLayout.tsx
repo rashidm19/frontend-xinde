@@ -18,9 +18,10 @@ export interface OnboardingLayoutProps {
   announcement?: string;
   headingRef?: MutableRefObject<HTMLHeadingElement | null>;
   headingId?: string;
+  loading?: boolean;
 }
 
-export function OnboardingLayout({ heading, description, supportingText, children, footer, progress, className, announcement, headingRef, headingId }: OnboardingLayoutProps) {
+export function OnboardingLayout({ heading, description, supportingText, children, footer, progress, className, announcement, headingRef, headingId, loading = false }: OnboardingLayoutProps) {
   const prefersReducedMotion = useReducedMotion();
 
   const illustrationVariants = useMemo(
@@ -76,15 +77,24 @@ export function OnboardingLayout({ heading, description, supportingText, childre
         <div className='relative my-auto flex w-full max-w-[500rem] flex-col gap-[18rem] rounded-[24rem] bg-white px-[24rem] pb-[24rem] pt-[28rem] shadow-[0_22rem_60rem_-50rem_rgba(15,23,42,0.45)] ring-1 ring-slate-100 tablet:max-h-[calc(100svh-96rem)] tablet:overflow-hidden tablet:px-[32rem] tablet:pb-[30rem] tablet:pt-[32rem]'>
           {progress ? <div aria-live='polite'>{progress}</div> : null}
           <header className='flex flex-col gap-[8rem]'>
-            <h1
-              ref={headingRef ?? undefined}
-              id={headingId}
-              tabIndex={-1}
-              className='text-[26rem] font-semibold leading-[1.2] text-slate-900 outline-none desktop:text-[30rem]'
-            >
-              {heading}
-            </h1>
-            {description ? <p className='text-[14rem] leading-[1.6] text-slate-500'>{description}</p> : null}
+            {loading ? (
+              <>
+                <div className='h-[32rem] w-3/4 animate-pulse rounded-[8rem] bg-slate-100' />
+                <div className='h-[18rem] w-1/2 animate-pulse rounded-[8rem] bg-slate-100' />
+              </>
+            ) : (
+              <>
+                <h1
+                  ref={headingRef ?? undefined}
+                  id={headingId}
+                  tabIndex={-1}
+                  className='text-[26rem] font-semibold leading-[1.2] text-slate-900 outline-none desktop:text-[30rem]'
+                >
+                  {heading}
+                </h1>
+                {description ? <p className='text-[14rem] leading-[1.6] text-slate-500'>{description}</p> : null}
+              </>
+            )}
           </header>
           <div className='flex flex-1 flex-col gap-[14rem] pr-[4rem] tablet:pr-0'>{children}</div>
           {footer ? <footer className='mt-auto pt-[14rem]'>{footer}</footer> : null}

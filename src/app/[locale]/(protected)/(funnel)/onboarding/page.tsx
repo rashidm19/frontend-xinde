@@ -371,6 +371,7 @@ export default function OnboardingPage({ params }: PageProps) {
       heading={heading}
       description={subheading}
       supportingText={supportingText}
+      loading={schemaLoading}
       progress={<StepProgress currentStep={currentStepIndex + 1} totalSteps={totalSteps} label={progressLabel} />}
       headingRef={headingRef}
       headingId={headingId}
