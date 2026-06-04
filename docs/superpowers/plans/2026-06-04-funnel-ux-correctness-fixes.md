@@ -168,10 +168,12 @@ const GlobalSubscriptionPaywallComponent = () => {
 export const GlobalSubscriptionPaywall = withHydrationGuard(GlobalSubscriptionPaywallComponent);
 ```
 > Notes: `z-[8889]` sits just above the overlay tier (`8888`) seen elsewhere; the `PromoPromptModal`'s own `BottomSheet`/`Dialog` portals render above it. `PricingPlansView`'s `motion.main`/`min-h-dvh` is the full-screen surface; the `bg-white` wrapper just covers app chrome behind it. `onBack` makes it dismissible (voluntary).
+> **Deliberate departure from spec Fix #1** ("don't wrap in `fixed inset-0`"): that guidance was for the dedicated `/paywall` *route* where document flow fills the screen. Here `GlobalSubscriptionPaywall` is mounted at the app root (`Providers.tsx`), so the overlay **must** be `fixed` to cover the live dashboard. No `overflow-y-auto` on the wrapper (the spec's double-scroll footgun) — `PricingPlansView`'s inner `flex-1 overflow-y-auto` owns scroll. Do NOT "fix" this back to an unwrapped view.
+> **Keep `withHydrationGuard`** here (unlike Task 6, which drops it on `/pricing`): the overlay's open state comes from the Zustand store, and the guard avoids briefly rendering the full-screen overlay mid-hydration before the store settles — a different concern than `/pricing`'s media-query flash.
 
 - [ ] **Step 2: Typecheck + build.** `npx tsc --noEmit` (no errors), then `npm run build` (succeeds; confirms no leftover references to the removed `useRouter`/`useLocale`/`Router`/`NProgress`).
 
-- [ ] **Step 3: Manual check (dev).** `npm run dev`, mobile width, trigger "Upgrade" on the dashboard → an in-place plan view opens (URL stays `/dashboard`), is dismissible (back), and selecting a plan opens the promo modal. Desktop still opens the Dialog.
+- [ ] **Step 3: Manual check (dev).** `npm run dev`, mobile width, trigger "Upgrade" on the dashboard → an in-place plan view opens (URL stays `/dashboard`), is dismissible (back), and selecting a plan opens the promo modal. On a short viewport, confirm the full plan list **scrolls** (inner scroll region, not clipped by the fixed wrapper). Desktop still opens the Dialog.
 
 - [ ] **Step 4: Commit.**
 ```bash
@@ -532,7 +534,7 @@ git commit -m "fix(onboarding): stable heading skeleton during schema load (no s
   - [ ] #1: mobile "Upgrade" → in-place dismissible plan view (URL stays `/dashboard`); desktop → Dialog; funnel `/paywall` (unentitled) unchanged.
   - [ ] #2: non-subscriber exhausts practice → practice **finish** routes to `/paywall`; non-subscriber with **0 practice / >0 mock** → practice finish opens the **voluntary modal** (no wall bounce); active subscriber with 0 mock → mock start opens the voluntary modal. Verify reading/listening (resolved-400) AND writing/speaking/mock (thrown-400) paths.
   - [ ] #3: backend 5xx → `(app)`/`(funnel)` render `Error503` (not a 500); a deliberate page render error still surfaces as a real error.
-  - [ ] #4: complete a payment → land on `/dashboard?subscribePaymentStatus=true` → "Activating…" → admitted with **no `/paywall` flash**.
+  - [ ] #4: complete a payment → land on `/dashboard?subscribePaymentStatus=true` → "Activating…" → admitted with **no `/paywall` flash**, and the status modal does **not** double-navigate (no re-`replace`) once on `/dashboard`.
   - [ ] #5: logged-in AND logged-out `/pricing` render plans on first paint, no blank/swap blank; desktop close works.
   - [ ] #6: onboarding finish honors a valid `next`, ignores a malicious one.
   - [ ] #7: onboarding entry shows a stable skeleton, no heading settle; full submit flow works.
