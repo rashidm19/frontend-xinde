@@ -1,18 +1,18 @@
 # Funnel UX & correctness fixes (#1–#7)
 
 - **Date:** 2026-06-04
-- **Status:** Draft for review
-- **Scope:** The seven bugs found in the funnel UX audit of the just-shipped gate (`login→onboarding→paywall→app`). Frontend-only **except #2's discriminator depends on backend message strings** (no backend code change). The plan-count flash (originally also listed) was already fixed in `b120b00`.
-- **Related:** `2026-06-02-funnel-gating-architecture-design.md` (the funnel design these bugs were found in).
+- **Status:** Draft — revised after a second spec review (corrections folded into #1–#5; #4 re-framed).
+- **Scope:** The seven bugs from the funnel UX audit of the shipped gate (`login→onboarding→paywall→app`). Frontend-only; #2's discriminator matches backend message strings (no backend code change). The plan-count flash was already fixed in `b120b00`; the post-pay `/paywall` strand was already self-healed in `0a73b50`.
+- **Related:** `2026-06-02-funnel-gating-architecture-design.md`.
 
 ## Summary of fixes
 
 | # | Bug | Severity | Effort | Depends on |
 |---|---|---|---|---|
 | 1 | Mobile "Upgrade" CTA round-trips and does nothing | 🔴 functional | S–M | — |
-| 2 | Entitlement-lapse 400 is never routed (mock-vs-practice) | 🔴 functional | M | #1 |
+| 2 | Entitlement-lapse 400 not routed on residual paths | 🔴 functional | M | #1 |
 | 3 | Gates 500 instead of `Error503` on backend outage | 🟠 robustness | S | — |
-| 4 | Just-paid user can get stuck on `/paywall` (webhook lag) | 🟠 functional | S–M | — |
+| 4 | Smooth the post-pay `/paywall` bounce (already self-healed) | 🟡 polish | S | — |
 | 5 | Public `/pricing` blank/swap flashes | 🟡 UX | M | — |
 | 6 | Onboarding `next` uses a weaker check than `sanitizeNextPath` | 🟡 consistency | XS | — |
 | 7 | Onboarding schema "preparing"/heading settle | 🟡 UX | L | — |
@@ -23,64 +23,75 @@
 
 ## Fix #1 — give mobile voluntary upgrade an in-place, dismissible surface
 
-**Problem:** the mobile "Upgrade" CTA does nothing. `openPaywall()` (voluntary trigger) fires from `handleUpgradeClick` (`src/app/[locale]/(protected)/(app)/dashboard/_components/MobileDashboardPage.tsx:374`) and the upsell modal (`src/components/modals/UiModalManager.tsx:263`). On mobile, `GlobalSubscriptionPaywall` reacts with `router.push('/${locale}/paywall')` (`GlobalSubscriptionPaywall.tsx:42-48`). But `/paywall` is the **involuntary** funnel gate — the `(funnel)` layout redirects any *entitled* user back to `/dashboard`. Anyone on the dashboard is entitled, so the CTA round-trips `/dashboard → /paywall → /dashboard`. Desktop works (in-place modal).
+**Problem:** the mobile "Upgrade" CTA does nothing. `openPaywall()` fires from `handleUpgradeClick` (`MobileDashboardPage.tsx:374`) and the upsell modal (`UiModalManager.tsx:263`). On mobile, `GlobalSubscriptionPaywall` reacts with `router.push('/${locale}/paywall')` (`GlobalSubscriptionPaywall.tsx:42-48`). But `/paywall` is the **involuntary** funnel gate — the `(funnel)` layout redirects any *entitled* user back to `/dashboard`. Anyone on the dashboard is entitled, so the CTA round-trips `/dashboard → /paywall → /dashboard`. Desktop works (in-place modal).
 
-**Root cause:** the gated funnel `/paywall` was made to serve both the involuntary gate *and* (Task 11's mobile redirect) the voluntary upgrade. Incompatible: the gate ejects entitled users, but voluntary upgrade is *for* entitled users (e.g. practice credits but 0 mock credits topping up). Voluntary upgrade needs a **non-gated** surface.
+**Root cause:** the gated funnel `/paywall` was made to serve both the involuntary gate *and* (Task 11's mobile redirect) the voluntary upgrade. Incompatible: the gate ejects entitled users, but voluntary upgrade is *for* entitled users. Voluntary upgrade needs a **non-gated** surface.
 
-**Design:** make `GlobalSubscriptionPaywall` render an in-place overlay on **both** breakpoints (it already does on desktop).
-- Remove the mobile `router.push('/${locale}/paywall')` effect. **Caution (verify):** only delete the imports/effects that exist *solely* for that push — there is a separate `Router.events`/`NProgress` route-progress effect in this file; check whether it's still used (it may be `next/router` dead code under App Router) before removing `useRouter`/`useLocale`/`NProgress`/`next/router`.
-- When `isPaywallOpen && isMobile`: render a **dismissible full-screen overlay** (`fixed inset-0 overflow-y-auto`, appropriate z-index) containing the extracted `PricingPlansView` with `onBack = () => setPaywallOpen(false)` (voluntary ⇒ must be dismissible).
+**Design:** make `GlobalSubscriptionPaywall` render an in-place surface on **both** breakpoints (it already does on desktop).
+- **Remove** the mobile `router.push('/${locale}/paywall')` effect. **Confirmed dead imports to delete with it:** `useRouter`, `useLocale`, `next/router`'s `Router`, and `NProgress` — `Router.events` never fires under App Router (dead code), and `NProgress` is used only in that dead effect + the removed push. (The `nprogress` *package* stays; ~20 other files use it.)
+- When `isPaywallOpen && isMobile`: render `PricingPlansView` **exactly as `/paywall/page.tsx` does** — its `motion.main`/`min-h-dvh` IS the full-screen surface and its `transform` already contains the `fixed` footer, so **do not** wrap it in a redundant `fixed inset-0 overflow-y-auto` (double-scroll). Pass `onBack = () => setPaywallOpen(false)` (voluntary ⇒ dismissible). Add a high z-index only if app chrome bleeds through.
 - When `isPaywallOpen && !isMobile`: keep the existing `<Dialog>` + `<PricesModal>`.
-- Both feed the existing `PromoPromptModal`. Checkout-return (Task 12 sessionStorage `orderId` + poll) already works wherever `pay()` is invoked.
+- **Ungate `PromoPromptModal`:** it is currently rendered **only** in the `!isMobile` branch (`GlobalSubscriptionPaywall.tsx:82-94`), so on mobile selecting a plan would do nothing. Render it **unconditionally** — it is internally responsive (`BottomSheet` on mobile, `Dialog` on desktop). Checkout-return (Task 12) works wherever `pay()` is invoked.
 - `GlobalSubscriptionPaywall` gains the paywall page's data wiring: `usePricingPlans()` (`activePlans`/`status`) + `useCustomTranslations('pricesModal')` (`t.raw('demo.includes')`/`'premium.includes'`).
 
 **Files:** Modify `src/components/GlobalSubscriptionPaywall.tsx`.
 
-**Edge cases:** funnel `/paywall` + its gate unchanged; mobile overlay dismissible; `PricingPlansView` is a `motion.main` with `min-h-dvh` + a `fixed` footer — verify it renders cleanly nested in the overlay (z-index/scroll).
+**Edge cases:** funnel `/paywall` + gate unchanged; the mobile surface is dismissible; `GlobalSubscriptionPaywall` is globally mounted (`Providers.tsx:56`), so the overlay can fire anywhere `openPaywall()` is called (today: dashboard + upsell).
 
-**Optional follow-up (out of scope):** extract a shared `PlanSelection` component (data wiring + desktop `PricesModal`/mobile `PricingPlansView` + `PromoPromptModal`), parameterized by `dismissible`, consumed by both the funnel `/paywall` page and `GlobalSubscriptionPaywall`. DRY but larger.
+**Optional follow-up (out of scope):** extract a shared `PlanSelection` component consumed by both the `/paywall` page and `GlobalSubscriptionPaywall`, parameterized by `dismissible`. DRY but larger.
 
 ---
 
-## Fix #2 — route the entitlement-lapse 400 (distinguish mock vs practice)
+## Fix #2 — route the entitlement-lapse 400 (the residual paths)
 
-**Problem:** funnel spec §4.1 required the frontend to handle the backend's entitlement 400 from practice/mock start-or-submit, but **no task implemented it** (verified: no such handling in the practice/mock client code). A user whose credits lapse mid-session sees a raw backend error on their next action and is only re-gated on the next *navigation*.
+**Problem (scope corrected):** the backend returns a 400 from practice/mock start-or-submit when entitlement is missing. The **common** no-credits case is **already** pre-empted at entry by `useSubscriptionGate('practice'|'mock')` (`hooks/useSubscriptionGate.ts:28-38`, called from the rules/start pages), which opens the voluntary modal *before* the request. So this fix targets the **residual**: the lapse/race window (credits run out between the gate check and the POST, or a stale client cache) and the **practice-finish / speaking-begin** paths that don't re-run the gate.
 
-**Root cause:** entitlement is enforced server-side at the practice/mock start/submit endpoints (returns 400), but the client never inspects that 400 to route the user.
+**Two error-handling shapes — must handle BOTH (there are no `useMutation`s; all inline `await`):**
+- **Resolved, no throw:** reading & listening finish call `axiosInstance.post(..., { validateStatus: () => true })` (`ReadingTestClient.tsx:195`, `reading/test/[id]/page.tsx:146`, `ListeningTestClient.tsx:147`) — axios **resolves** the 400; an `isAxiosError`/`onError` approach would never see it. They currently route non-200 → `/error500`.
+- **Thrown:** writing finish (`WritingTestClient.tsx:53`), speaking **begin** on-mount (`SpeakingTestClient.tsx:36`, the `_begin` call), and mock start (`mock/page.tsx:167`, `MockBySections.tsx:30`) throw an `AxiosError`.
 
-**Design:** a shared helper that discriminates the two backend messages (exact strings, verified):
-- **Practice** 400 → `"Practice requires active subscription or practice balance"` ⇒ the user is genuinely **unentitled** ⇒ `router.push('/${locale}/paywall')` (they're now `!entitled`, so the funnel gate renders the wall — no bounce).
-- **Mock** 400 → `"Mock access requires available mock balance"` ⇒ the user may still be **entitled** (active sub / practice credits) but lacks *mock* credits ⇒ `openPaywall()` (the **voluntary** in-app upgrade — fixed by #1), **not** the funnel `/paywall` (which would bounce them).
-- Any other 400/error ⇒ existing generic handling (toast/rethrow), unchanged.
+**Design:** one helper taking an extracted `{ status, message }` from **either** a thrown `AxiosError` **or** a resolved `AxiosResponse`, routing by **refreshed entitlement** (NOT by which message):
 
 ```ts
-// src/lib/funnel/handleEntitlementError.ts (shape)
-const PRACTICE_LAPSE = 'Practice requires active subscription or practice balance';
-const MOCK_LAPSE = 'Mock access requires available mock balance';
-export function handleEntitlementError(error: unknown, ctx: { router; locale: string; openPaywall: () => void }): boolean {
-  const msg = axios.isAxiosError(error) && error.response?.status === 400 ? error.response?.data?.message : null;
-  if (msg === PRACTICE_LAPSE) { ctx.router.push(`/${ctx.locale}/paywall`); return true; }
-  if (msg === MOCK_LAPSE) { ctx.openPaywall(); return true; }
-  return false; // not an entitlement lapse — caller handles normally
+// src/lib/funnel/handleEntitlementLapse.ts
+const LAPSE_MESSAGES = new Set([
+  'Practice requires active subscription or practice balance', // practice/views.py:574,822,1026,1315
+  'Mock access requires available mock balance',               // mock/views.py:206
+]);
+
+// returns true iff it recognized & handled an entitlement lapse
+export async function handleEntitlementLapse(
+  signal: { status?: number; message?: unknown },
+  ctx: { router: AppRouterInstance; locale: string; openPaywall: () => void },
+): Promise<boolean> {
+  if (signal.status !== 400 || typeof signal.message !== 'string' || !LAPSE_MESSAGES.has(signal.message)) return false;
+  await refreshSubscriptionAndBalance();                          // get the truth post-lapse
+  const { subscription, balance } = useSubscriptionStore.getState();
+  if (isEntitled(subscription, balance)) ctx.openPaywall();       // still entitled → voluntary modal, NOT the gated wall
+  else ctx.router.push(`/${ctx.locale}/paywall`);                 // genuinely unentitled → funnel wall (no bounce)
+  return true;
 }
 ```
 
-**Files:** new `src/lib/funnel/handleEntitlementError.ts`; wire it into the `onError` of every practice/mock **start** and **submit** mutation (reading/listening/writing finish, speaking begin, mock start). **Implementation must enumerate the exact call sites** (grep the practice/mock client mutations) — they weren't touched by the funnel work.
+**Critical correction — route by refreshed `isEntitled`, not by message.** A non-subscriber with `practice_balance=0` but `mock_balance>0` gets the *practice* 400 yet is still `isEntitled` (mock credits); pushing `/paywall` would make the `(funnel)` gate bounce them right back (`can_start_practice` ignores mock credits — `payments/services.py:28-41` — but `isEntitled` doesn't). So for **both** messages: refresh, then `entitled ⇒ openPaywall()`, `!entitled ⇒ /paywall`.
+
+**Wiring (~7 sites, two shapes):**
+- *Resolved branch* — call the helper in each existing non-200 branch **before** the `/error500` fallback: `ReadingTestClient.tsx:195`, `reading/test/[id]/page.tsx:146`, `ListeningTestClient.tsx:147`.
+- *Thrown branch* — call it in `catch` before existing handling: `WritingTestClient.tsx:53`, `SpeakingTestClient.tsx:36` (the `_begin` mount effect — **NOT** `/finish` or `/send/speaking`, which don't enforce), `mock/page.tsx:167`, `MockBySections.tsx:30`.
+- Ignore the dead `POST_practice_speaking_id_start.ts` (no importers).
 
 **Edge cases / caveats:**
-- **Brittle by message string.** The backend returns fixed English strings; matching on them is fragile (any backend wording change breaks it). Acceptable today (strings are stable); a machine-readable error code would be the robust long-term fix (backend change, out of scope) — note it.
-- Depends on **#1** (the mock path calls `openPaywall()`, which must work on mobile).
-- Subscribers are **not** debited for practice but **are** blocked from mock without mock credits — that asymmetry is exactly why the two messages must route differently (don't bounce a paying subscriber to the funnel wall).
+- **Exact-string match.** Any other 400 (e.g. speaking's `"Unsupported part value"`, `practice/views.py:1313`) falls through to existing handling. Brittle to backend wording changes — a machine error-code is the robust long-term fix (backend change, out of scope).
+- **Depends on #1** (the entitled branch calls `openPaywall()`).
+- For mock-start it largely duplicates `useSubscriptionGate`; it only fires there on the cache-staleness race. The genuinely-uncovered paths are practice-finish + speaking-begin.
 
 ---
 
-## Fix #3 — gates degrade to `Error503` on backend outage (mirror the parent)
+## Fix #3 — gates degrade to `Error503` on backend outage
 
-**Problem:** the `(app)`/`(funnel)` gate layouts call `getSubscriptionCached()`/`getBalanceCached()` with **no try/catch**, and there is **no `error.tsx`** anywhere in the app tree (verified). If a fetch rejects at the gate (backend 5xx/timeout, or a render-ordering edge), the result is an unhandled **500** instead of the parent's graceful `Error503`.
+**Problem:** the `(app)`/`(funnel)` gates call `getSubscriptionCached()`/`getBalanceCached()` with **no try/catch**, and there is **no `error.tsx`** anywhere in the app tree (verified). If a fetch rejects at the gate, the result is an unhandled **500** instead of the parent's graceful `Error503`.
 
-**Root cause:** entitlement fetches are fallible (`UpstreamServiceError`), but only the parent `(protected)/layout.tsx` treats them as such.
-
-**Design:** make the two gates handle `UpstreamServiceError` exactly like the parent — catch → render `Error503`; re-throw anything else (so genuine code bugs are NOT mislabeled "service unavailable").
+**Design:** wrap each gate's existing single `Promise.all([...])` in try/catch — on `UpstreamServiceError` render `Error503`; re-throw anything else (so genuine code bugs are NOT mislabeled "service unavailable"). *(Note: the parent layout uses a richer `getMe`-alone + `Promise.allSettled`+flag pattern; the gates don't need that split since all three values feed `resolveFunnelStage` together — a single guarded `Promise.all` is correct here. So "wrap the existing `Promise.all`," not literally "mirror the parent.")*
 
 ```tsx
 import { UpstreamServiceError } from '@/lib/api/errors';
@@ -95,27 +106,25 @@ try {
   [me, subscription, balance] = await Promise.all([getMeCached(), getSubscriptionCached(), getBalanceCached()]);
 } catch (error) {
   if (error instanceof UpstreamServiceError) return <Error503 />;
-  throw error; // genuine bugs surface as real errors, not a misleading 503
+  throw error;
 }
-// ...resolveFunnelStage({ me, subscription, balance }) + redirect as before (redirect stays OUTSIDE the try)
+// ...resolveFunnelStage(...) + redirect as before — redirect stays OUTSIDE the try
 ```
-(Catch always returns or throws ⇒ TS treats the three as definitely-assigned afterward. `redirect()` throws an internal Next signal, so it must stay OUTSIDE the try — it already runs after the fetch block.)
+(Catch always returns or throws ⇒ TS treats the three as definitely-assigned afterward — verified. `redirect()` throws an internal Next signal, so it stays outside the try; the `(funnel)` gate's extra post-fetch logic — `screenFromPath` + its redirects — is unaffected since only the fetch is wrapped.)
 
-**Why not a catch-all `error.tsx`:** one that always renders `Error503` would catch real page bugs and mislabel them "service unavailable," masking defects. Mirroring the parent's precise `UpstreamServiceError`-only handling is correct.
+**Why not a catch-all `error.tsx`:** one that always renders `Error503` would catch real page bugs and mislabel them "service unavailable," masking defects.
 
 **Files:** Modify `(app)/layout.tsx` and `(funnel)/layout.tsx`.
 
-**Edge cases:** `redirect()` outside try/catch; non-upstream errors re-throw; cached fetchers are cache hits on success (no extra fetch).
-
 ---
 
-## Fix #4 — don't bounce a just-paid user off `/paywall` during the webhook window
+## Fix #4 — smooth the post-pay `/paywall` bounce (refinement; already self-healed)
 
-**Problem:** after a successful EPay payment the browser returns to the backend's static `EPAY_BACK_LINK` = app-root `?subscribePaymentStatus=true` → `next.config` redirects to `/{locale}/dashboard?subscribePaymentStatus=true`. The `(app)` gate runs *before* the client mounts; if the async `postLink` webhook hasn't granted entitlement yet, the gate sees `!entitled` and bounces to `/paywall?next=/{locale}/dashboard?subscribePaymentStatus=true` — burying the param in `next=`. The global `SubscriptionPaymentStatusModal` reads the **top-level** `?subscribePaymentStatus`, so on `/paywall` it never fires → no poll → the user is **stuck on the wall** until they manually navigate.
+**Status (corrected):** the "stuck on `/paywall`" failure is **already fixed** by `0a73b50` (the spawned follow-up), which made `SubscriptionPaymentStatusModal` read the `subscribePaymentStatus` param **nested inside `next=`** (`cameFromNext`), poll, refresh, and `router.replace` off the wall. So this is **not a stranding bug** — it's a **polish refinement**: avoid the bounce *entirely* rather than bounce to `/paywall` and self-heal back.
 
-**Root cause:** the gate bounces during the payment-confirmation window, before the client-side poll/refresh can run, and the bounce relocates the signal param out of top-level scope.
+**Flow (verified):** EPay → backend static `EPAY_BACK_LINK` = `https://app.ieltsgg.com?subscribePaymentStatus=true` → `/` → `next.config` redirect `/`→`/{locale}/dashboard`. **Next.js forwards the query** (a `redirects()` whose destination has no query passes the incoming query through — verified) ⇒ the `(app)` gate sees `/{locale}/dashboard?subscribePaymentStatus=true` (`middleware.ts:92` puts the query in `x-sb-original-url`). If the webhook hasn't landed, the gate bounces to `/paywall?next=…` and the modal's `cameFromNext` path recovers — but the user sees a `/paywall` flash.
 
-**Design:** **(app) gate payment-return grace.** If the incoming URL carries `subscribePaymentStatus=true`, skip the `!entitled` bounce and let the page render; the global `SubscriptionPaymentStatusModal` then mounts on the landing page, reads the top-level param, polls `GET /orders/{id}` until `paid`, calls `refreshSubscriptionAndBalance()`, and strips the param. Once entitled, normal gating resumes on the next navigation.
+**Design (refinement):** **(app) gate payment-return grace** — skip the `!entitled` bounce when the URL carries `subscribePaymentStatus=true`, so the user stays on `/dashboard` and the modal polls there via the **top-level** param.
 
 ```tsx
 // (app)/layout.tsx — alongside the existing originalUrl handling
@@ -125,79 +134,68 @@ if (stage !== 'app' && !paymentReturning) {
 }
 ```
 
-**Files:** Modify `(app)/layout.tsx` (only — the landing is `/dashboard`).
+**Reconcile with `0a73b50`:** with the grace the user is never bounced, so the modal's `cameFromNext` branch won't trigger; the top-level-param branch handles the poll on `/dashboard`. Complementary — but verify the modal doesn't also navigate when already on the landing page (no double-nav).
+
+**Files:** Modify `(app)/layout.tsx`.
 
 **Edge cases / tradeoff:**
-- **Cosmetic bypass:** appending `?subscribePaymentStatus=true` lets an unentitled user render the landing chrome once. Bounded: the backend enforces entitlement per action (can't start practice/mock without credits/sub), and the modal strips the param so any refresh/next-nav re-gates. Acceptable.
-- **Stricter alternative (noted, not chosen):** a short-lived signed `payment_pending` cookie set just before `window.halyk.pay()` and read by the gate — more secure, more work. The URL-param grace is the simpler frontend-only fix.
-- **Supersedes** the earlier spawned "checkout-return webhook-lag" follow-up task.
+- **Cosmetic bypass:** appending `?subscribePaymentStatus=true` renders the landing chrome once for an unentitled user. Bounded — backend enforces per-action; the modal strips the top-level param so refresh/next-nav re-gates.
+- **Lower priority** now that `0a73b50` prevents real stranding — this purely smooths the flash. Skip if not worth the (small) gate change.
 
 ---
 
 ## Fix #5 — public `/pricing` blank/swap flashes
 
-**Problem:** the public `(public)/pricing/page.tsx` still uses the pre-fix pattern (Radix `Dialog` + `useMediaQuery` + `withHydrationGuard` + client-only `usePricingPlans`), so it has the same blank-frame and desktop→mobile swap flashes the funnel paywall had. (The desktop *count*-jump is already mitigated by the `PricesModal` skeleton shipped in `b120b00`, which `/pricing` also uses.)
+**Problem:** `(public)/pricing/page.tsx` still uses the pre-fix pattern (`Dialog` + `useMediaQuery` + `withHydrationGuard` + client-only `usePricingPlans`), so it has the blank-frame + desktop→mobile swap flashes. (The desktop *count*-jump is already mitigated by the `PricesModal` skeleton from `b120b00`, which `/pricing` also uses.)
 
-**Root cause:** `/pricing` wasn't migrated when the funnel `/paywall` was rebuilt flash-free.
+**Design:** mirror the funnel paywall treatment, keeping `/pricing` **dismissible**:
+- Add `(public)/pricing/layout.tsx` that prefetches plans (`getPlans`, extended per the caveat below) and hydrates → no client-fetch flash.
+- Rewrite the page to drop `withHydrationGuard` + `useMediaQuery` for a CSS `tablet:` split (desktop `PricesModal`, mobile `PricingPlansView` with `onBack = () => router.back()`).
+- **Keeping the desktop `Dialog` shell is viable** (the flash comes from `useMediaQuery`/`withHydrationGuard`, **not** the Dialog) — and probably simpler than inventing a non-Dialog close, since `/pricing` must stay dismissible. Decide during implementation.
 
-**Design:** mirror the funnel paywall treatment onto `/pricing`, keeping `/pricing` **dismissible** (it's a navigable marketing route, not a hard wall):
-- Add `(public)/pricing/layout.tsx` that best-effort prefetches plans (`getPlans`) and hydrates — eliminates the client-fetch flash **for logged-in visitors**.
-- Rewrite the page to drop `withHydrationGuard` + `useMediaQuery` in favor of a CSS `tablet:` split (desktop `PricesModal`, mobile `PricingPlansView` with `onBack = () => router.back()`).
-- Keep a dismiss affordance on desktop (a close/back control or keep a `Dialog` shell for `/pricing` only — decide during implementation; unlike the hard wall, `/pricing` should be closable).
+**Caveat (corrected — was wrong):** the plans endpoint `/billing/subscriptions/plans` (`payments/views.py:789`) is **public** — no `auth=ClientAuth()`; returns 200 with no token (verified). The logged-out limitation is *only* that `getPlans.ts:53` short-circuits to `null` without a cookie/token. So **logged-out prefetch is achievable**: add a token-less branch to `getPlans` (or a small anonymous fetcher). This fully fixes the flash for the marketing/logged-out audience (the main remaining audience for `/pricing` post-#1) — materially higher value than the earlier "logged-in only" framing.
 
-**Caveat (important):** the plans endpoint is under `/billing` (`ClientAuth`). For **logged-out** visitors `getPlans` returns `null` (no token) and the client fetch is also unauthenticated — so the prefetch only helps **logged-in** visitors; logged-out behavior is unchanged (and may already show no plans). Lower priority because, post-#1, in-app voluntary upgrades use the modal (not `/pricing`), so `/pricing`'s main remaining audience is marketing/logged-out where prefetch can't help.
-
-**Files:** new `(public)/pricing/layout.tsx`; modify `(public)/pricing/page.tsx`.
+**Files:** new `(public)/pricing/layout.tsx`; modify `(public)/pricing/page.tsx`; extend `src/lib/subscription/getPlans.ts` (token-less branch).
 
 ---
 
 ## Fix #6 — onboarding `next` uses the hardened sanitizer
 
-**Problem:** onboarding finish navigates with `nextParam && nextParam.startsWith('/${locale}')` (`(funnel)/onboarding/page.tsx`, ~the `handleFinish` destination). The gates use the hardened `sanitizeNextPath` (rejects `//`, the login path, off-locale). Not an actual open redirect (the browser normalizes; `//evil` fails `startsWith('/en')`), just inconsistent and weaker.
+**Problem:** onboarding finish navigates with `nextParam && nextParam.startsWith('/${locale}')` (`(funnel)/onboarding/page.tsx:341`). The gates use the hardened `sanitizeNextPath` (rejects `//`, login path, off-locale). Not an actual open redirect, just inconsistent/weaker.
 
-**Design:** reuse the shared sanitizer:
+**Design:**
 ```ts
 import { sanitizeNextPath } from '@/lib/auth/safeRedirect';
-// ...
 const destination = sanitizeNextPath(nextParam, locale) ?? `/${locale}/dashboard`;
 router.push(destination);
 ```
 
-**Files:** Modify `(funnel)/onboarding/page.tsx`. Trivial, low risk.
+**Files:** Modify `(funnel)/onboarding/page.tsx`. Trivial; strictly stronger; ready.
 
 ---
 
 ## Fix #7 — onboarding schema "preparing"/heading settle (lowest priority)
 
-**Problem:** the onboarding page fetches its schema client-side into local `useState`, so on entry it briefly shows a "preparing…" placeholder and the heading/progress can settle (i18n fallback → backend title) if the backend schema diverges from the i18n defaults. Unlike the paywall's old wrong-content flash, this is a *proper* loading state — hence lowest priority.
+**Problem:** the page fetches its schema client-side into local `useState`, so on entry it briefly shows "preparing…" and the heading/progress can settle (i18n fallback → backend title) if the schema diverges from the i18n defaults. A *proper* loading state (not wrong content) — hence lowest priority.
 
-**Root cause:** schema isn't prefetched; `getOnboardingSchema` is `'use client'` (axios) and the page holds schema in local state, not React Query.
+**Design (proper, higher-effort):** server-prefetch the schema, mirroring `getPlans`: (1) a server-side schema fetch; (2) `(funnel)/onboarding/layout.tsx` prefetch+hydrate; (3) refactor the page to read schema via `useQuery(['onboarding-schema'], …)` instead of local `useState` + manual fetch — preserving the retry + `schema_version` conflict-refetch. **Risk:** step 3 reworks load-bearing state (`useOnboardingMachine` wiring, `schemaRequestedRef`, version-conflict). **Requires runtime QA**; do it last.
 
-**Design (proper, higher-effort):** make schema available on first paint, mirroring the plans prefetch:
-1. Add a server-side schema fetch (`getOnboardingSchema` server variant, modeled on `getPlans.ts` — native fetch + cookie, returns the schema or `null`).
-2. Add `(funnel)/onboarding/layout.tsx` that prefetches `['onboarding-schema']` and hydrates.
-3. Refactor the page to read the schema via `useQuery(['onboarding-schema'], …)` instead of local `useState` + manual fetch — preserving the existing retry and `schema_version` conflict-refetch behavior.
+**Lighter alternative (recommended):** render a stable heading/progress **skeleton** during `schemaLoading` instead of the i18n→backend text swap. The heading text originates from `OnboardingLayout`'s `heading` prop (computed in the page), so apply the skeleton in `OnboardingLayout` (or pass a sentinel). Low-risk, no machine/refs/version changes.
 
-**Risk:** step 3 reworks load-bearing onboarding state (the `useOnboardingMachine` wiring, `schemaRequestedRef`, version-conflict path). **Requires runtime QA** (a working backend) — do it last and verify the full onboarding submit flow.
-
-**Lighter alternative (low-risk, partial):** keep the client load but render a stable heading/progress **skeleton** during `schemaLoading` instead of the i18n→backend text swap. Eliminates the visible settle without the refactor.
-
-**Files:** (proper) new server schema fetch + `(funnel)/onboarding/layout.tsx` + refactor `(funnel)/onboarding/page.tsx`. (lighter) modify `(funnel)/onboarding/page.tsx` + `OnboardingLayout` only.
-
-**Recommendation:** ship the **lighter alternative** unless/until there's appetite for the refactor + runtime QA.
+**Files:** (lighter) `(funnel)/onboarding/page.tsx` + `OnboardingLayout.tsx`. (proper) + server fetch + `(funnel)/onboarding/layout.tsx`.
 
 ---
 
 ## Out of scope (ops, not a code fix)
-- **Deploy coordination:** `WELCOME_CREDITS_ENABLED=False` must be set per-env and the FE + BE shipped together, or the hard wall silently won't engage. (Tracked in project notes.)
+- **Deploy coordination:** `WELCOME_CREDITS_ENABLED=False` per-env + ship FE/BE together, or the hard wall silently won't engage.
 
 ## Testing / verification
 - `npx tsc --noEmit` + `npm run build` green after each fix.
-- **#1** (staging, entitled mobile user): "Upgrade" opens an **in-place, dismissible** overlay (URL unchanged); plan select → promo/checkout; desktop still opens its Dialog; funnel `/paywall` (unentitled) still the non-dismissible wall.
-- **#2** (staging): exhaust practice credits → next practice start/submit routes to `/paywall`; an active subscriber with 0 mock credits → mock start opens the **voluntary** upgrade modal, **not** the funnel wall.
-- **#3:** backend 5xx → `(app)`/`(funnel)` routes render `Error503`, not a 500; a deliberate page render error still surfaces as a real error.
-- **#4** (staging): complete a payment → land on `/dashboard?subscribePaymentStatus=true` → "Activating…" → admitted (no `/paywall` strand); failure path shows the error.
-- **#5:** logged-in `/pricing` renders plans on first paint, no blank/swap; logged-out unchanged.
-- **#6:** unit-coverable — `sanitizeNextPath` already tested; verify onboarding finish honors a valid `next` and ignores a malicious one.
-- **#7:** onboarding entry shows no heading/progress settle (proper fix) or a stable skeleton (lighter); full submit flow still works.
-- Pure gate logic is unchanged, so existing vitest stays green; the rest is integration/RSC verified by build + manual QA.
+- **#1** (entitled mobile user): "Upgrade" opens an **in-place, dismissible** surface (URL unchanged); plan select → promo/checkout works on mobile; desktop still opens its Dialog; funnel `/paywall` (unentitled) unchanged.
+- **#2** (staging): exhaust practice credits as a non-subscriber → practice finish routes to `/paywall`; a non-subscriber with **0 practice but >0 mock** credits → practice finish opens the **voluntary** modal (not the wall, no bounce); active subscriber with 0 mock → mock start opens the voluntary modal. Verify reading/listening (resolved-400) AND writing/speaking/mock (thrown-400) paths both route.
+- **#3:** backend 5xx → `(app)`/`(funnel)` render `Error503`, not a 500; a deliberate page render error still surfaces as a real error.
+- **#4** (staging): complete a payment → `/dashboard?subscribePaymentStatus=true` → "Activating…" → admitted with **no `/paywall` flash**; modal doesn't double-navigate.
+- **#5:** logged-in AND logged-out `/pricing` render plans on first paint, no blank/swap.
+- **#6:** verify finish honors a valid `next` and ignores a malicious one (`sanitizeNextPath` is already unit-tested).
+- **#7:** no heading/progress settle (proper) or a stable skeleton (lighter); full submit flow still works.
+- Pure gate logic unchanged ⇒ existing vitest stays green; the rest is integration/RSC verified by build + manual QA.
