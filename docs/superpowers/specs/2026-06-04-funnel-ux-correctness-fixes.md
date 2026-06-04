@@ -1,7 +1,7 @@
 # Funnel UX & correctness fixes (#1–#7)
 
 - **Date:** 2026-06-04
-- **Status:** Draft — revised after a second spec review (corrections folded into #1–#5; #4 re-framed).
+- **Status:** Implementation-ready — 3 spec-review rounds; final verdict "ship it" (only the `/pricing` layout-already-exists note + `promoMessage`/mock-catch wiring details remained, now folded in).
 - **Scope:** The seven bugs from the funnel UX audit of the shipped gate (`login→onboarding→paywall→app`). Frontend-only; #2's discriminator matches backend message strings (no backend code change). The plan-count flash was already fixed in `b120b00`; the post-pay `/paywall` strand was already self-healed in `0a73b50`.
 - **Related:** `2026-06-02-funnel-gating-architecture-design.md`.
 
@@ -32,7 +32,7 @@
 - When `isPaywallOpen && isMobile`: render `PricingPlansView` **exactly as `/paywall/page.tsx` does** — its `motion.main`/`min-h-dvh` IS the full-screen surface and its `transform` already contains the `fixed` footer, so **do not** wrap it in a redundant `fixed inset-0 overflow-y-auto` (double-scroll). Pass `onBack = () => setPaywallOpen(false)` (voluntary ⇒ dismissible). Add a high z-index only if app chrome bleeds through.
 - When `isPaywallOpen && !isMobile`: keep the existing `<Dialog>` + `<PricesModal>`.
 - **Ungate `PromoPromptModal`:** it is currently rendered **only** in the `!isMobile` branch (`GlobalSubscriptionPaywall.tsx:82-94`), so on mobile selecting a plan would do nothing. Render it **unconditionally** — it is internally responsive (`BottomSheet` on mobile, `Dialog` on desktop). Checkout-return (Task 12) works wherever `pay()` is invoked.
-- `GlobalSubscriptionPaywall` gains the paywall page's data wiring: `usePricingPlans()` (`activePlans`/`status`) + `useCustomTranslations('pricesModal')` (`t.raw('demo.includes')`/`'premium.includes'`).
+- `GlobalSubscriptionPaywall` gains the paywall page's data wiring: `usePricingPlans()` (`activePlans`/`status`) + `useCustomTranslations('pricesModal')` (`t.raw('demo.includes')`/`'premium.includes'`). It currently tracks only `promoError` — also add `promoMessage` state (or pass `null`), which `PricingPlansView`/`PricesModal` expect.
 
 **Files:** Modify `src/components/GlobalSubscriptionPaywall.tsx`.
 
@@ -77,7 +77,7 @@ export async function handleEntitlementLapse(
 
 **Wiring (~7 sites, two shapes):**
 - *Resolved branch* — call the helper in each existing non-200 branch **before** the `/error500` fallback: `ReadingTestClient.tsx:195`, `reading/test/[id]/page.tsx:146`, `ListeningTestClient.tsx:147`.
-- *Thrown branch* — call it in `catch` before existing handling: `WritingTestClient.tsx:53`, `SpeakingTestClient.tsx:36` (the `_begin` mount effect — **NOT** `/finish` or `/send/speaking`, which don't enforce), `mock/page.tsx:167`, `MockBySections.tsx:30`.
+- *Thrown branch* — call it before existing handling: `WritingTestClient.tsx:53` (in its `catch`); `SpeakingTestClient.tsx:36` (the `_begin` mount effect's `.catch()` — **NOT** `/finish` or `/send/speaking`, which don't enforce); `mock/page.tsx:167` + `MockBySections.tsx:30` (these currently use `try/finally` with **no catch** — add one).
 - Ignore the dead `POST_practice_speaking_id_start.ts` (no importers).
 
 **Edge cases / caveats:**
@@ -149,13 +149,13 @@ if (stage !== 'app' && !paymentReturning) {
 **Problem:** `(public)/pricing/page.tsx` still uses the pre-fix pattern (`Dialog` + `useMediaQuery` + `withHydrationGuard` + client-only `usePricingPlans`), so it has the blank-frame + desktop→mobile swap flashes. (The desktop *count*-jump is already mitigated by the `PricesModal` skeleton from `b120b00`, which `/pricing` also uses.)
 
 **Design:** mirror the funnel paywall treatment, keeping `/pricing` **dismissible**:
-- Add `(public)/pricing/layout.tsx` that prefetches plans (`getPlans`, extended per the caveat below) and hydrates → no client-fetch flash.
+- **Extend the existing** `(public)/pricing/layout.tsx` (it's currently metadata-only — **preserve its `generateMetadata` export**) to prefetch plans (`getPlans`, extended per the caveat below) and hydrate → no client-fetch flash.
 - Rewrite the page to drop `withHydrationGuard` + `useMediaQuery` for a CSS `tablet:` split (desktop `PricesModal`, mobile `PricingPlansView` with `onBack = () => router.back()`).
 - **Keeping the desktop `Dialog` shell is viable** (the flash comes from `useMediaQuery`/`withHydrationGuard`, **not** the Dialog) — and probably simpler than inventing a non-Dialog close, since `/pricing` must stay dismissible. Decide during implementation.
 
-**Caveat (corrected — was wrong):** the plans endpoint `/billing/subscriptions/plans` (`payments/views.py:789`) is **public** — no `auth=ClientAuth()`; returns 200 with no token (verified). The logged-out limitation is *only* that `getPlans.ts:53` short-circuits to `null` without a cookie/token. So **logged-out prefetch is achievable**: add a token-less branch to `getPlans` (or a small anonymous fetcher). This fully fixes the flash for the marketing/logged-out audience (the main remaining audience for `/pricing` post-#1) — materially higher value than the earlier "logged-in only" framing.
+**Caveat (corrected — was wrong):** the plans endpoint `/billing/subscriptions/plans` (`payments/views.py:789`) is **public** — no `auth=ClientAuth()`; returns 200 with no token (verified). The logged-out limitation is *only* that `getPlans.ts:54` short-circuits to `null` without a cookie/token. So **logged-out prefetch is achievable**: add a token-less branch to `getPlans` (or a small anonymous fetcher). This fully fixes the flash for the marketing/logged-out audience (the main remaining audience for `/pricing` post-#1) — materially higher value than the earlier "logged-in only" framing.
 
-**Files:** new `(public)/pricing/layout.tsx`; modify `(public)/pricing/page.tsx`; extend `src/lib/subscription/getPlans.ts` (token-less branch).
+**Files:** **extend** the existing `(public)/pricing/layout.tsx` (keep its `generateMetadata`); modify `(public)/pricing/page.tsx`; extend `src/lib/subscription/getPlans.ts` (token-less branch).
 
 ---
 
