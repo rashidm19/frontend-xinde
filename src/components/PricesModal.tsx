@@ -92,6 +92,14 @@ export const PricesModal = ({ onSelectPlan, promoMessage = null, promoError = nu
               </div>
             </div>
 
+            {subscriptionStatus === 'pending' &&
+              [0, 1].map(index => (
+                <div
+                  key={`plan-skeleton-${index}`}
+                  className='h-[430rem] w-[342rem] animate-pulse rounded-[16rem] bg-d-light-gray tablet:h-[500rem] tablet:w-[300rem] desktop:h-[500rem] desktop:w-[370rem]'
+                />
+              ))}
+
             {subscriptionStatus === 'success' &&
               activePlans.map((plan, index) => {
                 const isPrimaryPlan = index === 0;
