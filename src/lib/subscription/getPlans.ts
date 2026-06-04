@@ -51,10 +51,6 @@ export const getPlans = async (): Promise<ISubscriptionPlan[] | null> => {
 
   const authHeader = buildAuthHeader(authorizationHeader, tokenFromCookie);
 
-  if (!authHeader && !cookieHeader && !tokenFromCookie) {
-    return null;
-  }
-
   const requestHeaders = new Headers({ Accept: 'application/json' });
 
   if (cookieHeader) {

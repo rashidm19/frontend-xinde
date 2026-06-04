@@ -22,6 +22,7 @@ import { cn, transformStringToArrayV2, transformStringToArrayV4 } from '@/lib/ut
 import type { PracticeReadingContent, PracticeReadingPart, PracticeReadingResult } from '@/types/PracticeReading';
 
 import { useRouter } from 'next/navigation';
+import { handleEntitlementLapse } from '@/lib/funnel/handleEntitlementLapse';
 import { useCustomTranslations } from '@/hooks/useCustomTranslations';
 import { PracticeLeaveGuard } from '@/components/PracticeLeaveGuard';
 import { useMediaQuery } from 'usehooks-ts';
@@ -202,6 +203,7 @@ function ReadingTestClient({ practiceId }: ReadingTestClientProps) {
         void router.push(`/practice/reading/results/${result.id}`);
       } else {
         setIsPending(false);
+        if (await handleEntitlementLapse({ status: response.status, message: (response.data as unknown as { message?: unknown })?.message }, router)) return;
         void router.push('/error500');
       }
     } catch (error) {

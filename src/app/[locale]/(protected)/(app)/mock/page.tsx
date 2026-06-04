@@ -15,6 +15,7 @@ import { useSubscriptionGate } from '@/hooks/useSubscriptionGate';
 import { SubscriptionAccessLabel } from '@/components/SubscriptionAccessLabel';
 import { SubscriptionStatusBanner } from '@/components/SubscriptionStatusBanner';
 import { useSubscriptionStore } from '@/stores/subscriptionStore';
+import { handleEntitlementLapseFromError } from '@/lib/funnel/handleEntitlementLapse';
 
 const data_rows = [
   {
@@ -168,6 +169,8 @@ export default function Page() {
       setMockData(data);
       nProgress.start();
       router.push('/mock/exam/listening/rules');
+    } catch (error) {
+      await handleEntitlementLapseFromError(error, router);
     } finally {
       setIsLoading(false);
     }

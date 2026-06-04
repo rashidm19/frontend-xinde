@@ -5,6 +5,7 @@ import { mockStore } from '@/stores/mock';
 import nProgress from 'nprogress';
 import { useRouter } from 'next/navigation';
 import { useSubscriptionGate } from '@/hooks/useSubscriptionGate';
+import { handleEntitlementLapseFromError } from '@/lib/funnel/handleEntitlementLapse';
 import { SubscriptionAccessLabel } from '@/components/SubscriptionAccessLabel';
 
 export const MockBySections = () => {
@@ -31,6 +32,8 @@ export const MockBySections = () => {
       setMockData(data);
       nProgress.start();
       router.push(`/mock/exam/${part}/rules`);
+    } catch (error) {
+      await handleEntitlementLapseFromError(error, router);
     } finally {
       setIsLoadingPart(null);
     }

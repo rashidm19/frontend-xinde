@@ -8,14 +8,13 @@ import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { PricesModal } from '@/components/PricesModal';
 import { usePricingPlans } from '@/hooks/usePricingPlans';
 import { useMediaQuery } from 'usehooks-ts';
-import { withHydrationGuard } from '@/hooks/useHasMounted';
 import { PricingPlansView } from '@/components/PricingPlansView';
 
 interface PlanDiscounts {
   [planId: string]: { amount: number; currency: string };
 }
 
-const PricingPageComponent = () => {
+export default function PricingPage() {
   const router = useRouter();
   const isMobile = useMediaQuery('(max-width: 767px)', { initializeWithValue: false });
   const { t } = useCustomTranslations('pricesModal');
@@ -53,10 +52,6 @@ const PricingPageComponent = () => {
     />
   );
 
-  if (isMobile === undefined) {
-    return null;
-  }
-
   if (!isMobile) {
     return (
       <>
@@ -93,8 +88,4 @@ const PricingPageComponent = () => {
       {promoModal}
     </>
   );
-};
-
-const PricingPage = withHydrationGuard(PricingPageComponent);
-
-export default PricingPage;
+}
