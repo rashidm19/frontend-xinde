@@ -28,7 +28,8 @@ export default async function AppZoneLayout({ children, params }: { children: Re
   }
   const stage = resolveFunnelStage({ me, subscription, balance });
 
-  if (stage !== 'app') {
+  const paymentReturning = new URLSearchParams(originalUrl?.split('?')[1] ?? '').get('subscribePaymentStatus') === 'true';
+  if (stage !== 'app' && !paymentReturning) {
     redirect(pathForStage(stage, locale, sanitizeNextPath(originalUrl, locale)));
   }
 
