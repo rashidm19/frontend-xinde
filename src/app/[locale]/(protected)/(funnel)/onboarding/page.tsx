@@ -12,6 +12,7 @@ import type { BaseStepProps, OnboardingAnswers, OnboardingStepDefinition, Onboar
 import { useOnboardingMachine } from '@/hooks/useOnboardingMachine';
 import { useProfile } from '@/hooks/useProfile';
 import { completeOnboarding } from '@/lib/onboarding';
+import { sanitizeNextPath } from '@/lib/auth/safeRedirect';
 import { getOnboardingSchema } from '@/api/GET_onboarding_schema';
 import { OnboardingSubmitError } from '@/api/POST_onboarding_submit';
 import type { OnboardingSchemaQuestion, OnboardingSchemaResponse, OnboardingSubmitAnswer } from '@/types/OnboardingSchema';
@@ -338,7 +339,7 @@ export default function OnboardingPage({ params }: PageProps) {
         }
       }
 
-      const destination = nextParam && nextParam.startsWith(`/${locale}`) ? nextParam : `/${locale}/dashboard`;
+      const destination = sanitizeNextPath(nextParam, locale) ?? `/${locale}/dashboard`;
       router.push(destination);
     } catch (error) {
       if (error instanceof OnboardingSubmitError && error.code === 'schema_version_conflict') {
