@@ -278,8 +278,17 @@
         "week": "week",
         "month": "month",
         "year": "year"
+      },
+      "per": {
+        "day": "{count, plural, one{day} other{# days}}",
+        "week": "{count, plural, one{week} other{# weeks}}",
+        "month": "{count, plural, one{month} other{# months}}",
+        "year": "{count, plural, one{year} other{# years}}"
       }
     },
+    "perMonth": "≈{amount} {currency}/mo",
+    "save": "save {percent}%",
+    "bestValue": "best value",
     "mobileHeader": {
       "choosePlan": "Choose your plan",
       "choosePlanSubtitle": "Upgrade to get full access"

@@ -276,8 +276,17 @@
         "week": "неделя",
         "month": "месяц",
         "year": "год"
+      },
+      "per": {
+        "day": "{count, plural, one{день} few{# дня} many{# дней} other{# дня}}",
+        "week": "{count, plural, one{неделя} few{# недели} many{# недель} other{# недели}}",
+        "month": "{count, plural, one{месяц} few{# месяца} many{# месяцев} other{# месяца}}",
+        "year": "{count, plural, one{год} few{# года} many{# лет} other{# года}}"
       }
     },
+    "perMonth": "≈{amount} {currency}/мес",
+    "save": "выгода {percent}%",
+    "bestValue": "выгоднее всего",
     "mobileHeader": {
       "choosePlan": "Выберите план",
       "choosePlanSubtitle": "Оформите подписку, чтобы получить полный доступ"
