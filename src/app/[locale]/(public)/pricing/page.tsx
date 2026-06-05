@@ -4,22 +4,20 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useCustomTranslations } from '@/hooks/useCustomTranslations';
 import { PromoPromptModal } from '@/components/PromoPromptModal';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { PricesModal } from '@/components/PricesModal';
 import { usePricingPlans } from '@/hooks/usePricingPlans';
 import { useMediaQuery } from 'usehooks-ts';
-import { withHydrationGuard } from '@/hooks/useHasMounted';
 import { PricingPlansView } from '@/components/PricingPlansView';
 
 interface PlanDiscounts {
   [planId: string]: { amount: number; currency: string };
 }
 
-const PricingPageComponent = () => {
+export default function PricingPage() {
   const router = useRouter();
   const isMobile = useMediaQuery('(max-width: 767px)', { initializeWithValue: false });
   const { t } = useCustomTranslations('pricesModal');
-  const demoIncludes: string[] = t.raw('demo.includes');
   const premiumIncludes: string[] = t.raw('premium.includes');
   const { activePlans, status } = usePricingPlans();
 
@@ -53,10 +51,6 @@ const PricingPageComponent = () => {
     />
   );
 
-  if (isMobile === undefined) {
-    return null;
-  }
-
   if (!isMobile) {
     return (
       <>
@@ -69,6 +63,8 @@ const PricingPageComponent = () => {
           }}
         >
           <DialogContent className='fixed left-1/2 top-1/2 flex h-auto w-[1280rem] -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center backdrop-brightness-90'>
+            <DialogTitle className='sr-only'>{t('mobileHeader.choosePlan', { defaultValue: 'Choose your plan' })}</DialogTitle>
+            <DialogDescription className='sr-only'>{t('mobileHeader.choosePlanSubtitle', { defaultValue: 'Upgrade to get full access' })}</DialogDescription>
             <PricesModal onSelectPlan={handlePlanSelect} promoMessage={promoMessage} promoError={promoError} planDiscounts={planDiscounts} />
           </DialogContent>
         </Dialog>
@@ -80,7 +76,6 @@ const PricingPageComponent = () => {
   return (
     <>
       <PricingPlansView
-        demoIncludes={demoIncludes}
         premiumIncludes={premiumIncludes}
         activePlans={activePlans}
         status={status}
@@ -93,8 +88,4 @@ const PricingPageComponent = () => {
       {promoModal}
     </>
   );
-};
-
-const PricingPage = withHydrationGuard(PricingPageComponent);
-
-export default PricingPage;
+}

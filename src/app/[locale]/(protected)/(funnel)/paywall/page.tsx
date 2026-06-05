@@ -1,21 +1,22 @@
 'use client';
 
-import React, { useState } from 'react';
-import { useMediaQuery } from 'usehooks-ts';
+import { useState } from 'react';
 
-import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { PricesModal } from '@/components/PricesModal';
 import { PricingPlansView } from '@/components/PricingPlansView';
 import { PromoPromptModal } from '@/components/PromoPromptModal';
 import { usePricingPlans } from '@/hooks/usePricingPlans';
 import { useCustomTranslations } from '@/hooks/useCustomTranslations';
-import { withHydrationGuard } from '@/hooks/useHasMounted';
 
-const PaywallPageComponent = () => {
-  const isMobile = useMediaQuery('(max-width: 767px)', { initializeWithValue: false });
+// Hard-wall paywall. Plans are server-prefetched by the sibling layout, so the
+// full plan set is present on first paint. The desktop/mobile split is done with
+// CSS (`tablet:` = 768px, matching the old `max-width:767px` boundary) instead of
+// a JS media query, so there is no hydration guard, no blank frame, and no
+// desktop→mobile swap. No Dialog: the wall is a normal centered page (no overlay,
+// no dismiss affordance).
+export default function PaywallPage() {
   const { activePlans, status } = usePricingPlans();
   const { t } = useCustomTranslations('pricesModal');
-  const demoIncludes = t.raw('demo.includes') as string[];
   const premiumIncludes = t.raw('premium.includes') as string[];
 
   const [isPromoModalOpen, setPromoModalOpen] = useState(false);
@@ -36,25 +37,16 @@ const PaywallPageComponent = () => {
     setSelectedPlanId(null);
   };
 
-  const promoModal = (
-    <PromoPromptModal
-      open={isPromoModalOpen}
-      planId={selectedPlanId}
-      onClose={handlePromoClose}
-      onBackToPlans={handlePromoClose}
-      onDiscountUpdate={(planId, info) => setPlanDiscounts(prev => ({ ...prev, [planId]: info }))}
-      onSuccessMessage={setPromoMessage}
-      onErrorMessage={setPromoError}
-    />
-  );
+  return (
+    <>
+      {/* Desktop (≥768px): centered card grid, no modal chrome */}
+      <div className='hidden min-h-dvh w-full items-center justify-center overflow-auto bg-gradient-to-b from-white via-white to-slate-50 p-[40rem] tablet:flex'>
+        <PricesModal showClose={false} onSelectPlan={handlePlanSelect} promoMessage={promoMessage} promoError={promoError} planDiscounts={planDiscounts} />
+      </div>
 
-  if (isMobile === undefined) return null;
-
-  if (isMobile) {
-    return (
-      <>
+      {/* Mobile (<768px): full-screen stacked view */}
+      <div className='tablet:hidden'>
         <PricingPlansView
-          demoIncludes={demoIncludes}
           premiumIncludes={premiumIncludes}
           activePlans={activePlans}
           status={status}
@@ -63,23 +55,17 @@ const PaywallPageComponent = () => {
           promoMessage={promoMessage}
           promoError={promoError}
         />
-        {promoModal}
-      </>
-    );
-  }
+      </div>
 
-  return (
-    <>
-      <Dialog open>
-        <DialogContent className='fixed left-1/2 top-1/2 flex h-auto w-[1280rem] -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center [&>button]:hidden'>
-          <PricesModal showClose={false} onSelectPlan={handlePlanSelect} promoMessage={promoMessage} promoError={promoError} planDiscounts={planDiscounts} />
-        </DialogContent>
-      </Dialog>
-      {promoModal}
+      <PromoPromptModal
+        open={isPromoModalOpen}
+        planId={selectedPlanId}
+        onClose={handlePromoClose}
+        onBackToPlans={handlePromoClose}
+        onDiscountUpdate={(planId, info) => setPlanDiscounts(prev => ({ ...prev, [planId]: info }))}
+        onSuccessMessage={setPromoMessage}
+        onErrorMessage={setPromoError}
+      />
     </>
   );
-};
-
-const PaywallPage = withHydrationGuard(PaywallPageComponent);
-
-export default PaywallPage;
+}

@@ -3,7 +3,7 @@
 import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { useCustomTranslations } from '@/hooks/useCustomTranslations';
-import { normalizeInterval } from '@/lib/pricing';
+import { formatPeriod, perMonthPrice, savingsPct } from '@/lib/pricing';
 import { MobilePageHeader } from '@/components/mobile/MobilePageHeader';
 import type { ISubscriptionPlan } from '@/types/Billing';
 
@@ -31,7 +31,6 @@ const getCardBackground = (index: number) => {
 };
 
 export interface PricingPlansViewProps {
-  demoIncludes: string[];
   premiumIncludes: string[];
   activePlans: ISubscriptionPlan[];
   status: 'pending' | 'error' | 'success';
@@ -43,7 +42,6 @@ export interface PricingPlansViewProps {
 }
 
 export const PricingPlansView = ({
-  demoIncludes,
   premiumIncludes,
   activePlans,
   status,
@@ -55,29 +53,28 @@ export const PricingPlansView = ({
 }: PricingPlansViewProps) => {
   const { t, tActions, tImgAlts } = useCustomTranslations('pricesModal');
 
-  const getIntervalLabel = (interval?: string) => {
-    const intervalKey = normalizeInterval(interval);
-    const translationKey = `billing.interval.${intervalKey}`;
-    const translated = t(translationKey, { defaultValue: intervalKey });
-
-    return translated || intervalKey;
-  };
-
   const titleText = t('mobileHeader.choosePlan', { defaultValue: 'Choose your plan' });
   const subtitleText = t('mobileHeader.choosePlanSubtitle', { defaultValue: 'Upgrade to get full access' });
+
+  const bestPlanId = activePlans.length
+    ? String(activePlans.reduce((a, b) => (savingsPct(b, activePlans) > savingsPct(a, activePlans) ? b : a)).id)
+    : null;
 
   const planCards = useMemo(
     () =>
       activePlans.map((plan, index) => {
         const planFeatures = plan.features && plan.features.length ? plan.features : premiumIncludes;
         const priceLabel = `${CURRENCY_FORMATTER.format(plan.price)} ${plan.currency}`;
-        const intervalLabel = getIntervalLabel(plan.interval);
-        const discount = planDiscounts[String(plan.id)];
+        const planId = String(plan.id);
+        const intervalLabel = formatPeriod(plan.interval, plan.interval_count, t);
+        const pct = savingsPct(plan, activePlans);
+        const discount = planDiscounts[planId];
+        const isBest = planId === bestPlanId;
 
         return (
           <article
             key={plan.id}
-            className={`relative rounded-[24rem] border p-[24rem] shadow-[0_18rem_40rem_-32rem_rgba(15,23,42,0.45)] ${getCardBackground(index)} transition-transform hover:-translate-y-[2rem]`}
+            className={`relative rounded-[24rem] border p-[24rem] shadow-[0_18rem_40rem_-32rem_rgba(15,23,42,0.45)] ${getCardBackground(index)} transition-transform hover:-translate-y-[2rem]${isBest ? ' ring-2 ring-d-violet' : ''}`}
           >
             <div className='flex flex-col gap-[16rem]'>
               <header className='flex flex-col gap-[6rem]'>
@@ -86,6 +83,12 @@ export const PricingPlansView = ({
                   {priceLabel}
                   <span className='ml-[4rem] text-[14rem] font-medium text-slate-500'>/ {intervalLabel}</span>
                 </div>
+                {pct > 0 && !discount && (
+                  <p className='text-[13rem] font-medium text-d-green'>
+                    {t('perMonth', { amount: CURRENCY_FORMATTER.format(perMonthPrice(plan)), currency: plan.currency })} · {t('save', { percent: pct })}
+                  </p>
+                )}
+                {isBest && <p className='text-[13rem] font-semibold text-d-violet'>{t('bestValue')}</p>}
               </header>
 
               <ul className='flex flex-col gap-[10rem] text-[14rem] text-slate-600'>
@@ -113,7 +116,7 @@ export const PricingPlansView = ({
           </article>
         );
       }),
-    [activePlans, planDiscounts, premiumIncludes, t, tActions, tImgAlts, onPlanSelect]
+    [activePlans, planDiscounts, premiumIncludes, t, tActions, tImgAlts, onPlanSelect, bestPlanId]
   );
 
   return (
@@ -135,27 +138,11 @@ export const PricingPlansView = ({
 
       <div className='flex-1 overflow-y-auto px-[20rem] pb-[calc(120rem+env(safe-area-inset-bottom))] pt-[20rem]'>
         <section className='flex flex-col gap-[20rem]'>
-          <article className='rounded-[24rem] border border-slate-200 bg-white p-[24rem] shadow-[0_18rem_40rem_-32rem_rgba(15,23,42,0.1)]'>
-            <header className='flex flex-col gap-[6rem]'>
-              <h2 className='text-[20rem] font-semibold text-slate-900'>{t('demo.title')}</h2>
-              <p className='text-[16rem] font-medium text-slate-700'>{t('demo.price')}</p>
-            </header>
-            <ul className='mt-[16rem] flex flex-col gap-[10rem]'>
-              {demoIncludes.map((item, index) => (
-                <li key={`demo-${index}`} className='flex items-start gap-[12rem]'>
-                  <img src='/images/icon_check.svg' alt={tImgAlts('check')} className='mt-[3rem] size-[16rem]' />
-                  <span className='flex-1 text-[14rem] leading-[130%] text-slate-700'>{item}</span>
-                </li>
-              ))}
-            </ul>
-            <p className='mt-[16rem] text-[13rem] text-slate-500'>{t('demo.about')}</p>
-          </article>
-
           {status === 'success' ? planCards : null}
 
           {status === 'pending' ? (
             <div className='space-y-[16rem]'>
-              {[0, 1].map(index => (
+              {[0, 1, 2].map(index => (
                 <div key={index} className='h-[180rem] rounded-[24rem] bg-slate-100/70' />
               ))}
             </div>

@@ -7,6 +7,7 @@ import { useQuery } from '@tanstack/react-query';
 import { AnimatePresence, motion } from 'framer-motion';
 import { ArrowUp, Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { handleEntitlementLapse } from '@/lib/funnel/handleEntitlementLapse';
 import { useForm } from 'react-hook-form';
 import { useMediaQuery } from 'usehooks-ts';
 import { withHydrationGuard } from '@/hooks/useHasMounted';
@@ -153,6 +154,7 @@ function ListeningTestClient({ practiceId }: ListeningTestClientProps) {
           router.push(`/practice/listening/results/${response.data.id}`);
         } else {
           setIsPending(false);
+          if (await handleEntitlementLapse({ status: response.status, message: (response.data as unknown as { message?: unknown })?.message }, router)) return;
           router.push('/error500');
         }
       } catch (error) {

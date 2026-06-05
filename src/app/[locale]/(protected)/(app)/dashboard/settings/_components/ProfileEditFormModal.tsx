@@ -9,10 +9,9 @@ import { useProfileEditController } from './useProfileEditController';
 
 export const ProfileEditFormModal = () => {
   const closeRef = useRef<HTMLButtonElement>(null);
-  const { tImgAlts, tCommon, tActions } = useCustomTranslations();
+  const { tImgAlts, tActions } = useCustomTranslations();
   const {
     profile,
-    hasActiveSubscription,
     isProfileLoading,
     form,
     isChangingPassword,
@@ -37,7 +36,7 @@ export const ProfileEditFormModal = () => {
 
       {/* // * Avatar, status, name, email */}
       <div className='flex items-end gap-x-[16rem]'>
-        <ProfileAvatarManager badgeLabel={!hasActiveSubscription ? tCommon('freeTrial') : undefined} />
+        <ProfileAvatarManager />
         <div className='mb-[16rem] flex flex-col gap-y-[8rem]'>
           <div className='text-[24rem] font-medium leading-none'>{profile?.name}</div>
           <div className='font-poppins text-[14rem] leading-none'>{profile?.email}</div>
