@@ -46,7 +46,7 @@ export const PricesModal = ({ onSelectPlan, promoMessage = null, promoError = nu
   const offerActive = offer.active && Boolean(offer.expiresAt) && !expired;
 
   return (
-    <section className='relative flex w-full flex-col overflow-auto rounded-[40rem] bg-white p-[24rem] tablet:p-[32rem] desktop:p-[44rem]'>
+    <section className='relative flex w-full flex-col overflow-auto rounded-[40rem] bg-white px-[24rem] py-[20rem] tablet:px-[32rem] tablet:py-[24rem] desktop:px-[44rem] desktop:py-[28rem]'>
       {showClose && (
         <DialogClose className='absolute right-[24rem] top-[24rem] z-[200] shrink-0 rounded-full p-[6rem] transition hover:bg-slate-100 desktop:right-[40rem] desktop:top-[40rem]'>
           <img src='/images/icon_close--black.svg' alt={tImgAlts('close')} className='size-[24rem] shrink-0' />
