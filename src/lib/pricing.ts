@@ -44,7 +44,7 @@ export const perMonthPrice = (plan: PricingPlanLike): number => Math.round(plan.
 // Savings vs the priciest per-month plan (the 1-month plan), 0..100. 0 for the baseline.
 export const savingsPct = (plan: PricingPlanLike, plans: PricingPlanLike[]): number => {
   const baseline = Math.max(...plans.map(perMonthPrice));
-  if (!baseline) return 0;
+  if (!baseline || !Number.isFinite(baseline)) return 0; // empty plans -> Math.max() is -Infinity
   return Math.round((1 - perMonthPrice(plan) / baseline) * 100);
 };
 
