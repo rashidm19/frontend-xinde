@@ -12,9 +12,10 @@ interface PricesModalProps {
   promoMessage?: string | null;
   promoError?: string | null;
   planDiscounts?: Record<string, { amount: number; currency: string }>;
+  showClose?: boolean;
 }
 
-export const PricesModal = ({ onSelectPlan, promoMessage = null, promoError = null, planDiscounts = {} }: PricesModalProps) => {
+export const PricesModal = ({ onSelectPlan, promoMessage = null, promoError = null, planDiscounts = {}, showClose = true }: PricesModalProps) => {
   const { t, tImgAlts, tActions } = useCustomTranslations('pricesModal');
 
   const demoIncludes: string[] = t.raw('demo.includes');
@@ -47,9 +48,11 @@ export const PricesModal = ({ onSelectPlan, promoMessage = null, promoError = nu
   return (
     // <ScrollArea className='tablet:h-[684rem] tablet:w-[96dvw] desktop:h-[726rem] desktop:w-[1280rem]'>
     <section className='relative flex flex-col overflow-auto rounded-[40rem] bg-white p-[16rem] tablet:p-[28rem] desktop:p-[36rem]'>
-      <DialogClose className='absolute right-[24rem] top-[24rem] z-[200] shrink-0 desktop:right-[56rem] desktop:top-[56rem]'>
-        <img src='/images/icon_close--black.svg' alt={tImgAlts('close')} className='size-[24rem] shrink-0' />
-      </DialogClose>
+      {showClose && (
+        <DialogClose className='absolute right-[24rem] top-[24rem] z-[200] shrink-0 desktop:right-[56rem] desktop:top-[56rem]'>
+          <img src='/images/icon_close--black.svg' alt={tImgAlts('close')} className='size-[24rem] shrink-0' />
+        </DialogClose>
+      )}
 
       <div className='container relative z-10 flex flex-col items-center desktop:max-w-[1440rem]'>
         <div className='flex flex-col items-center'>

@@ -20,13 +20,13 @@ import { useLocale } from 'next-intl';
 import { useLogout } from '@/hooks/useLogout';
 
 // Lazy-load protected modals so public routes don't eagerly bundle authenticated-only UI.
-const ChangeLangModal = dynamic(() => import('@/app/[locale]/(protected)/dashboard/settings/_components/ChangeLangModal').then(module => module.ChangeLangModal), {
+const ChangeLangModal = dynamic(() => import('@/app/[locale]/(protected)/(app)/dashboard/settings/_components/ChangeLangModal').then(module => module.ChangeLangModal), {
   ssr: false,
   loading: () => null,
 });
 
 const ProfileEditFormModal = dynamic(
-  () => import('@/app/[locale]/(protected)/dashboard/settings/_components/ProfileEditFormModal').then(module => module.ProfileEditFormModal),
+  () => import('@/app/[locale]/(protected)/(app)/dashboard/settings/_components/ProfileEditFormModal').then(module => module.ProfileEditFormModal),
   { ssr: false, loading: () => null }
 );
 
