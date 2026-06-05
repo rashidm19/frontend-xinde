@@ -19,7 +19,7 @@ export const PrivacyFooter = () => {
         <Link href={`/${locale}/privacy`} className='hover:text-d-black'>
           Privacy
         </Link>
-        <Link href='mailto:info@ieltsgg.com' className='hover:text-d-black'>
+        <Link href='mailto:info@ieltsmock.cc' className='hover:text-d-black'>
           Contact
         </Link>
       </div>

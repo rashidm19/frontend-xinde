@@ -23,7 +23,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const ogLocale = params.locale === 'ru' ? 'ru_RU' : 'en_US';
 
   return {
-    metadataBase: new URL('https://www.ieltsgg.com'),
+    metadataBase: new URL('https://app.studybox.kz'),
     title: {
       template: '%s | Studybox',
       default: t('title'),
@@ -53,7 +53,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       siteName: 'Studybox',
       title: t('title'),
       description: t('description'),
-      url: 'https://www.ieltsgg.com',
+      url: 'https://app.studybox.kz',
       locale: ogLocale,
       images: [
         {

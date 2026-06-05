@@ -50,7 +50,7 @@ export const Referrals = () => {
             <span className='text-[14rem] font-semibold'>{tActions('copyInviteLink')}</span>
           </>
         )}
-        <input type='text' className='hidden' value='https://app.ieltsgg.com/registration?ref=1542345' id='ref-link' />
+        <input type='text' className='hidden' value='https://app.studybox.kz/registration?ref=1542345' id='ref-link' />
       </button>
     </section>
   );
