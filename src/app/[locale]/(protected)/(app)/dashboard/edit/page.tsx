@@ -1,6 +1,5 @@
 'use client';
 
-import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { useCustomTranslations } from '@/hooks/useCustomTranslations';
@@ -46,13 +45,12 @@ interface MobileEditProfileViewProps {
 }
 
 const MobileEditProfileView = ({ onNavigateBack }: MobileEditProfileViewProps) => {
-  const { tActions, tCommon } = useCustomTranslations();
+  const { tActions } = useCustomTranslations();
   const { t: tProfile } = useCustomTranslations('profileSettings.profileEditForm');
   const controller = useProfileEditController({ onClose: onNavigateBack });
 
   const {
     profile,
-    hasActiveSubscription,
     form,
     isChangingPassword,
     setIsChangingPassword,
@@ -64,8 +62,6 @@ const MobileEditProfileView = ({ onNavigateBack }: MobileEditProfileViewProps) =
     isDeleting,
     isProfileLoading,
   } = controller;
-
-  const badgeLabel = useMemo(() => (!hasActiveSubscription ? tCommon('freeTrial') : undefined), [hasActiveSubscription, tCommon]);
 
   if (isProfileLoading) {
     return null;
@@ -101,7 +97,7 @@ const MobileEditProfileView = ({ onNavigateBack }: MobileEditProfileViewProps) =
       <div className='flex-1 overflow-y-auto px-[20rem] pb-[24rem] pt-[20rem]'>
         <div className='flex flex-col gap-[24rem]'>
           <div className='flex flex-col items-center gap-[16rem] rounded-[20rem] border border-slate-100 bg-slate-50 px-[20rem] py-[24rem]'>
-            <ProfileAvatarManager badgeLabel={badgeLabel} />
+            <ProfileAvatarManager />
             <div className='text-center'>
               <p className='text-[18rem] font-semibold text-slate-900'>{profile?.name}</p>
               <p className='text-[14rem] text-slate-500'>{profile?.email}</p>
