@@ -179,12 +179,12 @@ export default function Page() {
         )}
       </main>
       <Dialog open={profileSettingsOpen} onOpenChange={setProfileSettingsOpen}>
-        <DialogContent className='fixed left-[50%] top-[50%] flex h-auto w-[min(672rem,90vw)] -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center backdrop-brightness-90'>
+        <DialogContent className='fixed left-[50%] top-[50%] flex h-auto w-[min(672rem,90vw)] max-w-[min(672rem,90vw)] -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center backdrop-brightness-90'>
           <ProfileEditFormModal />
         </DialogContent>
       </Dialog>
       <Dialog open={languageModalOpen} onOpenChange={setLanguageModalOpen}>
-        <DialogContent className='fixed left-[50%] top-[50%] flex h-auto w-[min(672rem,90vw)] -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center backdrop-brightness-90'>
+        <DialogContent className='fixed left-[50%] top-[50%] flex h-auto w-[min(672rem,90vw)] max-w-[min(672rem,90vw)] -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center backdrop-brightness-90'>
           <ChangeLangModal variant='desktop' />
         </DialogContent>
       </Dialog>

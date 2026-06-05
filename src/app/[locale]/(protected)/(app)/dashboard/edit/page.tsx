@@ -30,7 +30,7 @@ const EditProfilePageComponent = () => {
           }
         }}
       >
-        <DialogContent className='fixed left-1/2 top-1/2 flex h-auto w-[672rem] -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center backdrop-brightness-90'>
+        <DialogContent className='fixed left-1/2 top-1/2 flex h-auto w-[672rem] max-w-[672rem] -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center backdrop-brightness-90'>
           <ProfileEditFormModal />
         </DialogContent>
       </Dialog>

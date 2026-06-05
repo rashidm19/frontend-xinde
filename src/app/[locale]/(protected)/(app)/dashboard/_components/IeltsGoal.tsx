@@ -99,7 +99,7 @@ const IeltsGoalComponent = ({ grade }: Props) => {
           </DialogTrigger>
 
           {canOpenTargetGoal ? (
-            <DialogContent className='fixed left-[50%] top-[50%] flex h-auto w-[1280rem] -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center backdrop-brightness-90'>
+            <DialogContent className='fixed left-[50%] top-[50%] flex h-auto w-[1280rem] max-w-[1280rem] -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center backdrop-brightness-90'>
               <TargetGoalModal grade={numericGrade!} variant='desktop' open={goalModalOpen} onClose={() => setGoalModalOpen(false)} />
             </DialogContent>
           ) : null}

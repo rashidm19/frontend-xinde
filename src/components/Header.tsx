@@ -479,7 +479,7 @@ const HeaderComponent = ({ name, email, avatar, title: _title, onOpenSubscriptio
           </BottomSheet>
         ) : (
           <Dialog open={isLangModalOpen} onOpenChange={setLangModalOpen}>
-            <DialogContent className='fixed left-[50%] top-[50%] flex h-auto w-[1280rem] -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center backdrop-brightness-90'>
+            <DialogContent className='fixed left-[50%] top-[50%] flex h-auto w-[1280rem] max-w-[1280rem] -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center backdrop-brightness-90'>
               <ChangeLangModal variant='desktop' />
             </DialogContent>
           </Dialog>
@@ -488,7 +488,7 @@ const HeaderComponent = ({ name, email, avatar, title: _title, onOpenSubscriptio
 
       {!onOpenProfileSettings ? (
         <Dialog open={isSettingsModalOpen} onOpenChange={setSettingsModalOpen}>
-          <DialogContent className='fixed left-[50%] top-[50%] flex h-auto w-[1280rem] -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center backdrop-brightness-90'>
+          <DialogContent className='fixed left-[50%] top-[50%] flex h-auto w-[1280rem] max-w-[1280rem] -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center backdrop-brightness-90'>
             <ProfileEditFormModal />
           </DialogContent>
         </Dialog>
