@@ -15,6 +15,15 @@ npm run lint    # next lint — but ESLint is NOT configured (see below)
 
 No test framework is configured. **ESLint is not actually set up**: there is no `.eslintrc*` / `eslint.config.*` and no `eslintConfig` in `package.json`, so `npm run lint` drops into Next's interactive ESLint setup wizard instead of linting (it hangs in CI). Add a config (e.g. `.eslintrc.json` with `{"extends": "next/core-web-vitals"}`) before relying on it. Formatting is Prettier (`.prettierrc`): single quotes (incl. JSX), semicolons, 2-space, `printWidth: 170`, `arrowParens: avoid`, Tailwind class sorting via plugin.
 
+## Git & branching
+
+- **Remote is GitHub** (`rashidm19/frontend-xinde`), **not** GitLab; deploys run on **Vercel**. `main` = **production** branch (push → prod deploy); `dev` = integration/working branch (pushes get preview deploys).
+- **Push over SSH, not HTTPS.** This repo's HTTPS remote has no stored write credential in the agent environment (`could not read Username for 'https://github.com'` on push), but an SSH key is authorized. Push to the SSH URL explicitly — `git push git@github.com:rashidm19/frontend-xinde.git <src>:<dst>` — or switch it once: `git remote set-url origin git@github.com:rashidm19/frontend-xinde.git`. (Fetch over HTTPS works; only writes need SSH. `gh` CLI is also logged in.)
+- **Release flow:** work lands on `dev`; bring `main` up by **fast-forward** and push — `git push origin dev:main` (linear history, no merge commit). Don't let `main` lag `dev`, and don't create `main`-only commits (keeps the ff clean).
+- **`git fetch` before judging drift.** A stale local `origin/main` ref makes `main` look "behind" when it isn't. Verify real state: `git rev-list --count origin/main..origin/dev` (commits `dev` has that `main` lacks) and `git rev-list --count origin/dev..origin/main` (must be `0` for a clean fast-forward).
+- **Before shipping to `main` (= prod), verify `API_URL`** in `src/lib/config.ts` is the prod backend (`https://api.studybox.kz`), not `localhost` — it's hardcoded, not env-driven (see "Backend dependency").
+- A merge/ff only moves **committed** history — `git status` first and commit (or stash) WIP on `dev` before releasing if it should ship.
+
 ## Backend dependency (read first)
 
 The API base URL is **hardcoded** in `src/lib/config.ts` as `API_URL` — currently `http://localhost:8080`, with the prod URL (`https://api.studybox.kz`) commented out. It is **not** read from env. The frontend dev server runs standalone, but every authenticated/data page calls this backend; without it `(protected)` pages hit `getMe()` failures → render `Error503` or redirect to `/login`. Of the public pages, only `login`, `registration`, and `privacy` are fully functional offline — `pricing` renders its shell but shows no plans (it fetches `/billing/subscriptions/plans` at load).
