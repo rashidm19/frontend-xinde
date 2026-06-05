@@ -4,7 +4,7 @@ import React from 'react';
 import { DialogClose } from './ui/dialog';
 import Image from 'next/image';
 import { useCustomTranslations } from '@/hooks/useCustomTranslations';
-import { normalizeInterval } from '@/lib/pricing';
+import { formatPeriod, perMonthPrice, savingsPct } from '@/lib/pricing';
 import { usePricingPlans } from '@/hooks/usePricingPlans';
 
 interface PricesModalProps {
@@ -18,7 +18,6 @@ interface PricesModalProps {
 export const PricesModal = ({ onSelectPlan, promoMessage = null, promoError = null, planDiscounts = {}, showClose = true }: PricesModalProps) => {
   const { t, tImgAlts, tActions } = useCustomTranslations('pricesModal');
 
-  const demoIncludes: string[] = t.raw('demo.includes');
   const premiumIncludes: string[] = t.raw('premium.includes');
 
   const { activePlans, status: subscriptionStatus } = usePricingPlans();
@@ -34,16 +33,9 @@ export const PricesModal = ({ onSelectPlan, promoMessage = null, promoError = nu
 
   const formatCurrency = React.useCallback((value: number, currency: string) => `${currencyFormatter.format(value)} ${currency}`, [currencyFormatter]);
 
-  const getIntervalLabel = React.useCallback(
-    (interval?: string) => {
-      const intervalKey = normalizeInterval(interval);
-      const translationKey = `billing.interval.${intervalKey}`;
-      const translated = t(translationKey, { defaultValue: intervalKey });
-
-      return translated || intervalKey;
-    },
-    [t]
-  );
+  const bestPlanId = activePlans.length
+    ? String(activePlans.reduce((a, b) => (savingsPct(b, activePlans) > savingsPct(a, activePlans) ? b : a)).id)
+    : null;
 
   return (
     // <ScrollArea className='tablet:h-[684rem] tablet:w-[96dvw] desktop:h-[726rem] desktop:w-[1280rem]'>
@@ -74,26 +66,8 @@ export const PricesModal = ({ onSelectPlan, promoMessage = null, promoError = nu
           </div>
 
           <div className='flex flex-col gap-[24rem] tablet:flex-row tablet:gap-[12rem] desktop:gap-x-[24rem]'>
-            <div className='flex h-[320rem] w-[342rem] flex-col gap-y-[12rem] rounded-[16rem] bg-d-light-gray p-[32rem] pb-[44rem] tablet:h-[500rem] tablet:w-[300rem] tablet:gap-y-[20rem] desktop:h-[500rem] desktop:w-[370rem] desktop:gap-y-[32rem]'>
-              <h2 className='font-poppins text-[32rem] font-medium'>{t('demo.title')}</h2>
-
-              <div className='flex flex-col gap-y-[12rem] tablet:gap-y-[16rem] desktop:gap-y-[20rem]'>
-                {demoIncludes?.map((item, index) => (
-                  <div key={index} className='flex items-center gap-x-[12rem]'>
-                    <img src='/images/icon_check.svg' alt={tImgAlts('check')} className='size-[16rem]' />
-                    <span className='text-[14rem] leading-[120%] tablet:text-[16rem] tablet:leading-[130%] desktop:leading-[120%]'>{item}</span>
-                  </div>
-                ))}
-              </div>
-
-              <div className='mt-auto flex flex-col'>
-                <h3 className='mb-[12rem] text-center text-[32rem] font-medium tablet:mb-[24rem] tablet:text-start desktop:mb-[38rem]'>{t('demo.price')}</h3>
-                <p className='mx-auto -mb-[10rem] text-center text-[14rem] font-semibold text-black/60 tablet:-mb-[0rem] desktop:mb-0'>{t('demo.about')}</p>
-              </div>
-            </div>
-
             {subscriptionStatus === 'pending' &&
-              [0, 1].map(index => (
+              [0, 1, 2].map(index => (
                 <div
                   key={`plan-skeleton-${index}`}
                   className='h-[430rem] w-[342rem] animate-pulse rounded-[16rem] bg-d-light-gray tablet:h-[500rem] tablet:w-[300rem] desktop:h-[500rem] desktop:w-[370rem]'
@@ -102,18 +76,25 @@ export const PricesModal = ({ onSelectPlan, promoMessage = null, promoError = nu
 
             {subscriptionStatus === 'success' &&
               activePlans.map((plan, index) => {
-                const isPrimaryPlan = index === 0;
+                const planId = String(plan.id);
+                const isPrimaryPlan = planId === bestPlanId;
+                const intervalLabel = formatPeriod(plan.interval, plan.interval_count, t);
+                const pct = savingsPct(plan, activePlans);
+                const hasPromo = Boolean(planDiscounts[planId]);
                 const planFeatures = plan.features && plan.features.length ? plan.features : premiumIncludes;
                 const priceLabel = `${currencyFormatter.format(plan.price)} ${plan.currency}`;
-                const intervalLabel = getIntervalLabel(plan.interval);
                 const imageIndex = (index % 2) + 1;
-                const planId = String(plan.id);
 
                 return (
                   <div
                     key={plan.id}
                     className={`relative flex h-[430rem] w-[342rem] flex-col gap-y-[12rem] rounded-[16rem] ${isPrimaryPlan ? 'bg-d-violet' : 'bg-d-blue'} p-[32rem] text-white tablet:h-[500rem] tablet:w-[300rem] tablet:gap-y-[20rem] desktop:h-[500rem] desktop:w-[370rem] desktop:gap-y-[32rem]`}
                   >
+                    {isPrimaryPlan && (
+                      <span className='absolute -top-[14rem] left-[24rem] rounded-full bg-d-black px-[16rem] py-[6rem] text-[13rem] font-medium text-white'>
+                        {t('bestValue')}
+                      </span>
+                    )}
                     <div className={`absolute -bottom-[0rem] right-0 ${isPrimaryPlan ? 'aspect-[462/428]' : 'aspect-[458/330]'} w-[213rem] mix-blend-soft-light`}>
                       <Image src={`/images/icon_subscription--0${imageIndex}.png`} alt={tImgAlts('premiumPlan')} className='rounded-br-[16rem] object-cover' fill />
                     </div>
@@ -132,10 +113,13 @@ export const PricesModal = ({ onSelectPlan, promoMessage = null, promoError = nu
                     <div className='mt-auto'>
                       <h3 className='text-[32rem] font-medium'>
                         {priceLabel}
-                        <span className='text-[14rem] font-normal tablet:text-[16rem]'>
-                          {' '}/ {intervalLabel}
-                        </span>
+                        <span className='text-[14rem] font-normal tablet:text-[16rem]'> / {intervalLabel}</span>
                       </h3>
+                      {pct > 0 && !hasPromo && (
+                        <p className='mt-[4rem] text-[14rem] font-medium opacity-90'>
+                          {t('perMonth', { amount: currencyFormatter.format(perMonthPrice(plan)), currency: plan.currency })} · {t('save', { percent: pct })}
+                        </p>
+                      )}
                       <button
                         onClick={() => onSelectPlan(planId)}
                         className='relative z-[200] w-full rounded-full bg-d-green py-[16rem] text-[18rem] font-medium text-black hover:bg-d-green/90'
