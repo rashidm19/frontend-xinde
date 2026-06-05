@@ -19,7 +19,6 @@ const GlobalSubscriptionPaywallComponent = () => {
 
   const { activePlans, status } = usePricingPlans();
   const { t } = useCustomTranslations('pricesModal');
-  const demoIncludes = t.raw('demo.includes') as string[];
   const premiumIncludes = t.raw('premium.includes') as string[];
 
   const [isPromoModalOpen, setPromoModalOpen] = React.useState(false);
@@ -46,7 +45,6 @@ const GlobalSubscriptionPaywallComponent = () => {
       {isMobile && isOpen ? (
         <div className='fixed inset-0 z-[8889] bg-white'>
           <PricingPlansView
-            demoIncludes={demoIncludes}
             premiumIncludes={premiumIncludes}
             activePlans={activePlans}
             status={status}

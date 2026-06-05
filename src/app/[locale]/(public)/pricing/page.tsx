@@ -18,7 +18,6 @@ export default function PricingPage() {
   const router = useRouter();
   const isMobile = useMediaQuery('(max-width: 767px)', { initializeWithValue: false });
   const { t } = useCustomTranslations('pricesModal');
-  const demoIncludes: string[] = t.raw('demo.includes');
   const premiumIncludes: string[] = t.raw('premium.includes');
   const { activePlans, status } = usePricingPlans();
 
@@ -77,7 +76,6 @@ export default function PricingPage() {
   return (
     <>
       <PricingPlansView
-        demoIncludes={demoIncludes}
         premiumIncludes={premiumIncludes}
         activePlans={activePlans}
         status={status}

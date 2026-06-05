@@ -17,7 +17,6 @@ import { useCustomTranslations } from '@/hooks/useCustomTranslations';
 export default function PaywallPage() {
   const { activePlans, status } = usePricingPlans();
   const { t } = useCustomTranslations('pricesModal');
-  const demoIncludes = t.raw('demo.includes') as string[];
   const premiumIncludes = t.raw('premium.includes') as string[];
 
   const [isPromoModalOpen, setPromoModalOpen] = useState(false);
@@ -48,7 +47,6 @@ export default function PaywallPage() {
       {/* Mobile (<768px): full-screen stacked view */}
       <div className='tablet:hidden'>
         <PricingPlansView
-          demoIncludes={demoIncludes}
           premiumIncludes={premiumIncludes}
           activePlans={activePlans}
           status={status}
