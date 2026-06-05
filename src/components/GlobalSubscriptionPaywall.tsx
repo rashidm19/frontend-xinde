@@ -69,7 +69,7 @@ const GlobalSubscriptionPaywallComponent = () => {
             }
           }}
         >
-          <DialogContent className='fixed left-1/2 top-1/2 flex h-auto w-[1280rem] -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center [&_button[data-radix-dialog-close]]:hidden'>
+          <DialogContent className='fixed left-1/2 top-1/2 flex h-auto w-[1280rem] max-w-[1280rem] -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center [&_button[data-radix-dialog-close]]:hidden'>
             <DialogTitle className='sr-only'>{t('mobileHeader.choosePlan', { defaultValue: 'Choose your plan' })}</DialogTitle>
             <DialogDescription className='sr-only'>{t('mobileHeader.choosePlanSubtitle', { defaultValue: 'Upgrade to get full access' })}</DialogDescription>
             <PricesModal onSelectPlan={handlePlanSelect} promoMessage={promoMessage} promoError={promoError} planDiscounts={planDiscounts} />

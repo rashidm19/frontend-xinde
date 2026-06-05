@@ -498,7 +498,7 @@ const HeaderComponent = ({ name, email, avatar, title: _title, onOpenSubscriptio
 
       {!isMobile ? (
         <Dialog open={isPricesModalOpen} onOpenChange={handlePricesModalOpenChange}>
-          <DialogContent className='fixed left-[50%] top-[50%] flex h-auto w-[1280rem] -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center backdrop-brightness-90'>
+          <DialogContent className='fixed left-[50%] top-[50%] flex h-auto w-[1280rem] max-w-[1280rem] -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center backdrop-brightness-90'>
             <PricesModal onSelectPlan={handlePlanSelect} promoError={promoError} planDiscounts={planDiscounts} />
           </DialogContent>
         </Dialog>

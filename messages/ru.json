@@ -62,6 +62,7 @@
     "submit": "Отправить",
     "sending": "Отправка...",
     "next": "Далее",
+    "continue": "Продолжить",
     "cancel": "Отменить",
     "practiceNow": "Практиковаться сейчас",
     "review": "Просмотреть",
@@ -270,12 +271,17 @@
     "perMonth": "≈{amount} {currency}/мес",
     "save": "выгода {percent}%",
     "bestValue": "выгоднее всего",
+    "discountBadge": "−{percent}%",
+    "discountA11y": "Скидка {percent}%",
+    "includedTitle": "Всё в Premium",
+    "oldPriceLabel": "Старая цена",
+    "offer": {
+      "endsIn": "−{percent}% сгорает через"
+    },
+    "title": "Перейдите на Premium для безлимитного доступа",
     "mobileHeader": {
       "choosePlan": "Выберите план",
       "choosePlanSubtitle": "Оформите подписку, чтобы получить полный доступ"
-    },
-    "cta": {
-      "footerHint": "Нажмите на любой план, чтобы продолжить"
     },
     "errors": {
       "loadFailed": "Не удалось загрузить планы. Пожалуйста, попробуйте позже."

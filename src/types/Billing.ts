@@ -21,6 +21,16 @@ export interface ISubscriptionPlan {
   period_start: string | null;
   period_end: string | null;
   features?: string[];
+  /** Launch-offer discount (%) applied to `price` while the user's offer window is open. 0/undefined = none. */
+  launch_discount_pct?: number;
+}
+
+/** Per-user, server-authoritative launch-offer window (see GET /billing/offer). */
+export interface ILaunchOffer {
+  active: boolean;
+  /** ISO timestamp the offer closes at; null when inactive. The countdown binds to this. */
+  expiresAt: string | null;
+  discountPct: number;
 }
 
 export interface IBillingBalance {

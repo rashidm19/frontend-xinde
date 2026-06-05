@@ -272,12 +272,17 @@
     "perMonth": "≈{amount} {currency}/mo",
     "save": "save {percent}%",
     "bestValue": "best value",
+    "discountBadge": "−{percent}%",
+    "discountA11y": "Discount {percent}%",
+    "includedTitle": "Everything in Premium",
+    "oldPriceLabel": "Old price",
+    "offer": {
+      "endsIn": "−{percent}% ends in"
+    },
+    "title": "Upgrade to Premium for unlimited access",
     "mobileHeader": {
       "choosePlan": "Choose your plan",
       "choosePlanSubtitle": "Upgrade to get full access"
-    },
-    "cta": {
-      "footerHint": "Tap any plan to continue"
     },
     "errors": {
       "loadFailed": "Unable to load plans. Please try again later."

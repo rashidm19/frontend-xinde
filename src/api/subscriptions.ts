@@ -1,11 +1,12 @@
 import axiosInstance from '@/lib/axiosInstance';
-import { IBillingBalance, IClientSubscription, ISubscriptionPlan } from '@/types/Billing';
+import { IBillingBalance, IClientSubscription, ILaunchOffer, ISubscriptionPlan } from '@/types/Billing';
 
 const CURRENT_SUBSCRIPTION_ENDPOINT = '/billing/subscriptions/current';
 const SUBSCRIPTION_PLANS_ENDPOINT = '/billing/subscriptions/plans';
 const SUBSCRIPTION_CANCEL_ENDPOINT = '/billing/subscriptions/cancel';
 const SUBSCRIPTION_RESUME_ENDPOINT = '/billing/subscriptions/resume';
 const BILLING_BALANCE_ENDPOINT = '/billing/balance';
+const LAUNCH_OFFER_ENDPOINT = '/billing/offer';
 
 type ApiPayload<T> = { data?: T } | T | null | undefined;
 
@@ -66,6 +67,35 @@ export const fetchSubscriptionPlans = async (): Promise<ISubscriptionPlan[]> => 
   }
 
   return [];
+};
+
+interface LaunchOfferResponse {
+  active?: boolean;
+  expires_at?: string | null;
+  discount_pct?: number;
+}
+
+const INACTIVE_OFFER: ILaunchOffer = { active: false, expiresAt: null, discountPct: 0 };
+
+// First authed call starts the per-user offer window server-side; later calls just
+// report it. Logged-out (401) / network errors degrade to "no offer".
+export const fetchLaunchOffer = async (): Promise<ILaunchOffer> => {
+  try {
+    const response = await axiosInstance.get(LAUNCH_OFFER_ENDPOINT, {
+      validateStatus: status => status === 200,
+    });
+    const payload = unwrapData<LaunchOfferResponse>(response.data);
+    if (!payload) {
+      return INACTIVE_OFFER;
+    }
+    return {
+      active: Boolean(payload.active),
+      expiresAt: payload.expires_at ?? null,
+      discountPct: payload.discount_pct ?? 0,
+    };
+  } catch {
+    return INACTIVE_OFFER;
+  }
 };
 
 export const fetchBillingBalance = async (): Promise<IBillingBalance> => {

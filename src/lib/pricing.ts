@@ -48,6 +48,18 @@ export const savingsPct = (plan: PricingPlanLike, plans: PricingPlanLike[]): num
   return Math.round((1 - perMonthPrice(plan) / baseline) * 100);
 };
 
+// Live (payable) price while a launch-offer window is open: the full `plan.price`
+// minus `discountPct`. The full price is shown struck-through. Mirrors the server's
+// integer math EXACTLY (payments/views.py `_launch_adjusted_price`): the server
+// floors in tiyn (price × 100), so we do the same and convert back to KZT. At the
+// seeded −20% this is a whole number; other percentages may carry ≤2 decimals — and
+// those decimals equal what EPay actually charges, so displayed always == charged.
+export const discountedPrice = (fullPrice: number, discountPct: number): number => {
+  const pct = Math.min(Math.max(discountPct, 0), 100);
+  const tiyn = Math.round(fullPrice * 100);
+  return Math.floor((tiyn * (100 - pct)) / 100) / 100;
+};
+
 // Value type MUST match next-intl's t (see src/hooks/useCustomTranslations.ts:3).
 // `Record<string, unknown>` is NOT assignable from next-intl's t and fails `npm run build` (TS2322).
 type Translator = (key: string, values?: Record<string, string | number | Date>) => string;
