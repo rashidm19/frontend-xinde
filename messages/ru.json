@@ -2,7 +2,6 @@
   "common": {
     "studybox": "studybox",
     "allRightsReserved": "© Все права защищены",
-    "freeTrial": "Демо",
     "points": "баллы",
     "thisWeek": "Эта неделя",
     "hCount": "{count}ч",
@@ -248,16 +247,6 @@
     "audioIsPlaying": "Аудио воспроизводится"
   },
   "pricesModal": {
-    "demo": {
-      "title": "Демо",
-      "includes": [
-        "1 бесплатный Writing тест",
-        "Отзыв с помощью AI",
-        "Поддержка по электронной почте"
-      ],
-      "price": "Бесплатно",
-      "about": "Активировано на неограниченное время"
-    },
     "premium": {
       "title": "Премиум",
       "includes": [
@@ -271,12 +260,6 @@
       "about": "Активировано на неограниченное время"
     },
     "billing": {
-      "interval": {
-        "day": "день",
-        "week": "неделя",
-        "month": "месяц",
-        "year": "год"
-      },
       "per": {
         "day": "{count, plural, one{день} few{# дня} many{# дней} other{# дня}}",
         "week": "{count, plural, one{неделя} few{# недели} many{# недель} other{# недели}}",

@@ -2,7 +2,6 @@
   "common": {
     "studybox": "studybox",
     "allRightsReserved": "© All rights reserved",
-    "freeTrial": "Free trial",
     "points": "points",
     "thisWeek": "This week",
     "hCount": "{count}h",
@@ -250,16 +249,6 @@
     "audioIsPlaying": "Audio is playing"
   },
   "pricesModal": {
-    "demo": {
-      "title": "Demo",
-      "includes": [
-        "1 Free Writing test",
-        "AI powered feedback",
-        "Email support"
-      ],
-      "price": "Free",
-      "about": "Activated for unlimited time"
-    },
     "premium": {
       "title": "Premium",
       "includes": [
@@ -273,12 +262,6 @@
       "about": "Activated for unlimited time"
     },
     "billing": {
-      "interval": {
-        "day": "day",
-        "week": "week",
-        "month": "month",
-        "year": "year"
-      },
       "per": {
         "day": "{count, plural, one{day} other{# days}}",
         "week": "{count, plural, one{week} other{# weeks}}",
@@ -709,10 +692,7 @@
       "subscribe": "Subscribe",
       "login": "Login",
       "try": "Try",
-      "tryForFree": "Try for free",
-      "generate": "Generate",
-      "startNowForFree": "Start now for free",
-      "joinForFreeNow": "Join for free now"
+      "generate": "Generate"
     },
     "animatedHorseshoeProgressBar": {
       "noResults": "No results"
