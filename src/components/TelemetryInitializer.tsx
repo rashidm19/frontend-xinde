@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 
 import { usePageViewTracking } from '@/hooks/usePageViewTracking';
+import { useMetrikaPageView } from '@/hooks/useMetrikaPageView';
 import { bootstrapTelemetry } from '@/lib/telemetry';
 import type { TelemetryConfig } from '@/lib/telemetry/types';
 import { useProfileStore } from '@/stores/profileStore';
@@ -34,6 +35,7 @@ export const TelemetryInitializer = () => {
   const [config, setConfig] = useState<TelemetryConfig>(FALLBACK_CONFIG);
 
   usePageViewTracking(IS_PROD_ENV);
+  useMetrikaPageView(IS_PROD_ENV);
 
   useEffect(() => {
     let cancelled = false;

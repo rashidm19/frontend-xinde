@@ -3,6 +3,7 @@ import '../globals.css';
 import { Inter, Poppins } from 'next/font/google';
 
 import { AosInit } from '@/components/AosInit';
+import { MetrikaInit } from '@/components/MetrikaInit';
 import type { Metadata } from 'next';
 import NextTopLoader from 'nextjs-toploader';
 import Providers from './providers';
@@ -85,6 +86,8 @@ export default async function LocaleLayout({ children, params }: { children: Rea
     <html lang={locale}>
       <body className={`body ${inter.className} ${poppins.variable}`}>
         <NextTopLoader height={4} color='#636AFB' initialPosition={0.3} showSpinner={false} />
+
+        <MetrikaInit />
 
         <NextIntlClientProvider locale={locale} messages={messages}>
           <Providers>
