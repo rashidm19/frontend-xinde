@@ -10,6 +10,10 @@ export const CAPTCHA_THRESHOLD = 'CAPTCHA_THRESHOLD';
 
 export const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
 
+// Yandex Metrika counter id for app.studybox.kz (set only in Production Vercel env).
+// Undefined in dev/preview → analytics no-ops. Read as a string; cast to Number at the ym() call.
+export const YANDEX_METRICS_ID = process.env.NEXT_PUBLIC_YANDEX_METRICS_ID;
+
 // ENVIRONMENTS
 export const NODE_ENV = process.env.NODE_ENV;
 export const NEXT_PUBLIC_ENVIRONMENT = process.env.NEXT_PUBLIC_ENVIRONMENT;
