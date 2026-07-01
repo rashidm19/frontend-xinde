@@ -2,11 +2,13 @@
 
 import { useEffect, useState } from 'react';
 
+import { usePathname } from 'next/navigation';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 
 import { useAppBootstrapReady } from '@/hooks/useAppBootstrapReady';
 
 export const GlobalAppLoader = () => {
+  const pathname = usePathname();
   const isBootstrapReady = useAppBootstrapReady();
   const shouldReduceMotion = useReducedMotion() ?? false;
   const [shouldRender, setShouldRender] = useState(() => !isBootstrapReady);
@@ -19,6 +21,10 @@ export const GlobalAppLoader = () => {
       return () => clearTimeout(timeout);
     }
   }, [isBootstrapReady]);
+
+  // The HSK checkout (pay.studybox.kz) is a standalone pass-through — it must never
+  // flash StudyBox/IELTS app chrome. Its own branded loader covers the load instead.
+  if (pathname?.includes('/checkout')) return null;
 
   return (
     <AnimatePresence>
