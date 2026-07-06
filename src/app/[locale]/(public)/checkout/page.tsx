@@ -14,9 +14,9 @@ declare global {
 
 // Display-only (authoritative amount is enforced server-side). Keep in sync with contract §6.
 const PLAN_DISPLAY: Record<string, { kzt: number; label: string }> = {
-  '1mo': { kzt: 39000, label: '1 month' },
-  '3mo': { kzt: 54000, label: '3 months' },
-  '12mo': { kzt: 149000, label: '12 months' },
+  '1mo': { kzt: 7990, label: '1 month' },
+  '3mo': { kzt: 13990, label: '3 months' },
+  '12mo': { kzt: 19990, label: '12 months' },
 };
 const ALLOWED_HOSTS = ['hskprep.cc', 'www.hskprep.cc'];
 
